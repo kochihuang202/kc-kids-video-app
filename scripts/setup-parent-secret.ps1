@@ -16,7 +16,7 @@ if ($password.Length -lt 8 -or $password.Length -gt 128) {
 
 $salt = [byte[]]::new(16)
 [Security.Cryptography.RandomNumberGenerator]::Fill($salt)
-$iterations = 310000
+$iterations = 100000
 $derive = [Security.Cryptography.Rfc2898DeriveBytes]::new(
   $password,
   $salt,

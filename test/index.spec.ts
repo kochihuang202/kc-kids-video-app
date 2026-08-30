@@ -1,7 +1,7 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { formatPosition, getDayRangeInTimeZone } from "../src/lib/utils";
-import { consumeRateLimit, makePasswordRecord, tokenHash, verifyPassword } from "../worker/security";
+import { consumeRateLimit, makePasswordRecord, parsePasswordSecret, tokenHash, verifyPassword } from "../worker/security";
 import type { AppEnv } from "../worker/types";
 import { parseIsoDuration, parseYouTubeVideoId } from "../worker/youtube";
 import worker from "../worker";
@@ -78,6 +78,12 @@ describe("Phase 1B units", () => {
     const record = await makePasswordRecord("a secure family password", 100_000);
     expect(await verifyPassword("a secure family password", record.hash, record.salt, record.iterations)).toBe(true);
     expect(await verifyPassword("wrong family password", record.hash, record.salt, record.iterations)).toBe(false);
+  });
+
+  it("keeps PBKDF2 credentials within the Cloudflare production limit", async () => {
+    const record = await makePasswordRecord("a secure family password");
+    expect(record.iterations).toBe(100_000);
+    expect(parsePasswordSecret(`pbkdf2_sha256$310000$salt$hash`)).toBeNull();
   });
 
   it("enforces a persisted rate-limit window", async () => {

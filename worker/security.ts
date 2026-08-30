@@ -6,6 +6,7 @@ const PARENT_COOKIE = "parent_session";
 const DEVICE_COOKIE = "kid_device";
 const SESSION_SECONDS = 12 * 60 * 60;
 const DEVICE_SECONDS = 365 * 24 * 60 * 60;
+export const MAX_PBKDF2_ITERATIONS = 100_000;
 
 function bytesToBase64(bytes: Uint8Array) {
   let binary = "";
@@ -86,12 +87,15 @@ export async function getChildDevice(request: Request, env: AppEnv, required = t
 }
 
 export async function pbkdf2(password: string, salt: Uint8Array, iterations: number) {
+  if (!Number.isInteger(iterations) || iterations < 100_000 || iterations > MAX_PBKDF2_ITERATIONS) {
+    throw new HttpError("家長密碼雜湊設定不符合執行環境限制。", 503, "PARENT_PASSWORD_NOT_CONFIGURED");
+  }
   const source = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new Uint8Array(salt), iterations }, source, 256);
   return new Uint8Array(bits);
 }
 
-export async function makePasswordRecord(password: string, iterations = 310_000) {
+export async function makePasswordRecord(password: string, iterations = MAX_PBKDF2_ITERATIONS) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const hash = await pbkdf2(password, salt, iterations);
   return { hash: bytesToBase64(hash), salt: bytesToBase64(salt), iterations };
@@ -113,7 +117,8 @@ export function parsePasswordSecret(secret: string | undefined) {
   if (!secret) return null;
   const [algorithm, iterationText, salt, hash] = secret.split("$");
   const iterations = Number(iterationText);
-  if (algorithm !== "pbkdf2_sha256" || !Number.isInteger(iterations) || iterations < 100_000 || !salt || !hash) return null;
+  if (algorithm !== "pbkdf2_sha256" || !Number.isInteger(iterations)
+    || iterations < 100_000 || iterations > MAX_PBKDF2_ITERATIONS || !salt || !hash) return null;
   return { hash, salt, iterations };
 }
 
