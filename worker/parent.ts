@@ -178,7 +178,7 @@ export async function createCategory(request: Request, env: AppEnv) {
   await env.DB.prepare(`
     INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
-  `).bind(id, name, icon, imageUrl, (max?.value || 0) + 1, tone, now, now).run();
+  `).bind(id, name, icon, imageUrl, tone, (max?.value || 0) + 1, now, now).run();
   return json({ id }, { status: 201 });
 }
 

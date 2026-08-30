@@ -52,6 +52,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM admin_credentials"),
     env.DB.prepare("DELETE FROM child_devices"),
     env.DB.prepare("DELETE FROM rate_limit_buckets"),
+    env.DB.prepare("DELETE FROM categories WHERE id NOT IN ('science', 'english', 'animals')"),
     env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', metadata_error = NULL"),
     env.DB.prepare("UPDATE categories SET is_active = 1, archived_at = NULL"),
   ]);
@@ -173,6 +174,19 @@ describe("device capability and heartbeat", () => {
 });
 
 describe("parent auth and administration", () => {
+  it("creates a category with the selected tone and numeric sort order", async () => {
+    const parentCookie = await addParent();
+    const response = await call("/api/parent/categories", {
+      method: "POST",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ name: "可愛巧虎島", icon: "✨" }),
+    });
+    expect(response.status).toBe(201);
+    const row = await env.DB.prepare("SELECT tone, sort_order FROM categories WHERE name = ?")
+      .bind("可愛巧虎島").first<{ tone: string; sort_order: number }>();
+    expect(row).toEqual({ tone: "sky", sort_order: 4 });
+  });
+
   it("accepts an eight-character family password and rejects shorter input", async () => {
     await addParent("eight888");
     const accepted = await call("/api/parent/session", { method: "POST", body: jsonBody({ password: "eight888" }) });
