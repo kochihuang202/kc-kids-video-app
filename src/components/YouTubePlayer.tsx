@@ -5,6 +5,8 @@ export type PlayerState = "PLAYING" | "PAUSED" | "ENDED" | "BUFFERING" | "READY"
 interface PlayerInstance {
   destroy(): void;
   getCurrentTime(): number;
+  getDuration(): number;
+  playVideo(): void;
   pauseVideo(): void;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
 }
@@ -45,6 +47,8 @@ function loadYouTubeApi() {
 
 export interface YouTubePlayerHandle {
   getCurrentTime(): number;
+  getDuration(): number;
+  play(): void;
   pause(): void;
   seekTo(seconds: number): void;
 }
@@ -67,10 +71,11 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
 
     useImperativeHandle(ref, () => ({
       getCurrentTime: () => typeof playerRef.current?.getCurrentTime === "function" ? playerRef.current.getCurrentTime() || startAt : startAt,
+      getDuration: () => typeof playerRef.current?.getDuration === "function" ? playerRef.current.getDuration() || 0 : 0,
+      play: () => { if (typeof playerRef.current?.playVideo === "function") playerRef.current.playVideo(); },
       pause: () => { if (typeof playerRef.current?.pauseVideo === "function") playerRef.current.pauseVideo(); },
       seekTo: (seconds) => {
         if (typeof playerRef.current?.seekTo === "function") playerRef.current.seekTo(Math.max(0, seconds), true);
-        if (typeof playerRef.current?.pauseVideo === "function") playerRef.current.pauseVideo();
       },
     }), [startAt]);
 
@@ -83,9 +88,12 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           videoId,
           playerVars: {
             autoplay: 0,
-            controls: 1,
+            controls: 0,
+            disablekb: 1,
             enablejsapi: 1,
             fs: 0,
+            iv_load_policy: 3,
+            modestbranding: 1,
             playsinline: 1,
             rel: 0,
             start: Math.max(0, Math.floor(startAt)),

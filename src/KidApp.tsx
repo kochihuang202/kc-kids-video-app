@@ -1,5 +1,5 @@
 import { flushSync } from "react-dom";
-import { ArrowLeft, Check, MessageCircle, RefreshCw, RotateCcw } from "lucide-react";
+import { ArrowLeft, Check, MessageCircle, Pause, Play, RefreshCw, RotateCcw, RotateCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
@@ -10,7 +10,7 @@ import {
 import { Button, buttonVariants } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
-import { cn } from "./lib/utils";
+import { cn, formatPosition } from "./lib/utils";
 import type { Category, DeviceStatus, UpdateViewSessionInput, VideoFixture } from "./types";
 
 const prompts = ["我學到", "我覺得", "我想問", "我發現"];
@@ -162,6 +162,11 @@ export function WatchPage() {
   const [authPrompt, setAuthPrompt] = useState(false);
   const [playerError, setPlayerError] = useState(false);
   const [showDictationTip, setShowDictationTip] = useState(localStorage.getItem("dictation_tip_seen") !== "1");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentPos, setCurrentPos] = useState(initialPosition);
+  const [totalDuration, setTotalDuration] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragPos, setDragPos] = useState(initialPosition);
 
   const load = useCallback(async () => {
     setLoadError("");
@@ -227,6 +232,7 @@ export function WatchPage() {
 
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
+    setIsPlaying(state === "PLAYING");
     if (state === "PLAYING") {
       if (playingStartPerfRef.current === null) {
         playingStartPerfRef.current = performance.now(); playingStartWallRef.current = new Date().toISOString();
@@ -240,9 +246,18 @@ export function WatchPage() {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      if (playerStateRef.current === "PLAYING") void flushTracking();
-      else void drainQueue();
-    }, 10_000);
+      if (playerStateRef.current === "PLAYING") {
+        void flushTracking();
+        if (playerRef.current) {
+          const time = playerRef.current.getCurrentTime();
+          if (!isDragging) setCurrentPos(time);
+          const dur = playerRef.current.getDuration();
+          if (dur > 0 && dur !== totalDuration) setTotalDuration(dur);
+        }
+      } else {
+        void drainQueue();
+      }
+    }, 500);
     const onVisibility = () => { if (document.visibilityState === "hidden") void flushTracking("active", true); };
     const onPageHide = () => { void flushTracking("active", true); };
     document.addEventListener("visibilitychange", onVisibility); window.addEventListener("pagehide", onPageHide);
@@ -250,7 +265,37 @@ export function WatchPage() {
       window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); window.removeEventListener("pagehide", onPageHide);
       if (successTimerRef.current !== null) window.clearTimeout(successTimerRef.current);
     };
-  }, [drainQueue, flushTracking]);
+  }, [drainQueue, flushTracking, isDragging, totalDuration]);
+
+  const togglePlay = () => {
+    if (playerStateRef.current === "PLAYING") {
+      playerRef.current?.pause();
+    } else {
+      playerRef.current?.play();
+    }
+  };
+
+  const seekRelative = (delta: number) => {
+    const current = playerRef.current?.getCurrentTime() ?? currentPos;
+    const max = totalDuration > 0 ? totalDuration : 999999;
+    const target = Math.max(0, Math.min(max, current + delta));
+    playerRef.current?.seekTo(target);
+    setCurrentPos(target);
+    setCapturedPosition(target);
+  };
+
+  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(event.target.value);
+    setDragPos(val);
+    setCurrentPos(val);
+  };
+
+  const handleSliderCommit = (val: number) => {
+    setIsDragging(false);
+    playerRef.current?.seekTo(val);
+    setCurrentPos(val);
+    setCapturedPosition(val);
+  };
 
   useEffect(() => {
     if (!noteMode || !window.visualViewport) return;
@@ -323,17 +368,121 @@ export function WatchPage() {
     } finally { setSaving(false); }
   };
 
+  const activePos = isDragging ? dragPos : currentPos;
+  const progressPercent = totalDuration > 0 ? Math.min(100, Math.max(0, (activePos / totalDuration) * 100)) : 0;
+
   return (
     <main className={cn("watch-page", noteMode && "note-is-open")}>
       <section className={cn("player-surface", noteMode && "player-hidden")} aria-hidden={noteMode}>
-        <div className="player-stage">
-          <YouTubePlayer ref={playerRef} videoId={video.youtubeVideoId} startAt={initialPosition} onStateChange={handlePlayerState} onError={() => setPlayerError(true)} />
-          {playerError && <div className="player-error" role="alert"><p>影片暫時載入不了。</p><Button variant="secondary" onClick={() => window.location.reload()}><RotateCcw />再試一次</Button></div>}
+        <div className="player-stage" onClick={togglePlay}>
+          <YouTubePlayer
+            ref={playerRef}
+            videoId={video.youtubeVideoId}
+            startAt={initialPosition}
+            onStateChange={handlePlayerState}
+            onError={() => setPlayerError(true)}
+          />
+          {!isPlaying && !playerError && (
+            <div className="stage-overlay" aria-hidden="true">
+              <button
+                type="button"
+                className="stage-big-play"
+                aria-label="播放"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                }}
+              >
+                <Play />
+              </button>
+            </div>
+          )}
+          {playerError && (
+            <div className="player-error" role="alert" onClick={(e) => e.stopPropagation()}>
+              <p>影片暫時載入不了。</p>
+              <Button variant="secondary" onClick={() => window.location.reload()}><RotateCcw />再試一次</Button>
+            </div>
+          )}
         </div>
-        <footer className="player-actions">
-          <Link className="player-back" to={`/category/${video.categoryId}`} onClick={() => { playerRef.current?.pause(); void flushTracking("ended"); }}><ArrowLeft />回去</Link>
-          <Button className="speak-button" size="large" onClick={() => void enterNote()}><MessageCircle />我想說</Button>
-        </footer>
+
+        <div className="kid-player-controls" role="region" aria-label="影片播放控制">
+          <div className="kid-scrubber-row">
+            <span className="time-text">{formatPosition(activePos)}</span>
+            <div className="scrubber-wrapper">
+              <input
+                type="range"
+                min={0}
+                max={totalDuration > 0 ? totalDuration : 100}
+                step={0.5}
+                value={activePos}
+                className="kid-slider"
+                aria-label="影片播放進度"
+                onPointerDown={() => {
+                  setIsDragging(true);
+                  setDragPos(currentPos);
+                }}
+                onChange={handleSliderChange}
+                onPointerUp={(e) => handleSliderCommit(Number((e.target as HTMLInputElement).value))}
+                onTouchEnd={(e) => handleSliderCommit(Number((e.target as HTMLInputElement).value))}
+                onKeyUp={(e) => handleSliderCommit(Number((e.target as HTMLInputElement).value))}
+                style={{
+                  backgroundSize: `${progressPercent}% 100%`,
+                }}
+              />
+            </div>
+            <span className="time-text">{totalDuration > 0 ? formatPosition(totalDuration) : "--:--"}</span>
+          </div>
+
+          <footer className="player-actions">
+            <Link
+              className="player-back"
+              to={`/category/${video.categoryId}`}
+              onClick={() => {
+                playerRef.current?.pause();
+                void flushTracking("ended");
+              }}
+            >
+              <ArrowLeft />回去
+            </Link>
+
+            <div className="playback-buttons" onClick={(e) => e.stopPropagation()}>
+              <Button
+                type="button"
+                variant="secondary"
+                className="seek-btn"
+                aria-label="倒退 10 秒"
+                onClick={() => seekRelative(-10)}
+              >
+                <RotateCcw />
+                <span>10秒</span>
+              </Button>
+
+              <Button
+                type="button"
+                className={cn("main-play-btn", isPlaying ? "btn-playing" : "btn-paused")}
+                aria-label={isPlaying ? "暫停" : "播放"}
+                onClick={togglePlay}
+              >
+                {isPlaying ? <Pause /> : <Play />}
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                className="seek-btn"
+                aria-label="前進 10 秒"
+                onClick={() => seekRelative(10)}
+              >
+                <RotateCw />
+                <span>10秒</span>
+              </Button>
+            </div>
+
+            <Button className="speak-button" size="large" onClick={() => void enterNote()}>
+              <MessageCircle />我想說
+            </Button>
+          </footer>
+        </div>
       </section>
       {noteMode && <section className="note-screen" aria-label="我想說">
         {draftPrompt ? <div className="draft-restore"><div className="draft-icon"><MessageCircle /></div><h1>剛剛還有一段<br />沒有存起來。</h1><div className="draft-actions"><Button size="large" onClick={continueDraft}>繼續</Button><Button size="large" variant="quiet" onClick={discardDraft}>不要了</Button></div></div> :
