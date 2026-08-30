@@ -209,7 +209,9 @@ svg { flex: 0 0 auto; }
     transparent 56px);
   z-index: 4;
   pointer-events: all;
-  transition: opacity 600ms ease;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 600ms ease, visibility 600ms ease;
 }
 
 .player-edge-bottom {
@@ -225,12 +227,15 @@ svg { flex: 0 0 auto; }
     transparent 64px);
   z-index: 4;
   pointer-events: all;
-  transition: opacity 600ms ease;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 600ms ease, visibility 600ms ease;
 }
 
 /* Hidden state: masks fade out smoothly and stop intercepting pointer events */
 .player-edge-hidden {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
