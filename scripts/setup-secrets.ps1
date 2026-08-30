@@ -8,10 +8,10 @@ function ConvertTo-Base64Url([byte[]]$Bytes) {
   return [Convert]::ToBase64String($Bytes).TrimEnd("=").Replace("+", "-").Replace("/", "_")
 }
 
-$passwordSecure = Read-Host "請輸入家長初始密碼（10–128 字元，不會顯示）" -AsSecureString
+$passwordSecure = Read-Host "請輸入家長初始密碼（8–128 字元，不會顯示）" -AsSecureString
 $password = ConvertTo-PlainText $passwordSecure
-if ($password.Length -lt 10 -or $password.Length -gt 128) {
-  throw "家長密碼必須是 10–128 個字元。"
+if ($password.Length -lt 8 -or $password.Length -gt 128) {
+  throw "家長密碼必須是 8–128 個字元。"
 }
 
 $salt = [byte[]]::new(16)

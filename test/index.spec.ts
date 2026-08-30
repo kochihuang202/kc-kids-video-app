@@ -167,6 +167,14 @@ describe("device capability and heartbeat", () => {
 });
 
 describe("parent auth and administration", () => {
+  it("accepts an eight-character family password and rejects shorter input", async () => {
+    await addParent("eight888");
+    const accepted = await call("/api/parent/session", { method: "POST", body: jsonBody({ password: "eight888" }) });
+    expect(accepted.status).toBe(200);
+    const rejected = await call("/api/parent/session", { method: "POST", body: jsonBody({ password: "short77" }) });
+    expect(rejected.status).toBe(400);
+  });
+
   it("returns 401 without a session and creates a secure 12-hour cookie on login", async () => {
     expect((await call("/api/parent/categories")).status).toBe(401);
     await addParent();

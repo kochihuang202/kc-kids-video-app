@@ -69,7 +69,7 @@ export async function parentSessionStatus(request: Request, env: AppEnv) {
 export async function loginParent(request: Request, env: AppEnv) {
   assertSameOrigin(request, env.APP_ORIGIN);
   const body = await readJson(request);
-  const password = text(body.password, "密碼", 10, 128);
+  const password = text(body.password, "密碼", 8, 128);
   const result = await validatePassword(password, env);
   if (!result.valid) {
     await consumeRateLimit(env, await rateKey(env, "login", clientIp(request)), 5, 15 * 60);
@@ -106,8 +106,8 @@ export async function logoutParent(request: Request, env: AppEnv) {
 export async function changePassword(request: Request, env: AppEnv) {
   const currentSession = await requireParentMutation(request, env);
   const body = await readJson(request);
-  const currentPassword = text(body.currentPassword, "目前密碼", 10, 128);
-  const newPassword = text(body.newPassword, "新密碼", 10, 128);
+  const currentPassword = text(body.currentPassword, "目前密碼", 8, 128);
+  const newPassword = text(body.newPassword, "新密碼", 8, 128);
   const validation = await validatePassword(currentPassword, env);
   if (!validation.valid) throw new HttpError("目前密碼不正確。", 400, "INVALID_PASSWORD");
   const record = await makePasswordRecord(newPassword);

@@ -43,9 +43,9 @@ export function ParentLogin() {
     <form className="parent-login-card" onSubmit={(event) => void submit(event)}>
       <div className="brand-mark">小</div><p className="parent-kicker">小小選片 · 家長</p><h1>家長登入</h1>
       <p>登入後可以管理白名單、查看筆記與授權家庭裝置。</p>
-      <label>家長密碼<input type="password" autoComplete="current-password" minLength={10} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} autoFocus /></label>
+      <label>家長密碼<input type="password" autoComplete="current-password" minLength={8} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} autoFocus /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <Button size="large" type="submit" disabled={loading || password.length < 10}>{loading ? "登入中…" : "登入"}</Button>
+      <Button size="large" type="submit" disabled={loading || password.length < 8}>{loading ? "登入中…" : "登入"}</Button>
       <Link to="/">回孩子首頁</Link>
     </form>
   </main>;
@@ -214,7 +214,7 @@ function SettingsPage() {
   return <div className="parent-content"><header className="parent-page-title"><div><p>家庭安全與偏好</p><h2>設定</h2></div></header>{error && <ParentState error={error} retry={() => void load()} />}{message && <p className="settings-success"><Check />{message}</p>}
     <section className="settings-card"><h3><Clock3 />時區</h3><p>Today Dashboard 會依此時區切分一天。</p><div className="settings-inline"><select value={timezone} onChange={(e) => setTimezone(e.target.value)}><option value="Asia/Taipei">Asia/Taipei（台北）</option><option value="Asia/Tokyo">Asia/Tokyo（東京）</option><option value="America/Los_Angeles">America/Los_Angeles（洛杉磯）</option></select><Button onClick={() => void run(parentRepository.updateSettings({ timezone }), "時區已更新。")}>儲存</Button></div></section>
     <section className="settings-card"><h3><Smartphone />家庭裝置</h3><p>授權後，即使家長登出，這台裝置仍能保存筆記與播放紀錄；可隨時撤銷。</p>{!devices.some((device) => device.isCurrent && !device.revokedAt) && <div className="settings-inline"><input value={deviceName} maxLength={80} onChange={(e) => setDeviceName(e.target.value)} /><Button onClick={() => void run(parentRepository.authorizeDevice(deviceName), "目前裝置已授權。")}>授權目前裝置</Button></div>}<div className="device-list">{devices.map((device) => <DeviceSettingsRow key={device.id} device={device} run={run} />)}</div></section>
-    <section className="settings-card"><h3><Settings />變更家長密碼</h3><p>新密碼至少 10 個字元。更新後，其他家長 Session 會立即失效。</p><label>目前密碼<input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} /></label><label>新密碼<input type="password" minLength={10} maxLength={128} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></label><Button disabled={currentPassword.length < 10 || newPassword.length < 10} onClick={() => void run(parentRepository.changePassword(currentPassword, newPassword), "密碼已更新，其他登入已撤銷。")}>更新密碼</Button></section>
+    <section className="settings-card"><h3><Settings />變更家長密碼</h3><p>新密碼至少 8 個字元。更新後，其他家長 Session 會立即失效。</p><label>目前密碼<input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} /></label><label>新密碼<input type="password" minLength={8} maxLength={128} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></label><Button disabled={currentPassword.length < 8 || newPassword.length < 8} onClick={() => void run(parentRepository.changePassword(currentPassword, newPassword), "密碼已更新，其他登入已撤銷。")}>更新密碼</Button></section>
   </div>;
 }
 
