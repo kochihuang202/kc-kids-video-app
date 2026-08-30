@@ -167,6 +167,11 @@ export function WatchPage() {
   const [totalDuration, setTotalDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragPos, setDragPos] = useState(initialPosition);
+  // Drives the edge-mask visibility: true for the first ~5 s after each
+  // play event (when YouTube shows its chrome), then false so the full
+  // frame is visible after YouTube auto-hides its own chrome.
+  const [showEdgeMasks, setShowEdgeMasks] = useState(false);
+  const edgeMaskTimerRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
     setLoadError("");
@@ -238,9 +243,20 @@ export function WatchPage() {
         playingStartPerfRef.current = performance.now(); playingStartWallRef.current = new Date().toISOString();
       }
       void ensureSession();
+      // Show edge masks immediately — YouTube chrome is about to appear.
+      // After 5 s YouTube auto-hides its own chrome, so we fade our masks out too.
+      if (edgeMaskTimerRef.current !== null) window.clearTimeout(edgeMaskTimerRef.current);
+      setShowEdgeMasks(true);
+      edgeMaskTimerRef.current = window.setTimeout(() => {
+        setShowEdgeMasks(false);
+        edgeMaskTimerRef.current = null;
+      }, 5000);
     } else if (state === "PAUSED" || state === "ENDED") {
       void flushTracking(state === "ENDED" ? "ended" : "active");
       playingStartPerfRef.current = null; playingStartWallRef.current = null;
+      // Poster reappears → masks not needed. Cancel any pending fade-out timer.
+      if (edgeMaskTimerRef.current !== null) { window.clearTimeout(edgeMaskTimerRef.current); edgeMaskTimerRef.current = null; }
+      setShowEdgeMasks(false);
     }
   }, [ensureSession, flushTracking]);
 
@@ -264,6 +280,7 @@ export function WatchPage() {
     return () => {
       window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); window.removeEventListener("pagehide", onPageHide);
       if (successTimerRef.current !== null) window.clearTimeout(successTimerRef.current);
+      if (edgeMaskTimerRef.current !== null) window.clearTimeout(edgeMaskTimerRef.current);
     };
   }, [drainQueue, flushTracking, isDragging, totalDuration]);
 
@@ -383,17 +400,11 @@ export function WatchPage() {
             onStateChange={handlePlayerState}
             onError={() => setPlayerError(true)}
           />
-
-          {/* Permanent edge masks — always sit above the iframe.
-              YouTube places its "auto-hiding" chrome (channel title, logo,
-              related-video thumbnail, share button) in the top ~36px and
-              bottom ~50px of the iframe. These dark gradient strips cover
-              exactly those areas so the chrome is never visible to the child,
-              even during the first 5 seconds of playback before YouTube hides it.
-              pointer-events:all also blocks any accidental clicks through to
-              YouTube links (logo, channel name). */}
-          <div className="player-edge-top" aria-hidden="true" />
-          <div className="player-edge-bottom" aria-hidden="true" />
+          {/* Edge masks — appear the instant playback starts (YouTube chrome is
+              briefly shown), then fade out after ~5 s once YouTube auto-hides
+              its own chrome.  Poster overlay covers everything when paused. */}
+          <div className={cn("player-edge-top", !showEdgeMasks && "player-edge-hidden")} aria-hidden="true" />
+          <div className={cn("player-edge-bottom", !showEdgeMasks && "player-edge-hidden")} aria-hidden="true" />
 
           {/* Opaque poster: covers the ENTIRE iframe when not playing,
               hiding everything. Fades away once playback is confirmed. */}
