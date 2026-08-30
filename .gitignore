@@ -165,3 +165,5 @@ dist
 .env*
 !.env.example
 .wrangler/
+.verify-state/
+artifacts/backups/

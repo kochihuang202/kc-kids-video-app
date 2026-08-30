@@ -66,11 +66,11 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
     errorCallbackRef.current = onError;
 
     useImperativeHandle(ref, () => ({
-      getCurrentTime: () => playerRef.current?.getCurrentTime() || startAt,
-      pause: () => playerRef.current?.pauseVideo(),
+      getCurrentTime: () => typeof playerRef.current?.getCurrentTime === "function" ? playerRef.current.getCurrentTime() || startAt : startAt,
+      pause: () => { if (typeof playerRef.current?.pauseVideo === "function") playerRef.current.pauseVideo(); },
       seekTo: (seconds) => {
-        playerRef.current?.seekTo(Math.max(0, seconds), true);
-        playerRef.current?.pauseVideo();
+        if (typeof playerRef.current?.seekTo === "function") playerRef.current.seekTo(Math.max(0, seconds), true);
+        if (typeof playerRef.current?.pauseVideo === "function") playerRef.current.pauseVideo();
       },
     }), [startAt]);
 
@@ -105,7 +105,6 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
             onError: () => errorCallbackRef.current?.(),
           },
         });
-        playerRef.current = player;
       });
       return () => {
         cancelled = true;

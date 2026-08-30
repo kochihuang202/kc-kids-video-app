@@ -1,0 +1,23 @@
+{
+  "name": "小小選片",
+  "short_name": "小小選片",
+  "description": "兒童白名單影音與家庭學習筆記",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f3e8",
+  "theme_color": "#557664",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

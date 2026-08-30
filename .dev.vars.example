@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local development. Never commit real values.
+SESSION_SECRET=
+PARENT_PASSWORD_HASH=
+YOUTUBE_API_KEY=

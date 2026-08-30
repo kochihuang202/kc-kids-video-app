@@ -35,3 +35,31 @@ export function getLocalDayRange(now = new Date()) {
   end.setDate(end.getDate() + 1);
   return { start: start.toISOString(), end: end.toISOString() };
 }
+
+function zonedOffsetMilliseconds(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit",
+    minute: "2-digit", second: "2-digit", hourCycle: "h23",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const representedAsUtc = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute), Number(values.second));
+  return representedAsUtc - date.getTime();
+}
+
+function zonedMidnightUtc(year: number, month: number, day: number, timeZone: string) {
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  let timestamp = candidate.getTime() - zonedOffsetMilliseconds(candidate, timeZone);
+  timestamp = candidate.getTime() - zonedOffsetMilliseconds(new Date(timestamp), timeZone);
+  return new Date(timestamp);
+}
+
+export function getDayRangeInTimeZone(timeZone: string, now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const year = Number(values.year); const month = Number(values.month); const day = Number(values.day);
+  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  return {
+    start: zonedMidnightUtc(year, month, day, timeZone).toISOString(),
+    end: zonedMidnightUtc(next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate(), timeZone).toISOString(),
+  };
+}

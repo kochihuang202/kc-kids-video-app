@@ -24,7 +24,11 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"vars": {
+		"APP_ORIGIN": "https://kc-kids-video-app.ji3cp31p4.workers.dev",
+		"ENVIRONMENT": "production"
+	}
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

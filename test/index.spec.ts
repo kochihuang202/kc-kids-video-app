@@ -1,86 +1,256 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
-import { contentRepository } from "../src/data/repositories";
-import { addPlayedSeconds, formatPosition, getLocalDayRange } from "../src/lib/utils";
+import { formatPosition, getDayRangeInTimeZone } from "../src/lib/utils";
+import { consumeRateLimit, makePasswordRecord, tokenHash, verifyPassword } from "../worker/security";
+import type { AppEnv } from "../worker/types";
+import { parseIsoDuration, parseYouTubeVideoId } from "../worker/youtube";
 import worker from "../worker";
 
-describe("fixtures", () => {
-  it("sorts categories and videos by their fixed order", () => {
-    expect(contentRepository.getCategories().map((item) => item.id)).toEqual(["science", "english", "animals"]);
-    expect(contentRepository.getVideos("science").map((item) => item.id)).toEqual(["why-sky-blue", "big-story-dinosaurs"]);
-  });
+const appEnv = env as unknown as AppEnv;
+const origin = "https://app.test";
+
+async function call(path: string, init: RequestInit = {}) {
+  const headers = new Headers(init.headers);
+  if (init.body && !headers.has("content-type")) headers.set("content-type", "application/json");
+  if (init.method && init.method !== "GET") headers.set("origin", origin);
+  const context = createExecutionContext();
+  const response = await worker.fetch(new Request(`${origin}${path}`, { ...init, headers }), appEnv, context);
+  await waitOnExecutionContext(context);
+  return response;
+}
+
+function jsonBody(value: unknown) { return JSON.stringify(value); }
+function cookieValue(response: Response) { return response.headers.get("set-cookie")!.split(";")[0]; }
+
+async function addParent(password = "correct horse battery") {
+  const record = await makePasswordRecord(password, 100_000);
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    INSERT INTO admin_credentials (id, password_hash, salt, iterations, created_at, updated_at)
+    VALUES ('family', ?, ?, ?, ?, ?)
+  `).bind(record.hash, record.salt, record.iterations, now, now).run();
+  const response = await call("/api/parent/session", { method: "POST", body: jsonBody({ password }) });
+  expect(response.status).toBe(200);
+  return cookieValue(response);
+}
+
+async function pairDevice(name = "測試 iPad") {
+  const token = "test-device-token-that-is-long-enough";
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  await env.DB.prepare("INSERT INTO child_devices (id, token_hash, name, created_at, last_used_at) VALUES (?, ?, ?, ?, ?)")
+    .bind(id, await tokenHash(token, appEnv), name, now, now).run();
+  return { id, cookie: `kid_device=${token}` };
+}
+
+beforeEach(async () => {
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM view_heartbeats"),
+    env.DB.prepare("DELETE FROM notes"),
+    env.DB.prepare("DELETE FROM view_sessions"),
+    env.DB.prepare("DELETE FROM admin_sessions"),
+    env.DB.prepare("DELETE FROM admin_credentials"),
+    env.DB.prepare("DELETE FROM child_devices"),
+    env.DB.prepare("DELETE FROM rate_limit_buckets"),
+    env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', metadata_error = NULL"),
+    env.DB.prepare("UPDATE categories SET is_active = 1, archived_at = NULL"),
+  ]);
 });
 
-describe("time helpers", () => {
-  it("formats positions and accumulates only positive elapsed time", () => {
+describe("Phase 1B units", () => {
+  it("accepts supported YouTube URLs and rejects non-video pages", () => {
+    expect(parseYouTubeVideoId("https://www.youtube.com/watch?v=bcVr13Fw7w8&list=PL123")).toBe("bcVr13Fw7w8");
+    expect(parseYouTubeVideoId("https://youtu.be/bcVr13Fw7w8?t=3")).toBe("bcVr13Fw7w8");
+    expect(parseYouTubeVideoId("https://youtube.com/shorts/bcVr13Fw7w8")).toBe("bcVr13Fw7w8");
+    expect(() => parseYouTubeVideoId("https://youtube.com/playlist?list=PL123")).toThrow(/單支影片/);
+    expect(() => parseYouTubeVideoId("https://youtube.com/@example")).toThrow(/單支影片/);
+  });
+
+  it("parses ISO durations and Taiwan day boundaries", () => {
+    expect(parseIsoDuration("PT1H2M3S")).toBe(3723);
+    expect(parseIsoDuration("P1DT1M")).toBe(86460);
     expect(formatPosition(512)).toBe("08:32");
-    expect(addPlayedSeconds(10, 2500)).toBe(13);
-    expect(addPlayedSeconds(10, -500)).toBe(10);
+    const range = getDayRangeInTimeZone("Asia/Taipei", new Date("2026-08-29T12:00:00+08:00"));
+    expect(range).toEqual({ start: "2026-08-28T16:00:00.000Z", end: "2026-08-29T16:00:00.000Z" });
   });
-  it("builds one local calendar day", () => {
-    const range = getLocalDayRange(new Date("2026-08-29T12:00:00+08:00"));
-    expect(Date.parse(range.end) - Date.parse(range.start)).toBe(86_400_000);
+
+  it("hashes passwords with PBKDF2 and compares safely", async () => {
+    const record = await makePasswordRecord("a secure family password", 100_000);
+    expect(await verifyPassword("a secure family password", record.hash, record.salt, record.iterations)).toBe(true);
+    expect(await verifyPassword("wrong family password", record.hash, record.salt, record.iterations)).toBe(false);
+  });
+
+  it("enforces a persisted rate-limit window", async () => {
+    await consumeRateLimit(appEnv, "test:bucket", 2, 60);
+    await consumeRateLimit(appEnv, "test:bucket", 2, 60);
+    await expect(consumeRateLimit(appEnv, "test:bucket", 2, 60)).rejects.toMatchObject({ status: 429 });
   });
 });
 
-describe("worker validation", () => {
-  it("rejects an unknown video before touching D1", async () => {
-    const request = new Request("http://example.com/api/notes", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ videoId: "unknown", content: "test", videoPositionSeconds: 2 }),
+describe("migration and public whitelist", () => {
+  it("seeds three sorted categories and six videos from D1", async () => {
+    const categories = await call("/api/content/categories");
+    const payload = await categories.json() as Array<{ id: string }>;
+    expect(payload.map((item) => item.id)).toEqual(["science", "english", "animals"]);
+    const science = await call("/api/content/categories/science/videos");
+    expect((await science.json() as Array<{ id: string }>).map((item) => item.id)).toEqual(["why-sky-blue", "big-story-dinosaurs"]);
+    const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM videos").first<{ count: number }>();
+    expect(count?.count).toBe(6);
+  });
+
+  it("filters hidden and archived records in SQL", async () => {
+    await env.DB.prepare("UPDATE videos SET is_active = 0 WHERE id = 'why-sky-blue'").run();
+    const response = await call("/api/content/categories/science/videos");
+    expect((await response.json() as Array<{ id: string }>).map((item) => item.id)).toEqual(["big-story-dinosaurs"]);
+    expect((await call("/api/content/videos/why-sky-blue")).status).toBe(404);
+  });
+});
+
+describe("device capability and heartbeat", () => {
+  it("allows public reading but rejects unpaired writes", async () => {
+    expect((await call("/api/content/videos/why-sky-blue")).status).toBe(200);
+    const start = await call("/api/view-sessions", { method: "POST", body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) });
+    expect(start.status).toBe(403);
+    expect(await start.json()).toMatchObject({ code: "DEVICE_AUTH_REQUIRED" });
+  });
+
+  it("counts repeated heartbeat sequences once and checks capability tokens", async () => {
+    const device = await pairDevice();
+    const started = await call("/api/view-sessions", { method: "POST", headers: { cookie: device.cookie }, body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) });
+    expect(started.status).toBe(201);
+    const session = await started.json() as { id: string; writeToken: string };
+    const heartbeat = (seq: number, delta: number, token = session.writeToken) => call(`/api/view-sessions/${session.id}`, {
+      method: "PATCH", headers: { cookie: device.cookie }, body: jsonBody({
+        writeToken: token, heartbeatSeq: seq, deltaSeconds: delta, positionSeconds: 42,
+        intervalStartedAt: "2026-08-29T01:00:00.000Z", intervalEndedAt: "2026-08-29T01:00:10.000Z",
+      }),
     });
-    const context = createExecutionContext();
-    const response = await worker.fetch(request, {} as Env, context);
-    await waitOnExecutionContext(context);
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "找不到這部影片。" });
+    expect((await heartbeat(1, 30)).status).toBe(200);
+    expect((await heartbeat(1, 30)).status).toBe(200);
+    expect((await heartbeat(2, 20)).status).toBe(200);
+    expect((await heartbeat(3, 10, "wrong-capability-token-that-is-long")).status).toBe(403);
+    const row = await env.DB.prepare("SELECT played_seconds, last_heartbeat_seq FROM view_sessions WHERE id = ?").bind(session.id).first<{ played_seconds: number; last_heartbeat_seq: number }>();
+    expect(row).toEqual({ played_seconds: 50, last_heartbeat_seq: 2 });
+  });
+
+  it("records Play 120, Pause, then Play 180 as 300 seconds", async () => {
+    const device = await pairDevice();
+    const started = await call("/api/view-sessions", { method: "POST", headers: { cookie: device.cookie }, body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) });
+    const session = await started.json() as { id: string; writeToken: string };
+    let seq = 0;
+    const send = (deltaSeconds: number) => call(`/api/view-sessions/${session.id}`, {
+      method: "PATCH", headers: { cookie: device.cookie }, body: jsonBody({
+        writeToken: session.writeToken, heartbeatSeq: ++seq, deltaSeconds, positionSeconds: seq * 10,
+        intervalStartedAt: "2026-08-29T01:00:00.000Z", intervalEndedAt: "2026-08-29T01:00:10.000Z",
+      }),
+    });
+    for (let index = 0; index < 12; index += 1) expect((await send(10)).status).toBe(200);
+    expect((await send(0)).status).toBe(200);
+    await env.DB.prepare("UPDATE rate_limit_buckets SET expires_at = '2000-01-01T00:00:00.000Z'").run();
+    for (let index = 0; index < 18; index += 1) expect((await send(10)).status).toBe(200);
+    const row = await env.DB.prepare("SELECT played_seconds FROM view_sessions WHERE id = ?").bind(session.id).first<{ played_seconds: number }>();
+    expect(row?.played_seconds).toBe(300);
+  });
+
+  it("stores a plain-text note only for its matching session", async () => {
+    const device = await pairDevice();
+    const started = await call("/api/view-sessions", { method: "POST", headers: { cookie: device.cookie }, body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) });
+    const session = await started.json() as { id: string; writeToken: string };
+    const note = await call("/api/notes", { method: "POST", headers: { cookie: device.cookie }, body: jsonBody({
+      videoId: "why-sky-blue", viewSessionId: session.id, writeToken: session.writeToken,
+      content: "<b>我發現天空的顏色和光有關。</b>", videoPositionSeconds: 42,
+    }) });
+    expect(note.status).toBe(201);
+    const row = await env.DB.prepare("SELECT content FROM notes").first<{ content: string }>();
+    expect(row?.content).toBe("<b>我發現天空的顏色和光有關。</b>");
   });
 });
 
-describe("worker D1 flow", () => {
-  beforeEach(async () => {
-    await env.DB.batch([
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY NOT NULL, video_id TEXT NOT NULL, content TEXT NOT NULL, video_position_seconds INTEGER NOT NULL DEFAULT 0 CHECK (video_position_seconds >= 0), created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS view_sessions (id TEXT PRIMARY KEY NOT NULL, video_id TEXT NOT NULL, played_seconds INTEGER NOT NULL DEFAULT 0 CHECK (played_seconds >= 0), last_position_seconds INTEGER NOT NULL DEFAULT 0 CHECK (last_position_seconds >= 0), started_at TEXT NOT NULL, updated_at TEXT NOT NULL)"),
-    ]);
-    await env.DB.batch([
-      env.DB.prepare("DELETE FROM notes"),
-      env.DB.prepare("DELETE FROM view_sessions"),
-    ]);
+describe("parent auth and administration", () => {
+  it("returns 401 without a session and creates a secure 12-hour cookie on login", async () => {
+    expect((await call("/api/parent/categories")).status).toBe(401);
+    await addParent();
+    const response = await call("/api/parent/session", { method: "POST", body: jsonBody({ password: "correct horse battery" }) });
+    const setCookie = response.headers.get("set-cookie") || "";
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toContain("SameSite=Lax");
+    expect(setCookie).toContain("Max-Age=43200");
   });
 
-  it("stores notes and keeps cumulative session updates idempotent", async () => {
-    const context = createExecutionContext();
-    const started = await worker.fetch(new Request("http://example.com/api/view-sessions", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ videoId: "why-sky-blue" }),
-    }), env, context);
-    const session = await started.json() as { id: string };
+  it("requires same-origin JSON for parent mutations", async () => {
+    const parentCookie = await addParent();
+    const response = await worker.fetch(new Request(`${origin}/api/parent/categories`, {
+      method: "POST", headers: { cookie: parentCookie, "content-type": "application/json", origin: "https://evil.example" },
+      body: jsonBody({ name: "音樂", icon: "🎵" }),
+    }), appEnv, createExecutionContext());
+    expect(response.status).toBe(403);
+  });
 
-    for (const playedSeconds of [30, 12]) {
-      const updated = await worker.fetch(new Request(`http://example.com/api/view-sessions/${session.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ playedSeconds, lastPositionSeconds: 42 }),
-      }), env, context);
-      expect(updated.status).toBe(200);
-    }
+  it("requires a complete unique sorting scope", async () => {
+    const parentCookie = await addParent();
+    const response = await call("/api/parent/categories/order", { method: "PUT", headers: { cookie: parentCookie }, body: jsonBody({ ids: ["science", "english"] }) });
+    expect(response.status).toBe(409);
+    const success = await call("/api/parent/categories/order", { method: "PUT", headers: { cookie: parentCookie }, body: jsonBody({ ids: ["animals", "english", "science"] }) });
+    expect(success.status).toBe(200);
+  });
 
-    const note = await worker.fetch(new Request("http://example.com/api/notes", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ videoId: "why-sky-blue", content: "我發現天空的顏色和光有關。", videoPositionSeconds: 42 }),
-    }), env, context);
-    expect(note.status).toBe(201);
+  it("authorizes and revokes the current child device", async () => {
+    const parentCookie = await addParent();
+    const authorized = await call("/api/parent/devices", { method: "POST", headers: { cookie: parentCookie }, body: jsonBody({ name: "客廳 iPad" }) });
+    expect(authorized.status).toBe(201);
+    const childCookie = cookieValue(authorized);
+    const device = await authorized.json() as { id: string };
+    expect(await (await call("/api/device/status", { headers: { cookie: childCookie } })).json()).toMatchObject({ authorized: true });
+    expect((await call(`/api/parent/devices/${device.id}`, { method: "DELETE", headers: { cookie: `${parentCookie}; ${childCookie}` }, body: jsonBody({}) })).status).toBe(200);
+    expect((await call("/api/view-sessions", { method: "POST", headers: { cookie: childCookie }, body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) })).status).toBe(403);
+  });
 
-    const dashboard = await worker.fetch(new Request("http://example.com/api/today?start=2020-01-01T00:00:00.000Z&end=2030-01-01T00:00:00.000Z"), env, context);
-    const payload = await dashboard.json() as { summary: { totalPlayedSeconds: number; noteCount: number }; notes: unknown[]; timeline: Array<{ playedSeconds: number }> };
-    await waitOnExecutionContext(context);
+  it("logs out by revoking the server session", async () => {
+    const parentCookie = await addParent();
+    expect((await call("/api/parent/categories", { headers: { cookie: parentCookie } })).status).toBe(200);
+    const logout = await call("/api/parent/session", { method: "DELETE", headers: { cookie: parentCookie }, body: jsonBody({}) });
+    expect(logout.status).toBe(200);
+    expect(logout.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect((await call("/api/parent/categories", { headers: { cookie: parentCookie } })).status).toBe(401);
+  });
 
-    expect(payload.summary).toMatchObject({ totalPlayedSeconds: 30, noteCount: 1 });
-    expect(payload.notes).toHaveLength(1);
-    expect(payload.timeline[0]).toMatchObject({ playedSeconds: 30, noteCount: 1 });
+  it("changes the password and revokes other parent sessions", async () => {
+    const firstCookie = await addParent();
+    const secondLogin = await call("/api/parent/session", { method: "POST", body: jsonBody({ password: "correct horse battery" }) });
+    const secondCookie = cookieValue(secondLogin);
+    const changed = await call("/api/parent/password", { method: "POST", headers: { cookie: firstCookie }, body: jsonBody({ currentPassword: "correct horse battery", newPassword: "a brand new family password" }) });
+    expect(changed.status).toBe(200);
+    expect((await call("/api/parent/categories", { headers: { cookie: firstCookie } })).status).toBe(200);
+    expect((await call("/api/parent/categories", { headers: { cookie: secondCookie } })).status).toBe(401);
+  });
+
+  it("previews a duplicate video without creating a second row", async () => {
+    const parentCookie = await addParent();
+    const preview = await call("/api/parent/videos/preview", { method: "POST", headers: { cookie: parentCookie }, body: jsonBody({ url: "https://youtu.be/bcVr13Fw7w8" }) });
+    expect(preview.status).toBe(200);
+    expect(await preview.json()).toMatchObject({ duplicate: { id: "why-sky-blue" }, youtubeVideoId: "bcVr13Fw7w8" });
+    const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM videos WHERE youtube_video_id = 'bcVr13Fw7w8'").first<{ count: number }>();
+    expect(count?.count).toBe(1);
+  });
+});
+
+describe("dashboard history and day splitting", () => {
+  it("splits a heartbeat crossing Taipei midnight and keeps archived video labels", async () => {
+    const parentCookie = await addParent();
+    await env.DB.prepare(`
+      INSERT INTO view_sessions (id, video_id, played_seconds, last_position_seconds, started_at, updated_at, ended_at, status)
+      VALUES ('cross-midnight', 'why-sky-blue', 20, 10, '2026-08-29T15:59:50.000Z', '2026-08-29T16:00:10.000Z', '2026-08-29T16:00:10.000Z', 'ended')
+    `).run();
+    await env.DB.prepare(`
+      INSERT INTO view_heartbeats (id, view_session_id, heartbeat_seq, delta_seconds, position_seconds, interval_started_at, interval_ended_at, received_at)
+      VALUES ('heartbeat-midnight', 'cross-midnight', 1, 20, 10, '2026-08-29T15:59:50.000Z', '2026-08-29T16:00:10.000Z', '2026-08-29T16:00:10.000Z')
+    `).run();
+    await env.DB.prepare("UPDATE videos SET archived_at = '2026-08-29T16:00:20.000Z', is_active = 0 WHERE id = 'why-sky-blue'").run();
+    const response = await call("/api/parent/dashboard/today?start=2026-08-29T16%3A00%3A00.000Z&end=2026-08-30T16%3A00%3A00.000Z", { headers: { cookie: parentCookie } });
+    const dashboard = await response.json() as TodayDashboard;
+    expect(dashboard.summary.totalPlayedSeconds).toBe(10);
+    expect(dashboard.timeline).toHaveLength(1);
+    expect(dashboard.timeline[0]).toMatchObject({ videoLabel: "天空為什麼是藍色？", playedSeconds: 10 });
   });
 });

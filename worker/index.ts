@@ -1,146 +1,115 @@
-import { videos } from "../src/data/fixtures";
+import {
+  getDeviceStatus,
+  getPublicCategories,
+  getPublicCategoryVideos,
+  getPublicVideo,
+  heartbeatViewSession,
+  saveNote,
+  startViewSession,
+} from "./content";
+import { fail, HttpError, json, routeId } from "./http";
+import {
+  archiveCategory,
+  archiveVideo,
+  authorizeDevice,
+  changePassword,
+  createCategory,
+  createVideo,
+  getDashboard,
+  getDevices,
+  getParentCategories,
+  getParentVideos,
+  getSettings,
+  loginParent,
+  logoutParent,
+  orderCategories,
+  orderCategoryVideos,
+  parentSessionStatus,
+  previewVideo,
+  refreshVideoMetadata,
+  revokeDevice,
+  updateCategory,
+  updateDevice,
+  updateSettings,
+  updateVideo,
+} from "./parent";
+import type { AppEnv } from "./types";
 
-type JsonRecord = Record<string, unknown>;
+async function route(request: Request, env: AppEnv) {
+  const url = new URL(request.url);
+  const { method } = request;
+  const path = url.pathname;
+  if (!path.startsWith("/api/")) throw new HttpError("Not Found", 404);
 
-interface NoteRow {
-  id: string;
-  video_id: string;
-  content: string;
-  video_position_seconds: number;
-  created_at: string;
-}
+  if (method === "GET" && path === "/api/health") return json({ ok: true, phase: "1B" });
+  if (method === "GET" && path === "/api/content/categories") return getPublicCategories(env);
+  let id = routeId(path, /^\/api\/content\/categories\/([^/]+)\/videos$/);
+  if (method === "GET" && id) return getPublicCategoryVideos(env, id);
+  id = routeId(path, /^\/api\/content\/videos\/([^/]+)$/);
+  if (method === "GET" && id) return getPublicVideo(env, id);
+  if (method === "GET" && path === "/api/device/status") return getDeviceStatus(request, env);
+  if (method === "POST" && path === "/api/view-sessions") return startViewSession(request, env);
+  id = routeId(path, /^\/api\/view-sessions\/([^/]+)$/);
+  if (method === "PATCH" && id) return heartbeatViewSession(request, env, id);
+  if (method === "POST" && path === "/api/notes") return saveNote(request, env);
 
-interface SessionRow {
-  id: string;
-  video_id: string;
-  played_seconds: number;
-  last_position_seconds: number;
-  started_at: string;
-  updated_at: string;
-}
-
-const videoMap = new Map(videos.map((video) => [video.id, video]));
-
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, { ...init, headers: { "cache-control": "no-store", ...init?.headers } });
-}
-
-function error(message: string, status = 400) {
-  return json({ error: message }, { status });
-}
-
-async function readBody(request: Request): Promise<JsonRecord | null> {
-  try {
-    const value = await request.json();
-    return value && typeof value === "object" ? value as JsonRecord : null;
-  } catch {
-    return null;
+  if (path === "/api/parent/session") {
+    if (method === "GET") return parentSessionStatus(request, env);
+    if (method === "POST") return loginParent(request, env);
+    if (method === "DELETE") return logoutParent(request, env);
   }
-}
+  if (method === "POST" && path === "/api/parent/password") return changePassword(request, env);
+  if (method === "GET" && path === "/api/parent/dashboard/today") return getDashboard(request, env);
 
-function safeSeconds(value: unknown) {
-  const number = typeof value === "number" ? value : Number.NaN;
-  return Number.isFinite(number) && number >= 0 ? Math.round(number) : null;
-}
+  if (path === "/api/parent/categories") {
+    if (method === "GET") return getParentCategories(request, env);
+    if (method === "POST") return createCategory(request, env);
+  }
+  if (method === "PUT" && path === "/api/parent/categories/order") return orderCategories(request, env);
+  id = routeId(path, /^\/api\/parent\/categories\/([^/]+)$/);
+  if (method === "PATCH" && id) return updateCategory(request, env, id);
+  id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/archive$/);
+  if (method === "POST" && id) return archiveCategory(request, env, id);
+  id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/restore$/);
+  if (method === "POST" && id) return archiveCategory(request, env, id, true);
+  id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/videos\/order$/);
+  if (method === "PUT" && id) return orderCategoryVideos(request, env, id);
 
-function isIsoDate(value: string | null) {
-  return !!value && !Number.isNaN(Date.parse(value));
-}
+  if (path === "/api/parent/videos") {
+    if (method === "GET") return getParentVideos(request, env);
+    if (method === "POST") return createVideo(request, env);
+  }
+  if (method === "POST" && path === "/api/parent/videos/preview") return previewVideo(request, env);
+  id = routeId(path, /^\/api\/parent\/videos\/([^/]+)$/);
+  if (method === "PATCH" && id) return updateVideo(request, env, id);
+  id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/metadata$/);
+  if (method === "POST" && id) return refreshVideoMetadata(request, env, id);
+  id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/archive$/);
+  if (method === "POST" && id) return archiveVideo(request, env, id);
+  id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/restore$/);
+  if (method === "POST" && id) return archiveVideo(request, env, id, true);
 
-async function saveNote(request: Request, env: Env) {
-  const body = await readBody(request);
-  const videoId = typeof body?.videoId === "string" ? body.videoId : "";
-  const content = typeof body?.content === "string" ? body.content.trim() : "";
-  const position = safeSeconds(body?.videoPositionSeconds);
-  if (!videoMap.has(videoId)) return error("找不到這部影片。");
-  if (!content) return error("先留下一點想法，再存起來。");
-  if (content.length > 4000) return error("想法太長了，請縮短一些。");
-  if (position === null) return error("影片位置不正確。");
-  const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
-  await env.DB.prepare("INSERT INTO notes (id, video_id, content, video_position_seconds, created_at) VALUES (?, ?, ?, ?, ?)")
-    .bind(id, videoId, content, position, createdAt).run();
-  return json({ id, createdAt }, { status: 201 });
-}
+  if (path === "/api/parent/settings") {
+    if (method === "GET") return getSettings(request, env);
+    if (method === "PATCH") return updateSettings(request, env);
+  }
+  if (path === "/api/parent/devices") {
+    if (method === "GET") return getDevices(request, env);
+    if (method === "POST") return authorizeDevice(request, env);
+  }
+  id = routeId(path, /^\/api\/parent\/devices\/([^/]+)$/);
+  if (method === "PATCH" && id) return updateDevice(request, env, id);
+  if (method === "DELETE" && id) return revokeDevice(request, env, id);
 
-async function startSession(request: Request, env: Env) {
-  const body = await readBody(request);
-  const videoId = typeof body?.videoId === "string" ? body.videoId : "";
-  if (!videoMap.has(videoId)) return error("找不到這部影片。");
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-  await env.DB.prepare("INSERT INTO view_sessions (id, video_id, played_seconds, last_position_seconds, started_at, updated_at) VALUES (?, ?, 0, 0, ?, ?)")
-    .bind(id, videoId, now, now).run();
-  return json({ id, startedAt: now }, { status: 201 });
-}
-
-async function updateSession(request: Request, env: Env, id: string) {
-  const body = await readBody(request);
-  const played = safeSeconds(body?.playedSeconds);
-  const position = safeSeconds(body?.lastPositionSeconds);
-  if (!id || played === null || position === null) return error("播放資料不正確。");
-  const result = await env.DB.prepare("UPDATE view_sessions SET played_seconds = MAX(played_seconds, ?), last_position_seconds = ?, updated_at = ? WHERE id = ?")
-    .bind(played, position, new Date().toISOString(), id).run();
-  if (!result.meta.changes) return error("找不到播放紀錄。", 404);
-  return json({ ok: true });
-}
-
-async function getToday(url: URL, env: Env) {
-  const start = url.searchParams.get("start");
-  const end = url.searchParams.get("end");
-  if (!isIsoDate(start) || !isIsoDate(end) || Date.parse(start!) >= Date.parse(end!)) return error("日期範圍不正確。");
-  const [noteResult, sessionResult] = await env.DB.batch([
-    env.DB.prepare("SELECT id, video_id, content, video_position_seconds, created_at FROM notes WHERE created_at >= ? AND created_at < ? ORDER BY created_at DESC").bind(start, end),
-    env.DB.prepare("SELECT id, video_id, played_seconds, last_position_seconds, started_at, updated_at FROM view_sessions WHERE started_at >= ? AND started_at < ? ORDER BY started_at ASC").bind(start, end),
-  ]);
-  const noteRows = (noteResult.results || []) as unknown as NoteRow[];
-  const sessionRows = (sessionResult.results || []) as unknown as SessionRow[];
-  const notes = noteRows.map((row) => ({
-    id: row.id,
-    videoId: row.video_id,
-    videoLabel: videoMap.get(row.video_id)?.parentLabel || "影片",
-    content: row.content,
-    videoPositionSeconds: row.video_position_seconds,
-    createdAt: row.created_at,
-  }));
-  const timeline = sessionRows.map((row, index) => {
-    const nextSameVideoSession = sessionRows.slice(index + 1).find((session) => session.video_id === row.video_id);
-    return {
-      id: row.id,
-      videoId: row.video_id,
-      videoLabel: videoMap.get(row.video_id)?.parentLabel || "影片",
-      playedSeconds: row.played_seconds,
-      lastPositionSeconds: row.last_position_seconds,
-      startedAt: row.started_at,
-      updatedAt: row.updated_at,
-      noteCount: noteRows.filter((note) => (
-        note.video_id === row.video_id
-        && note.created_at >= row.started_at
-        && (!nextSameVideoSession || note.created_at < nextSameVideoSession.started_at)
-      )).length,
-    };
-  });
-  return json({
-    notes,
-    timeline,
-    summary: {
-      totalPlayedSeconds: sessionRows.reduce((total, row) => total + row.played_seconds, 0),
-      playedVideoCount: new Set(sessionRows.map((row) => row.video_id)).size,
-      noteCount: noteRows.length,
-    },
-  });
+  throw new HttpError("找不到這個功能。", 404, "NOT_FOUND");
 }
 
 export default {
   async fetch(request, env): Promise<Response> {
-    const url = new URL(request.url);
-    if (!url.pathname.startsWith("/api/")) return new Response("Not Found", { status: 404 });
-    if (request.method === "GET" && url.pathname === "/api/health") return json({ ok: true });
-    if (request.method === "POST" && url.pathname === "/api/notes") return saveNote(request, env);
-    if (request.method === "POST" && url.pathname === "/api/view-sessions") return startSession(request, env);
-    if (request.method === "GET" && url.pathname === "/api/today") return getToday(url, env);
-    const sessionMatch = request.method === "PATCH" && url.pathname.match(/^\/api\/view-sessions\/([^/]+)$/);
-    if (sessionMatch) return updateSession(request, env, decodeURIComponent(sessionMatch[1]));
-    return error("找不到這個功能。", 404);
+    try {
+      return await route(request, env);
+    } catch (error) {
+      return fail(error);
+    }
   },
-} satisfies ExportedHandler<Env>;
+} satisfies ExportedHandler<AppEnv>;
