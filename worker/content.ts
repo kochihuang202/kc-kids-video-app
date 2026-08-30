@@ -47,12 +47,6 @@ export async function getPublicCategories(env: AppEnv) {
     SELECT id, name, icon, image_url, tone, sort_order
     FROM categories
     WHERE is_active = 1 AND archived_at IS NULL
-      AND EXISTS (
-        SELECT 1 FROM category_videos cv
-        JOIN videos v ON v.id = cv.video_id
-        WHERE cv.category_id = categories.id AND v.is_active = 1
-          AND v.archived_at IS NULL AND v.availability_status = 'available'
-      )
     ORDER BY sort_order, id
   `).all<CategoryRow>();
   return json((result.results || []).map(categoryDto));

@@ -95,6 +95,17 @@ describe("Phase 1B units", () => {
 });
 
 describe("migration and public whitelist", () => {
+  it("shows an active empty category on the child home", async () => {
+    const now = new Date().toISOString();
+    await env.DB.prepare(`
+      INSERT INTO categories (id, name, icon, tone, sort_order, is_active, created_at, updated_at)
+      VALUES ('empty-category', '空分類', '✨', 'sky', 4, 1, ?, ?)
+    `).bind(now, now).run();
+    const response = await call("/api/content/categories");
+    const payload = await response.json() as Array<{ id: string }>;
+    expect(payload.map((item) => item.id)).toContain("empty-category");
+  });
+
   it("seeds three sorted categories and six videos from D1", async () => {
     const categories = await call("/api/content/categories");
     const payload = await categories.json() as Array<{ id: string }>;
