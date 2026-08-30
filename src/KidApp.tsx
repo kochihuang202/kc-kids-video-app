@@ -384,9 +384,19 @@ export function WatchPage() {
             onError={() => setPlayerError(true)}
           />
 
-          {/* Opaque poster: covers the entire iframe when not playing,
-              completely hiding YouTube's title bar, logo, and related-video buttons.
-              Fades away the instant real playback starts. */}
+          {/* Permanent edge masks — always sit above the iframe.
+              YouTube places its "auto-hiding" chrome (channel title, logo,
+              related-video thumbnail, share button) in the top ~36px and
+              bottom ~50px of the iframe. These dark gradient strips cover
+              exactly those areas so the chrome is never visible to the child,
+              even during the first 5 seconds of playback before YouTube hides it.
+              pointer-events:all also blocks any accidental clicks through to
+              YouTube links (logo, channel name). */}
+          <div className="player-edge-top" aria-hidden="true" />
+          <div className="player-edge-bottom" aria-hidden="true" />
+
+          {/* Opaque poster: covers the ENTIRE iframe when not playing,
+              hiding everything. Fades away once playback is confirmed. */}
           <div
             className={cn("poster-overlay", isPlaying && "poster-hidden")}
             onClick={togglePlay}

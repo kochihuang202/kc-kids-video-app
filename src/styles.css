@@ -190,6 +190,44 @@ svg { flex: 0 0 auto; }
 .player-stage { position: relative; min-height: 0; display: grid; place-items: center; background: #101613; }
 .youtube-player, .player-stage iframe { width: 100%; height: 100%; border: 0; }
 
+/* ── Permanent edge masks ──────────────────────────────────────────────────
+   YouTube's iframe briefly shows chrome (channel title, logo, related-video
+   thumbnail, share/embed buttons) at the TOP and BOTTOM-RIGHT of the player
+   for ~3-5 s whenever the video starts playing.  These dark gradient bars sit
+   permanently above the iframe (z-index 4, below poster at z-index 6) and
+   cover exactly those edge regions, so YouTube chrome is never visible to the
+   child — even during the transition from paused → playing.
+   pointer-events: all also prevents click-through to YouTube links. */
+.player-edge-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  /* solid block for the first 36 px (covers title bar), then gradient to transparent */
+  background: linear-gradient(to bottom,
+    #101613 0px,
+    #101613 36px,
+    transparent 56px);
+  z-index: 4;
+  pointer-events: all;
+}
+
+.player-edge-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  /* solid block for the last 44 px (covers logo + thumbnail bar), then gradient to transparent */
+  background: linear-gradient(to top,
+    #101613 0px,
+    #101613 44px,
+    transparent 64px);
+  z-index: 4;
+  pointer-events: all;
+}
+
 /* Opaque poster overlay — completely covers the YouTube iframe when not playing,
    hiding the YouTube title bar, logo, and related-video / sharing buttons.
    Uses the video's own thumbnail as background so it looks native. */
