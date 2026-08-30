@@ -374,7 +374,8 @@ export function WatchPage() {
   return (
     <main className={cn("watch-page", noteMode && "note-is-open")}>
       <section className={cn("player-surface", noteMode && "player-hidden")} aria-hidden={noteMode}>
-        <div className="player-stage" onClick={togglePlay}>
+        <div className="player-stage">
+          {/* YouTube iframe — always mounted so seeking/state works */}
           <YouTubePlayer
             ref={playerRef}
             videoId={video.youtubeVideoId}
@@ -382,8 +383,22 @@ export function WatchPage() {
             onStateChange={handlePlayerState}
             onError={() => setPlayerError(true)}
           />
-          {!isPlaying && !playerError && (
-            <div className="stage-overlay" aria-hidden="true">
+
+          {/* Opaque poster: covers the entire iframe when not playing,
+              completely hiding YouTube's title bar, logo, and related-video buttons.
+              Fades away the instant real playback starts. */}
+          <div
+            className={cn("poster-overlay", isPlaying && "poster-hidden")}
+            onClick={togglePlay}
+            aria-hidden={isPlaying}
+          >
+            <img
+              src={video.thumbnailUrl}
+              alt=""
+              className="poster-thumb"
+              draggable={false}
+            />
+            {!playerError && (
               <button
                 type="button"
                 className="stage-big-play"
@@ -395,10 +410,11 @@ export function WatchPage() {
               >
                 <Play />
               </button>
-            </div>
-          )}
+            )}
+          </div>
+
           {playerError && (
-            <div className="player-error" role="alert" onClick={(e) => e.stopPropagation()}>
+            <div className="player-error" role="alert">
               <p>影片暫時載入不了。</p>
               <Button variant="secondary" onClick={() => window.location.reload()}><RotateCcw />再試一次</Button>
             </div>

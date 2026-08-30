@@ -187,34 +187,57 @@ svg { flex: 0 0 auto; }
 
 .watch-page { height: 100dvh; min-height: 560px; overflow: hidden; background: #18201d; }
 .player-surface { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
-.player-stage { position: relative; min-height: 0; display: grid; place-items: center; background: #101613; cursor: pointer; user-select: none; }
+.player-stage { position: relative; min-height: 0; display: grid; place-items: center; background: #101613; }
 .youtube-player, .player-stage iframe { width: 100%; height: 100%; border: 0; }
 
-.stage-overlay {
+/* Opaque poster overlay — completely covers the YouTube iframe when not playing,
+   hiding the YouTube title bar, logo, and related-video / sharing buttons.
+   Uses the video's own thumbnail as background so it looks native. */
+.poster-overlay {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.22);
-  transition: background-color 200ms ease;
-  z-index: 5;
+  background: #101613;
+  z-index: 6;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.poster-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* When playback starts, the poster fades out and becomes non-interactive,
+   revealing only the pure YouTube video underneath — no branding visible. */
+.poster-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .stage-big-play {
+  position: relative; /* sit above the thumbnail */
+  z-index: 1;
   width: 96px;
   height: 96px;
   border-radius: 50%;
   border: none;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
   color: #18201d;
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 160ms ease;
 }
 .stage-big-play svg { width: 44px; height: 44px; fill: currentColor; margin-left: 5px; stroke-width: 2.2; }
-.stage-big-play:hover { transform: scale(1.1); background: #f7f3e8; }
+.stage-big-play:hover { transform: scale(1.08); background: #ffffff; }
 .stage-big-play:active { transform: scale(0.92); }
 
 .player-error {
