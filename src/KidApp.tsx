@@ -397,6 +397,16 @@ export function WatchPage() {
             onStateChange={handlePlayerState}
             onError={() => setPlayerError(true)}
           />
+
+          {/* Transparent touch/click interceptor — captures all screen taps and mouse
+              hovers so YouTube iframe NEVER detects user activity or pops up its UI.
+              Clicking anywhere on the video screen cleanly toggles Play / Pause. */}
+          <div
+            className="stage-click-capture"
+            onClick={togglePlay}
+            aria-label={isPlaying ? "暫停影片" : "播放影片"}
+          />
+
           {/* Edge masks — appear the instant playback starts (YouTube chrome is
               briefly shown), then fade out after ~5 s once YouTube auto-hides
               its own chrome.  Poster overlay covers everything when paused. */}
