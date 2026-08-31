@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>io.github.kc-kids-video-app.mac-media-server</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/path/to/mac-media-server/bin/mac-media-server</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>MEDIA_ROOT</key>
+    <string>/path/to/offline/media</string>
+    <key>SERVER_HOST</key>
+    <string>127.0.0.1</string>
+    <key>SERVER_PORT</key>
+    <string>8080</string>
+    <key>ALLOWED_ORIGINS</key>
+    <string>https://kc-kids-video-app.ji3cp31p4.workers.dev</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/path/to/logs/mac-media-server.log</string>
+  <key>StandardErrorPath</key>
+  <string>/path/to/logs/mac-media-server.err.log</string>
+</dict>
+</plist>
