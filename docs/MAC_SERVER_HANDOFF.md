@@ -1,6 +1,6 @@
 # Mac Media Server handoff
 
-> Status: Mac local server and Tailscale Serve HTTPS implemented and verified on 2026-08-31. iPad Safari remains pending user verification. This repository is public: never commit real tailnet names, Tailscale hostnames, home paths, credentials, tokens, media filenames that reveal private information, or a real `.env`.
+> Status: Mac local server and Tailscale Serve HTTPS were verified on 2026-08-31. Thumbnail serving and generation are implemented on `codex/mac-media-thumbnails` and pending Mac deployment verification. iPad Safari remains pending user verification. This repository is public: never commit real tailnet names, Tailscale hostnames, home paths, credentials, tokens, media filenames that reveal private information, or a real `.env`.
 
 ## Ownership
 
@@ -23,6 +23,7 @@
 | Tailscale Serve HTTPS | Verified | Tailnet-only Serve enabled after explicit user approval; HTTPS `/health`, MP4 HEAD, and MP4 Range verified through Tailscale userspace SOCKS path |
 | launchd | Verified | User LaunchAgents installed locally and verified running for Tailscale userspace daemon and media server; sanitized template committed under `mac-media-server/launchd/` |
 | Automated tests | Verified | `GOCACHE=/private/tmp/kc-kids-go-build go test ./...` |
+| Thumbnail generation and `/thumbnails` | In progress | Code and automated tests added; Mac must generate the private cache, restart launchd, and verify the Tailscale HTTPS endpoint |
 | iPad Safari test | Pending user verification | — |
 
 Use only `Pending`, `In progress`, `Verified`, `Failed`, or `Pending user verification`.
@@ -36,6 +37,7 @@ MEDIA_SERVER_BASE_URL=https://<mac-host>.<tailnet>.ts.net
 MEDIA_SERVER_HEALTH_PATH=/health
 MEDIA_SERVER_LIBRARY_PATH=/library
 MEDIA_SERVER_MEDIA_PREFIX=/media/
+MEDIA_SERVER_THUMBNAIL_PREFIX=/thumbnails/
 ```
 
 ## Endpoint contract
@@ -92,6 +94,10 @@ Verified locally. Supports `GET` and `HEAD` for `.mp4` and `.mp3`.
 - Cache header: `Cache-Control: private, max-age=3600`
 - CORS only reflects exact configured origins
 
+### `GET|HEAD /thumbnails/{relativePathWithoutExtension}.jpg`
+
+Implemented and pending Mac deployment verification. JPEG files are generated ahead of time with `scripts/generate-thumbnails.sh`, stored in the private `THUMBNAIL_ROOT`, and served read-only with the same traversal and symlink protections as media files. `/library` returns `thumbnailPath` for a video when its generated JPEG exists.
+
 ## Configuration
 
 List configuration key names and safe examples only. Never commit the real `.env`.
@@ -99,11 +105,13 @@ List configuration key names and safe examples only. Never commit the real `.env
 | Key | Required | Safe example | Description |
 | --- | --- | --- | --- |
 | `MEDIA_ROOT` | Yes | `/path/to/offline/media` | Physical read-only root on the Mac |
+| `THUMBNAIL_ROOT` | No | `/path/to/private/thumbnail-cache` | Private generated JPEG cache outside Git |
 | `SERVER_HOST` | Yes | `127.0.0.1` | Local bind host |
 | `SERVER_PORT` | Yes | `8080` | Local bind port |
 | `ALLOWED_ORIGINS` | Yes | `https://example.com` | Comma-separated exact origins |
 | `PROBE_DURATIONS` | No | `false` | Set `true` to run `ffprobe` during `/library` scans |
 | `FFPROBE_PATH` | No | `ffprobe` | Path or command name for ffprobe |
+| `FFMPEG_PATH` | No | `ffmpeg` | Used by the thumbnail generation script |
 
 ## Operations
 

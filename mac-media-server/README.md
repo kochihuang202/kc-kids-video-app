@@ -17,6 +17,7 @@ Required tools:
 - Go 1.27 or newer
 - Tailscale CLI/app
 - ffprobe from ffmpeg, optional but recommended for `/library` durations
+- ffmpeg, required only when generating video thumbnails
 
 ## Run Locally
 
@@ -44,9 +45,23 @@ go test ./...
 - `GET|HEAD /health`
 - `GET|HEAD /library`
 - `GET|HEAD /media/{relativePath}`
+- `GET|HEAD /thumbnails/{relativePathWithoutExtension}.jpg`
 - `OPTIONS` for CORS preflight
 
 Only `.mp4` and `.mp3` files are served. Paths are normalized and must stay inside `MEDIA_ROOT`.
+
+## Generate thumbnails
+
+Set `THUMBNAIL_ROOT` to a private cache directory outside the repository. Generate or refresh thumbnails for one library folder with:
+
+```sh
+set -a
+. ./.env
+set +a
+./scripts/generate-thumbnails.sh "example-course-folder"
+```
+
+The command mirrors each MP4 relative path below `THUMBNAIL_ROOT`, replaces `.mp4` with `.jpg`, and skips thumbnails newer than their source video. Generated images stay outside Git. Restart the launchd service after adding `THUMBNAIL_ROOT` to its local environment.
 
 `/library` keeps `durationSeconds` as `null` by default so large home libraries return quickly. Set `PROBE_DURATIONS=true` to ask the server to run `ffprobe` while building the library response.
 

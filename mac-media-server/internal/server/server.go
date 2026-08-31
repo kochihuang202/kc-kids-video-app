@@ -19,6 +19,7 @@ import (
 
 type Config struct {
 	MediaRoot      string
+	ThumbnailRoot  string
 	Host           string
 	Port           string
 	AllowedOrigins []string
@@ -35,6 +36,7 @@ type Server struct {
 type healthResponse struct {
 	Status             string `json:"status"`
 	MediaRootAvailable bool   `json:"mediaRootAvailable"`
+	ThumbnailRootAvailable bool `json:"thumbnailRootAvailable"`
 	ServerTime         string `json:"serverTime"`
 	Error              string `json:"error,omitempty"`
 }
@@ -52,11 +54,13 @@ type libraryItem struct {
 	SizeBytes       int64    `json:"sizeBytes"`
 	ModifiedAt      string   `json:"modifiedAt"`
 	DurationSeconds *float64 `json:"durationSeconds"`
+	ThumbnailPath   *string  `json:"thumbnailPath"`
 }
 
 func ConfigFromEnv() (Config, error) {
 	cfg := Config{
 		MediaRoot:      strings.TrimSpace(os.Getenv("MEDIA_ROOT")),
+		ThumbnailRoot:  strings.TrimSpace(os.Getenv("THUMBNAIL_ROOT")),
 		Host:           valueOrDefault(os.Getenv("SERVER_HOST"), "127.0.0.1"),
 		Port:           valueOrDefault(os.Getenv("SERVER_PORT"), "8080"),
 		FFProbePath:    valueOrDefault(os.Getenv("FFPROBE_PATH"), "ffprobe"),
@@ -99,6 +103,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleLibrary(w, r)
 	case strings.HasPrefix(r.URL.Path, "/media/"):
 		s.handleMedia(w, r)
+	case strings.HasPrefix(r.URL.Path, "/thumbnails/"):
+		s.handleThumbnail(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -121,6 +127,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, r, http.StatusOK, healthResponse{
 		Status:             status,
 		MediaRootAvailable: available,
+		ThumbnailRootAvailable: dirExists(s.cfg.ThumbnailRoot),
 		ServerTime:         s.now().Format(time.RFC3339),
 		Error:              errText,
 	})
@@ -162,6 +169,7 @@ func (s *Server) handleLibrary(w http.ResponseWriter, r *http.Request) {
 			SizeBytes:       info.Size(),
 			ModifiedAt:      info.ModTime().UTC().Format(time.RFC3339),
 			DurationSeconds: s.duration(path),
+			ThumbnailPath:   s.thumbnailPath(rel),
 		})
 		return nil
 	})
@@ -181,7 +189,7 @@ func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
 		methodNotAllowed(w)
 		return
 	}
-	target, err := s.safeMediaPath(r)
+	target, err := s.safeAssetPath(r, "/media/", s.cfg.MediaRoot, isAllowedMediaName)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
@@ -207,8 +215,39 @@ func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, filepath.Base(target), info.ModTime(), file)
 }
 
-func (s *Server) safeMediaPath(r *http.Request) (string, error) {
-	escaped := strings.TrimPrefix(r.URL.EscapedPath(), "/media/")
+func (s *Server) handleThumbnail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		methodNotAllowed(w)
+		return
+	}
+	target, err := s.safeAssetPath(r, "/thumbnails/", s.cfg.ThumbnailRoot, isAllowedThumbnailName)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	info, err := os.Stat(target)
+	if err != nil || info.IsDir() || !isAllowedThumbnailName(target) {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	file, err := os.Open(target)
+	if err != nil {
+		http.Error(w, "failed to open thumbnail", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Cache-Control", "private, max-age=86400")
+	http.ServeContent(w, r, filepath.Base(target), info.ModTime(), file)
+}
+
+func (s *Server) safeAssetPath(r *http.Request, prefix, root string, allowed func(string) bool) (string, error) {
+	if root == "" || !dirExists(root) {
+		return "", errors.New("asset root unavailable")
+	}
+	escaped := strings.TrimPrefix(r.URL.EscapedPath(), prefix)
 	rel, err := url.PathUnescape(escaped)
 	if err != nil || rel == "" || strings.Contains(rel, "\x00") {
 		return "", errors.New("invalid path")
@@ -218,7 +257,7 @@ func (s *Server) safeMediaPath(r *http.Request) (string, error) {
 		return "", errors.New("invalid path")
 	}
 
-	rootAbs, err := filepath.Abs(s.cfg.MediaRoot)
+	rootAbs, err := filepath.Abs(root)
 	if err != nil {
 		return "", err
 	}
@@ -239,8 +278,25 @@ func (s *Server) safeMediaPath(r *http.Request) (string, error) {
 			return "", errors.New("symlink escapes media root")
 		}
 	}
+	if !allowed(targetAbs) {
+		return "", errors.New("unsupported asset type")
+	}
 
 	return targetAbs, nil
+}
+
+func (s *Server) thumbnailPath(mediaRel string) *string {
+	if s.cfg.ThumbnailRoot == "" {
+		return nil
+	}
+	rel := strings.TrimSuffix(filepath.ToSlash(mediaRel), filepath.Ext(mediaRel)) + ".jpg"
+	target := filepath.Join(s.cfg.ThumbnailRoot, filepath.FromSlash(rel))
+	info, err := os.Stat(target)
+	if err != nil || info.IsDir() {
+		return nil
+	}
+	value := thumbnailURLPath(rel)
+	return &value
 }
 
 func (s *Server) applyCORS(w http.ResponseWriter, r *http.Request) {
@@ -312,6 +368,10 @@ func isAllowedMediaName(path string) bool {
 	return ext == ".mp4" || ext == ".mp3"
 }
 
+func isAllowedThumbnailName(path string) bool {
+	return strings.EqualFold(filepath.Ext(path), ".jpg")
+}
+
 func mediaMetadata(path string) (mimeType string, mediaType string) {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".mp4":
@@ -328,11 +388,19 @@ func mediaMetadata(path string) (mimeType string, mediaType string) {
 }
 
 func mediaURLPath(rel string) string {
+	return encodedURLPath("/media/", rel)
+}
+
+func thumbnailURLPath(rel string) string {
+	return encodedURLPath("/thumbnails/", rel)
+}
+
+func encodedURLPath(prefix, rel string) string {
 	parts := strings.Split(filepath.ToSlash(rel), "/")
 	for i, part := range parts {
 		parts[i] = url.PathEscape(part)
 	}
-	return "/media/" + strings.Join(parts, "/")
+	return prefix + strings.Join(parts, "/")
 }
 
 func pathWithin(root, target string) (bool, error) {

@@ -73,6 +73,32 @@ func TestMediaGetHeadAndRange(t *testing.T) {
 	}
 }
 
+func TestThumbnailGetHeadAndTraversal(t *testing.T) {
+	srv := testServer(t)
+	res := request(t, srv, http.MethodGet, "/thumbnails/videos/sample.jpg", nil)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("thumbnail GET status = %d, want 200", res.StatusCode)
+	}
+	if got := res.Header.Get("Content-Type"); got != "image/jpeg" {
+		t.Fatalf("thumbnail Content-Type = %q, want image/jpeg", got)
+	}
+
+	res = request(t, srv, http.MethodHead, "/thumbnails/videos/sample.jpg", nil)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || res.Header.Get("Content-Length") == "" {
+		t.Fatalf("thumbnail HEAD status = %d, length = %q", res.StatusCode, res.Header.Get("Content-Length"))
+	}
+
+	for _, path := range []string{"/thumbnails/../secret.jpg", "/thumbnails/%2e%2e/secret.jpg", "/thumbnails/videos/sample.png"} {
+		res = request(t, srv, http.MethodGet, path, nil)
+		res.Body.Close()
+		if res.StatusCode != http.StatusNotFound {
+			t.Fatalf("thumbnail invalid path %s status = %d, want 404", path, res.StatusCode)
+		}
+	}
+}
+
 func TestInvalidRangeTraversalAndMethods(t *testing.T) {
 	srv := testServer(t)
 
@@ -115,6 +141,16 @@ func TestLibraryAndCORS(t *testing.T) {
 	if len(body.Items) != 2 {
 		t.Fatalf("items = %d, want 2", len(body.Items))
 	}
+	var videoItem *libraryItem
+	for index := range body.Items {
+		if body.Items[index].MediaType == "video" {
+			videoItem = &body.Items[index]
+			break
+		}
+	}
+	if videoItem == nil || videoItem.ThumbnailPath == nil || *videoItem.ThumbnailPath != "/thumbnails/videos/sample.jpg" {
+		t.Fatalf("video thumbnail path is missing: %+v", videoItem)
+	}
 	if !strings.HasPrefix(body.Items[0].Path, "/media/") || strings.Contains(body.Items[0].Path, srv.cfg.MediaRoot) {
 		t.Fatalf("library path is not a sanitized media URL: %q", body.Items[0].Path)
 	}
@@ -138,9 +174,12 @@ func testServer(t *testing.T) *Server {
 	mustWrite(t, filepath.Join(root, "videos", "sample.mp4"), 4096)
 	mustWrite(t, filepath.Join(root, "audio", "sample.mp3"), 2048)
 	mustWrite(t, filepath.Join(root, "ignore.txt"), 128)
+	thumbnailRoot := t.TempDir()
+	mustWrite(t, filepath.Join(thumbnailRoot, "videos", "sample.jpg"), 1024)
 
 	srv := New(Config{
 		MediaRoot:      root,
+		ThumbnailRoot:  thumbnailRoot,
 		Host:           "127.0.0.1",
 		Port:           "8080",
 		AllowedOrigins: []string{allowedOrigin},
