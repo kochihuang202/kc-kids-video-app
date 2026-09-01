@@ -12,6 +12,8 @@
   <dict>
     <key>MEDIA_ROOT</key>
     <string>/path/to/offline/media</string>
+    <key>THUMBNAIL_ROOT</key>
+    <string>/path/to/private/thumbnail-cache</string>
     <key>SERVER_HOST</key>
     <string>127.0.0.1</string>
     <key>SERVER_PORT</key>
