@@ -222,7 +222,7 @@ describe("device capability and heartbeat", () => {
     expect(row?.played_seconds).toBe(300);
   });
 
-  it("stores a plain-text note only for its matching session", async () => {
+  it("keeps child note writes disabled while preserving the matching session", async () => {
     const device = await pairDevice();
     const started = await call("/api/view-sessions", { method: "POST", headers: { cookie: device.cookie }, body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) });
     const session = await started.json() as { id: string; writeToken: string };
@@ -230,9 +230,10 @@ describe("device capability and heartbeat", () => {
       videoId: "why-sky-blue", viewSessionId: session.id, writeToken: session.writeToken,
       content: "<b>我發現天空的顏色和光有關。</b>", videoPositionSeconds: 42,
     }) });
-    expect(note.status).toBe(201);
+    expect(note.status).toBe(410);
+    expect(await note.json()).toMatchObject({ code: "NOTES_DISABLED" });
     const row = await env.DB.prepare("SELECT content FROM notes").first<{ content: string }>();
-    expect(row?.content).toBe("<b>我發現天空的顏色和光有關。</b>");
+    expect(row).toBeNull();
   });
 });
 
@@ -377,6 +378,6 @@ describe("production recording switch", () => {
       body: jsonBody({ content: "不應保存" }),
     });
     expect(note.status).toBe(410);
-    expect(await note.json()).toMatchObject({ code: "RECORDING_DISABLED" });
+    expect(await note.json()).toMatchObject({ code: "NOTES_DISABLED" });
   });
 });

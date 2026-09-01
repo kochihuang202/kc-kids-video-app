@@ -63,7 +63,7 @@ export function ParentLogin() {
     setError("");
     try {
       await parentRepository.login(password);
-      navigate("/parent/rules", { replace: true });
+      navigate("/parent/today", { replace: true });
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "登入失敗。");
     } finally {
@@ -128,6 +128,7 @@ function ParentLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <nav className="parent-nav" aria-label="家長功能">
+        <NavLink to="/parent/today">觀看紀錄</NavLink>
         <NavLink to="/parent/rules">提醒與時段</NavLink>
         <NavLink to="/parent/videos">影片管理</NavLink>
         <NavLink to="/parent/categories">分類管理</NavLink>
@@ -199,16 +200,6 @@ function HistoryPage() {
     if (dateStr > todayStr) return;
     setCalendarOpen(false);
     setSearchParams(dateStr === todayStr ? {} : { date: dateStr });
-  };
-
-  const deleteNote = async (id: string) => {
-    if (!confirm("確定要刪除這則想法嗎？（刪除後仍保留歷史時數）")) return;
-    try {
-      await parentRepository.deleteNote(id);
-      await load();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "刪除失敗");
-    }
   };
 
   const handleBonus = async (minutes: number) => {
@@ -325,46 +316,6 @@ function HistoryPage() {
 
       {!loading && dashboard && (
         <>
-          {/* Notes Section - 1st Priority (Spec #25) */}
-          <section className="notes-section">
-            <p className="section-label">孩子在 {activeDateStr} 說了什麼？</p>
-            {dashboard.errors.notes ? (
-              <ParentState error={dashboard.errors.notes} retry={() => void load()} />
-            ) : dashboard.notes.length ? (
-              <div className="note-card-list">
-                {dashboard.notes.map((note) => (
-                  <article className="parent-note-card" key={note.id}>
-                    <div className="note-meta">
-                      <time>{formatClock(note.createdAt)}</time>
-                      <span>{note.videoLabel}</span>
-                      <button
-                        type="button"
-                        className="note-del-btn"
-                        title="刪除想法"
-                        onClick={() => void deleteNote(note.id)}
-                      >
-                        <Trash2 />
-                      </button>
-                    </div>
-                    <blockquote>「{note.content}」</blockquote>
-                    <footer>
-                      <span>影片位置 {formatPosition(note.videoPositionSeconds)}</span>
-                      <Link to={`/watch/${note.videoId}?t=${Math.round(note.videoPositionSeconds)}`}>
-                        <Play /> 從這裡看
-                      </Link>
-                    </footer>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-notes">
-                <MessageCircle />
-                <p>{isToday ? "今天還沒有留下想法。" : `${activeDateStr} 沒有留下想法紀錄。`}</p>
-                <span>孩子在看影片時按「💬 我想說」存下的話，會出現在這裡。</span>
-              </div>
-            )}
-          </section>
-
           {/* Summary Cards */}
           <section className="summary-section" aria-label="當日摘要">
             {dashboard.errors.summary ? (
@@ -385,11 +336,6 @@ function HistoryPage() {
                   <Play />
                   <strong>{dashboard.summary.sessionCount}</strong>
                   <span>次播放</span>
-                </div>
-                <div className="summary-card">
-                  <MessageCircle />
-                  <strong>{dashboard.summary.noteCount}</strong>
-                  <span>個想法</span>
                 </div>
               </>
             )}
@@ -502,12 +448,6 @@ function HistoryPage() {
                         <span className="detail-label">上次觀看位置：</span>
                         <span className="detail-value">{formatPosition(session.lastPositionSeconds)}</span>
                       </div>
-                      {session.noteCount > 0 && (
-                        <div className="play-detail-item">
-                          <span className="detail-label">留下想法：</span>
-                          <span className="detail-value note-highlight"><MessageCircle /> {session.noteCount} 個想法</span>
-                        </div>
-                      )}
                     </div>
                   </article>
                 ))}
@@ -1860,12 +1800,14 @@ export default function ParentApp() {
         <ParentGuard>
           <ParentLayout>
             <Routes>
-              <Route index element={<Navigate to="/parent/rules" replace />} />
+              <Route index element={<Navigate to="/parent/today" replace />} />
+              <Route path="today" element={<HistoryPage />} />
+              <Route path="history" element={<HistoryPage />} />
               <Route path="rules" element={<RulesPage />} />
               <Route path="videos" element={<VideosPage />} />
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/parent/rules" replace />} />
+              <Route path="*" element={<Navigate to="/parent/today" replace />} />
             </Routes>
           </ParentLayout>
         </ParentGuard>

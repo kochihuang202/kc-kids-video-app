@@ -34,7 +34,7 @@
 	"vars": {
 		"APP_ORIGIN": "https://kc-kids-video-app.ji3cp31p4.workers.dev",
 		"ENVIRONMENT": "production",
-		"RECORDING_ENABLED": "false"
+		"RECORDING_ENABLED": "true"
 	}
 	/**
 	 * Smart Placement

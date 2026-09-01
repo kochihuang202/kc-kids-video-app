@@ -8,10 +8,9 @@ import {
   getPublicResume,
   getPublicVideo,
   heartbeatViewSession,
-  saveNote,
   startViewSession,
 } from "./content";
-import { exportNotes, exportSessions } from "./export";
+import { exportSessions } from "./export";
 import { runHealthCheck } from "./health";
 import { fail, HttpError, json } from "./http";
 import { serveMediaAsset } from "./media";
@@ -42,9 +41,7 @@ import {
   previewVideo,
   refreshVideoMetadata,
   revokeDevice,
-  searchNotes,
   setParentTodayPause,
-  softDeleteNote,
   toggleParentTodayPick,
   updateCategory,
   updateDevice,
@@ -74,13 +71,19 @@ async function route(request: Request, env: AppEnv) {
 
   if (method === "GET" && path === "/api/health") return json({ ok: true, phase: "3" });
   if (method === "GET" && path === "/api/content/categories") return getPublicCategories(env);
+  if (
+    path === "/api/notes" || path.startsWith("/api/parent/notes") ||
+    path === "/api/parent/export/notes"
+  ) {
+    throw new HttpError("孩子想法紀錄已停用。", 410, "NOTES_DISABLED");
+  }
   if (!recordingEnabled && method === "GET" && path === "/api/content/resume") return json({ resume: null });
   if (!recordingEnabled && method === "GET" && path === "/api/content/recents") return json([]);
   if (!recordingEnabled && (
-    path === "/api/notes" || path === "/api/view-sessions" || path.startsWith("/api/view-sessions/") ||
+    path === "/api/view-sessions" || path.startsWith("/api/view-sessions/") ||
     path.startsWith("/api/parent/dashboard") || path.startsWith("/api/parent/history") ||
-    path.startsWith("/api/parent/summary") || path.startsWith("/api/parent/notes") ||
-    path.startsWith("/api/parent/export") || /^\/api\/parent\/videos\/[^/]+\/history$/.test(path)
+    path.startsWith("/api/parent/summary") || path === "/api/parent/export/sessions" ||
+    /^\/api\/parent\/videos\/[^/]+\/history$/.test(path)
   )) {
     throw new HttpError("這個網站已停止保存播放與想法紀錄。", 410, "RECORDING_DISABLED");
   }
@@ -96,7 +99,6 @@ async function route(request: Request, env: AppEnv) {
   if (method === "POST" && path === "/api/view-sessions") return startViewSession(request, env);
   id = routeId(path, /^\/api\/view-sessions\/([^/]+)$/);
   if (method === "PATCH" && id) return heartbeatViewSession(request, env, id);
-  if (method === "POST" && path === "/api/notes") return saveNote(request, env);
 
   if (path === "/api/parent/session") {
     if (method === "GET") return parentSessionStatus(request, env);
@@ -107,9 +109,6 @@ async function route(request: Request, env: AppEnv) {
   if (method === "GET" && (path === "/api/parent/dashboard/today" || path === "/api/parent/history")) return getDashboard(request, env);
   if (method === "GET" && path === "/api/parent/history/calendar") return getCalendarHistory(request, env);
   if (method === "GET" && path === "/api/parent/summary") return getSummaryAnalytics(request, env);
-  if (method === "GET" && path === "/api/parent/notes/search") return searchNotes(request, env);
-  id = routeId(path, /^\/api\/parent\/notes\/([^/]+)$/);
-  if (method === "DELETE" && id) return softDeleteNote(request, env, id);
 
   if (path === "/api/parent/rules") {
     if (method === "GET") return getParentRules(request, env);
@@ -161,9 +160,6 @@ async function route(request: Request, env: AppEnv) {
     if (method === "POST") return runHealthCheck(request, env);
   }
 
-  if (path === "/api/parent/export/notes") {
-    if (method === "GET") return exportNotes(request, env);
-  }
   if (path === "/api/parent/export/sessions") {
     if (method === "GET") return exportSessions(request, env);
   }

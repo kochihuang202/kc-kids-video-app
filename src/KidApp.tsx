@@ -4,10 +4,12 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
-import { ApiError, contentRepository } from "./data/repositories";
-import { addLocalReminderSeconds, applyLocalReminderUsage } from "./lib/localReminder";
+import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
 import { cn, formatPosition } from "./lib/utils";
-import type { Category, ChildAccessState, TodayPick, VideoFixture } from "./types";
+import type {
+  Category, ChildAccessState, DeviceStatus, RecentVideo, ResumeInfo, TodayPick,
+  UpdateViewSessionInput, VideoFixture,
+} from "./types";
 
 function showThumbnailFallback(event: React.SyntheticEvent<HTMLImageElement>) {
   const image = event.currentTarget;
@@ -85,20 +87,31 @@ function KidError({ message, retry }: { message: string; retry: () => void }) {
 export function HomePage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [todayPicks, setTodayPicks] = useState<TodayPick[]>([]);
+  const [resume, setResume] = useState<ResumeInfo | null>(null);
+  const [recents, setRecents] = useState<RecentVideo[]>([]);
+  const [device, setDevice] = useState<DeviceStatus | null>(null);
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [nextCategories, accessData, picksData] = await Promise.all([
+      const [nextCategories, accessData, picksData, resumeData, recentData, deviceData] = await Promise.all([
         contentRepository.getCategories(),
         contentRepository.getAccessState().catch(() => null),
         contentRepository.getTodayPicks().catch(() => []),
+        contentRepository.getResume().catch(() => ({ resume: null })),
+        contentRepository.getRecents().catch(() => []),
+        deviceRepository.status().catch(() => ({ authorized: false, device: null })),
       ]);
       setCategories(nextCategories);
-      setAccessState(accessData ? applyLocalReminderUsage(accessData) : null);
+      setAccessState(accessData);
       setTodayPicks(picksData || []);
+      setResume(resumeData.resume);
+      setRecents(recentData || []);
+      setDevice(deviceData);
+      if (!deviceData.authorized && localStorage.getItem("device_setup_notice_seen") !== "1") setNotice(true);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "內容暫時載入不了。");
     }
@@ -109,11 +122,16 @@ export function HomePage() {
     const interval = window.setInterval(async () => {
       try {
         const nextState = await contentRepository.getAccessState();
-        setAccessState(applyLocalReminderUsage(nextState));
+        setAccessState(nextState);
       } catch { /* ignore offline errors */ }
     }, 30000);
     return () => window.clearInterval(interval);
   }, [load]);
+
+  const dismissNotice = () => {
+    localStorage.setItem("device_setup_notice_seen", "1");
+    setNotice(false);
+  };
 
   if (accessState?.state === "PAUSED_BY_PARENT") {
     return (
@@ -161,6 +179,40 @@ export function HomePage() {
           </div>
         )}
       </header>
+
+      {notice && (
+        <aside className="device-notice" role="status">
+          <div><strong>這台裝置還沒設定好</strong><p>請家長授權一次，才能同步觀看紀錄與每日時間。</p></div>
+          <div><Button variant="secondary" onClick={dismissNotice}>知道了</Button><Link to="/parent/settings">家長設定</Link></div>
+        </aside>
+      )}
+
+      {!isOutsideWindow && resume && (
+        <section className="resume-section" aria-label="繼續觀看">
+          <div className="resume-header"><span className="resume-tag"><Play />繼續看</span></div>
+          <Link className="resume-card" to={`/watch/${resume.videoId}?t=${Math.round(resume.lastPositionSeconds)}`}>
+            <div className="resume-thumb-wrapper">
+              <img src={resume.thumbnailUrl} alt="" onError={showThumbnailFallback} />
+              <span className="resume-pos-pill">看到 {formatPosition(resume.lastPositionSeconds)}</span>
+            </div>
+            <div className="resume-content"><h2>{resume.parentLabel}</h2><span className="resume-action-btn"><Play />繼續播放</span></div>
+          </Link>
+        </section>
+      )}
+
+      {!isOutsideWindow && recents.length > 0 && (
+        <section className="recents-section" aria-label="最近看過">
+          <h2 className="recents-title">最近看過</h2>
+          <div className="recents-scroll-row">
+            {recents.map((recent) => (
+              <Link className="recent-card" to={`/watch/${recent.id}?t=${Math.round(recent.lastPositionSeconds)}`} key={recent.id}>
+                <div className="recent-thumb-wrapper"><img src={recent.thumbnailUrl} alt="" onError={showThumbnailFallback} /></div>
+                <h3>{recent.parentLabel}</h3>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 今天推薦 (Today Picks) (Spec #46, #49, #50) */}
       {!isOutsideWindow && todayPicks.length > 0 && (
@@ -215,6 +267,8 @@ export function HomePage() {
         </section>
       )}
 
+      {device?.authorized && <p className="device-ready">這台裝置已同步觀看紀錄 ✓</p>}
+
     </main>
   );
 }
@@ -238,7 +292,7 @@ export function CategoryPage() {
       if (!nextCategory) throw new ApiError("找不到這個分類。", 404);
       setCategory(nextCategory);
       setVideos(nextVideos);
-      setAccessState(nextAccess ? applyLocalReminderUsage(nextAccess) : null);
+      setAccessState(nextAccess);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "影片暫時載入不了。");
     }
@@ -280,6 +334,12 @@ export function CategoryPage() {
                 <Link className="video-card" to={`/watch/${video.id}`} key={video.id}>
                   <div className="video-thumb-container">
                     <img src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} onError={showThumbnailFallback} />
+                    {video.isWatched && <span className="watched-badge">✓ 看過</span>}
+                    {!!video.lastPositionSeconds && !!video.durationSeconds && (
+                      <div className="mini-progress-track" aria-hidden="true">
+                        <div className="mini-progress-fill" style={{ width: `${Math.min(100, video.lastPositionSeconds / video.durationSeconds * 100)}%` }} />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h2>{video.parentLabel}</h2>
@@ -308,16 +368,28 @@ function reminderRemainingForVideo(access: ChildAccessState, video: VideoFixture
   return { remaining, categoryReached };
 }
 
+interface Capability { id: string; writeToken: string }
+interface PendingHeartbeat { sessionId: string; payload: UpdateViewSessionInput; keepalive: boolean }
+
 export function WatchPage() {
   const { videoId = "" } = useParams();
   const initialParams = new URLSearchParams(window.location.search);
   const rawInitialPos = Math.max(0, Number(initialParams.get("at") || initialParams.get("t") || 0) || 0);
 
   const [video, setVideo] = useState<VideoFixture | null>(null);
+  const [device, setDevice] = useState<DeviceStatus | null>(null);
+  const [startPosition, setStartPosition] = useState(rawInitialPos);
   const [loadError, setLoadError] = useState("");
   const playerRef = useRef<YouTubePlayerHandle>(null);
+  const capabilityRef = useRef<Capability | null>(null);
+  const sessionPromiseRef = useRef<Promise<Capability | null> | null>(null);
+  const clientSessionIdRef = useRef(crypto.randomUUID());
+  const heartbeatSeqRef = useRef(0);
+  const queueRef = useRef<PendingHeartbeat[]>([]);
+  const drainingRef = useRef(false);
   const playingStartPerfRef = useRef<number | null>(null);
   const accumulatedPlayMsRef = useRef<number>(0);
+  const playingStartWallRef = useRef<string | null>(null);
   const playerStateRef = useRef<PlayerState>("READY");
 
   const [playerError, setPlayerError] = useState(false);
@@ -342,12 +414,18 @@ export function WatchPage() {
   const load = useCallback(async () => {
     setLoadError("");
     try {
-      const [nextVideo, rawAccess] = await Promise.all([
+      const [nextVideo, rawAccess, nextDevice] = await Promise.all([
         contentRepository.getVideo(videoId),
         contentRepository.getAccessState().catch(() => null),
+        deviceRepository.status().catch(() => ({ authorized: false, device: null })),
       ]);
       setVideo(nextVideo);
-      const nextAccess = rawAccess ? applyLocalReminderUsage(rawAccess) : null;
+      setDevice(nextDevice);
+      const resumePosition = rawInitialPos > 0 ? rawInitialPos : Math.max(0, nextVideo.lastPositionSeconds || 0);
+      setStartPosition(resumePosition);
+      setCurrentPos(resumePosition);
+      setDragPos(resumePosition);
+      const nextAccess = rawAccess;
       setAccessState(nextAccess);
       if (nextAccess) {
         const { remaining, categoryReached } = reminderRemainingForVideo(nextAccess, nextVideo);
@@ -367,7 +445,7 @@ export function WatchPage() {
     void load();
     const interval = window.setInterval(async () => {
       try {
-        const nextAccess = applyLocalReminderUsage(await contentRepository.getAccessState());
+        const nextAccess = await contentRepository.getAccessState();
         setAccessState(nextAccess);
         if (nextAccess.state === "PAUSED_BY_PARENT") {
           playerRef.current?.pause();
@@ -387,36 +465,79 @@ export function WatchPage() {
     return () => window.clearInterval(interval);
   }, [load, inGrace, video]);
 
-  const flushTracking = useCallback((_status: "active" | "ended" = "active", _keepalive = false) => {
+  const ensureSession = useCallback(async () => {
+    if (!video || !device?.authorized) return null;
+    if (capabilityRef.current) return capabilityRef.current;
+    if (!sessionPromiseRef.current) {
+      sessionPromiseRef.current = activityRepository.startViewSession(video.id, clientSessionIdRef.current)
+        .then(({ id, writeToken }) => {
+          capabilityRef.current = { id, writeToken };
+          return capabilityRef.current;
+        })
+        .catch(() => null)
+        .finally(() => { sessionPromiseRef.current = null; });
+    }
+    return sessionPromiseRef.current;
+  }, [device?.authorized, video]);
+
+  const drainQueue = useCallback(async () => {
+    if (drainingRef.current) return;
+    drainingRef.current = true;
+    try {
+      while (queueRef.current.length) {
+        const item = queueRef.current[0];
+        try {
+          await activityRepository.updateViewSession(item.sessionId, item.payload, item.keepalive);
+          queueRef.current.shift();
+        } catch {
+          break;
+        }
+      }
+    } finally {
+      drainingRef.current = false;
+    }
+  }, []);
+
+  const flushTracking = useCallback(async (status: "active" | "ended" = "active", keepalive = false) => {
     const nowPerf = performance.now();
+    const nowIso = new Date().toISOString();
     if (playingStartPerfRef.current !== null) {
       const elapsedMs = Math.max(0, nowPerf - playingStartPerfRef.current);
       accumulatedPlayMsRef.current += elapsedMs;
       playingStartPerfRef.current = nowPerf;
     }
     const deltaSeconds = Math.floor(accumulatedPlayMsRef.current / 1000);
-    if (deltaSeconds <= 0) return;
-    accumulatedPlayMsRef.current -= deltaSeconds * 1000;
+    if (deltaSeconds > 0) accumulatedPlayMsRef.current -= deltaSeconds * 1000;
 
-    const categoryIds = video?.categoryIds || (video?.categoryId ? [video.categoryId] : []);
-    const reminderDate = accessState?.todayDate || new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
-    addLocalReminderSeconds(reminderDate, categoryIds, deltaSeconds);
-
-    // Decrement remaining seconds
-    remainingSecsRef.current = Math.max(0, remainingSecsRef.current - deltaSeconds);
-    if (remainingSecsRef.current <= 0 && !inGrace) {
-      setInGrace(true);
-    }
-    if (inGrace) {
-      graceSecsUsedRef.current += deltaSeconds;
-      const maxGrace = accessState?.gracePeriodSeconds || 300;
-      if (graceSecsUsedRef.current >= maxGrace) {
-        playerRef.current?.pause();
-        setTimeUp(true);
+    if (deltaSeconds > 0) {
+      remainingSecsRef.current = Math.max(0, remainingSecsRef.current - deltaSeconds);
+      if (remainingSecsRef.current <= 0 && !inGrace) setInGrace(true);
+      if (inGrace) {
+        graceSecsUsedRef.current += deltaSeconds;
+        const maxGrace = accessState?.gracePeriodSeconds || 300;
+        if (graceSecsUsedRef.current >= maxGrace) {
+          playerRef.current?.pause();
+          setTimeUp(true);
+        }
       }
     }
 
-  }, [accessState?.gracePeriodSeconds, accessState?.todayDate, inGrace, video]);
+    if (!device?.authorized) return;
+    const capability = capabilityRef.current || await ensureSession();
+    if (!capability) return;
+    const payload: UpdateViewSessionInput = {
+      writeToken: capability.writeToken,
+      heartbeatSeq: ++heartbeatSeqRef.current,
+      deltaSeconds,
+      positionSeconds: Math.max(0, Math.round(playerRef.current?.getCurrentTime() || currentPos)),
+      intervalStartedAt: playingStartWallRef.current,
+      intervalEndedAt: playingStartWallRef.current ? nowIso : null,
+      status,
+    };
+    playingStartWallRef.current = playingStartPerfRef.current === null ? null : nowIso;
+    queueRef.current.push({ sessionId: capability.id, payload, keepalive });
+    void drainQueue();
+  }, [accessState?.gracePeriodSeconds, currentPos, device?.authorized, drainQueue, ensureSession, inGrace]);
 
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
@@ -424,25 +545,31 @@ export function WatchPage() {
     if (state === "PLAYING") {
       setIsEnded(false);
       setPausePrompts([]);
-      playingStartPerfRef.current = performance.now();
+      if (playingStartPerfRef.current === null) {
+        playingStartPerfRef.current = performance.now();
+        playingStartWallRef.current = new Date().toISOString();
+      }
+      void ensureSession();
     } else if (state === "ENDED") {
       setIsEnded(true);
       setPausePrompts([]);
       setEndPrompts(getRandomThinkingPrompts(5));
       void flushTracking("ended");
       playingStartPerfRef.current = null;
+      playingStartWallRef.current = null;
       if (inGrace || remainingSecsRef.current <= 0) {
         setTimeUp(true);
       }
     } else if (state === "PAUSED") {
       void flushTracking("active");
       playingStartPerfRef.current = null;
+      playingStartWallRef.current = null;
       const cur = playerRef.current?.getCurrentTime() || 0;
       if (cur > 2) {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [flushTracking, inGrace]);
+  }, [ensureSession, flushTracking, inGrace]);
 
   const handleNativeProgress = useCallback((time: number, duration: number) => {
     if (!isDragging) setCurrentPos(time);
@@ -470,9 +597,8 @@ export function WatchPage() {
   }, [isPlaying]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
+    const progressInterval = window.setInterval(() => {
       if (playerStateRef.current === "PLAYING") {
-        void flushTracking();
         if (playerRef.current) {
           const time = playerRef.current.getCurrentTime();
           if (!isDragging) setCurrentPos(time);
@@ -481,16 +607,21 @@ export function WatchPage() {
         }
       }
     }, 500);
+    const heartbeatInterval = window.setInterval(() => {
+      if (playerStateRef.current === "PLAYING") void flushTracking();
+      else void drainQueue();
+    }, 10_000);
     const onVisibility = () => { if (document.visibilityState === "hidden") void flushTracking("active", true); };
     const onPageHide = () => { void flushTracking("active", true); };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pagehide", onPageHide);
     return () => {
-      window.clearInterval(interval);
+      window.clearInterval(progressInterval);
+      window.clearInterval(heartbeatInterval);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
     };
-  }, [flushTracking, isDragging, totalDuration]);
+  }, [drainQueue, flushTracking, isDragging, totalDuration]);
 
   const togglePlay = () => {
     if (playerStateRef.current === "PLAYING") {
@@ -545,7 +676,7 @@ export function WatchPage() {
             <YouTubePlayer
               ref={playerRef}
               videoId={video.youtubeVideoId}
-              startAt={rawInitialPos}
+              startAt={startPosition}
               volume={volume}
               onStateChange={handlePlayerState}
               onError={() => setPlayerError(true)}
@@ -556,7 +687,7 @@ export function WatchPage() {
               src={video.mediaUrl}
               mediaType={video.mediaType}
               poster={video.thumbnailUrl}
-              startAt={rawInitialPos}
+              startAt={startPosition}
               volume={volume}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}

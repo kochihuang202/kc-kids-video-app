@@ -6,10 +6,12 @@ import type {
   ChildAccessState,
   ChildDevice,
   DailyOverride,
+  DeviceStatus,
   NoteSearchResult,
   SummaryAnalytics,
   TodayDashboard,
   TodayPick,
+  UpdateViewSessionInput,
   UsageRule,
   VideoFixture,
   VideoHistoryResponse,
@@ -41,6 +43,30 @@ export const contentRepository = {
   getVideo: (videoId: string) => api<VideoFixture>(`/api/content/videos/${encodeURIComponent(videoId)}`),
   getAccessState: () => api<ChildAccessState>("/api/child/access-state"),
   getTodayPicks: () => api<TodayPick[]>("/api/child/today-picks"),
+  getResume: () => api<{ resume: import("../types").ResumeInfo | null }>("/api/content/resume"),
+  getRecents: () => api<import("../types").RecentVideo[]>("/api/content/recents"),
+};
+
+export const deviceRepository = {
+  status: () => api<DeviceStatus>("/api/device/status"),
+};
+
+export const activityRepository = {
+  startViewSession(videoId: string, clientSessionId: string, playbackMode: "video" | "listen" = "video") {
+    return write<{ id: string; writeToken: string; startedAt: string }>("/api/view-sessions", "POST", {
+      videoId,
+      clientSessionId,
+      playbackMode,
+    });
+  },
+  updateViewSession(id: string, input: UpdateViewSessionInput, keepalive = false) {
+    return api<{ ok: true }>(`/api/view-sessions/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input),
+      keepalive,
+    });
+  },
 };
 
 export interface VideoPreview {

@@ -202,8 +202,8 @@ describe("Phase 2 End-to-End Suite", () => {
     expect(data.dailyBars.length).toBe(7);
   });
 
-  // Test E2E 06: Note search
-  it("E2E 06: Searches notes by content and video title", async () => {
+  // Test E2E 06: Note search remains disabled
+  it("E2E 06: Keeps parent note search disabled", async () => {
     const parentCookie = await addParent();
     await env.DB.prepare(`
       INSERT INTO notes (id, video_id, content, video_position_seconds, created_at, updated_at)
@@ -211,10 +211,8 @@ describe("Phase 2 End-to-End Suite", () => {
     `).run();
 
     const searchRes = await call("/api/parent/notes/search?q=植物", { headers: { cookie: parentCookie } });
-    expect(searchRes.status).toBe(200);
-    const searchData = await searchRes.json<{ total: number; results: any[] }>();
-    expect(searchData.total).toBe(1);
-    expect(searchData.results[0].content).toContain("植物死掉");
+    expect(searchRes.status).toBe(410);
+    expect(await searchRes.json()).toMatchObject({ code: "NOTES_DISABLED" });
   });
 
   // Test E2E 07: Video health check and auto deactivation
@@ -258,8 +256,8 @@ describe("Phase 2 End-to-End Suite", () => {
     expect(rows?.count).toBe(2);
   });
 
-  // Test E2E 09: Export Markdown and CSV
-  it("E2E 09: Exports notes as Markdown and CSV with correct headers and quotes", async () => {
+  // Test E2E 09: Note exports remain disabled
+  it("E2E 09: Keeps note exports disabled", async () => {
     const parentCookie = await addParent();
     await env.DB.prepare(`
       INSERT INTO notes (id, video_id, content, video_position_seconds, created_at, updated_at)
@@ -268,19 +266,13 @@ describe("Phase 2 End-to-End Suite", () => {
 
     // Export Markdown
     const mdRes = await call("/api/parent/export/notes?format=md&range=all", { headers: { cookie: parentCookie } });
-    expect(mdRes.status).toBe(200);
-    expect(mdRes.headers.get("content-type")).toContain("text/markdown");
-    const mdText = await mdRes.text();
-    expect(mdText).toContain("# 小小選片 孩子想法紀錄");
-    expect(mdText).toContain("> 因為陽光散亂散射");
+    expect(mdRes.status).toBe(410);
+    expect(await mdRes.json()).toMatchObject({ code: "NOTES_DISABLED" });
 
     // Export CSV
     const csvRes = await call("/api/parent/export/notes?format=csv&range=all", { headers: { cookie: parentCookie } });
-    expect(csvRes.status).toBe(200);
-    expect(csvRes.headers.get("content-type")).toContain("text/csv");
-    const csvText = await csvRes.text();
-    expect(csvText).toContain("date,time,video_title,youtube_video_id,video_position_seconds,note_content");
-    expect(csvText).toContain("因為陽光散亂散射");
+    expect(csvRes.status).toBe(410);
+    expect(await csvRes.json()).toMatchObject({ code: "NOTES_DISABLED" });
   });
 
   // Test E2E 10: Category time statistics
