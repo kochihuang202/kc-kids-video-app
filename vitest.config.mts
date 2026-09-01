@@ -14,6 +14,10 @@ export default defineConfig(async () => {
 						SESSION_SECRET: "test-session-secret-with-enough-entropy",
 						PARENT_PASSWORD_HASH: "",
 						YOUTUBE_API_KEY: "test-youtube-key",
+						MEDIA_SERVER_BASE_URL: "https://media.test",
+						// Keep the historical recording suite as a rollback regression test.
+						// Production explicitly sets this to "false" in wrangler.jsonc.
+						RECORDING_ENABLED: "true",
 					},
 				},
 			}),

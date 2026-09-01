@@ -21,13 +21,20 @@
 			"migrations_dir": "migrations"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA_ASSETS",
+			"bucket_name": "kc-kids-video-app-assets"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},
 	"upload_source_maps": true,
 	"vars": {
 		"APP_ORIGIN": "https://kc-kids-video-app.ji3cp31p4.workers.dev",
-		"ENVIRONMENT": "production"
+		"ENVIRONMENT": "production",
+		"RECORDING_ENABLED": "false"
 	}
 	/**
 	 * Smart Placement

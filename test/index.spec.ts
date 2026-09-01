@@ -52,6 +52,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM admin_credentials"),
     env.DB.prepare("DELETE FROM child_devices"),
     env.DB.prepare("DELETE FROM rate_limit_buckets"),
+    env.DB.prepare("DELETE FROM videos WHERE source = 'self_hosted'"),
     env.DB.prepare("DELETE FROM categories WHERE id NOT IN ('science', 'english', 'animals')"),
     env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', metadata_error = NULL"),
     env.DB.prepare("UPDATE categories SET is_active = 1, archived_at = NULL"),
@@ -59,6 +60,20 @@ beforeEach(async () => {
 });
 
 describe("Phase 1B units", () => {
+  it("serves a private R2 thumbnail through the Worker with cache headers", async () => {
+    const bucket = appEnv.MEDIA_ASSETS;
+    expect(bucket).toBeDefined();
+    await bucket!.put("thumbnails/test.webp", new Uint8Array([82, 73, 70, 70]), {
+      httpMetadata: { contentType: "image/webp" },
+    });
+
+    const response = await call("/api/media/thumbnails/test.webp");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("image/webp");
+    expect(response.headers.get("cache-control")).toContain("max-age=31536000");
+    expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual([82, 73, 70, 70]);
+  });
+
   it("accepts supported YouTube URLs and rejects non-video pages", () => {
     expect(parseYouTubeVideoId("https://www.youtube.com/watch?v=bcVr13Fw7w8&list=PL123")).toBe("bcVr13Fw7w8");
     expect(parseYouTubeVideoId("https://youtu.be/bcVr13Fw7w8?t=3")).toBe("bcVr13Fw7w8");
@@ -121,6 +136,43 @@ describe("migration and public whitelist", () => {
     const response = await call("/api/content/categories/science/videos");
     expect((await response.json() as Array<{ id: string }>).map((item) => item.id)).toEqual(["big-story-dinosaurs"]);
     expect((await call("/api/content/videos/why-sky-blue")).status).toBe(404);
+  });
+
+  it("returns a playable Tailscale URL for a self-hosted video", async () => {
+    const now = new Date().toISOString();
+    await env.DB.batch([
+      env.DB.prepare(`
+        INSERT INTO categories (id, name, icon, tone, sort_order, is_active, created_at, updated_at)
+        VALUES ('local-course', '家庭課程', '📚', 'sage', 4, 1, ?, ?)
+      `).bind(now, now),
+      env.DB.prepare(`
+        INSERT INTO videos (
+          id, source, youtube_title, parent_label, thumbnail_url, availability_status,
+          health_status, media_type, media_path, thumbnail_path, is_active, created_at, updated_at
+        ) VALUES (
+          'local-lesson-01', 'self_hosted', '第一課', '第一課', '', 'available',
+          'healthy', 'video', '/media/課程/第一課.mp4', '/thumbnails/課程/第一課.jpg', 1, ?, ?
+        )
+      `).bind(now, now),
+      env.DB.prepare(`
+        INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
+        VALUES ('local-course', 'local-lesson-01', 1, ?)
+      `).bind(now),
+    ]);
+
+    const response = await call("/api/content/categories/local-course/videos");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([
+      expect.objectContaining({
+        id: "local-lesson-01",
+        source: "self_hosted",
+        youtubeVideoId: null,
+        mediaType: "video",
+        mediaPath: "/media/課程/第一課.mp4",
+        mediaUrl: "https://media.test/media/%E8%AA%B2%E7%A8%8B/%E7%AC%AC%E4%B8%80%E8%AA%B2.mp4",
+        thumbnailUrl: "https://media.test/thumbnails/%E8%AA%B2%E7%A8%8B/%E7%AC%AC%E4%B8%80%E8%AA%B2.jpg",
+      }),
+    ]);
   });
 });
 
@@ -291,5 +343,40 @@ describe("dashboard history and day splitting", () => {
     expect(dashboard.summary.totalPlayedSeconds).toBe(10);
     expect(dashboard.timeline).toHaveLength(1);
     expect(dashboard.timeline[0]).toMatchObject({ videoLabel: "天空為什麼是藍色？", playedSeconds: 10 });
+  });
+});
+
+describe("production recording switch", () => {
+  async function callWithRecordingDisabled(path: string, init: RequestInit = {}) {
+    const headers = new Headers(init.headers);
+    if (init.body && !headers.has("content-type")) headers.set("content-type", "application/json");
+    const context = createExecutionContext();
+    const response = await worker.fetch(
+      new Request(`${origin}${path}`, { ...init, headers }),
+      { ...appEnv, RECORDING_ENABLED: "false" },
+      context,
+    );
+    await waitOnExecutionContext(context);
+    return response;
+  }
+
+  it("returns no resume data and refuses new session or note writes", async () => {
+    const resume = await callWithRecordingDisabled("/api/content/resume");
+    expect(resume.status).toBe(200);
+    expect(await resume.json()).toEqual({ resume: null });
+
+    const session = await callWithRecordingDisabled("/api/view-sessions", {
+      method: "POST",
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }),
+    });
+    expect(session.status).toBe(410);
+    expect(await session.json()).toMatchObject({ code: "RECORDING_DISABLED" });
+
+    const note = await callWithRecordingDisabled("/api/notes", {
+      method: "POST",
+      body: jsonBody({ content: "不應保存" }),
+    });
+    expect(note.status).toBe(410);
+    expect(await note.json()).toMatchObject({ code: "RECORDING_DISABLED" });
   });
 });

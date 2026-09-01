@@ -167,3 +167,6 @@ dist
 .wrangler/
 .verify-state/
 artifacts/backups/
+artifacts/
+backups/
+.worktrees/

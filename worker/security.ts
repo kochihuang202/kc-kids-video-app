@@ -86,6 +86,25 @@ export async function getChildDevice(request: Request, env: AppEnv, required = t
   return row;
 }
 
+export async function getOrCreateChildDevice(request: Request, env: AppEnv): Promise<{ device: ChildDevice; cookieHeader?: string }> {
+  const existing = await getChildDevice(request, env, false);
+  if (existing) return { device: existing };
+
+  const token = randomToken();
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const hash = await tokenHash(token, env);
+  await env.DB.prepare(`
+    INSERT INTO child_devices (id, token_hash, name, created_at, last_used_at)
+    VALUES (?, ?, '家庭裝置', ?, ?)
+  `).bind(id, hash, now, now).run();
+
+  return {
+    device: { id, name: "家庭裝置" },
+    cookieHeader: deviceCookie(token),
+  };
+}
+
 export async function pbkdf2(password: string, salt: Uint8Array, iterations: number) {
   if (!Number.isInteger(iterations) || iterations < 100_000 || iterations > MAX_PBKDF2_ITERATIONS) {
     throw new HttpError("家長密碼雜湊設定不符合執行環境限制。", 503, "PARENT_PASSWORD_NOT_CONFIGURED");

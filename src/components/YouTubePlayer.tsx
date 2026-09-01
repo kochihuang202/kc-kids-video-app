@@ -9,6 +9,9 @@ interface PlayerInstance {
   playVideo(): void;
   pauseVideo(): void;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
+  setVolume(volume: number): void;
+  mute(): void;
+  unMute(): void;
 }
 
 interface PlayerEvent { target: PlayerInstance; data: number; }
@@ -56,18 +59,30 @@ export interface YouTubePlayerHandle {
 interface YouTubePlayerProps {
   videoId: string;
   startAt?: number;
+  volume?: number;
   onStateChange?: (state: PlayerState) => void;
   onError?: () => void;
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  ({ videoId, startAt = 0, onStateChange, onError }, ref) => {
+  ({ videoId, startAt = 0, volume = 1, onStateChange, onError }, ref) => {
     const hostRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<PlayerInstance | null>(null);
     const stateCallbackRef = useRef(onStateChange);
     const errorCallbackRef = useRef(onError);
+    const volumeRef = useRef(volume);
     stateCallbackRef.current = onStateChange;
     errorCallbackRef.current = onError;
+    volumeRef.current = volume;
+
+    useEffect(() => {
+      const player = playerRef.current;
+      if (!player) return;
+      const nextVolume = Math.round(Math.min(1, Math.max(0, volume)) * 100);
+      player.setVolume(nextVolume);
+      if (nextVolume === 0) player.mute();
+      else player.unMute();
+    }, [volume]);
 
     useImperativeHandle(ref, () => ({
       getCurrentTime: () => typeof playerRef.current?.getCurrentTime === "function" ? playerRef.current.getCurrentTime() || startAt : startAt,
@@ -102,6 +117,10 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           events: {
             onReady: (event: PlayerEvent) => {
               playerRef.current = event.target;
+              const initialVolume = Math.round(Math.min(1, Math.max(0, volumeRef.current)) * 100);
+              event.target.setVolume(initialVolume);
+              if (initialVolume === 0) event.target.mute();
+              else event.target.unMute();
               if (startAt > 0) event.target.seekTo(startAt, true);
               event.target.pauseVideo();
               stateCallbackRef.current?.("READY");

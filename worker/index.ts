@@ -1,25 +1,39 @@
 import {
+  getChildAccessState,
+  getChildTodayPicks,
   getDeviceStatus,
   getPublicCategories,
   getPublicCategoryVideos,
+  getPublicRecents,
+  getPublicResume,
   getPublicVideo,
   heartbeatViewSession,
   saveNote,
   startViewSession,
 } from "./content";
-import { fail, HttpError, json, routeId } from "./http";
+import { exportNotes, exportSessions } from "./export";
+import { runHealthCheck } from "./health";
+import { fail, HttpError, json } from "./http";
+import { serveMediaAsset } from "./media";
 import {
+  addParentTodayBonus,
   archiveCategory,
   archiveVideo,
   authorizeDevice,
+  batchUpdateVideos,
   changePassword,
   createCategory,
   createVideo,
+  getCalendarHistory,
   getDashboard,
   getDevices,
   getParentCategories,
+  getParentRules,
+  getParentTodayPicks,
   getParentVideos,
   getSettings,
+  getSummaryAnalytics,
+  getVideoHistory,
   loginParent,
   logoutParent,
   orderCategories,
@@ -28,25 +42,56 @@ import {
   previewVideo,
   refreshVideoMetadata,
   revokeDevice,
+  searchNotes,
+  setParentTodayPause,
+  softDeleteNote,
+  toggleParentTodayPick,
   updateCategory,
   updateDevice,
+  updateParentRules,
+  updateParentTodayPicks,
   updateSettings,
   updateVideo,
 } from "./parent";
 import type { AppEnv } from "./types";
+
+function routeId(pathname: string, pattern: RegExp): string | null {
+  const match = pathname.match(pattern);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 async function route(request: Request, env: AppEnv) {
   const url = new URL(request.url);
   const { method } = request;
   const path = url.pathname;
   if (!path.startsWith("/api/")) throw new HttpError("Not Found", 404);
+  if (method === "GET" && path.startsWith("/api/media/")) {
+    const asset = await serveMediaAsset(path, env);
+    if (!asset) throw new HttpError("找不到這張縮圖。", 404, "MEDIA_ASSET_NOT_FOUND");
+    return asset;
+  }
+  const recordingEnabled = env.RECORDING_ENABLED !== "false";
 
-  if (method === "GET" && path === "/api/health") return json({ ok: true, phase: "1B" });
+  if (method === "GET" && path === "/api/health") return json({ ok: true, phase: "3" });
   if (method === "GET" && path === "/api/content/categories") return getPublicCategories(env);
+  if (!recordingEnabled && method === "GET" && path === "/api/content/resume") return json({ resume: null });
+  if (!recordingEnabled && method === "GET" && path === "/api/content/recents") return json([]);
+  if (!recordingEnabled && (
+    path === "/api/notes" || path === "/api/view-sessions" || path.startsWith("/api/view-sessions/") ||
+    path.startsWith("/api/parent/dashboard") || path.startsWith("/api/parent/history") ||
+    path.startsWith("/api/parent/summary") || path.startsWith("/api/parent/notes") ||
+    path.startsWith("/api/parent/export") || /^\/api\/parent\/videos\/[^/]+\/history$/.test(path)
+  )) {
+    throw new HttpError("這個網站已停止保存播放與想法紀錄。", 410, "RECORDING_DISABLED");
+  }
+  if (method === "GET" && path === "/api/content/resume") return getPublicResume(request, env);
+  if (method === "GET" && path === "/api/content/recents") return getPublicRecents(request, env);
+  if (method === "GET" && path === "/api/child/access-state") return getChildAccessState(request, env);
+  if (method === "GET" && path === "/api/child/today-picks") return getChildTodayPicks(request, env);
   let id = routeId(path, /^\/api\/content\/categories\/([^/]+)\/videos$/);
-  if (method === "GET" && id) return getPublicCategoryVideos(env, id);
+  if (method === "GET" && id) return getPublicCategoryVideos(request, env, id);
   id = routeId(path, /^\/api\/content\/videos\/([^/]+)$/);
-  if (method === "GET" && id) return getPublicVideo(env, id);
+  if (method === "GET" && id) return getPublicVideo(request, env, id);
   if (method === "GET" && path === "/api/device/status") return getDeviceStatus(request, env);
   if (method === "POST" && path === "/api/view-sessions") return startViewSession(request, env);
   id = routeId(path, /^\/api\/view-sessions\/([^/]+)$/);
@@ -59,7 +104,27 @@ async function route(request: Request, env: AppEnv) {
     if (method === "DELETE") return logoutParent(request, env);
   }
   if (method === "POST" && path === "/api/parent/password") return changePassword(request, env);
-  if (method === "GET" && path === "/api/parent/dashboard/today") return getDashboard(request, env);
+  if (method === "GET" && (path === "/api/parent/dashboard/today" || path === "/api/parent/history")) return getDashboard(request, env);
+  if (method === "GET" && path === "/api/parent/history/calendar") return getCalendarHistory(request, env);
+  if (method === "GET" && path === "/api/parent/summary") return getSummaryAnalytics(request, env);
+  if (method === "GET" && path === "/api/parent/notes/search") return searchNotes(request, env);
+  id = routeId(path, /^\/api\/parent\/notes\/([^/]+)$/);
+  if (method === "DELETE" && id) return softDeleteNote(request, env, id);
+
+  if (path === "/api/parent/rules") {
+    if (method === "GET") return getParentRules(request, env);
+    if (method === "PUT") return updateParentRules(request, env);
+  }
+  if (method === "POST" && path === "/api/parent/today/bonus") return addParentTodayBonus(request, env);
+  if (method === "POST" && path === "/api/parent/today/pause") return setParentTodayPause(request, env, true);
+  if (method === "POST" && path === "/api/parent/today/resume") return setParentTodayPause(request, env, false);
+
+  if (path === "/api/parent/today/picks") {
+    if (method === "GET") return getParentTodayPicks(request, env);
+    if (method === "PUT") return updateParentTodayPicks(request, env);
+  }
+  id = routeId(path, /^\/api\/parent\/today\/picks\/([^/]+)\/toggle$/);
+  if (method === "POST" && id) return toggleParentTodayPick(request, env, id);
 
   if (path === "/api/parent/categories") {
     if (method === "GET") return getParentCategories(request, env);
@@ -67,7 +132,7 @@ async function route(request: Request, env: AppEnv) {
   }
   if (method === "PUT" && path === "/api/parent/categories/order") return orderCategories(request, env);
   id = routeId(path, /^\/api\/parent\/categories\/([^/]+)$/);
-  if (method === "PATCH" && id) return updateCategory(request, env, id);
+  if ((method === "PATCH" || method === "PUT") && id) return updateCategory(request, env, id);
   id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/archive$/);
   if (method === "POST" && id) return archiveCategory(request, env, id);
   id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/restore$/);
@@ -79,7 +144,10 @@ async function route(request: Request, env: AppEnv) {
     if (method === "GET") return getParentVideos(request, env);
     if (method === "POST") return createVideo(request, env);
   }
+  if (method === "POST" && path === "/api/parent/videos/batch") return batchUpdateVideos(request, env);
   if (method === "POST" && path === "/api/parent/videos/preview") return previewVideo(request, env);
+  id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/history$/);
+  if (method === "GET" && id) return getVideoHistory(request, env, id);
   id = routeId(path, /^\/api\/parent\/videos\/([^/]+)$/);
   if (method === "PATCH" && id) return updateVideo(request, env, id);
   id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/metadata$/);
@@ -88,6 +156,17 @@ async function route(request: Request, env: AppEnv) {
   if (method === "POST" && id) return archiveVideo(request, env, id);
   id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/restore$/);
   if (method === "POST" && id) return archiveVideo(request, env, id, true);
+
+  if (path === "/api/parent/health-check") {
+    if (method === "POST") return runHealthCheck(request, env);
+  }
+
+  if (path === "/api/parent/export/notes") {
+    if (method === "GET") return exportNotes(request, env);
+  }
+  if (path === "/api/parent/export/sessions") {
+    if (method === "GET") return exportSessions(request, env);
+  }
 
   if (path === "/api/parent/settings") {
     if (method === "GET") return getSettings(request, env);
