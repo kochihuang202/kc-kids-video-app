@@ -96,7 +96,7 @@ Verified locally. Supports `GET` and `HEAD` for `.mp4` and `.mp3`.
 
 ### `GET|HEAD /thumbnails/{relativePathWithoutExtension}.jpg`
 
-Implemented and pending Mac deployment verification. JPEG files are generated ahead of time with `scripts/generate-thumbnails.sh`, stored in the private `THUMBNAIL_ROOT`, and served read-only with the same traversal and symlink protections as media files. `/library` returns `thumbnailPath` for a video when its generated JPEG exists.
+Implemented and pending Mac deployment verification. JPEG files are generated ahead of time with `scripts/generate-thumbnails.sh`, stored in the private `THUMBNAIL_ROOT`, and served read-only with the same traversal and symlink protections as media files. Set `THUMBNAIL_AT_SECONDS` for a course-specific capture time and `THUMBNAIL_FORCE=true` when replacing older captures. `/library` returns `thumbnailPath` for a video when its generated JPEG exists.
 
 ## Configuration
 
@@ -112,6 +112,8 @@ List configuration key names and safe examples only. Never commit the real `.env
 | `PROBE_DURATIONS` | No | `false` | Set `true` to run `ffprobe` during `/library` scans |
 | `FFPROBE_PATH` | No | `ffprobe` | Path or command name for ffprobe |
 | `FFMPEG_PATH` | No | `ffmpeg` | Used by the thumbnail generation script |
+| `THUMBNAIL_AT_SECONDS` | No | `640` | Frame timestamp used by the thumbnail generation script; defaults to `3` |
+| `THUMBNAIL_FORCE` | No | `true` | Regenerate existing thumbnails when `true`; defaults to `false` |
 
 ## Operations
 

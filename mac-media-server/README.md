@@ -61,7 +61,14 @@ set +a
 ./scripts/generate-thumbnails.sh "example-course-folder"
 ```
 
-The command mirrors each MP4 relative path below `THUMBNAIL_ROOT`, replaces `.mp4` with `.jpg`, and skips thumbnails newer than their source video. Generated images stay outside Git. Restart the launchd service after adding `THUMBNAIL_ROOT` to its local environment.
+The command captures at 3 seconds by default. Set a course-specific timestamp and force regeneration when needed:
+
+```sh
+THUMBNAIL_AT_SECONDS=640 THUMBNAIL_FORCE=true \
+  ./scripts/generate-thumbnails.sh "example-course-folder"
+```
+
+The command mirrors each MP4 relative path below `THUMBNAIL_ROOT`, replaces `.mp4` with `.jpg`, and skips thumbnails newer than their source video unless `THUMBNAIL_FORCE=true`. If a video is shorter than the requested timestamp, it is reported as failed instead of silently using the wrong frame. Generated images stay outside Git. Restart the launchd service after adding `THUMBNAIL_ROOT` to its local environment.
 
 `/library` keeps `durationSeconds` as `null` by default so large home libraries return quickly. Set `PROBE_DURATIONS=true` to ask the server to run `ffprobe` while building the library response.
 
