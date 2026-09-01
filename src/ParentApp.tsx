@@ -1860,12 +1860,12 @@ export default function ParentApp() {
         <ParentGuard>
           <ParentLayout>
             <Routes>
-              <Route index element={<Navigate to="rules" replace />} />
+              <Route index element={<Navigate to="/parent/rules" replace />} />
               <Route path="rules" element={<RulesPage />} />
               <Route path="videos" element={<VideosPage />} />
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="rules" replace />} />
+              <Route path="*" element={<Navigate to="/parent/rules" replace />} />
             </Routes>
           </ParentLayout>
         </ParentGuard>
