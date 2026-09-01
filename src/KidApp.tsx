@@ -396,6 +396,7 @@ export function WatchPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
   const [currentPos, setCurrentPos] = useState(rawInitialPos);
+  const currentPosRef = useRef(rawInitialPos);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragPos, setDragPos] = useState(rawInitialPos);
@@ -443,6 +444,9 @@ export function WatchPage() {
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  useEffect(() => {
     const interval = window.setInterval(async () => {
       try {
         const nextAccess = await contentRepository.getAccessState();
@@ -463,7 +467,11 @@ export function WatchPage() {
       } catch { /* offline tolerance */ }
     }, 15000);
     return () => window.clearInterval(interval);
-  }, [load, inGrace, video]);
+  }, [inGrace, video]);
+
+  useEffect(() => {
+    currentPosRef.current = currentPos;
+  }, [currentPos]);
 
   const ensureSession = useCallback(async () => {
     if (!video || !device?.authorized) return null;
@@ -529,7 +537,7 @@ export function WatchPage() {
       writeToken: capability.writeToken,
       heartbeatSeq: ++heartbeatSeqRef.current,
       deltaSeconds,
-      positionSeconds: Math.max(0, Math.round(playerRef.current?.getCurrentTime() || currentPos)),
+      positionSeconds: Math.max(0, Math.round(playerRef.current?.getCurrentTime() || currentPosRef.current)),
       intervalStartedAt: playingStartWallRef.current,
       intervalEndedAt: playingStartWallRef.current ? nowIso : null,
       status,
@@ -537,7 +545,7 @@ export function WatchPage() {
     playingStartWallRef.current = playingStartPerfRef.current === null ? null : nowIso;
     queueRef.current.push({ sessionId: capability.id, payload, keepalive });
     void drainQueue();
-  }, [accessState?.gracePeriodSeconds, currentPos, device?.authorized, drainQueue, ensureSession, inGrace]);
+  }, [accessState?.gracePeriodSeconds, device?.authorized, drainQueue, ensureSession, inGrace]);
 
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
