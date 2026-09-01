@@ -48,6 +48,19 @@ describe("REG-004 D1 request cost guardrails", () => {
     expect(details).not.toMatch(/SCAN category_videos/i);
   });
 
+  it("uses an interval-end index for the narrow heartbeat overlap lookup", async () => {
+    const plan = await env.DB.prepare(`
+      EXPLAIN QUERY PLAN
+      SELECT id FROM view_heartbeats INDEXED BY idx_view_heartbeats_overlap_end
+      WHERE interval_ended_at > ? AND interval_started_at < ?
+    `).bind("2026-09-02T00:00:00.000Z", "2026-09-02T00:01:00.000Z")
+      .all<{ detail: string }>();
+    const details = (plan.results || []).map((row) => row.detail).join("\n");
+
+    expect(details).toContain("idx_view_heartbeats_overlap_end");
+    expect(details).toMatch(/interval_ended_at>\?/);
+  });
+
   it("reads the compact daily rollup instead of rebuilding today's heartbeat history", async () => {
     const { dateStr } = getTaipeiDateParts();
     await env.DB.prepare(`

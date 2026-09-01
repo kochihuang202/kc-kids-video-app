@@ -182,10 +182,13 @@ async function loadUsageHistory(env: AppEnv, range: { start: string; end: string
 
   const heartbeatsResult = await env.DB.prepare(`
     SELECT view_session_id, delta_seconds, interval_started_at, interval_ended_at, received_at
-    FROM view_heartbeats
-    WHERE (interval_started_at IS NOT NULL AND interval_started_at < ? AND interval_ended_at >= ?)
-      OR (interval_started_at IS NULL AND received_at >= ? AND received_at < ?)
-  `).bind(range.end, range.start, range.start, range.end).all<UsageHeartbeat>();
+    FROM view_heartbeats INDEXED BY idx_view_heartbeats_overlap_end
+    WHERE interval_started_at IS NOT NULL AND interval_ended_at >= ? AND interval_started_at < ?
+    UNION ALL
+    SELECT view_session_id, delta_seconds, interval_started_at, interval_ended_at, received_at
+    FROM view_heartbeats INDEXED BY idx_view_heartbeats_received
+    WHERE interval_started_at IS NULL AND received_at >= ? AND received_at < ?
+  `).bind(range.start, range.end, range.start, range.end).all<UsageHeartbeat>();
   return { sessions, heartbeats: heartbeatsResult.results || [] };
 }
 
@@ -296,11 +299,17 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
       SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at,
         s.video_id, s.played_seconds, s.started_at,
         COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
-      FROM view_heartbeats h
+      FROM view_heartbeats h INDEXED BY idx_view_heartbeats_overlap_end
       JOIN view_sessions s ON s.id = h.view_session_id
-      WHERE (h.interval_started_at IS NOT NULL AND h.interval_started_at < ? AND h.interval_ended_at > ?)
-        OR (h.interval_started_at IS NULL AND h.received_at >= ? AND h.received_at < ?)
-    `).bind(to, from, from, to).all<UsageHeartbeat & UsageSession>();
+      WHERE h.interval_started_at IS NOT NULL AND h.interval_ended_at > ? AND h.interval_started_at < ?
+      UNION ALL
+      SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at,
+        s.video_id, s.played_seconds, s.started_at,
+        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
+      FROM view_heartbeats h INDEXED BY idx_view_heartbeats_received
+      JOIN view_sessions s ON s.id = h.view_session_id
+      WHERE h.interval_started_at IS NULL AND h.received_at >= ? AND h.received_at < ?
+    `).bind(from, to, from, to).all<UsageHeartbeat & UsageSession>();
     const existingHeartbeats = (rows.results || []).map((row) => ({
       view_session_id: row.view_session_id,
       delta_seconds: row.delta_seconds,

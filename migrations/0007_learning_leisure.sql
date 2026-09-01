@@ -49,6 +49,11 @@ ON category_videos(video_id, sort_order, category_id);
 CREATE INDEX idx_view_sessions_video_updated
 ON view_sessions(video_id, updated_at DESC);
 
+-- Narrow overlap checks search for intervals that ended after the new
+-- heartbeat began. The original start-first index reads all older intervals.
+CREATE INDEX idx_view_heartbeats_overlap_end
+ON view_heartbeats(interval_ended_at, interval_started_at, view_session_id);
+
 -- Access polling reads one compact row. Detailed heartbeat history remains the
 -- source of truth and is only scanned once when a day's rollup is missing.
 CREATE TABLE daily_usage_totals (
