@@ -13,6 +13,7 @@
     "test:regression": "playwright test e2e/regressions",
     "test:regression:playback": "playwright test e2e/regressions/playback-position-stability.spec.ts",
     "test:regression:media-retry": "playwright test e2e/regressions/media-auto-retry.spec.ts",
+    "test:regression:d1-cost": "vitest run test/d1-cost-regressions.spec.ts test/learning-leisure.spec.ts",
     "test:feature:learning-leisure": "playwright test e2e/features/learning-leisure-flow.spec.ts",
     "test:e2e": "playwright test",
     "test:regression:ui": "playwright test --ui",

@@ -6,6 +6,7 @@ const PARENT_COOKIE = "parent_session";
 const DEVICE_COOKIE = "kid_device";
 const SESSION_SECONDS = 12 * 60 * 60;
 const DEVICE_SECONDS = 365 * 24 * 60 * 60;
+const DEVICE_TOUCH_INTERVAL_MS = 15 * 60 * 1000;
 export const MAX_PBKDF2_ITERATIONS = 100_000;
 
 function bytesToBase64(bytes: Uint8Array) {
@@ -75,15 +76,21 @@ export async function getChildDevice(request: Request, env: AppEnv, required = t
   }
   const hash = await tokenHash(token, env);
   const row = await env.DB.prepare(
-    "SELECT id, name FROM child_devices WHERE token_hash = ? AND revoked_at IS NULL",
-  ).bind(hash).first<{ id: string; name: string }>();
+    "SELECT id, name, last_used_at FROM child_devices WHERE token_hash = ? AND revoked_at IS NULL",
+  ).bind(hash).first<{ id: string; name: string; last_used_at: string }>();
   if (!row) {
     if (required) throw new HttpError("這台裝置的授權已失效，請家長重新授權。", 403, "DEVICE_AUTH_REQUIRED");
     return null;
   }
-  await env.DB.prepare("UPDATE child_devices SET last_used_at = ? WHERE id = ?")
-    .bind(new Date().toISOString(), row.id).run();
-  return row;
+  const now = new Date();
+  const touchCutoff = new Date(now.getTime() - DEVICE_TOUCH_INTERVAL_MS).toISOString();
+  if (!row.last_used_at || row.last_used_at < touchCutoff) {
+    await env.DB.prepare(`
+      UPDATE child_devices SET last_used_at = ?
+      WHERE id = ? AND last_used_at < ?
+    `).bind(now.toISOString(), row.id, touchCutoff).run();
+  }
+  return { id: row.id, name: row.name };
 }
 
 export async function getOrCreateChildDevice(request: Request, env: AppEnv): Promise<{ device: ChildDevice; cookieHeader?: string }> {

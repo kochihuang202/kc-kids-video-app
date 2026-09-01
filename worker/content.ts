@@ -1,6 +1,6 @@
 import { boolean, HttpError, integer, json, readJson, text } from "./http";
 import { mediaDto } from "./media";
-import { evaluateChildAccessState, getTodayPicks } from "./rules";
+import { evaluateChildAccessState, getTodayPicks, prepareDailyUsageRollupUpdates } from "./rules";
 import { consumeRateLimit, getChildDevice, getOrCreateChildDevice, rateKey, randomToken, tokenHash } from "./security";
 import type { AppEnv } from "./types";
 
@@ -426,6 +426,15 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
   await consumeRateLimit(env, await rateKey(env, "heartbeat", `${device!.id}:${sessionId}`), 30, 60);
   const now = new Date().toISOString();
   const heartbeatId = crypto.randomUUID();
+  const rollupUpdates = await prepareDailyUsageRollupUpdates(env, {
+    viewSessionId: sessionId,
+    deltaSeconds,
+    intervalStartedAt,
+    intervalEndedAt,
+    receivedAt: now,
+    playbackMode: session.playback_mode,
+    seriesType: session.series_type_snapshot,
+  });
   await env.DB.batch([
     env.DB.prepare(`
       INSERT OR IGNORE INTO view_heartbeats (
@@ -446,6 +455,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
         ended_at = CASE WHEN ? = 'ended' THEN COALESCE(ended_at, ?) ELSE ended_at END
       WHERE id = ?
     `).bind(sessionId, sessionId, sessionId, now, now, status, status, now, sessionId),
+    ...rollupUpdates,
   ]);
   const aggregate = await env.DB.prepare(
     "SELECT played_seconds, last_position_seconds, last_heartbeat_seq, status FROM view_sessions WHERE id = ?",

@@ -41,4 +41,23 @@ ON view_sessions(series_type_snapshot, playback_mode, started_at, updated_at);
 CREATE INDEX idx_video_learned_active
 ON video_learned_state(is_learned, updated_at);
 
+-- Hot-path indexes: content lookups start from a video, while the original
+-- category_videos index only supports category-first ordering.
+CREATE INDEX idx_category_videos_video_order
+ON category_videos(video_id, sort_order, category_id);
+
+CREATE INDEX idx_view_sessions_video_updated
+ON view_sessions(video_id, updated_at DESC);
+
+-- Access polling reads one compact row. Detailed heartbeat history remains the
+-- source of truth and is only scanned once when a day's rollup is missing.
+CREATE TABLE daily_usage_totals (
+  usage_date TEXT PRIMARY KEY NOT NULL,
+  leisure_seconds INTEGER NOT NULL DEFAULT 0 CHECK (leisure_seconds >= 0),
+  learning_seconds INTEGER NOT NULL DEFAULT 0 CHECK (learning_seconds >= 0),
+  listen_seconds INTEGER NOT NULL DEFAULT 0 CHECK (listen_seconds >= 0),
+  total_seconds INTEGER NOT NULL DEFAULT 0 CHECK (total_seconds >= 0),
+  updated_at TEXT NOT NULL
+);
+
 PRAGMA optimize;

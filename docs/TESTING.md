@@ -13,6 +13,7 @@ This project protects bugs that have actually happened. It does not aim for broa
 - Playback changes: `npm run test:regression:playback`
 - Local Mac/Tailscale media loading: `npm run test:regression:media-retry`
 - Learning/leisure child flow: `npm run test:feature:learning-leisure`
+- D1 polling, rollup, indexes, or device authorization cost: `npm run test:regression:d1-cost`
 - A new feature: its focused unit/integration test plus related regressions
 - Shared routing, repositories, player abstractions, authentication, or a large change: `npm run test:regression`
 

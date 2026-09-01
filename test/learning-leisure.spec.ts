@@ -96,6 +96,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM child_devices"),
     env.DB.prepare("DELETE FROM rate_limit_buckets"),
     env.DB.prepare("DELETE FROM daily_overrides"),
+    env.DB.prepare("DELETE FROM daily_usage_totals"),
     env.DB.prepare("DELETE FROM allowed_windows"),
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),
     env.DB.prepare("DELETE FROM categories WHERE id = 'leisure-test'"),
@@ -250,6 +251,39 @@ describe("learning and leisure rules", () => {
     expect(access.leisureUsedSeconds).toBe(60);
     expect(access.learningSeconds).toBe(0);
     expect(access.earnedBonusSeconds).toBe(0);
+  });
+
+  it("updates the daily rollup idempotently when a leisure heartbeat overlaps learning", async () => {
+    const learningDevice = await pairDevice("rollup-learning");
+    const leisureDevice = await pairDevice("rollup-leisure");
+    const learningStarted = await call("/api/view-sessions", {
+      method: "POST", headers: { cookie: learningDevice.cookie },
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID(), playbackMode: "video" }),
+    });
+    const leisureStarted = await call("/api/view-sessions", {
+      method: "POST", headers: { cookie: leisureDevice.cookie },
+      body: jsonBody({ videoId: "elmo-alphabet", clientSessionId: crypto.randomUUID(), playbackMode: "video" }),
+    });
+    expect(learningStarted.status).toBe(201);
+    expect(leisureStarted.status).toBe(201);
+    const learningSession = await learningStarted.json<{ id: string; writeToken: string }>();
+    const leisureSession = await leisureStarted.json<{ id: string; writeToken: string }>();
+    const end = new Date();
+    const start = new Date(end.getTime() - 60_000);
+
+    expect((await sendHeartbeat(learningDevice.cookie, learningSession, 1, 60, start, end)).status).toBe(200);
+    let access = await (await call("/api/child/access-state")).json<any>();
+    expect(access).toMatchObject({ learningSeconds: 60, leisureUsedSeconds: 0, todayPlayedSeconds: 60 });
+
+    expect((await sendHeartbeat(leisureDevice.cookie, leisureSession, 1, 60, start, end)).status).toBe(200);
+    access = await (await call("/api/child/access-state")).json<any>();
+    expect(access).toMatchObject({ learningSeconds: 0, leisureUsedSeconds: 60, todayPlayedSeconds: 60 });
+
+    const duplicate = await sendHeartbeat(leisureDevice.cookie, leisureSession, 1, 60, start, end);
+    expect(duplicate.status).toBe(200);
+    expect(await duplicate.json()).toMatchObject({ duplicate: true });
+    access = await (await call("/api/child/access-state")).json<any>();
+    expect(access).toMatchObject({ learningSeconds: 0, leisureUsedSeconds: 60, todayPlayedSeconds: 60 });
   });
 
   it("shares resume position across authorized devices for the single child", async () => {

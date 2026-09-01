@@ -101,6 +101,21 @@ interface UsageHeartbeat {
   received_at: string;
 }
 
+interface SharedUsage {
+  leisureUsedSeconds: number;
+  learningSeconds: number;
+  listenSeconds: number;
+  totalPlayedSeconds: number;
+}
+
+interface DailyUsageTotalRow {
+  usage_date: string;
+  leisure_seconds: number;
+  learning_seconds: number;
+  listen_seconds: number;
+  total_seconds: number;
+}
+
 /** Counts at most one second of activity per wall-clock second for the single child. */
 export function calculateSharedUsage(
   sessions: UsageSession[],
@@ -155,6 +170,175 @@ export function calculateSharedUsage(
   return { leisureUsedSeconds, learningSeconds, listenSeconds, totalPlayedSeconds };
 }
 
+async function loadUsageHistory(env: AppEnv, range: { start: string; end: string }) {
+  const sessionsResult = await env.DB.prepare(`
+    SELECT id, video_id, played_seconds, started_at,
+      COALESCE(playback_mode, 'video') AS playback_mode, series_type_snapshot
+    FROM view_sessions
+    WHERE started_at < ? AND COALESCE(ended_at, updated_at) >= ?
+  `).bind(range.end, range.start).all<UsageSession>();
+  const sessions = sessionsResult.results || [];
+  if (!sessions.length) return { sessions, heartbeats: [] as UsageHeartbeat[] };
+
+  const heartbeatsResult = await env.DB.prepare(`
+    SELECT view_session_id, delta_seconds, interval_started_at, interval_ended_at, received_at
+    FROM view_heartbeats
+    WHERE (interval_started_at IS NOT NULL AND interval_started_at < ? AND interval_ended_at >= ?)
+      OR (interval_started_at IS NULL AND received_at >= ? AND received_at < ?)
+  `).bind(range.end, range.start, range.start, range.end).all<UsageHeartbeat>();
+  return { sessions, heartbeats: heartbeatsResult.results || [] };
+}
+
+function usageFromRow(row: DailyUsageTotalRow): SharedUsage {
+  return {
+    leisureUsedSeconds: row.leisure_seconds,
+    learningSeconds: row.learning_seconds,
+    listenSeconds: row.listen_seconds,
+    totalPlayedSeconds: row.total_seconds,
+  };
+}
+
+/**
+ * Polling reads one row. The detailed history is scanned only once for a date
+ * that has no rollup yet (including dates created before this migration).
+ */
+export async function ensureDailyUsageRollup(env: AppEnv, targetDate: Date = new Date()) {
+  const { dateStr } = getTaipeiDateParts(targetDate);
+  const existing = await env.DB.prepare(`
+    SELECT usage_date, leisure_seconds, learning_seconds, listen_seconds, total_seconds
+    FROM daily_usage_totals WHERE usage_date = ?
+  `).bind(dateStr).first<DailyUsageTotalRow>();
+  if (existing) return usageFromRow(existing);
+
+  const range = getDayRangeInTimeZone(TIME_ZONE, targetDate);
+  let usage: SharedUsage = {
+    leisureUsedSeconds: 0,
+    learningSeconds: 0,
+    listenSeconds: 0,
+    totalPlayedSeconds: 0,
+  };
+  if (env.RECORDING_ENABLED !== "false") {
+    const history = await loadUsageHistory(env, range);
+    usage = calculateSharedUsage(history.sessions, history.heartbeats, range);
+  }
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO daily_usage_totals (
+      usage_date, leisure_seconds, learning_seconds, listen_seconds, total_seconds, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(
+    dateStr,
+    usage.leisureUsedSeconds,
+    usage.learningSeconds,
+    usage.listenSeconds,
+    usage.totalPlayedSeconds,
+    now,
+  ).run();
+
+  const stored = await env.DB.prepare(`
+    SELECT usage_date, leisure_seconds, learning_seconds, listen_seconds, total_seconds
+    FROM daily_usage_totals WHERE usage_date = ?
+  `).bind(dateStr).first<DailyUsageTotalRow>();
+  return stored ? usageFromRow(stored) : usage;
+}
+
+export interface RollupHeartbeatInput {
+  viewSessionId: string;
+  deltaSeconds: number;
+  intervalStartedAt: string | null;
+  intervalEndedAt: string | null;
+  receivedAt: string;
+  playbackMode: "video" | "listen";
+  seriesType: "learning" | "leisure" | null;
+}
+
+/** Builds atomic rollup updates for one new, non-duplicate heartbeat. */
+export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupHeartbeatInput) {
+  if (env.RECORDING_ENABLED === "false" || input.deltaSeconds <= 0) return [] as D1PreparedStatement[];
+
+  const receivedMs = Date.parse(input.receivedAt);
+  const parsedStart = input.intervalStartedAt ? Date.parse(input.intervalStartedAt) : Number.NaN;
+  const parsedEnd = input.intervalEndedAt ? Date.parse(input.intervalEndedAt) : Number.NaN;
+  const rawEnd = Number.isFinite(parsedEnd) ? parsedEnd : receivedMs;
+  const rawStart = Number.isFinite(parsedStart) ? parsedStart : rawEnd - input.deltaSeconds * 1000;
+  const intervalStart = Math.min(rawStart, rawEnd);
+  const intervalEnd = Math.max(rawStart, rawEnd, intervalStart + 1000);
+  if (!Number.isFinite(intervalStart) || !Number.isFinite(intervalEnd)) return [] as D1PreparedStatement[];
+
+  const dates = new Map<string, Date>();
+  for (const instant of [new Date(intervalStart), new Date(intervalEnd - 1)]) {
+    dates.set(getTaipeiDateParts(instant).dateStr, instant);
+  }
+
+  const statements: D1PreparedStatement[] = [];
+  const newSession: UsageSession = {
+    id: input.viewSessionId,
+    video_id: "",
+    played_seconds: 0,
+    started_at: input.intervalStartedAt || input.receivedAt,
+    playback_mode: input.playbackMode,
+    series_type_snapshot: input.seriesType,
+  };
+  const newHeartbeat: UsageHeartbeat = {
+    view_session_id: input.viewSessionId,
+    delta_seconds: input.deltaSeconds,
+    interval_started_at: input.intervalStartedAt,
+    interval_ended_at: input.intervalEndedAt,
+    received_at: input.receivedAt,
+  };
+
+  for (const [dateStr, date] of dates) {
+    await ensureDailyUsageRollup(env, date);
+    const dayRange = getDayRangeInTimeZone(TIME_ZONE, date);
+    const from = new Date(Math.max(intervalStart, Date.parse(dayRange.start))).toISOString();
+    const to = new Date(Math.min(intervalEnd, Date.parse(dayRange.end))).toISOString();
+    const rows = await env.DB.prepare(`
+      SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at,
+        s.video_id, s.played_seconds, s.started_at,
+        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
+      FROM view_heartbeats h
+      JOIN view_sessions s ON s.id = h.view_session_id
+      WHERE (h.interval_started_at IS NOT NULL AND h.interval_started_at < ? AND h.interval_ended_at > ?)
+        OR (h.interval_started_at IS NULL AND h.received_at >= ? AND h.received_at < ?)
+    `).bind(to, from, from, to).all<UsageHeartbeat & UsageSession>();
+    const existingHeartbeats = (rows.results || []).map((row) => ({
+      view_session_id: row.view_session_id,
+      delta_seconds: row.delta_seconds,
+      interval_started_at: row.interval_started_at,
+      interval_ended_at: row.interval_ended_at,
+      received_at: row.received_at,
+    }));
+    const existingSessions = [...new Map((rows.results || []).map((row) => [row.view_session_id, {
+      id: row.view_session_id,
+      video_id: row.video_id,
+      played_seconds: row.played_seconds,
+      started_at: row.started_at,
+      playback_mode: row.playback_mode,
+      series_type_snapshot: row.series_type_snapshot,
+    }])).values()];
+    const before = calculateSharedUsage(existingSessions, existingHeartbeats, dayRange);
+    const after = calculateSharedUsage(
+      [...existingSessions.filter((session) => session.id !== input.viewSessionId), newSession],
+      [...existingHeartbeats, newHeartbeat],
+      dayRange,
+    );
+    const leisureDelta = after.leisureUsedSeconds - before.leisureUsedSeconds;
+    const learningDelta = after.learningSeconds - before.learningSeconds;
+    const listenDelta = after.listenSeconds - before.listenSeconds;
+    const totalDelta = after.totalPlayedSeconds - before.totalPlayedSeconds;
+    statements.push(env.DB.prepare(`
+      UPDATE daily_usage_totals SET
+        leisure_seconds = MAX(0, leisure_seconds + ?),
+        learning_seconds = MAX(0, learning_seconds + ?),
+        listen_seconds = MAX(0, listen_seconds + ?),
+        total_seconds = MAX(0, total_seconds + ?),
+        updated_at = ?
+      WHERE usage_date = ?
+    `).bind(leisureDelta, learningDelta, listenDelta, totalDelta, input.receivedAt, dateStr));
+  }
+  return statements;
+}
+
 export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = new Date()) {
   const { dateStr, dayType, currentHHmm } = getTaipeiDateParts(targetDate);
   const dayRange = getDayRangeInTimeZone(TIME_ZONE, targetDate);
@@ -185,31 +369,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
     "SELECT id, date, bonus_seconds, limit_override_seconds, is_paused FROM daily_overrides WHERE date = ?",
   ).bind(dateStr).first<DailyOverrideRow>();
 
-  // Recording can be disabled while reminder rules continue to work from device-local time.
-  let sessions: UsageSession[] = [];
-  if (env.RECORDING_ENABLED !== "false") {
-    const sessionsResult = await env.DB.prepare(`
-      SELECT id, video_id, played_seconds, started_at, updated_at, ended_at,
-        COALESCE(playback_mode, 'video') AS playback_mode, series_type_snapshot
-      FROM view_sessions
-      WHERE started_at < ? AND COALESCE(ended_at, updated_at) >= ?
-    `).bind(dayRange.end, dayRange.start).all<UsageSession>();
-    sessions = sessionsResult.results || [];
-  }
-
-  let heartbeats: UsageHeartbeat[] = [];
-
-  if (sessions.length) {
-    const heartbeatsResult = await env.DB.prepare(`
-      SELECT view_session_id, delta_seconds, interval_started_at, interval_ended_at, received_at
-      FROM view_heartbeats
-      WHERE (interval_started_at IS NOT NULL AND interval_started_at < ? AND interval_ended_at >= ?)
-        OR (interval_started_at IS NULL AND received_at >= ? AND received_at < ?)
-    `).bind(dayRange.end, dayRange.start, dayRange.start, dayRange.end).all<UsageHeartbeat>();
-    heartbeats = heartbeatsResult.results || [];
-  }
-
-  const sharedUsage = calculateSharedUsage(sessions, heartbeats, dayRange);
+  const sharedUsage = await ensureDailyUsageRollup(env, targetDate);
   const todayPlayedSeconds = sharedUsage.totalPlayedSeconds;
 
   // Calculate Category-specific played seconds and limits
@@ -221,16 +381,18 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
   `).all<{ id: string; name: string; icon: string; tone: "sage" | "sky" | "apricot"; daily_limit_seconds: number | null }>();
   const activeCategories = categoriesResult.results || [];
 
-  const catVideosResult = await env.DB.prepare(`
-    SELECT category_id, video_id
-    FROM category_videos
-  `).all<{ category_id: string; video_id: string }>();
-  const catVideos = catVideosResult.results || [];
-
-  const sessionSecondsMap = new Map<string, number>();
-  if (sessions.length) {
+  const categoryPlayedMap = new Map<string, number>();
+  if (activeCategories.some((category) => (category.daily_limit_seconds || 0) > 0)) {
+    const { sessions, heartbeats } = await loadUsageHistory(env, dayRange);
+    const heartbeatsBySession = new Map<string, UsageHeartbeat[]>();
+    for (const heartbeat of heartbeats) {
+      const matching = heartbeatsBySession.get(heartbeat.view_session_id) || [];
+      matching.push(heartbeat);
+      heartbeatsBySession.set(heartbeat.view_session_id, matching);
+    }
+    const sessionSecondsMap = new Map<string, number>();
     for (const session of sessions) {
-      const matching = heartbeats.filter((hb) => hb.view_session_id === session.id);
+      const matching = heartbeatsBySession.get(session.id) || [];
       let sec = 0;
       if (matching.length) {
         sec = matching.reduce((sum, hb) => {
@@ -251,15 +413,15 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
       }
       sessionSecondsMap.set(session.id, sec);
     }
-  }
-
-  const categoryPlayedMap = new Map<string, number>();
-  for (const session of sessions) {
-    const sec = sessionSecondsMap.get(session.id) || 0;
-    if (sec <= 0) continue;
-    const mappedCatIds = catVideos.filter((cv) => cv.video_id === (session as any).video_id).map((cv) => cv.category_id);
-    for (const catId of mappedCatIds) {
-      categoryPlayedMap.set(catId, (categoryPlayedMap.get(catId) || 0) + sec);
+    const mappings = await env.DB.prepare(`
+      SELECT DISTINCT vs.id AS session_id, cv.category_id
+      FROM view_sessions vs
+      JOIN category_videos cv ON cv.video_id = vs.video_id
+      WHERE vs.started_at < ? AND COALESCE(vs.ended_at, vs.updated_at) >= ?
+    `).bind(dayRange.end, dayRange.start).all<{ session_id: string; category_id: string }>();
+    for (const mapping of mappings.results || []) {
+      const sec = sessionSecondsMap.get(mapping.session_id) || 0;
+      if (sec > 0) categoryPlayedMap.set(mapping.category_id, (categoryPlayedMap.get(mapping.category_id) || 0) + sec);
     }
   }
 
