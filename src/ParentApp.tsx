@@ -272,9 +272,9 @@ function HistoryPage() {
               {dashboard.ruleState.isPaused ? "⏸️ 孩子端目前已暫停" : "🌱 孩子端運行中"}
             </span>
             <strong className="control-progress">
-              今日播放 {Math.round(dashboard.ruleState.todayPlayedSeconds / 60)} / {Math.round(dashboard.ruleState.dailyLimitSeconds / 60)} 分鐘
-              {dashboard.ruleState.bonusSeconds > 0 && ` (含加時 ${Math.round(dashboard.ruleState.bonusSeconds / 60)} 分)`}
-              ，剩餘約 {Math.round(dashboard.ruleState.remainingSeconds / 60)} 分鐘
+              今日休閒已用 {Math.round((dashboard.ruleState.leisureUsedSeconds || 0) / 60)} 分鐘，
+              剩餘約 {Math.round(dashboard.ruleState.remainingSeconds / 60)} 分鐘
+              {dashboard.ruleState.earnedBonusSeconds ? `（學習增加 ${Math.floor(dashboard.ruleState.earnedBonusSeconds / 60)} 分鐘）` : ""}
             </strong>
           </div>
           <div className="quick-control-actions">
@@ -324,8 +324,20 @@ function HistoryPage() {
               <>
                 <div className="summary-card summary-main">
                   <Clock3 />
-                  <span>影片播放</span>
+                  <span>全部播放</span>
                   <strong>{formatPlayedDuration(dashboard.summary.totalPlayedSeconds)}</strong>
+                </div>
+                <div className="summary-card">
+                  <span>📚 學習觀看</span>
+                  <strong>{formatExactDuration(dashboard.summary.learningSeconds || 0)}</strong>
+                </div>
+                <div className="summary-card">
+                  <span>🎈 休閒觀看</span>
+                  <strong>{formatExactDuration(dashboard.summary.leisureSeconds || 0)}</strong>
+                </div>
+                <div className="summary-card">
+                  <span>🎧 純聽</span>
+                  <strong>{formatExactDuration(dashboard.summary.listenSeconds || 0)}</strong>
                 </div>
                 <div className="summary-card">
                   <Film />
@@ -424,6 +436,12 @@ function HistoryPage() {
                           )}
                           <span className="device-chip">
                             <Smartphone /> {session.deviceName || "家庭裝置"}
+                          </span>
+                          <span className={`series-history-chip ${session.seriesType || "leisure"}`}>
+                            {session.seriesType === "learning" ? "📚 學習" : "🎈 休閒"}
+                          </span>
+                          <span className={`playback-mode-chip ${session.playbackMode || "video"}`}>
+                            {session.playbackMode === "listen" ? "🎧 純聽" : "▶ 觀看"}
                           </span>
                           <span className="play-time-badge">
                             <Clock3 /> 開始於 {formatClock(session.startedAt)}
@@ -863,6 +881,7 @@ function VideoForm({ categories, onCreated }: { categories: AdminCategory[]; onC
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const selectedSeriesType = categories.find((category) => categoryIds.includes(category.id))?.seriesType;
 
   const inspect = async (event: FormEvent) => {
     event.preventDefault();
@@ -929,16 +948,19 @@ function VideoForm({ categories, onCreated }: { categories: AdminCategory[]; onC
               </label>
               <fieldset>
                 <legend>放入分類</legend>
-                {categories.filter((c) => !c.archivedAt).map((category) => (
-                  <label key={category.id}>
+                {categories.filter((c) => !c.archivedAt).map((category) => {
+                  const checked = categoryIds.includes(category.id);
+                  const disabled = !checked && !!selectedSeriesType && selectedSeriesType !== category.seriesType;
+                  return <label key={category.id} className={disabled ? "disabled-option" : ""}>
                     <input
                       type="checkbox"
-                      checked={categoryIds.includes(category.id)}
-                      onChange={() => setCategoryIds(categoryIds.includes(category.id) ? categoryIds.filter((id) => id !== category.id) : [...categoryIds, category.id])}
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => setCategoryIds(checked ? categoryIds.filter((id) => id !== category.id) : [...categoryIds, category.id])}
                     />
-                    {category.icon} {category.name}
-                  </label>
-                ))}
+                    {category.icon} {category.name} · {category.seriesType === "learning" ? "學習" : "休閒"}
+                  </label>;
+                })}
               </fieldset>
               <Button onClick={() => void add()} disabled={loading || !parentLabel.trim() || !categoryIds.length}>
                 <Check /> 確認加入
@@ -959,7 +981,6 @@ function RulesPage() {
   const [rules, setRules] = useState<UsageRule[]>([]);
   const [todayOverride, setTodayOverride] = useState<DailyOverride | null>(null);
   const [todayPicks, setTodayPicks] = useState<TodayPick[]>([]);
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -969,15 +990,13 @@ function RulesPage() {
     setLoading(true);
     setError("");
     try {
-      const [rulesData, picksData, categoriesData] = await Promise.all([
+      const [rulesData, picksData] = await Promise.all([
         parentRepository.rules(),
         parentRepository.todayPicks(),
-        parentRepository.categories(),
       ]);
       setRules(rulesData.rules || []);
       setTodayOverride(rulesData.todayOverride || null);
       setTodayPicks(picksData || []);
-      setCategories((categoriesData || []).filter((c) => !c.archivedAt));
     } catch (e) {
       setError(e instanceof Error ? e.message : "規則載入失敗。");
     } finally {
@@ -1055,16 +1074,6 @@ function RulesPage() {
     }
   };
 
-  const updateCategoryLimit = async (id: string, limitSec: number | null) => {
-    try {
-      await parentRepository.updateCategory(id, { dailyLimitSeconds: limitSec });
-      setCategories((prev) => prev.map((c) => c.id === id ? { ...c, dailyLimitSeconds: limitSec } : c));
-      setMessage("分類上限已更新！");
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "更新分類上限失敗");
-    }
-  };
-
   const updateTodayReminder = async (action: "pause" | "resume" | "bonus", minutes = 0) => {
     try {
       if (action === "pause") await parentRepository.pauseToday();
@@ -1089,7 +1098,7 @@ function RulesPage() {
         <div className="rule-card-header">
           <h3><Clock3 /> 今天的即時提醒</h3>
         </div>
-        <p>觀看時間只保存在孩子目前使用的裝置，不會上傳；這裡仍可暫停今天的播放或增加今日上限。</p>
+        <p>所有已授權裝置共用同一個孩子的休閒額度與觀看紀錄；這裡可暫停今天的播放或增加休閒時間。</p>
         <div className="quick-control-bar">
           <div className="quick-control-status">
             <span className="control-indicator">{todayOverride?.isPaused ? "⏸️ 孩子端目前已暫停" : "🌱 孩子端可以播放"}</span>
@@ -1111,7 +1120,6 @@ function RulesPage() {
         const isWeekday = rule.id === "weekday";
         const title = isWeekday ? "平日（週一 ～ 週五）" : "週末（週六 ～ 週日）";
         const dailyLimitMinutes = Math.round(rule.dailyLimitSeconds / 60);
-        const graceMinutes = Math.round(rule.gracePeriodSeconds / 60);
 
         return (
           <section className="settings-card rule-card" key={rule.id}>
@@ -1122,7 +1130,7 @@ function RulesPage() {
             <div className="rule-config-grid">
               <div className="rule-config-item">
                 <label>
-                  <strong>每日播放上限</strong>
+                  <strong>每日休閒基本額度</strong>
                   <div className="input-with-unit">
                     <input
                       type="number"
@@ -1137,22 +1145,6 @@ function RulesPage() {
                 </label>
               </div>
 
-              <div className="rule-config-item">
-                <label>
-                  <strong>超時寬限期</strong>
-                  <div className="input-with-unit">
-                    <input
-                      type="number"
-                      min={0}
-                      max={60}
-                      step={1}
-                      value={graceMinutes}
-                      onChange={(e) => updateRuleField(rule.id, "gracePeriodMinutes", Number(e.target.value))}
-                    />
-                    <span>分鐘</span>
-                  </div>
-                </label>
-              </div>
             </div>
 
             <div className="allowed-windows-block">
@@ -1198,31 +1190,6 @@ function RulesPage() {
         </Button>
       </div>
 
-      {/* Category-Specific Limits Section */}
-      <section className="settings-card" style={{ marginTop: "36px" }}>
-        <h3><Film /> 各分類每日播放上限</h3>
-        <p>若個別分類有設定上限（例如卡通 15 分鐘、科普 30 分鐘），該分類播滿後會先鎖定，孩子仍可看其他分類；若填 0 或留空則不個別限制（受全域上限約束）。</p>
-        <div className="cat-limits-grid">
-          {categories.map((c) => (
-            <div className="cat-limit-card" key={c.id}>
-              <span className="cat-limit-title">{c.icon} {c.name}</span>
-              <div className="input-with-unit">
-                <input
-                  type="number"
-                  min={0}
-                  max={1440}
-                  step={5}
-                  value={c.dailyLimitSeconds ? Math.round(c.dailyLimitSeconds / 60) : ""}
-                  placeholder="不限制"
-                  onChange={(e) => updateCategoryLimit(c.id, e.target.value === "" ? null : Number(e.target.value) * 60)}
-                />
-                <span>分鐘</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Today Picks Section (Spec #46 ~ #56) */}
       <section className="settings-card" style={{ marginTop: "36px" }}>
         <h3><Sparkles /> 今天推薦影片（共 {todayPicks.length} 部）</h3>
@@ -1259,6 +1226,7 @@ function VideoRow({
   const [label, setLabel] = useState(video.parentLabel || "");
   const [categoryIds, setCategoryIds] = useState<string[]>(video.categoryIds || []);
   const [error, setError] = useState("");
+  const selectedSeriesType = categories.find((category) => categoryIds.includes(category.id))?.seriesType;
 
   useEffect(() => {
     setLabel(video.parentLabel || "");
@@ -1305,16 +1273,19 @@ function VideoRow({
         </div>
 
         <div className="category-checkboxes">
-          {(categories || []).filter((c) => !c.archivedAt).map((category) => (
-            <label key={category.id}>
+          {(categories || []).filter((c) => !c.archivedAt).map((category) => {
+            const checked = (categoryIds || []).includes(category.id);
+            const disabled = !checked && !!selectedSeriesType && selectedSeriesType !== category.seriesType;
+            return <label key={category.id} className={disabled ? "disabled-option" : ""}>
               <input
                 type="checkbox"
-                checked={(categoryIds || []).includes(category.id)}
-                onChange={() => setCategoryIds((categoryIds || []).includes(category.id) ? (categoryIds || []).filter((id) => id !== category.id) : [...(categoryIds || []), category.id])}
+                checked={checked}
+                disabled={disabled}
+                onChange={() => setCategoryIds(checked ? (categoryIds || []).filter((id) => id !== category.id) : [...(categoryIds || []), category.id])}
               />
-              {category.name}
-            </label>
-          ))}
+              {category.name} · {category.seriesType === "learning" ? "學習" : "休閒"}
+            </label>;
+          })}
         </div>
 
         {video.metadataError && <p className="metadata-error">{video.metadataError}</p>}
@@ -1548,7 +1519,7 @@ function SortableCategoryRow({
   category, index, count, onChange, onMove, onArchive, onRestore,
 }: {
   category: AdminCategory; index: number; count: number;
-  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "dailyLimitSeconds">>) => void;
+  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType">>) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onArchive: (id: string) => void;
   onRestore: (id: string) => void;
@@ -1556,19 +1527,15 @@ function SortableCategoryRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id, disabled: !!category.archivedAt });
   const [name, setName] = useState(category.name);
   const [icon, setIcon] = useState(category.icon);
-  const [limitMinutes, setLimitMinutes] = useState<string>(
-    category.dailyLimitSeconds ? String(Math.round(category.dailyLimitSeconds / 60)) : ""
-  );
+  const [seriesType, setSeriesType] = useState(category.seriesType);
   useEffect(() => {
     setName(category.name);
     setIcon(category.icon);
-    setLimitMinutes(category.dailyLimitSeconds ? String(Math.round(category.dailyLimitSeconds / 60)) : "");
+    setSeriesType(category.seriesType);
   }, [category]);
 
   const handleSave = () => {
-    const parsedMin = limitMinutes.trim() === "" ? null : Number(limitMinutes);
-    const dailyLimitSeconds = parsedMin !== null && !isNaN(parsedMin) && parsedMin > 0 ? parsedMin * 60 : null;
-    onChange(category.id, { name, icon, dailyLimitSeconds });
+    onChange(category.id, { name, icon, seriesType });
   };
 
   return (
@@ -1576,19 +1543,10 @@ function SortableCategoryRow({
       <button className="drag-handle" aria-label={`拖曳 ${category.name}`} {...attributes} {...listeners}><GripVertical /></button>
       <input className="emoji-input" aria-label="圖示" value={icon} maxLength={12} onChange={(event) => setIcon(event.target.value)} />
       <input aria-label="分類名稱" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />
-      <div className="cat-limit-input-wrapper" title="每日播放上限（分鐘，留空或 0 代表不個別限制）">
-        <input
-          type="number"
-          min={0}
-          max={1440}
-          step={5}
-          placeholder="不限時"
-          value={limitMinutes}
-          onChange={(e) => setLimitMinutes(e.target.value)}
-          className="cat-limit-field"
-        />
-        <span className="unit-label">分/天</span>
-      </div>
+      <select aria-label="系列類型" value={seriesType} onChange={(event) => setSeriesType(event.target.value as "learning" | "leisure")}>
+        <option value="learning">📚 學習系列</option>
+        <option value="leisure">🎈 休閒系列</option>
+      </select>
       <span className={`status-chip ${category.archivedAt ? "archived" : category.isActive ? "active" : "hidden"}`}>
         {category.archivedAt ? "Archived" : category.isActive ? "Active" : "Hidden"}
       </span>
@@ -1616,6 +1574,7 @@ function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("✨");
+  const [seriesType, setSeriesType] = useState<"learning" | "leisure">("leisure");
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const load = useCallback(async () => {
     setLoading(true);
@@ -1639,12 +1598,12 @@ function CategoriesPage() {
     const to = active.findIndex((item) => item.id === event.over!.id);
     void persistOrder(arrayMove(active, from, to));
   };
-  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive">>) => {
+  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType">>) => {
     await parentRepository.updateCategory(id, body).then(load).catch((e) => setError(e.message));
   };
   const create = async (event: FormEvent) => {
     event.preventDefault();
-    await parentRepository.createCategory({ name, icon }).then(() => { setName(""); setIcon("✨"); return load(); }).catch((e) => setError(e.message));
+    await parentRepository.createCategory({ name, icon, seriesType }).then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); return load(); }).catch((e) => setError(e.message));
   };
   return (
     <div className="parent-content">
@@ -1652,6 +1611,10 @@ function CategoriesPage() {
       <form className="inline-create-form" onSubmit={(event) => void create(event)}>
         <input className="emoji-input" value={icon} maxLength={12} onChange={(e) => setIcon(e.target.value)} aria-label="新分類圖示" />
         <input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="新分類名稱" required />
+        <select aria-label="新分類系列類型" value={seriesType} onChange={(event) => setSeriesType(event.target.value as "learning" | "leisure")}>
+          <option value="leisure">🎈 休閒系列</option>
+          <option value="learning">📚 學習系列</option>
+        </select>
         <Button type="submit"><Plus /> 建立分類</Button>
       </form>
       {loading && <ParentState>正在載入分類…</ParentState>}

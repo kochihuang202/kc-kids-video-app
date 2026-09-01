@@ -78,10 +78,81 @@ function formatFriendlyTime(hhmm: string) {
 
 function formatGentleRemaining(seconds: number) {
   const minutes = Math.round(seconds / 60);
-  if (minutes <= 0) return "今天的影片時間到了 🌙";
-  if (minutes <= 5) return "今天快到時間囉 🌱";
-  if (minutes <= 12) return `今天大約還能看 ${minutes} 分鐘`;
-  return `今天還可以看約 ${minutes} 分鐘`;
+  if (minutes <= 0) return "今天的休閒時間到了，學習和純聽仍可使用 🌙";
+  if (minutes <= 5) return "今天的休閒時間快到了 🌱";
+  if (minutes <= 12) return `今天大約還有 ${minutes} 分鐘休閒時間`;
+  return `今天還有約 ${minutes} 分鐘休閒時間`;
+}
+
+interface UsageSession {
+  id: string;
+  video_id: string;
+  played_seconds: number;
+  started_at: string;
+  playback_mode: "video" | "listen";
+  series_type_snapshot: "learning" | "leisure" | null;
+}
+
+interface UsageHeartbeat {
+  view_session_id: string;
+  delta_seconds: number;
+  interval_started_at: string | null;
+  interval_ended_at: string | null;
+  received_at: string;
+}
+
+/** Counts at most one second of activity per wall-clock second for the single child. */
+export function calculateSharedUsage(
+  sessions: UsageSession[],
+  heartbeats: UsageHeartbeat[],
+  range: { start: string; end: string },
+) {
+  const rangeStart = Date.parse(range.start);
+  const rangeEnd = Date.parse(range.end);
+  const slotCount = Math.max(1, Math.ceil((rangeEnd - rangeStart) / 1000));
+  const leisure = new Uint8Array(slotCount);
+  const learning = new Uint8Array(slotCount);
+  const listen = new Uint8Array(slotCount);
+  const all = new Uint8Array(slotCount);
+  const sessionMap = new Map(sessions.map((session) => [session.id, session]));
+
+  for (const heartbeat of heartbeats) {
+    const session = sessionMap.get(heartbeat.view_session_id);
+    if (!session || heartbeat.delta_seconds <= 0) continue;
+    const rawEnd = heartbeat.interval_ended_at ? Date.parse(heartbeat.interval_ended_at) : Date.parse(heartbeat.received_at);
+    const rawStart = heartbeat.interval_started_at
+      ? Date.parse(heartbeat.interval_started_at)
+      : rawEnd - heartbeat.delta_seconds * 1000;
+    if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) continue;
+    const from = Math.max(rangeStart, Math.min(rawStart, rawEnd));
+    const to = Math.min(rangeEnd, Math.max(rawStart, rawEnd));
+    if (to <= from) continue;
+    const firstSlot = Math.max(0, Math.floor((from - rangeStart) / 1000));
+    const availableSlots = Math.max(1, Math.ceil((to - from) / 1000));
+    const secondsToMark = Math.min(heartbeat.delta_seconds, availableSlots, slotCount - firstSlot);
+    for (let index = 0; index < secondsToMark; index += 1) {
+      const slot = firstSlot + index;
+      all[slot] = 1;
+      if (session.playback_mode !== "video") {
+        listen[slot] = 1;
+        continue;
+      }
+      if (session.series_type_snapshot === "learning") learning[slot] = 1;
+      else leisure[slot] = 1;
+    }
+  }
+
+  let leisureUsedSeconds = 0;
+  let learningSeconds = 0;
+  let listenSeconds = 0;
+  let totalPlayedSeconds = 0;
+  for (let index = 0; index < slotCount; index += 1) {
+    if (all[index]) totalPlayedSeconds += 1;
+    if (leisure[index]) leisureUsedSeconds += 1;
+    else if (learning[index]) learningSeconds += 1;
+    else if (listen[index]) listenSeconds += 1;
+  }
+  return { leisureUsedSeconds, learningSeconds, listenSeconds, totalPlayedSeconds };
 }
 
 export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = new Date()) {
@@ -115,21 +186,18 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
   ).bind(dateStr).first<DailyOverrideRow>();
 
   // Recording can be disabled while reminder rules continue to work from device-local time.
-  let sessions: Array<{ id: string; video_id: string; played_seconds: number; started_at: string }> = [];
+  let sessions: UsageSession[] = [];
   if (env.RECORDING_ENABLED !== "false") {
     const sessionsResult = await env.DB.prepare(`
-      SELECT id, video_id, played_seconds, started_at, updated_at, ended_at
+      SELECT id, video_id, played_seconds, started_at, updated_at, ended_at,
+        COALESCE(playback_mode, 'video') AS playback_mode, series_type_snapshot
       FROM view_sessions
       WHERE started_at < ? AND COALESCE(ended_at, updated_at) >= ?
-    `).bind(dayRange.end, dayRange.start).all<{ id: string; video_id: string; played_seconds: number; started_at: string }>();
+    `).bind(dayRange.end, dayRange.start).all<UsageSession>();
     sessions = sessionsResult.results || [];
   }
 
-  let todayPlayedSeconds = 0;
-  let heartbeats: Array<{
-    view_session_id: string; delta_seconds: number; interval_started_at: string | null;
-    interval_ended_at: string | null; received_at: string;
-  }> = [];
+  let heartbeats: UsageHeartbeat[] = [];
 
   if (sessions.length) {
     const heartbeatsResult = await env.DB.prepare(`
@@ -137,33 +205,12 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
       FROM view_heartbeats
       WHERE (interval_started_at IS NOT NULL AND interval_started_at < ? AND interval_ended_at >= ?)
         OR (interval_started_at IS NULL AND received_at >= ? AND received_at < ?)
-    `).bind(dayRange.end, dayRange.start, dayRange.start, dayRange.end).all<{
-      view_session_id: string; delta_seconds: number; interval_started_at: string | null;
-      interval_ended_at: string | null; received_at: string;
-    }>();
+    `).bind(dayRange.end, dayRange.start, dayRange.start, dayRange.end).all<UsageHeartbeat>();
     heartbeats = heartbeatsResult.results || [];
-
-    for (const session of sessions) {
-      const matching = heartbeats.filter((hb) => hb.view_session_id === session.id);
-      if (matching.length) {
-        todayPlayedSeconds += matching.reduce((sum, hb) => {
-          if (!hb.interval_started_at || !hb.interval_ended_at) {
-            return hb.received_at >= dayRange.start && hb.received_at < dayRange.end ? sum + hb.delta_seconds : sum;
-          }
-          const from = Date.parse(hb.interval_started_at);
-          const to = Date.parse(hb.interval_ended_at);
-          if (to <= from) {
-            return from >= Date.parse(dayRange.start) && from < Date.parse(dayRange.end) ? sum + hb.delta_seconds : sum;
-          }
-          const overlap = Math.max(0, Math.min(to, Date.parse(dayRange.end)) - Math.max(from, Date.parse(dayRange.start)));
-          const full = Math.max(1, to - from);
-          return sum + Math.round(hb.delta_seconds * Math.min(1, overlap / full));
-        }, 0);
-      } else if (session.started_at >= dayRange.start && session.started_at < dayRange.end) {
-        todayPlayedSeconds += session.played_seconds;
-      }
-    }
   }
+
+  const sharedUsage = calculateSharedUsage(sessions, heartbeats, dayRange);
+  const todayPlayedSeconds = sharedUsage.totalPlayedSeconds;
 
   // Calculate Category-specific played seconds and limits
   const categoriesResult = await env.DB.prepare(`
@@ -235,8 +282,17 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
 
   const bonusSeconds = override?.bonus_seconds ?? 0;
   const baseLimitSeconds = override?.limit_override_seconds ?? rule.daily_limit_seconds;
-  const effectiveLimitSeconds = baseLimitSeconds + bonusSeconds;
-  const remainingSeconds = Math.max(0, effectiveLimitSeconds - todayPlayedSeconds);
+  const earnedBonusSeconds = Math.floor(sharedUsage.learningSeconds / 2);
+  const effectiveLimitSeconds = baseLimitSeconds + bonusSeconds + earnedBonusSeconds;
+  const remainingSeconds = Math.max(0, effectiveLimitSeconds - sharedUsage.leisureUsedSeconds);
+
+  const sharedFields = {
+    baseLimitSeconds,
+    earnedBonusSeconds,
+    learningSeconds: sharedUsage.learningSeconds,
+    leisureUsedSeconds: sharedUsage.leisureUsedSeconds,
+    listenSeconds: sharedUsage.listenSeconds,
+  };
 
   // Check 1: Parent Paused
   if (override && override.is_paused === 1) {
@@ -253,6 +309,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
       todayDate: dateStr,
       message: "今天先休息一下 🌱 等等再來看看。",
       categoryStates,
+      ...sharedFields,
     };
   }
 
@@ -278,6 +335,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
           ? "今天影片時間結束了 🌙 明天再來看看吧。"
           : (nextAllowedAt ? `今天的影片時間還沒到 🌱 ${formatFriendlyTime(nextAllowedAt)} 就可以看了。` : "今天的影片時間還沒到 🌱"),
         categoryStates,
+        ...sharedFields,
       };
     }
   }
@@ -295,8 +353,9 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
       isPaused: false,
       serverTimeTaipei: currentHHmm,
       todayDate: dateStr,
-      message: "今天的影片時間到了 🌙 明天再來看看吧。",
+      message: "今天的休閒時間到了，學習和純聽仍可使用 🌙",
       categoryStates,
+      ...sharedFields,
     };
   }
 
@@ -314,6 +373,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
     todayDate: dateStr,
     message: formatGentleRemaining(remainingSeconds),
     categoryStates,
+    ...sharedFields,
   };
 }
 

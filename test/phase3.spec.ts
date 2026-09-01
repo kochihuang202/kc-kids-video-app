@@ -238,8 +238,8 @@ describe("Phase 3: Family Usage Rules & Time Management Suite", () => {
     expect(catState.remainingSeconds).toBe(900);
   });
 
-  // Test 08: Reject startViewSession when category limit is reached
-  it("E2E 08: Enforce category-specific limit when exhausted", async () => {
+  // Test 08: Phase 2 limits are global; legacy per-category values are not enforced.
+  it("E2E 08: Uses the shared allowance instead of a legacy category limit", async () => {
     const parentCookie = await addParent();
     const device = await pairDevice();
     const categories = await (await call("/api/parent/categories", { headers: { cookie: parentCookie } })).json<any[]>();
@@ -266,8 +266,6 @@ describe("Phase 3: Family Usage Rules & Time Management Suite", () => {
       headers: { cookie: device.cookie },
       body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }),
     });
-    expect(sessionRes.status).toBe(403);
-    const sessionErr = await sessionRes.json<any>();
-    expect(sessionErr.code).toBe("CATEGORY_LIMIT_REACHED");
+    expect(sessionRes.status).toBe(201);
   });
 });

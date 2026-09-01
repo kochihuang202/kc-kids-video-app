@@ -132,10 +132,11 @@ describe("migration and public whitelist", () => {
   });
 
   it("filters hidden and archived records in SQL", async () => {
+    const device = await pairDevice();
     await env.DB.prepare("UPDATE videos SET is_active = 0 WHERE id = 'why-sky-blue'").run();
     const response = await call("/api/content/categories/science/videos");
     expect((await response.json() as Array<{ id: string }>).map((item) => item.id)).toEqual(["big-story-dinosaurs"]);
-    expect((await call("/api/content/videos/why-sky-blue")).status).toBe(404);
+    expect((await call("/api/content/videos/why-sky-blue", { headers: { cookie: device.cookie } })).status).toBe(404);
   });
 
   it("returns a playable Tailscale URL for a self-hosted video", async () => {
@@ -177,8 +178,9 @@ describe("migration and public whitelist", () => {
 });
 
 describe("device capability and heartbeat", () => {
-  it("allows public reading but rejects unpaired writes", async () => {
-    expect((await call("/api/content/videos/why-sky-blue")).status).toBe(200);
+  it("allows public browsing but rejects unpaired playback and writes", async () => {
+    expect((await call("/api/content/categories/science/videos")).status).toBe(200);
+    expect((await call("/api/content/videos/why-sky-blue")).status).toBe(403);
     const start = await call("/api/view-sessions", { method: "POST", body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }) });
     expect(start.status).toBe(403);
     expect(await start.json()).toMatchObject({ code: "DEVICE_AUTH_REQUIRED" });

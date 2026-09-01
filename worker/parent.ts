@@ -12,6 +12,7 @@ import {
 import { mediaDto } from "./media";
 import {
   addTodayBonus,
+  calculateSharedUsage,
   evaluateChildAccessState,
   getRules,
   getTodayPicks,
@@ -42,6 +43,20 @@ import { fetchYouTubeMetadata, parseYouTubeVideoId, type VideoMetadata } from ".
 import { formatPosition, getDayRangeInTimeZone } from "../src/lib/utils";
 
 const tones = ["sky", "apricot", "sage"] as const;
+const seriesTypes = ["learning", "leisure"] as const;
+
+async function validateCategorySeriesScope(env: AppEnv, categoryIds: string[]) {
+  const uniqueIds = [...new Set(categoryIds)];
+  if (!uniqueIds.length) throw new HttpError("請至少選擇一個分類。");
+  const placeholders = uniqueIds.map(() => "?").join(",");
+  const rows = await env.DB.prepare(
+    `SELECT id, series_type FROM categories WHERE id IN (${placeholders}) AND archived_at IS NULL`,
+  ).bind(...uniqueIds).all<{ id: string; series_type: "learning" | "leisure" }>();
+  if ((rows.results || []).length !== uniqueIds.length) throw new HttpError("所選分類不存在。", 404, "CATEGORY_NOT_FOUND");
+  const types = new Set((rows.results || []).map((row) => row.series_type));
+  if (types.size !== 1) throw new HttpError("同一影片不能同時屬於學習與休閒分類。", 409, "SERIES_TYPE_CONFLICT");
+  return [...types][0];
+}
 
 function clientIp(request: Request) {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
@@ -142,7 +157,7 @@ export async function changePassword(request: Request, env: AppEnv) {
 export async function getParentCategories(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const result = await env.DB.prepare(`
-    SELECT id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, created_at, updated_at, archived_at
+    SELECT id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, created_at, updated_at, archived_at
     FROM categories
     ORDER BY sort_order, id
   `).all();
@@ -150,6 +165,7 @@ export async function getParentCategories(request: Request, env: AppEnv) {
     id: row.id, name: row.name, icon: row.icon, imageUrl: row.image_url,
     tone: row.tone, sortOrder: row.sort_order, isActive: row.is_active === 1,
     dailyLimitSeconds: row.daily_limit_seconds ?? null,
+    seriesType: row.series_type,
     createdAt: row.created_at, updatedAt: row.updated_at, archivedAt: row.archived_at,
   })));
 }
@@ -163,14 +179,16 @@ export async function createCategory(request: Request, env: AppEnv) {
   const tone = text(body.tone || "sky", "色系", 3, 20) as typeof tones[number];
   if (!tones.includes(tone)) throw new HttpError("色系設定不正確。");
   const dailyLimitSeconds = body.dailyLimitSeconds ? integer(body.dailyLimitSeconds, "每日播放上限", 0, 86400) : null;
+  const seriesType = text(body.seriesType || "leisure", "系列類型", 7, 8) as typeof seriesTypes[number];
+  if (!seriesTypes.includes(seriesType)) throw new HttpError("系列類型設定不正確。");
   const id = text(body.id || name.toLowerCase().replace(/\s+/g, "-"), "分類識別碼", 1, 40);
   const nextOrder = (await env.DB.prepare("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM categories").first<{ next_order: number }>())?.next_order || 1;
   const now = new Date().toISOString();
   await env.DB.prepare(`
-    INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
-  `).bind(id, name, icon, imageUrl, tone, nextOrder, dailyLimitSeconds, now, now).run();
-  return json({ id, name, icon, imageUrl, tone, sortOrder: nextOrder, isActive: true, dailyLimitSeconds, createdAt: now, updatedAt: now, archivedAt: null }, { status: 201 });
+    INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
+  `).bind(id, name, icon, imageUrl, tone, nextOrder, dailyLimitSeconds, seriesType, now, now).run();
+  return json({ id, name, icon, imageUrl, tone, sortOrder: nextOrder, isActive: true, dailyLimitSeconds, seriesType, createdAt: now, updatedAt: now, archivedAt: null }, { status: 201 });
 }
 
 export async function updateCategory(request: Request, env: AppEnv, id: string) {
@@ -187,11 +205,24 @@ export async function updateCategory(request: Request, env: AppEnv, id: string) 
   const dailyLimitSeconds = body.dailyLimitSeconds !== undefined
     ? (body.dailyLimitSeconds === null || body.dailyLimitSeconds === 0 ? null : integer(body.dailyLimitSeconds, "每日播放上限", 0, 86400))
     : current.daily_limit_seconds;
+  const seriesType = body.seriesType !== undefined ? text(body.seriesType, "系列類型", 7, 8) : current.series_type;
+  if (!seriesTypes.includes(seriesType as typeof seriesTypes[number])) throw new HttpError("系列類型設定不正確。");
+  if (seriesType !== current.series_type) {
+    const conflicting = await env.DB.prepare(`
+      SELECT 1 AS found
+      FROM category_videos cv
+      JOIN category_videos other ON other.video_id = cv.video_id AND other.category_id != cv.category_id
+      JOIN categories other_category ON other_category.id = other.category_id
+      WHERE cv.category_id = ? AND other_category.archived_at IS NULL AND other_category.series_type != ?
+      LIMIT 1
+    `).bind(id, seriesType).first();
+    if (conflicting) throw new HttpError("此分類含有同時出現在另一類系列的影片，請先調整影片分類。", 409, "SERIES_TYPE_CONFLICT");
+  }
   const now = new Date().toISOString();
   await env.DB.prepare(`
-    UPDATE categories SET name = ?, icon = ?, image_url = ?, tone = ?, is_active = ?, daily_limit_seconds = ?, updated_at = ?
+    UPDATE categories SET name = ?, icon = ?, image_url = ?, tone = ?, is_active = ?, daily_limit_seconds = ?, series_type = ?, updated_at = ?
     WHERE id = ?
-  `).bind(name, icon, imageUrl, tone, isActive, dailyLimitSeconds, now, id).run();
+  `).bind(name, icon, imageUrl, tone, isActive, dailyLimitSeconds, seriesType, now, id).run();
   return json({ ok: true });
 }
 
@@ -211,7 +242,7 @@ export async function orderCategories(request: Request, env: AppEnv) {
   const body = await readJson(request);
   const ids = stringArray(body.ids || body.categoryIds, "分類順序清單");
   const activeCategories = await env.DB.prepare(
-    "SELECT id FROM categories WHERE is_active = 1 AND archived_at IS NULL ORDER BY sort_order, id",
+    "SELECT id FROM categories WHERE archived_at IS NULL ORDER BY sort_order, id",
   ).all<{ id: string }>();
   const activeIds = (activeCategories.results || []).map((c) => c.id);
   const activeSet = new Set(activeIds);
@@ -365,7 +396,7 @@ export async function createVideo(request: Request, env: AppEnv) {
   const youtubeVideoId = parseYouTubeVideoId(url);
   const parentLabel = text(body.parentLabel, "影片標題", 1, 120);
   const categoryIds = stringArray(body.categoryIds, "所屬分類");
-  if (!categoryIds.length) throw new HttpError("請至少選擇一個分類。");
+  await validateCategorySeriesScope(env, categoryIds);
   const metadata = await fetchYouTubeMetadata(youtubeVideoId, env);
   const now = new Date().toISOString();
   const id = text(body.id || youtubeVideoId, "影片識別碼", 1, 80);
@@ -400,6 +431,7 @@ export async function updateVideo(request: Request, env: AppEnv, id: string) {
   ];
   if (body.categoryIds !== undefined) {
     const categoryIds = stringArray(body.categoryIds, "所屬分類");
+    await validateCategorySeriesScope(env, categoryIds);
     queries.push(env.DB.prepare("DELETE FROM category_videos WHERE video_id = ?").bind(id));
     for (const categoryId of categoryIds) {
       queries.push(env.DB.prepare(`
@@ -542,6 +574,7 @@ interface DashboardSessionRow {
   id: string; video_id: string; video_label: string | null; played_seconds: number;
   last_position_seconds: number; started_at: string; updated_at: string; ended_at: string | null;
   child_device_id: string | null; device_name: string | null;
+  playback_mode: "video" | "listen"; series_type_snapshot: "learning" | "leisure" | null;
 }
 interface HeartbeatRow {
   view_session_id: string; delta_seconds: number; interval_started_at: string | null;
@@ -595,7 +628,8 @@ export async function getDashboard(request: Request, env: AppEnv) {
     const result = await env.DB.prepare(`
       SELECT s.id, s.video_id, v.parent_label AS video_label, s.played_seconds,
         s.last_position_seconds, s.started_at, s.updated_at, s.ended_at,
-        s.child_device_id, COALESCE(cd.name, '家庭裝置') AS device_name
+        s.child_device_id, COALESCE(cd.name, '家庭裝置') AS device_name,
+        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
       FROM view_sessions s
       LEFT JOIN videos v ON v.id = s.video_id
       LEFT JOIN child_devices cd ON cd.id = s.child_device_id
@@ -652,10 +686,27 @@ export async function getDashboard(request: Request, env: AppEnv) {
       playedSeconds: Math.round(played), lastPositionSeconds: session.last_position_seconds,
       startedAt: session.started_at, updatedAt: session.updated_at,
       noteCount: notes.filter((note) => note.view_session_id === session.id).length,
+      playbackMode: session.playback_mode,
+      seriesType: session.series_type_snapshot,
     };
   }).filter((session) => session.playedSeconds > 0 || notes.some((note) => note.view_session_id === session.id));
 
-  const totalPlayedSeconds = timeline.reduce((sum, session) => sum + session.playedSeconds, 0);
+  const sharedUsage = calculateSharedUsage(sessions, heartbeats, { start, end });
+  const sessionsWithHeartbeats = new Set(heartbeats.map((heartbeat) => heartbeat.view_session_id));
+  let fallbackLearningSeconds = 0;
+  let fallbackLeisureSeconds = 0;
+  let fallbackListenSeconds = 0;
+  for (const session of timeline) {
+    if (sessionsWithHeartbeats.has(session.id)) continue;
+    if (session.playbackMode === "listen") fallbackListenSeconds += session.playedSeconds;
+    else if (session.seriesType === "learning") fallbackLearningSeconds += session.playedSeconds;
+    else fallbackLeisureSeconds += session.playedSeconds;
+  }
+  const learningSeconds = sharedUsage.learningSeconds + fallbackLearningSeconds;
+  const leisureSeconds = sharedUsage.leisureUsedSeconds + fallbackLeisureSeconds;
+  const listenSeconds = sharedUsage.listenSeconds + fallbackListenSeconds;
+  const totalPlayedSeconds = sharedUsage.totalPlayedSeconds
+    + fallbackLearningSeconds + fallbackLeisureSeconds + fallbackListenSeconds;
 
   // Compute Category Statistics for the day
   const catStatsMap: Record<string, { playedSeconds: number; videoIds: Set<string>; sessionCount: number; noteCount: number }> = {};
@@ -736,6 +787,9 @@ export async function getDashboard(request: Request, env: AppEnv) {
     timeline,
     summary: {
       totalPlayedSeconds,
+      learningSeconds,
+      leisureSeconds,
+      listenSeconds,
       playedVideoCount: new Set(timeline.map((session) => session.videoId)).size,
       sessionCount: timeline.length,
       noteCount: notes.length,
@@ -840,7 +894,8 @@ export async function getSummaryAnalytics(request: Request, env: AppEnv) {
 
   const sessionsResult = await env.DB.prepare(`
     SELECT s.id, s.video_id, s.played_seconds, s.started_at, s.updated_at, s.ended_at,
-      s.child_device_id, COALESCE(cd.name, '家庭裝置') AS device_name
+      s.child_device_id, COALESCE(cd.name, '家庭裝置') AS device_name,
+      COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
     FROM view_sessions s
     LEFT JOIN child_devices cd ON cd.id = s.child_device_id
     WHERE s.started_at < ? AND COALESCE(s.ended_at, s.updated_at) >= ?

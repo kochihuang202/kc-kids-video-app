@@ -11,10 +11,11 @@ interface NativeMediaPlayerProps {
   onStateChange?: (state: PlayerState) => void;
   onProgress?: (currentTime: number, duration: number) => void;
   onError?: () => void;
+  onReady?: () => void;
 }
 
 export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlayerProps>(
-  ({ src, mediaType, poster, startAt = 0, volume = 1, onStateChange, onProgress, onError }, ref) => {
+  ({ src, mediaType, poster, startAt = 0, volume = 1, onStateChange, onProgress, onError, onReady }, ref) => {
     const elementRef = useRef<HTMLMediaElement | null>(null);
     const readySentRef = useRef(false);
 
@@ -89,6 +90,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       element.pause();
       readySentRef.current = true;
       reportProgress();
+      onReady?.();
       onStateChange?.("READY");
     };
 

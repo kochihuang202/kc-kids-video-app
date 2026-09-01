@@ -45,6 +45,9 @@ export const contentRepository = {
   getTodayPicks: () => api<TodayPick[]>("/api/child/today-picks"),
   getResume: () => api<{ resume: import("../types").ResumeInfo | null }>("/api/content/resume"),
   getRecents: () => api<import("../types").RecentVideo[]>("/api/content/recents"),
+  setLearned: (videoId: string, learned: boolean) => write<{ ok: true; videoId: string; isLearned: boolean }>(
+    `/api/child/videos/${encodeURIComponent(videoId)}/learned`, "PUT", { learned },
+  ),
 };
 
 export const deviceRepository = {
@@ -101,8 +104,8 @@ export const parentRepository = {
     return api<{ ok: true }>(`/api/parent/notes/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
   categories: () => api<AdminCategory[]>("/api/parent/categories"),
-  createCategory: (body: { name: string; icon: string; dailyLimitSeconds?: number | null }) => write<{ id: string }>("/api/parent/categories", "POST", body),
-  updateCategory: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "imageUrl" | "isActive" | "dailyLimitSeconds">>) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, "PATCH", body),
+  createCategory: (body: { name: string; icon: string; seriesType?: "learning" | "leisure"; dailyLimitSeconds?: number | null }) => write<{ id: string }>("/api/parent/categories", "POST", body),
+  updateCategory: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "imageUrl" | "isActive" | "dailyLimitSeconds" | "seriesType">>) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, "PATCH", body),
   archiveCategory: (id: string) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}/archive`, "POST", {}),
   restoreCategory: (id: string) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}/restore`, "POST", {}),
   orderCategories: (ids: string[]) => write<{ ok: true }>("/api/parent/categories/order", "PUT", { ids }),

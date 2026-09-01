@@ -1,9 +1,9 @@
 import type { Category, VideoFixture } from "../types";
 
 export const categories: Category[] = [
-  { id: "science", name: "科學", icon: "🚀", sortOrder: 1, tone: "sky" },
-  { id: "english", name: "英文", icon: "ABC", sortOrder: 2, tone: "apricot" },
-  { id: "animals", name: "動物", icon: "🐾", sortOrder: 3, tone: "sage" },
+  { id: "science", name: "科學", icon: "🚀", sortOrder: 1, tone: "sky", seriesType: "learning" },
+  { id: "english", name: "英文", icon: "ABC", sortOrder: 2, tone: "apricot", seriesType: "leisure" },
+  { id: "animals", name: "動物", icon: "🐾", sortOrder: 3, tone: "sage", seriesType: "leisure" },
 ];
 
 const thumbnail = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;

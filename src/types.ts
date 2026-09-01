@@ -1,3 +1,6 @@
+export type SeriesType = "learning" | "leisure";
+export type PlaybackMode = "video" | "listen";
+
 export interface Category {
   id: string;
   name: string;
@@ -6,6 +9,7 @@ export interface Category {
   tone: "sage" | "sky" | "apricot";
   imageUrl?: string | null;
   dailyLimitSeconds?: number | null;
+  seriesType: SeriesType;
 }
 
 export type MediaSource = "youtube" | "self_hosted";
@@ -31,6 +35,9 @@ export interface VideoFixture extends MediaDescriptor {
   durationSeconds?: number | null;
   lastPositionSeconds?: number;
   isWatched?: boolean;
+  isLearned?: boolean;
+  isSelectable?: boolean;
+  seriesType?: SeriesType;
 }
 
 export interface ResumeInfo extends MediaDescriptor {
@@ -75,10 +82,15 @@ export interface ViewSession {
   startedAt: string;
   updatedAt: string;
   noteCount: number;
+  playbackMode?: PlaybackMode;
+  seriesType?: SeriesType | null;
 }
 
 export interface TodaySummary {
   totalPlayedSeconds: number;
+  learningSeconds?: number;
+  leisureSeconds?: number;
+  listenSeconds?: number;
   playedVideoCount: number;
   sessionCount: number;
   noteCount: number;
@@ -125,6 +137,11 @@ export interface ChildAccessState {
   todayPlayedSeconds: number;
   dailyLimitSeconds: number;
   bonusSeconds: number;
+  baseLimitSeconds?: number;
+  earnedBonusSeconds?: number;
+  learningSeconds?: number;
+  leisureUsedSeconds?: number;
+  listenSeconds?: number;
   gracePeriodSeconds: number;
   nextAllowedAt: string | null;
   isPaused: boolean;

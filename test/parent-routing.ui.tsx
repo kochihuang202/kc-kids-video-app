@@ -42,11 +42,11 @@ describe("ParentApp legacy route fallback", () => {
     vi.clearAllMocks();
   });
 
-  it("redirects an old parent route exactly once to /parent/rules", async () => {
+  it("redirects a malformed nested parent route exactly once to /parent/today", async () => {
     const root = createRoot(host);
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={["/parent/today"]}>
+        <MemoryRouter initialEntries={["/parent/today/rules"]}>
           <Routes>
             <Route path="/parent/*" element={<ParentApp />} />
           </Routes>
@@ -55,7 +55,7 @@ describe("ParentApp legacy route fallback", () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
 
-    expect(navigateTargets).toEqual(["/parent/rules"]);
+    expect(navigateTargets).toEqual(["/parent/today"]);
     await act(async () => root.unmount());
   });
 });

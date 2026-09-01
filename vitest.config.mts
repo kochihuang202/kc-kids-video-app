@@ -2,6 +2,8 @@ import path from "node:path";
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
+process.env.XDG_CONFIG_HOME ||= path.join(import.meta.dirname, ".wrangler-test");
+
 export default defineConfig(async () => {
 	const migrations = await readD1Migrations(path.join(import.meta.dirname, "migrations"));
 	return {
@@ -22,6 +24,9 @@ export default defineConfig(async () => {
 				},
 			}),
 		],
-		test: { setupFiles: ["./test/apply-migrations.ts"] },
+		test: {
+			include: ["test/**/*.spec.ts"],
+			setupFiles: ["./test/apply-migrations.ts"],
+		},
 	};
 });

@@ -289,7 +289,9 @@ describe("Phase 2 End-to-End Suite", () => {
     const { id: sid, writeToken } = await sessionRes.json<{ id: string; writeToken: string }>();
 
     // Send heartbeat 60 seconds (max delta per heartbeat is 60)
-    const nowIso = new Date().toISOString();
+    const intervalEnd = new Date();
+    const nowIso = intervalEnd.toISOString();
+    const intervalStartIso = new Date(intervalEnd.getTime() - 60_000).toISOString();
     await call(`/api/view-sessions/${sid}`, {
       method: "PATCH",
       headers: { cookie: deviceCookie },
@@ -298,7 +300,7 @@ describe("Phase 2 End-to-End Suite", () => {
         heartbeatSeq: 1,
         deltaSeconds: 60,
         positionSeconds: 60,
-        intervalStartedAt: nowIso,
+        intervalStartedAt: intervalStartIso,
         intervalEndedAt: nowIso,
         status: "active",
       }),

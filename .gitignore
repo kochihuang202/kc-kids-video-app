@@ -170,3 +170,10 @@ artifacts/backups/
 artifacts/
 backups/
 .worktrees/
+
+# Playwright regression artifacts
+playwright-report/
+test-results/
+blob-report/
+.wrangler-e2e/
+.wrangler-test/

@@ -1,4 +1,4 @@
-import { HttpError, integer, json, readJson, text } from "./http";
+import { boolean, HttpError, integer, json, readJson, text } from "./http";
 import { mediaDto } from "./media";
 import { evaluateChildAccessState, getTodayPicks } from "./rules";
 import { consumeRateLimit, getChildDevice, getOrCreateChildDevice, rateKey, randomToken, tokenHash } from "./security";
@@ -12,6 +12,7 @@ interface CategoryRow {
   tone: "sage" | "sky" | "apricot";
   sort_order: number;
   daily_limit_seconds?: number | null;
+  series_type: "learning" | "leisure";
 }
 
 interface VideoRow {
@@ -27,6 +28,7 @@ interface VideoRow {
   duration_seconds: number | null;
   sort_order?: number;
   last_position_seconds?: number | null;
+  is_learned?: number | null;
 }
 
 const categoryDto = (row: CategoryRow) => ({
@@ -37,9 +39,16 @@ const categoryDto = (row: CategoryRow) => ({
   tone: row.tone,
   sortOrder: row.sort_order,
   dailyLimitSeconds: row.daily_limit_seconds ?? null,
+  seriesType: row.series_type,
 });
 
-const videoDto = (env: AppEnv, row: VideoRow, categoryIds: string[] = [], threshold = 0.9) => {
+const videoDto = (
+  env: AppEnv,
+  row: VideoRow,
+  categoryIds: string[] = [],
+  threshold = 0.9,
+  options: { isLearned?: boolean; isSelectable?: boolean; seriesType?: "learning" | "leisure" } = {},
+) => {
   const duration = row.duration_seconds || 0;
   const position = env.RECORDING_ENABLED === "false" ? 0 : row.last_position_seconds || 0;
   const isWatched = duration > 0 ? position / duration >= threshold : false;
@@ -54,6 +63,9 @@ const videoDto = (env: AppEnv, row: VideoRow, categoryIds: string[] = [], thresh
     sortOrder: row.sort_order || 0,
     lastPositionSeconds: position,
     isWatched,
+    isLearned: options.isLearned ?? false,
+    isSelectable: options.isSelectable ?? true,
+    seriesType: options.seriesType,
   };
 };
 
@@ -68,9 +80,51 @@ async function getCompletionThreshold(env: AppEnv): Promise<number> {
   return 0.9;
 }
 
+async function getVideoSeriesState(env: AppEnv, videoId: string) {
+  const categories = await env.DB.prepare(`
+    SELECT c.id, c.series_type, cv.sort_order,
+      COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = cv.video_id), 0) AS is_learned
+    FROM category_videos cv
+    JOIN categories c ON c.id = cv.category_id
+    WHERE cv.video_id = ? AND c.is_active = 1 AND c.archived_at IS NULL
+    ORDER BY c.sort_order, c.id
+  `).bind(videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; is_learned: number }>();
+  const rows = categories.results || [];
+  if (!rows.length) throw new HttpError("這部影片目前沒有可用分類。", 404, "VIDEO_NOT_FOUND");
+  const types = new Set(rows.map((row) => row.series_type));
+  if (types.size !== 1) throw new HttpError("影片的學習／休閒分類設定衝突。", 409, "SERIES_TYPE_CONFLICT");
+
+  const isLearned = rows[0].is_learned === 1;
+  let isSelectable = true;
+  if (rows[0].series_type === "learning" && !isLearned) {
+    for (const category of rows) {
+      const rank = await env.DB.prepare(`
+        SELECT COUNT(*) AS count
+        FROM category_videos before
+        JOIN videos preceding_video ON preceding_video.id = before.video_id
+        LEFT JOIN video_learned_state ls ON ls.video_id = before.video_id
+        WHERE before.category_id = ? AND before.sort_order < ?
+          AND preceding_video.is_active = 1 AND preceding_video.archived_at IS NULL
+          AND preceding_video.availability_status = 'available'
+          AND COALESCE(ls.is_learned, 0) = 0
+      `).bind(category.id, category.sort_order).first<{ count: number }>();
+      if ((rank?.count || 0) >= 5) {
+        isSelectable = false;
+        break;
+      }
+    }
+  }
+  return {
+    categoryIds: rows.map((row) => row.id),
+    seriesType: rows[0].series_type,
+    isLearned,
+    isSelectable,
+  };
+}
+
 export async function getPublicCategories(env: AppEnv) {
   const result = await env.DB.prepare(`
-    SELECT id, name, icon, image_url, tone, sort_order, daily_limit_seconds
+    SELECT id, name, icon, image_url, tone, sort_order, daily_limit_seconds, series_type
     FROM categories
     WHERE is_active = 1 AND archived_at IS NULL
     ORDER BY sort_order, id
@@ -80,66 +134,69 @@ export async function getPublicCategories(env: AppEnv) {
 
 export async function getPublicCategoryVideos(request: Request, env: AppEnv, categoryId: string) {
   const category = await env.DB.prepare(
-    "SELECT id FROM categories WHERE id = ? AND is_active = 1 AND archived_at IS NULL",
-  ).bind(categoryId).first();
+    "SELECT id, series_type FROM categories WHERE id = ? AND is_active = 1 AND archived_at IS NULL",
+  ).bind(categoryId).first<{ id: string; series_type: "learning" | "leisure" }>();
   if (!category) throw new HttpError("找不到這個分類。", 404, "CATEGORY_NOT_FOUND");
 
   const device = await getChildDevice(request, env, false);
   const threshold = await getCompletionThreshold(env);
 
-  let query = `
+  const learnedColumn = device
+    ? "COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0)"
+    : "0";
+  const progressColumn = device
+    ? `(SELECT vs.last_position_seconds FROM view_sessions vs
+        WHERE vs.video_id = v.id ORDER BY vs.updated_at DESC LIMIT 1)`
+    : "NULL";
+  const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path,
       v.duration_seconds, cv.sort_order,
-      (
-        SELECT vs.last_position_seconds
-        FROM view_sessions vs
-        WHERE vs.video_id = v.id ${device ? "AND vs.child_device_id = ?" : ""}
-        ORDER BY vs.updated_at DESC LIMIT 1
-      ) AS last_position_seconds
+      ${learnedColumn} AS is_learned,
+      ${progressColumn} AS last_position_seconds
     FROM category_videos cv
     JOIN videos v ON v.id = cv.video_id
     WHERE cv.category_id = ? AND v.is_active = 1 AND v.archived_at IS NULL
       AND v.availability_status = 'available'
-    ORDER BY cv.sort_order, v.id
+    ORDER BY is_learned ASC, cv.sort_order, v.id
   `;
-  const params: unknown[] = [];
-  if (device) params.push(device.id);
-  params.push(categoryId);
-
-  const result = await env.DB.prepare(query).bind(...params).all<VideoRow>();
-  return json((result.results || []).map((row) => videoDto(env, row, [categoryId], threshold)));
+  const result = await env.DB.prepare(query).bind(categoryId).all<VideoRow>();
+  let unlearnedIndex = 0;
+  return json((result.results || []).map((row) => {
+    const isLearned = !!device && row.is_learned === 1;
+    const isSelectable = category.series_type !== "learning" || isLearned || unlearnedIndex++ < 5;
+    return videoDto(env, row, [categoryId], threshold, { isLearned, isSelectable, seriesType: category.series_type });
+  }));
 }
 
 export async function getPublicVideo(request: Request, env: AppEnv, videoId: string) {
-  const device = await getChildDevice(request, env, false);
+  await getChildDevice(request, env, true);
   const threshold = await getCompletionThreshold(env);
 
-  let query = `
+  const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path, v.duration_seconds,
+      COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0) AS is_learned,
       (
         SELECT vs.last_position_seconds
         FROM view_sessions vs
-        WHERE vs.video_id = v.id ${device ? "AND vs.child_device_id = ?" : ""}
+        WHERE vs.video_id = v.id
         ORDER BY vs.updated_at DESC LIMIT 1
       ) AS last_position_seconds
     FROM videos v
     WHERE v.id = ? AND v.is_active = 1 AND v.archived_at IS NULL
       AND v.availability_status = 'available'
   `;
-  const params: unknown[] = [];
-  if (device) params.push(device.id);
-  params.push(videoId);
-
-  const video = await env.DB.prepare(query).bind(...params).first<VideoRow>();
+  const video = await env.DB.prepare(query).bind(videoId).first<VideoRow>();
   if (!video) throw new HttpError("找不到這部影片。", 404, "VIDEO_NOT_FOUND");
 
-  const categories = await env.DB.prepare(
-    "SELECT category_id FROM category_videos WHERE video_id = ? ORDER BY sort_order",
-  ).bind(videoId).all<{ category_id: string }>();
-
-  return json(videoDto(env, video, (categories.results || []).map((row) => row.category_id), threshold));
+  const series = await getVideoSeriesState(env, videoId);
+  if (!series.isSelectable) throw new HttpError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
+  return json(videoDto(env, video, series.categoryIds, threshold, {
+    isLearned: series.isLearned,
+    isSelectable: series.isSelectable,
+    seriesType: series.seriesType,
+  }));
 }
 
 export async function getPublicResume(request: Request, env: AppEnv) {
@@ -153,8 +210,7 @@ export async function getPublicResume(request: Request, env: AppEnv) {
       v.duration_seconds, vs.last_position_seconds, vs.updated_at AS last_played_at
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
-    WHERE vs.child_device_id = ?
-      AND v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
+    WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
       AND vs.last_position_seconds > 0
       AND (v.duration_seconds IS NULL OR v.duration_seconds = 0 OR vs.last_position_seconds < (v.duration_seconds * ?))
       AND vs.played_seconds > 0
@@ -162,7 +218,7 @@ export async function getPublicResume(request: Request, env: AppEnv) {
     LIMIT 1
   `;
 
-  const row = await env.DB.prepare(query).bind(device.id, threshold).first<VideoRow & {
+  const row = await env.DB.prepare(query).bind(threshold).first<VideoRow & {
     last_position_seconds: number;
     last_played_at: string;
   }>();
@@ -193,20 +249,19 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
       v.duration_seconds, MAX(vs.updated_at) AS last_played_at,
       (
         SELECT last_position_seconds FROM view_sessions
-        WHERE video_id = v.id AND child_device_id = ?
+        WHERE video_id = v.id
         ORDER BY updated_at DESC LIMIT 1
       ) AS last_position_seconds
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
-    WHERE vs.child_device_id = ?
-      AND v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
+    WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
       AND vs.played_seconds > 0
     GROUP BY v.id
     ORDER BY last_played_at DESC
     LIMIT 10
   `;
 
-  const rows = await env.DB.prepare(query).bind(device.id, device.id).all<VideoRow & {
+  const rows = await env.DB.prepare(query).all<VideoRow & {
     last_played_at: string;
     last_position_seconds: number | null;
   }>();
@@ -244,20 +299,51 @@ export async function getDeviceStatus(request: Request, env: AppEnv) {
   return json({ authorized: !!device, device });
 }
 
+export async function updateLearnedState(request: Request, env: AppEnv, videoId: string) {
+  const device = await getChildDevice(request, env, true);
+  const body = await readJson(request);
+  const learned = boolean(body.learned, "學會狀態");
+  await requireActiveVideo(env, videoId);
+  await consumeRateLimit(env, await rateKey(env, "learned", device!.id), 30, 60);
+  const now = new Date().toISOString();
+  if (learned) {
+    await env.DB.prepare(`
+      INSERT INTO video_learned_state (video_id, is_learned, learned_at, updated_at)
+      VALUES (?, 1, ?, ?)
+      ON CONFLICT(video_id) DO UPDATE SET is_learned = 1, learned_at = excluded.learned_at, updated_at = excluded.updated_at
+    `).bind(videoId, now, now).run();
+  } else {
+    await env.DB.prepare("DELETE FROM video_learned_state WHERE video_id = ?").bind(videoId).run();
+  }
+  return json({ ok: true, videoId, isLearned: learned });
+}
+
 async function requireActiveVideo(env: AppEnv, videoId: string) {
   const video = await env.DB.prepare(`
-    SELECT id FROM videos WHERE id = ? AND is_active = 1 AND archived_at IS NULL
+    SELECT id, source, media_type FROM videos WHERE id = ? AND is_active = 1 AND archived_at IS NULL
       AND availability_status = 'available'
       AND EXISTS (
         SELECT 1 FROM category_videos cv JOIN categories c ON c.id = cv.category_id
         WHERE cv.video_id = videos.id AND c.is_active = 1 AND c.archived_at IS NULL
       )
-  `).bind(videoId).first();
+  `).bind(videoId).first<{ id: string; source: "youtube" | "self_hosted"; media_type: "video" | "audio" | null }>();
   if (!video) throw new HttpError("這部影片目前不可記錄。", 404, "VIDEO_NOT_FOUND");
+  const series = await getVideoSeriesState(env, videoId);
+  return { ...video, ...series };
 }
 
 export async function startViewSession(request: Request, env: AppEnv) {
   const device = await getChildDevice(request, env, true);
+  const body = await readJson(request);
+  const videoId = text(body.videoId, "影片", 1, 120);
+  const playbackMode = body.playbackMode === "listen" ? "listen" : "video";
+  const activeVideo = await requireActiveVideo(env, videoId);
+  if (!activeVideo.isSelectable) {
+    throw new HttpError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
+  }
+  if (playbackMode === "listen" && activeVideo.source !== "self_hosted") {
+    throw new HttpError("YouTube 影片不提供純聽模式。", 400, "LISTEN_MODE_NOT_AVAILABLE");
+  }
   const accessState = await evaluateChildAccessState(env);
 
   if (accessState.state === "PAUSED_BY_PARENT") {
@@ -266,26 +352,11 @@ export async function startViewSession(request: Request, env: AppEnv) {
   if (accessState.state === "OUTSIDE_WINDOW") {
     throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
   }
-  if (accessState.state === "DAILY_LIMIT_REACHED" && accessState.remainingSeconds <= 0) {
+  if (activeVideo.seriesType === "leisure" && playbackMode === "video" && accessState.remainingSeconds <= 0) {
     throw new HttpError("今天的影片時間到了 🌙 明天再來看看吧。", 403, "DAILY_LIMIT_REACHED");
   }
 
-  const body = await readJson(request);
-  const videoId = text(body.videoId, "影片", 1, 120);
-
-  // Check category daily limits
-  const catLinks = await env.DB.prepare("SELECT category_id FROM category_videos WHERE video_id = ?").bind(videoId).all<{ category_id: string }>();
-  const videoCatIds = (catLinks.results || []).map((r) => r.category_id);
-  if (videoCatIds.length > 0 && accessState.categoryStates) {
-    const relevantStates = accessState.categoryStates.filter((cs) => videoCatIds.includes(cs.categoryId));
-    const anyReached = relevantStates.some((cs) => cs.dailyLimitSeconds && cs.dailyLimitSeconds > 0 && cs.isReached);
-    if (anyReached) {
-      throw new HttpError("此分類今天的觀看時間到了 🌱", 403, "CATEGORY_LIMIT_REACHED");
-    }
-  }
-
   const clientSessionId = text(body.clientSessionId, "裝置播放識別碼", 8, 100);
-  await requireActiveVideo(env, videoId);
   await consumeRateLimit(env, await rateKey(env, "session", device!.id), 20, 60);
   const existing = await env.DB.prepare(
     "SELECT id FROM view_sessions WHERE client_session_id = ? AND child_device_id = ?",
@@ -298,9 +369,10 @@ export async function startViewSession(request: Request, env: AppEnv) {
   await env.DB.prepare(`
     INSERT INTO view_sessions (
       id, client_session_id, video_id, child_device_id, write_token_hash,
-      played_seconds, last_position_seconds, started_at, updated_at, status, last_heartbeat_seq
-    ) VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?, 'active', 0)
-  `).bind(id, clientSessionId, videoId, device!.id, capabilityHash, now, now).run();
+      played_seconds, last_position_seconds, started_at, updated_at, status, last_heartbeat_seq,
+      playback_mode, series_type_snapshot
+    ) VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?, 'active', 0, ?, ?)
+  `).bind(id, clientSessionId, videoId, device!.id, capabilityHash, now, now, playbackMode, activeVideo.seriesType).run();
   return json({ id, writeToken: capability, startedAt: now }, { status: 201 });
 }
 
@@ -312,9 +384,12 @@ async function verifyCapability(
 ) {
   const hash = await tokenHash(writeToken, env);
   const row = await env.DB.prepare(`
-    SELECT id, video_id, status FROM view_sessions
+    SELECT id, video_id, status, playback_mode, series_type_snapshot FROM view_sessions
     WHERE id = ? AND child_device_id = ? AND write_token_hash = ?
-  `).bind(sessionId, deviceId, hash).first<{ id: string; video_id: string; status: string }>();
+  `).bind(sessionId, deviceId, hash).first<{
+    id: string; video_id: string; status: string;
+    playback_mode: "video" | "listen"; series_type_snapshot: "learning" | "leisure" | null;
+  }>();
   if (!row) throw new HttpError("播放紀錄授權不正確。", 403, "INVALID_WRITE_TOKEN");
   return row;
 }
@@ -324,7 +399,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
   const body = await readJson(request);
   const writeToken = text(body.writeToken, "播放授權", 20, 200);
   const heartbeatSeq = integer(body.heartbeatSeq, "Heartbeat 序號", 1, 1_000_000_000);
-  const deltaSeconds = integer(body.deltaSeconds, "播放秒數", 0, 60);
+  let deltaSeconds = integer(body.deltaSeconds, "播放秒數", 0, 60);
   const positionSeconds = integer(body.positionSeconds, "影片位置", 0, 10_000_000);
   const status = body.status === "ended" ? "ended" : "active";
   const intervalStartedAt = typeof body.intervalStartedAt === "string" && !Number.isNaN(Date.parse(body.intervalStartedAt)) ? body.intervalStartedAt : null;
@@ -339,6 +414,14 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
       "SELECT played_seconds, last_position_seconds, last_heartbeat_seq, status FROM view_sessions WHERE id = ?",
     ).bind(sessionId).first();
     return json({ ok: true, aggregate, duplicate: true });
+  }
+  const accessState = await evaluateChildAccessState(env);
+  const closingWithoutPlayback = status === "ended" && deltaSeconds === 0;
+  if (accessState.state === "PAUSED_BY_PARENT" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "PAUSED_BY_PARENT");
+  if (accessState.state === "OUTSIDE_WINDOW" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
+  if (session.playback_mode === "video" && session.series_type_snapshot === "leisure") {
+    if (accessState.remainingSeconds <= 0 && !closingWithoutPlayback) throw new HttpError("今天的休閒時間到了。", 403, "DAILY_LIMIT_REACHED");
+    deltaSeconds = Math.min(deltaSeconds, accessState.remainingSeconds);
   }
   await consumeRateLimit(env, await rateKey(env, "heartbeat", `${device!.id}:${sessionId}`), 30, 60);
   const now = new Date().toISOString();
@@ -367,7 +450,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
   const aggregate = await env.DB.prepare(
     "SELECT played_seconds, last_position_seconds, last_heartbeat_seq, status FROM view_sessions WHERE id = ?",
   ).bind(sessionId).first();
-  return json({ ok: true, aggregate });
+  return json({ ok: true, aggregate, accessState: await evaluateChildAccessState(env) });
 }
 
 export async function saveNote(request: Request, env: AppEnv) {

@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Clock3, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
+import { ArrowLeft, Clock, Clock3, Headphones, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
 import { cn, formatPosition } from "./lib/utils";
 import type {
-  Category, ChildAccessState, DeviceStatus, RecentVideo, ResumeInfo, TodayPick,
+  Category, ChildAccessState, DeviceStatus, PlaybackMode, RecentVideo, ResumeInfo, TodayPick,
   UpdateViewSessionInput, VideoFixture,
 } from "./types";
 
@@ -15,6 +15,18 @@ function showThumbnailFallback(event: React.SyntheticEvent<HTMLImageElement>) {
   const image = event.currentTarget;
   image.onerror = null;
   image.src = "/local-media-placeholder.svg";
+}
+
+function withMediaRetry(src: string, retryKey: number) {
+  if (retryKey === 0) return src;
+  try {
+    const url = new URL(src);
+    url.searchParams.set("kc_retry", String(retryKey));
+    return url.toString();
+  } catch {
+    const separator = src.includes("?") ? "&" : "?";
+    return `${src}${separator}kc_retry=${retryKey}`;
+  }
 }
 
 export const thinkingPromptsList = [
@@ -147,28 +159,17 @@ export function HomePage() {
     );
   }
 
-  if (accessState?.state === "DAILY_LIMIT_REACHED") {
-    return (
-      <main className="kid-shell home-page">
-        <header className="home-header">
-          <ParentGate />
-          <h1>今天的影片時間到了 🌙</h1>
-        </header>
-        <div className="limit-card">
-          <p>今天看影片的時間已經結束囉！✨ 休息一下，明天再來看看吧！</p>
-        </div>
-      </main>
-    );
-  }
-
   const isOutsideWindow = accessState?.state === "OUTSIDE_WINDOW";
+  const learningCategories = categories?.filter((category) => category.seriesType === "learning") || [];
+  const leisureCategories = categories?.filter((category) => category.seriesType === "leisure") || [];
+  const leisureReached = !!accessState && accessState.remainingSeconds <= 0;
 
   return (
     <main className="kid-shell home-page">
       <header className="home-header">
         <ParentGate />
         <h1>今天想看什麼？</h1>
-        {accessState && accessState.state === "AVAILABLE" && accessState.message && (
+        {accessState && !isOutsideWindow && accessState.message && (
           <div className="gentle-time-badge" aria-label={accessState.message}>
             <Clock /> {accessState.message}
           </div>
@@ -179,6 +180,14 @@ export function HomePage() {
           </div>
         )}
       </header>
+
+      {accessState && !isOutsideWindow && (
+        <section className="leisure-balance" aria-label="今日休閒時間">
+          <div><span>今日休閒剩餘</span><strong>{Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘</strong></div>
+          <div><span>學習增加</span><strong>+{Math.floor((accessState.earnedBonusSeconds || 0) / 60)} 分鐘</strong></div>
+          <div><span>休閒已用</span><strong>{Math.floor((accessState.leisureUsedSeconds || 0) / 60)} 分鐘</strong></div>
+        </section>
+      )}
 
       {notice && (
         <aside className="device-notice" role="status">
@@ -234,38 +243,27 @@ export function HomePage() {
       {!categories && !error && <LoadingCard label="正在拿出選片盒…" />}
       {error && <KidError message={error} retry={() => void load()} />}
 
-      {categories && (
-        <section className={`category-grid ${isOutsideWindow ? "is-disabled" : ""}`} aria-label="影片分類">
-          {categories.map((category) => {
-            const catState = accessState?.categoryStates?.find((cs) => cs.categoryId === category.id);
-            const isCatReached = !isOutsideWindow && !!catState?.isReached;
-
-            if (isOutsideWindow || isCatReached) {
-              return (
-                <div
-                  className={`category-card tone-${category.tone} disabled-card`}
-                  key={category.id}
-                  title={isCatReached ? "此分類今天的時間到了 🌱" : undefined}
-                >
-                  <span className="category-icon" aria-hidden="true">{category.icon}</span>
-                  <span className="category-name-text">{category.name}</span>
-                  {isCatReached && <span className="cat-reached-pill">🌱 今日時間到了</span>}
-                </div>
-              );
-            }
-
-            return (
+      {categories && [
+        { type: "learning", title: "📚 學習系列", items: learningCategories },
+        { type: "leisure", title: "🎈 休閒系列", items: leisureCategories },
+      ].map((group) => group.items.length > 0 && (
+        <section className="series-group" aria-label={group.title} key={group.type}>
+          <div className="series-heading"><h2>{group.title}</h2>{group.type === "learning" && <span>不限時間 · 看 2 分鐘，多 1 分鐘休閒</span>}</div>
+          <div className={`category-grid ${isOutsideWindow ? "is-disabled" : ""}`}>
+            {group.items.map((category) => isOutsideWindow ? (
+              <div className={`category-card tone-${category.tone} disabled-card`} key={category.id}>
+                <span className="category-icon" aria-hidden="true">{category.icon}</span><span className="category-name-text">{category.name}</span>
+              </div>
+            ) : (
               <Link className={`category-card tone-${category.tone}`} to={`/category/${category.id}`} key={category.id}>
                 <span className="category-icon" aria-hidden="true">{category.icon}</span>
                 <span className="category-name-text">{category.name}</span>
-                {catState && catState.dailyLimitSeconds && catState.remainingSeconds !== null && catState.remainingSeconds > 0 && catState.remainingSeconds <= 1800 && (
-                  <span className="cat-time-pill">約剩 {Math.max(1, Math.round(catState.remainingSeconds / 60))} 分</span>
-                )}
+                {group.type === "leisure" && leisureReached && <span className="cat-reached-pill">一般觀看時間已到 · 純聽仍可用</span>}
               </Link>
-            );
-          })}
+            ))}
+          </div>
         </section>
-      )}
+      ))}
 
       {device?.authorized && <p className="device-ready">這台裝置已同步觀看紀錄 ✓</p>}
 
@@ -278,21 +276,25 @@ export function CategoryPage() {
   const [category, setCategory] = useState<Category | null>(null);
   const [videos, setVideos] = useState<VideoFixture[] | null>(null);
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
+  const [device, setDevice] = useState<DeviceStatus | null>(null);
   const [error, setError] = useState("");
+  const [savingLearnedId, setSavingLearnedId] = useState("");
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [categories, nextVideos, nextAccess] = await Promise.all([
+      const [categories, nextVideos, nextAccess, nextDevice] = await Promise.all([
         contentRepository.getCategories(),
         contentRepository.getVideos(categoryId),
         contentRepository.getAccessState().catch(() => null),
+        deviceRepository.status().catch(() => ({ authorized: false, device: null })),
       ]);
       const nextCategory = categories.find((item) => item.id === categoryId);
       if (!nextCategory) throw new ApiError("找不到這個分類。", 404);
       setCategory(nextCategory);
       setVideos(nextVideos);
       setAccessState(nextAccess);
+      setDevice(nextDevice);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "影片暫時載入不了。");
     }
@@ -300,8 +302,17 @@ export function CategoryPage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const currentCatState = accessState?.categoryStates?.find((cs) => cs.categoryId === categoryId);
-  const isCategoryLimitReached = currentCatState?.isReached;
+  const toggleLearned = async (video: VideoFixture) => {
+    setSavingLearnedId(video.id);
+    try {
+      await contentRepository.setLearned(video.id, !video.isLearned);
+      await load();
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : "學會狀態暫時無法更新。");
+    } finally {
+      setSavingLearnedId("");
+    }
+  };
 
   return (
     <main className="kid-shell category-page">
@@ -313,42 +324,53 @@ export function CategoryPage() {
           <header className="section-heading">
             <span aria-hidden="true">{category.icon}</span>
             <h1>{category.name}</h1>
-            {currentCatState && currentCatState.dailyLimitSeconds && currentCatState.remainingSeconds !== null && !isCategoryLimitReached && (
+            <span className={`series-type-pill ${category.seriesType}`}>{category.seriesType === "learning" ? "學習系列" : "休閒系列"}</span>
+            {category.seriesType === "leisure" && accessState && (
               <span className="gentle-time-badge">
-                <Clock3 /> 此分類今日約剩 {Math.max(1, Math.round(currentCatState.remainingSeconds / 60))} 分鐘
+                <Clock3 /> 今日休閒剩餘 {Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘
               </span>
             )}
           </header>
 
-          {isCategoryLimitReached && (
-            <div className="limit-card" role="status">
-              <span className="ended-badge">🌱</span>
-              <h2>這個分類今天的時間到了</h2>
-              <p>這個分類今天已經看夠囉！休息一下，也可以回首頁看看其他分類喔 ✨</p>
+          {!device?.authorized && (
+            <div className="device-notice" role="status">
+              <div><strong>請家長先授權這台裝置</strong><p>可以先看看有哪些影片；授權後才能播放、同步進度與標記學會。</p></div>
+              <Link to="/parent/settings">家長設定</Link>
             </div>
           )}
 
-          {!isCategoryLimitReached && (
-            <section className="video-grid" aria-label={`${category.name}影片`}>
+          <section className="video-grid" aria-label={`${category.name}影片`}>
               {videos.map((video) => (
-                <Link className="video-card" to={`/watch/${video.id}`} key={video.id}>
-                  <div className="video-thumb-container">
-                    <img src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} onError={showThumbnailFallback} />
-                    {video.isWatched && <span className="watched-badge">✓ 看過</span>}
-                    {!!video.lastPositionSeconds && !!video.durationSeconds && (
-                      <div className="mini-progress-track" aria-hidden="true">
-                        <div className="mini-progress-fill" style={{ width: `${Math.min(100, video.lastPositionSeconds / video.durationSeconds * 100)}%` }} />
+                <article className={cn("video-card", !video.isSelectable && "is-locked", video.isLearned && "is-learned")} key={video.id}>
+                  {video.isSelectable ? (
+                    <Link className="video-card-main" to={`/watch/${video.id}`}>
+                      <div className="video-thumb-container">
+                        <img src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} onError={showThumbnailFallback} />
+                        {video.isWatched && <span className="watched-badge">✓ 看過</span>}
+                        {!!video.lastPositionSeconds && !!video.durationSeconds && (
+                          <div className="mini-progress-track" aria-hidden="true"><div className="mini-progress-fill" style={{ width: `${Math.min(100, video.lastPositionSeconds / video.durationSeconds * 100)}%` }} /></div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <h2>{video.parentLabel}</h2>
-                    <p>{video.youtubeTitle}</p>
-                  </div>
-                </Link>
+                      <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
+                    </Link>
+                  ) : (
+                    <div className="video-card-main" aria-disabled="true">
+                      <div className="video-thumb-container"><img src={video.thumbnailUrl} alt="" onError={showThumbnailFallback} /><span className="locked-badge">🔒 先從前五部選擇</span></div>
+                      <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className={cn("learned-toggle", video.isLearned && "checked")}
+                    disabled={!device?.authorized || savingLearnedId === video.id}
+                    onClick={() => void toggleLearned(video)}
+                    aria-pressed={!!video.isLearned}
+                  >
+                    <span aria-hidden="true">{video.isLearned ? "✓" : ""}</span>{video.isLearned ? "學會了" : "標記學會了"}
+                  </button>
+                </article>
               ))}
-            </section>
-          )}
+          </section>
         </>
       )}
     </main>
@@ -393,6 +415,11 @@ export function WatchPage() {
   const playerStateRef = useRef<PlayerState>("READY");
 
   const [playerError, setPlayerError] = useState(false);
+  const [mediaRetryKey, setMediaRetryKey] = useState(0);
+  const [autoRetryActive, setAutoRetryActive] = useState(false);
+  const [autoRetrySecondsLeft, setAutoRetrySecondsLeft] = useState(60);
+  const retryDeadlineRef = useRef(0);
+  const autoRetryActiveRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
   const [currentPos, setCurrentPos] = useState(rawInitialPos);
@@ -402,26 +429,32 @@ export function WatchPage() {
   const [dragPos, setDragPos] = useState(rawInitialPos);
   const [showEdgeMasks, setShowEdgeMasks] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("video");
 
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
-  const [inGrace, setInGrace] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
   const [parentPaused, setParentPaused] = useState(false);
+  const [outsideWindow, setOutsideWindow] = useState(false);
   const [pausePrompts, setPausePrompts] = useState<Array<{ icon: string; text: string; shortText: string; prompt: string }>>([]);
   const [endPrompts, setEndPrompts] = useState<Array<{ icon: string; text: string; shortText: string; prompt: string }>>(() => getRandomThinkingPrompts(5));
-  const graceSecsUsedRef = useRef<number>(0);
   const remainingSecsRef = useRef<number>(999999);
 
   const load = useCallback(async () => {
     setLoadError("");
     try {
-      const [nextVideo, rawAccess, nextDevice] = await Promise.all([
+      const nextDevice = await deviceRepository.status().catch(() => ({ authorized: false, device: null }));
+      setDevice(nextDevice);
+      if (!nextDevice.authorized) {
+        setLoadError("DEVICE_AUTH_REQUIRED");
+        return;
+      }
+      const [nextVideo, rawAccess] = await Promise.all([
         contentRepository.getVideo(videoId),
         contentRepository.getAccessState().catch(() => null),
-        deviceRepository.status().catch(() => ({ authorized: false, device: null })),
       ]);
       setVideo(nextVideo);
-      setDevice(nextDevice);
+      const initialMode: PlaybackMode = nextVideo.mediaType === "audio" ? "listen" : "video";
+      setPlaybackMode(initialMode);
       const resumePosition = rawInitialPos > 0 ? rawInitialPos : Math.max(0, nextVideo.lastPositionSeconds || 0);
       setStartPosition(resumePosition);
       setCurrentPos(resumePosition);
@@ -433,7 +466,9 @@ export function WatchPage() {
         remainingSecsRef.current = remaining;
         if (nextAccess.state === "PAUSED_BY_PARENT") {
           setParentPaused(true);
-        } else if (categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED") {
+        } else if (nextAccess.state === "OUTSIDE_WINDOW") {
+          setOutsideWindow(true);
+        } else if (initialMode === "video" && nextVideo.seriesType === "leisure" && (categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED")) {
           setTimeUp(true);
         }
       }
@@ -454,30 +489,88 @@ export function WatchPage() {
         if (nextAccess.state === "PAUSED_BY_PARENT") {
           playerRef.current?.pause();
           setParentPaused(true);
+          setOutsideWindow(false);
+        } else if (nextAccess.state === "OUTSIDE_WINDOW") {
+          playerRef.current?.pause();
+          setParentPaused(false);
+          setOutsideWindow(true);
         } else {
           setParentPaused(false);
+          setOutsideWindow(false);
           const state = video ? reminderRemainingForVideo(nextAccess, video) : { remaining: nextAccess.remainingSeconds, categoryReached: false };
           remainingSecsRef.current = state.remaining;
-          if (state.categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED") {
-            if (!inGrace) {
-              setInGrace(true);
-            }
-          }
+          if (playbackMode === "video" && video?.seriesType === "leisure" && (state.categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED")) setTimeUp(true);
         }
       } catch { /* offline tolerance */ }
     }, 15000);
     return () => window.clearInterval(interval);
-  }, [inGrace, video]);
+  }, [playbackMode, video]);
 
   useEffect(() => {
     currentPosRef.current = currentPos;
   }, [currentPos]);
 
+  const startMediaRetry = useCallback(() => {
+    const retryPosition = playerRef.current?.getCurrentTime() || currentPosRef.current;
+    setStartPosition(Math.max(0, retryPosition));
+    retryDeadlineRef.current = Date.now() + 60_000;
+    autoRetryActiveRef.current = true;
+    setAutoRetrySecondsLeft(60);
+    setAutoRetryActive(true);
+    setPlayerError(true);
+    setMediaRetryKey((key) => key + 1);
+  }, []);
+
+  const handleMediaError = useCallback(() => {
+    setPlayerError(true);
+    if (video?.source !== "self_hosted" || autoRetryActiveRef.current) return;
+    startMediaRetry();
+  }, [startMediaRetry, video?.source]);
+
+  const handleMediaReady = useCallback(() => {
+    retryDeadlineRef.current = 0;
+    autoRetryActiveRef.current = false;
+    setAutoRetryActive(false);
+    setAutoRetrySecondsLeft(60);
+    setPlayerError(false);
+  }, []);
+
+  const retryMediaNow = useCallback(() => {
+    if (autoRetryActive) {
+      setMediaRetryKey((key) => key + 1);
+      return;
+    }
+    startMediaRetry();
+  }, [autoRetryActive, startMediaRetry]);
+
+  useEffect(() => {
+    if (!autoRetryActive) return;
+    const tick = () => {
+      const remainingMs = retryDeadlineRef.current - Date.now();
+      if (remainingMs <= 0) {
+        autoRetryActiveRef.current = false;
+        setAutoRetrySecondsLeft(0);
+        setAutoRetryActive(false);
+        return;
+      }
+      setAutoRetrySecondsLeft(Math.ceil(remainingMs / 1000));
+    };
+    tick();
+    const countdown = window.setInterval(tick, 1000);
+    const retry = window.setInterval(() => {
+      if (Date.now() < retryDeadlineRef.current) setMediaRetryKey((key) => key + 1);
+    }, 4000);
+    return () => {
+      window.clearInterval(countdown);
+      window.clearInterval(retry);
+    };
+  }, [autoRetryActive]);
+
   const ensureSession = useCallback(async () => {
     if (!video || !device?.authorized) return null;
     if (capabilityRef.current) return capabilityRef.current;
     if (!sessionPromiseRef.current) {
-      sessionPromiseRef.current = activityRepository.startViewSession(video.id, clientSessionIdRef.current)
+      sessionPromiseRef.current = activityRepository.startViewSession(video.id, clientSessionIdRef.current, playbackMode)
         .then(({ id, writeToken }) => {
           capabilityRef.current = { id, writeToken };
           return capabilityRef.current;
@@ -486,7 +579,7 @@ export function WatchPage() {
         .finally(() => { sessionPromiseRef.current = null; });
     }
     return sessionPromiseRef.current;
-  }, [device?.authorized, video]);
+  }, [device?.authorized, playbackMode, video]);
 
   const drainQueue = useCallback(async () => {
     if (drainingRef.current) return;
@@ -497,7 +590,11 @@ export function WatchPage() {
         try {
           await activityRepository.updateViewSession(item.sessionId, item.payload, item.keepalive);
           queueRef.current.shift();
-        } catch {
+        } catch (error) {
+          if (error instanceof ApiError && [400, 403, 409, 410].includes(error.status)) {
+            queueRef.current.shift();
+            continue;
+          }
           break;
         }
       }
@@ -517,16 +614,12 @@ export function WatchPage() {
     const deltaSeconds = Math.floor(accumulatedPlayMsRef.current / 1000);
     if (deltaSeconds > 0) accumulatedPlayMsRef.current -= deltaSeconds * 1000;
 
-    if (deltaSeconds > 0) {
+    const consumesLeisure = playbackMode === "video" && video?.seriesType === "leisure";
+    if (deltaSeconds > 0 && consumesLeisure) {
       remainingSecsRef.current = Math.max(0, remainingSecsRef.current - deltaSeconds);
-      if (remainingSecsRef.current <= 0 && !inGrace) setInGrace(true);
-      if (inGrace) {
-        graceSecsUsedRef.current += deltaSeconds;
-        const maxGrace = accessState?.gracePeriodSeconds || 300;
-        if (graceSecsUsedRef.current >= maxGrace) {
-          playerRef.current?.pause();
-          setTimeUp(true);
-        }
+      if (remainingSecsRef.current <= 0) {
+        playerRef.current?.pause();
+        setTimeUp(true);
       }
     }
 
@@ -545,7 +638,7 @@ export function WatchPage() {
     playingStartWallRef.current = playingStartPerfRef.current === null ? null : nowIso;
     queueRef.current.push({ sessionId: capability.id, payload, keepalive });
     void drainQueue();
-  }, [accessState?.gracePeriodSeconds, device?.authorized, drainQueue, ensureSession, inGrace]);
+  }, [device?.authorized, drainQueue, ensureSession, playbackMode, video?.seriesType]);
 
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
@@ -565,7 +658,7 @@ export function WatchPage() {
       void flushTracking("ended");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
-      if (inGrace || remainingSecsRef.current <= 0) {
+      if (playbackMode === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
         setTimeUp(true);
       }
     } else if (state === "PAUSED") {
@@ -577,7 +670,7 @@ export function WatchPage() {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [ensureSession, flushTracking, inGrace]);
+  }, [ensureSession, flushTracking, playbackMode, video?.seriesType]);
 
   const handleNativeProgress = useCallback((time: number, duration: number) => {
     if (!isDragging) setCurrentPos(time);
@@ -632,10 +725,30 @@ export function WatchPage() {
   }, [drainQueue, flushTracking, isDragging, totalDuration]);
 
   const togglePlay = () => {
+    if (!device?.authorized || parentPaused || outsideWindow) return;
+    if (playbackMode === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
+      setTimeUp(true);
+      return;
+    }
     if (playerStateRef.current === "PLAYING") {
       playerRef.current?.pause();
     } else {
       playerRef.current?.play();
+    }
+  };
+
+  const switchPlaybackMode = async (mode: PlaybackMode) => {
+    if (mode === playbackMode || !video || video.source !== "self_hosted") return;
+    playerRef.current?.pause();
+    await flushTracking("ended");
+    capabilityRef.current = null;
+    sessionPromiseRef.current = null;
+    clientSessionIdRef.current = crypto.randomUUID();
+    heartbeatSeqRef.current = 0;
+    queueRef.current = [];
+    setPlaybackMode(mode);
+    if (mode === "listen") {
+      setTimeUp(false);
     }
   };
 
@@ -667,6 +780,9 @@ export function WatchPage() {
   };
 
   if (!video && !loadError) return <main className="watch-page watch-loading"><LoadingCard label="正在準備播放器…" /></main>;
+  if (loadError === "DEVICE_AUTH_REQUIRED") return (
+    <main className="kid-shell"><div className="limit-card"><span className="ended-badge">🔐</span><h1>請家長先授權這台裝置</h1><p>授權一次後，孩子不需要登入，觀看紀錄與時間會自動同步。</p><Link className={buttonVariants({ size: "large" })} to="/parent/settings">前往家長設定</Link></div></main>
+  );
   if (loadError) return <main className="kid-shell"><KidError message={loadError} retry={() => void load()} /></main>;
   if (!video) return <Navigate to="/" replace />;
 
@@ -678,7 +794,7 @@ export function WatchPage() {
   return (
     <main className="watch-page">
       <section className="player-surface">
-        <div className={cn("player-stage", !isYouTube && "player-stage-local")}>
+        <div className={cn("player-stage", !isYouTube && "player-stage-local", playbackMode === "listen" && "player-stage-listen")}>
           {/* Keep the selected player mounted so playback and reminder timing stay continuous. */}
           {isYouTube && video.youtubeVideoId ? (
             <YouTubePlayer
@@ -691,17 +807,28 @@ export function WatchPage() {
             />
           ) : video.mediaUrl && video.mediaType ? (
             <NativeMediaPlayer
+              key={mediaRetryKey}
               ref={playerRef}
-              src={video.mediaUrl}
+              src={withMediaRetry(video.mediaUrl, mediaRetryKey)}
               mediaType={video.mediaType}
               poster={video.thumbnailUrl}
               startAt={startPosition}
               volume={volume}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
-              onError={() => setPlayerError(true)}
+              onError={handleMediaError}
+              onReady={handleMediaReady}
             />
           ) : null}
+
+          {playbackMode === "listen" && (
+            <div className="listen-cover" aria-label="純聽模式">
+              <Headphones aria-hidden="true" />
+              <strong>純聽模式</strong>
+              <span>{video.parentLabel}</span>
+              <small>不顯示影片畫面，也不計入休閒時間</small>
+            </div>
+          )}
 
           {/* Transparent touch/click interceptor */}
           <div
@@ -742,13 +869,6 @@ export function WatchPage() {
             )}
           </div>
 
-          {/* Grace Period gentle prompt (Spec #23, #25) */}
-          {inGrace && !timeUp && !isEnded && (
-            <div className="grace-toast" role="status">
-              今天快結束囉 🌙 這一段看完就休息囉。
-            </div>
-          )}
-
           {/* 家長暫停畫面 (Spec #20, #35) */}
           {parentPaused && (
             <div className="ended-overlay" role="region" aria-label="家長暫停">
@@ -765,13 +885,26 @@ export function WatchPage() {
             </div>
           )}
 
+          {outsideWindow && !parentPaused && (
+            <div className="ended-overlay" role="region" aria-label="目前不是可觀看時段">
+              <div className="ended-content">
+                <span className="ended-badge" aria-hidden="true">🕰️</span>
+                <h1>現在先做別的事</h1>
+                <p>{accessState?.message || "目前還沒到可觀看時段。"}</p>
+                <div className="ended-buttons">
+                  <Link className={buttonVariants({ variant: "secondary", size: "large" })} to="/">回首頁</Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 時間結束畫面 (Spec #25, #26) */}
-          {timeUp && !parentPaused && (
+          {timeUp && !parentPaused && !outsideWindow && (
             <div className="ended-overlay" role="region" aria-label="時間到了">
               <div className="ended-content">
                 <span className="ended-badge" aria-hidden="true">🌙</span>
-                <h1>時間到了，今天先休息囉！</h1>
-                <p>今天的觀看時間已經結束囉。<br /><span style={{ color: "#b7e3ca", fontWeight: "bold" }}>✨ 休息前，想想今天最有趣的新發現吧！</span></p>
+                <h1>今天的休閒時間到了</h1>
+                <p>可以回首頁選學習影片；自家影片也能切換成純聽。<br /><span style={{ color: "#b7e3ca", fontWeight: "bold" }}>✨ 休息前，想想今天最有趣的新發現吧！</span></p>
 
                 <div className="ended-questions-box">
                   <span className="ended-questions-title">💭 休息前想一想：</span>
@@ -795,7 +928,7 @@ export function WatchPage() {
           )}
 
           {/* 暫停時提醒與 5 組隨機思考問題 */}
-          {!isPlaying && !isEnded && !timeUp && !parentPaused && pausePrompts.length > 0 && currentPos > 2 && (
+          {!isPlaying && !isEnded && !timeUp && !parentPaused && !outsideWindow && pausePrompts.length > 0 && currentPos > 2 && (
             <div className="pause-reminder-overlay" role="region" aria-label="暫停思考提示">
               <div className="pause-reminder-card">
                 <div className="pause-reminder-header">
@@ -823,7 +956,7 @@ export function WatchPage() {
           )}
 
           {/* 自訂播放結束畫面 (看完提醒 + 5 組隨機問題清單) */}
-          {isEnded && !timeUp && !parentPaused && (
+          {isEnded && !timeUp && !parentPaused && !outsideWindow && (
             <div className="ended-overlay" role="region" aria-label="播放完畢與心得提醒">
               <div className="ended-content">
                 <span className="ended-badge" aria-hidden="true">🎉</span>
@@ -858,8 +991,14 @@ export function WatchPage() {
 
           {(playerError || !hasPlayableSource) && (
             <div className="player-error" role="alert">
-              <p>{isYouTube ? "影片暫時載入不了。" : "目前連不到家裡的影片。請確認 Mac 與 Tailscale 都在線上。"}</p>
-              <Button variant="secondary" onClick={() => window.location.reload()}><RotateCcw />再試一次</Button>
+              <p>{isYouTube
+                ? "影片暫時載入不了。"
+                : autoRetryActive
+                  ? `正在重新連線，最多再試 ${autoRetrySecondsLeft} 秒…`
+                  : "目前連不到家裡的影片。請確認 Mac 與 Tailscale 都在線上。"}</p>
+              <Button variant="secondary" onClick={isYouTube ? () => window.location.reload() : retryMediaNow}>
+                <RotateCcw />{autoRetryActive ? "立即再試" : "再試一次"}
+              </Button>
             </div>
           )}
         </div>
@@ -903,6 +1042,13 @@ export function WatchPage() {
             >
               <ArrowLeft />回去
             </Link>
+
+            {!isYouTube && video.mediaType === "video" && (
+              <div className="mode-switch" role="group" aria-label="播放模式">
+                <button className={playbackMode === "video" ? "active" : ""} onClick={() => void switchPlaybackMode("video")}><Play />觀看</button>
+                <button className={playbackMode === "listen" ? "active" : ""} onClick={() => void switchPlaybackMode("listen")}><Headphones />純聽</button>
+              </div>
+            )}
 
             <div className="playback-buttons" onClick={(e) => e.stopPropagation()}>
               <Button
