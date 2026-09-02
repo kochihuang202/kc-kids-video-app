@@ -69,6 +69,7 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
   await expect(page.getByRole("region", { name: "今日休閒時間" })).toContainText("15 分鐘");
 
   await page.getByRole("link", { name: /科學/ }).click();
+  await expect(page.getByRole("region", { name: "今天的學習開始囉，好好動動大腦吧!!" })).toBeVisible();
   await expect(page.getByText("🔒 先從前五部選擇")).toBeVisible();
   await page.locator(".video-card").first().getByRole("button", { name: "標記學會了" }).click();
 

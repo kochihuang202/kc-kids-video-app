@@ -390,8 +390,8 @@ export function CategoryPage() {
             </div>
           )}
 
-          <section className="learning-status-group" aria-label="還沒學會">
-            <div className="learning-status-heading"><h2>🌱 還沒學會</h2><span>{videos.filter((video) => !video.isLearned).length} 部</span></div>
+          <section className="learning-status-group" aria-label="今天的學習開始囉，好好動動大腦吧!!">
+            <div className="learning-status-heading"><h2>🌱 今天的學習開始囉，好好動動大腦吧!!</h2><span>{videos.filter((video) => !video.isLearned).length} 部</span></div>
             <div className="video-grid">{videos.filter((video) => !video.isLearned).map(renderVideoCard)}</div>
           </section>
 
