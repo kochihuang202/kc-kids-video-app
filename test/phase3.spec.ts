@@ -1,6 +1,6 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
-import { evaluateChildAccessState } from "../worker/rules";
+import { evaluateChildAccessState, getTaipeiDateParts } from "../worker/rules";
 import { makePasswordRecord, tokenHash } from "../worker/security";
 import type { AppEnv } from "../worker/types";
 import worker from "../worker";
@@ -46,6 +46,7 @@ beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare("DELETE FROM view_heartbeats"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
+    env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM notes"),
     env.DB.prepare("DELETE FROM view_sessions"),
     env.DB.prepare("DELETE FROM admin_sessions"),
@@ -58,7 +59,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM usage_rules"),
     env.DB.prepare("INSERT INTO usage_rules (id, day_type, daily_limit_seconds, grace_period_seconds, is_active) VALUES ('weekday', 'weekday', 2400, 300, 1), ('weekend', 'weekend', 3600, 300, 1)"),
     env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', health_status = 'healthy', duration_seconds = 1200, metadata_error = NULL"),
-    env.DB.prepare("UPDATE categories SET is_active = 1, archived_at = NULL"),
+    env.DB.prepare("UPDATE categories SET is_active = 1, archived_at = NULL, daily_limit_seconds = NULL"),
   ]);
 });
 
@@ -239,12 +240,15 @@ describe("Phase 3: Family Usage Rules & Time Management Suite", () => {
     expect(catState.remainingSeconds).toBe(900);
   });
 
-  // Test 08: Phase 2 limits are global; legacy per-category values are not enforced.
-  it("E2E 08: Uses the shared allowance instead of a legacy category limit", async () => {
+  // Test 08: Restored category limits block video mode while pure listening stays available.
+  it("E2E 08: Enforces the category allowance without blocking pure listening", async () => {
     const parentCookie = await addParent();
     const device = await pairDevice();
     const categories = await (await call("/api/parent/categories", { headers: { cookie: parentCookie } })).json<any[]>();
-    const natureCat = categories.find((c) => c.id === "nature") || categories[0];
+    const mapping = await env.DB.prepare("SELECT category_id FROM category_videos WHERE video_id = 'why-sky-blue' LIMIT 1")
+      .first<{ category_id: string }>();
+    const natureCat = categories.find((c) => c.id === mapping?.category_id);
+    expect(natureCat).toBeDefined();
 
     // Set 10 minutes limit (600 seconds) on nature category
     await call(`/api/parent/categories/${natureCat.id}`, {
@@ -253,20 +257,27 @@ describe("Phase 3: Family Usage Rules & Time Management Suite", () => {
       body: jsonBody({ dailyLimitSeconds: 600 }),
     });
 
-    // Create a completed session of 600 seconds on video 'why-sky-blue' (which belongs to 'nature')
-    const sessionId = crypto.randomUUID();
+    // The compact daily rollup says this category has used all 600 seconds.
     const now = new Date().toISOString();
+    const { dateStr } = getTaipeiDateParts();
     await env.DB.prepare(`
-      INSERT INTO view_sessions (id, client_session_id, video_id, child_device_id, played_seconds, last_position_seconds, started_at, updated_at, ended_at)
-      VALUES (?, ?, 'why-sky-blue', ?, 600, 600, ?, ?, ?)
-    `).bind(sessionId, crypto.randomUUID(), device.id, now, now, now).run();
+      INSERT INTO daily_category_usage_totals (usage_date, category_id, video_seconds, updated_at)
+      VALUES (?, ?, 600, ?)
+    `).bind(dateStr, natureCat.id, now).run();
 
-    // Now start a new session for 'why-sky-blue'
-    const sessionRes = await call("/api/view-sessions", {
+    const videoSession = await call("/api/view-sessions", {
       method: "POST",
       headers: { cookie: device.cookie },
-      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID() }),
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID(), playbackMode: "video" }),
     });
-    expect(sessionRes.status).toBe(201);
+    expect(videoSession.status).toBe(403);
+    expect(await videoSession.json()).toMatchObject({ code: "CATEGORY_DAILY_LIMIT_REACHED" });
+
+    const listenSession = await call("/api/view-sessions", {
+      method: "POST",
+      headers: { cookie: device.cookie },
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID(), playbackMode: "listen" }),
+    });
+    expect(listenSession.status).toBe(201);
   });
 });

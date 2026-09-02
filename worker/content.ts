@@ -356,9 +356,6 @@ export async function startViewSession(request: Request, env: AppEnv) {
   if (!activeVideo.isSelectable) {
     throw new HttpError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
   }
-  if (playbackMode === "listen" && activeVideo.source !== "self_hosted") {
-    throw new HttpError("YouTube 影片不提供純聽模式。", 400, "LISTEN_MODE_NOT_AVAILABLE");
-  }
   const accessState = await evaluateChildAccessState(env);
 
   if (accessState.state === "PAUSED_BY_PARENT") {
@@ -366,6 +363,11 @@ export async function startViewSession(request: Request, env: AppEnv) {
   }
   if (accessState.state === "OUTSIDE_WINDOW") {
     throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
+  }
+  if (playbackMode === "video" && accessState.categoryStates?.some(
+    (category) => activeVideo.categoryIds.includes(category.categoryId) && category.isReached,
+  )) {
+    throw new HttpError("這個系列今天的觀看時間到了，仍可使用純聽。", 403, "CATEGORY_DAILY_LIMIT_REACHED");
   }
   if (activeVideo.seriesType === "leisure" && playbackMode === "video" && accessState.remainingSeconds <= 0) {
     throw new HttpError("今天的影片時間到了 🌙 明天再來看看吧。", 403, "DAILY_LIMIT_REACHED");
@@ -434,6 +436,21 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
   const closingWithoutPlayback = status === "ended" && deltaSeconds === 0;
   if (accessState.state === "PAUSED_BY_PARENT" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "PAUSED_BY_PARENT");
   if (accessState.state === "OUTSIDE_WINDOW" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
+  if (session.playback_mode === "video") {
+    const sessionCategories = await env.DB.prepare(
+      "SELECT category_id FROM category_videos WHERE video_id = ?",
+    ).bind(session.video_id).all<{ category_id: string }>();
+    const categoryIds = new Set((sessionCategories.results || []).map((row) => row.category_id));
+    const limitedStates = (accessState.categoryStates || []).filter(
+      (category) => categoryIds.has(category.categoryId) && category.remainingSeconds !== null,
+    );
+    if (limitedStates.some((category) => category.isReached) && !closingWithoutPlayback) {
+      throw new HttpError("這個系列今天的觀看時間到了。", 403, "CATEGORY_DAILY_LIMIT_REACHED");
+    }
+    if (limitedStates.length) {
+      deltaSeconds = Math.min(deltaSeconds, ...limitedStates.map((category) => category.remainingSeconds || 0));
+    }
+  }
   if (session.playback_mode === "video" && session.series_type_snapshot === "leisure") {
     if (accessState.remainingSeconds <= 0 && !closingWithoutPlayback) throw new HttpError("今天的休閒時間到了。", 403, "DAILY_LIMIT_REACHED");
     deltaSeconds = Math.min(deltaSeconds, accessState.remainingSeconds);
@@ -443,6 +460,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
   const heartbeatId = crypto.randomUUID();
   const rollupUpdates = await prepareDailyUsageRollupUpdates(env, {
     viewSessionId: sessionId,
+    videoId: session.video_id,
     deltaSeconds,
     intervalStartedAt,
     intervalEndedAt,

@@ -11,7 +11,27 @@ function json(route: Route, body: unknown, status = 200) {
   });
 }
 
-export async function installDeterministicMedia(page: Page, failLoads: number) {
+function silentWav() {
+  const sampleRate = 8_000;
+  const dataSize = sampleRate;
+  const wav = Buffer.alloc(44 + dataSize);
+  wav.write("RIFF", 0);
+  wav.writeUInt32LE(36 + dataSize, 4);
+  wav.write("WAVEfmt ", 8);
+  wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20);
+  wav.writeUInt16LE(1, 22);
+  wav.writeUInt32LE(sampleRate, 24);
+  wav.writeUInt32LE(sampleRate, 28);
+  wav.writeUInt16LE(1, 32);
+  wav.writeUInt16LE(8, 34);
+  wav.write("data", 36);
+  wav.writeUInt32LE(dataSize, 40);
+  wav.fill(128, 44);
+  return wav;
+}
+
+export async function installDeterministicMedia(page: Page, failLoads: number, options: { abortNetwork?: boolean } = {}) {
   await page.addInitScript(({ failures }) => {
     const states = new WeakMap<HTMLMediaElement, { base: number; startedAt: number; playing: boolean }>();
     let loadCount = 0;
@@ -68,7 +88,9 @@ export async function installDeterministicMedia(page: Page, failLoads: number) {
     };
   }, { failures: failLoads });
 
-  await page.route("**/e2e-media/regression-media.wav*", (route) => route.abort("connectionfailed"));
+  await page.route("**/e2e-media/regression-media.wav*", (route) => options.abortNetwork === false
+    ? route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() })
+    : route.abort("connectionfailed"));
 }
 
 export function getMediaLoadCount(page: Page) {

@@ -9,6 +9,10 @@ param(
   [string]$DatabaseName = "kc-kids-video-app-db",
   [string]$OutputDirectory = "",
   [string]$BackupDirectory = "",
+  [int]$Limit = 0,
+  [int]$MaxAttempts = 3,
+  [int]$ProgressEvery = 10,
+  [switch]$Force,
   [switch]$SkipGenerate,
   [switch]$SkipUpload,
   [switch]$ApplyRemoteD1
@@ -17,6 +21,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 if ($TimestampSeconds -lt 0) { throw "TimestampSeconds must be zero or greater." }
+if ($Limit -lt 0) { throw "Limit must be zero or greater." }
+if ($MaxAttempts -lt 1 -or $MaxAttempts -gt 10) { throw "MaxAttempts must be between 1 and 10." }
+if ($ProgressEvery -lt 1) { throw "ProgressEvery must be one or greater." }
+if ($ApplyRemoteD1 -and $Limit -gt 0) { throw "ApplyRemoteD1 cannot be used with Limit." }
 if ($R2Prefix -notmatch '^[A-Za-z0-9/_-]+$' -or $R2Prefix.Contains("..")) {
   throw "R2Prefix may contain only letters, numbers, slash, underscore, and dash."
 }
@@ -38,6 +46,45 @@ if (-not $ffmpegPath) { throw "ffmpeg is required. Run npm install first to rest
 if (-not (Get-Command npx -ErrorAction SilentlyContinue)) { throw "npx is required." }
 Write-Host "Using FFmpeg: $ffmpegPath"
 
+function Invoke-WithRetry {
+  param(
+    [Parameter(Mandatory = $true)][string]$Label,
+    [Parameter(Mandatory = $true)][scriptblock]$Action
+  )
+  for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    try {
+      & $Action
+      return
+    } catch {
+      if ($attempt -eq $MaxAttempts) { throw }
+      $delay = [Math]::Min(20, [Math]::Pow(2, $attempt))
+      Write-Warning "$Label failed (attempt $attempt/$MaxAttempts). Retrying in ${delay}s."
+      Start-Sleep -Seconds $delay
+    }
+  }
+}
+
+function Write-ProgressState {
+  param(
+    [Parameter(Mandatory = $true)][string]$Status,
+    [Parameter(Mandatory = $true)][int]$CompletedCount,
+    [Parameter(Mandatory = $true)][int]$TotalCount,
+    [string]$LastCompletedId = "",
+    [string]$ErrorMessage = ""
+  )
+  $tempPath = "$progressPath.tmp"
+  [pscustomobject]@{
+    updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+    status = $Status
+    categoryId = $CategoryId
+    completedCount = $CompletedCount
+    totalCount = $TotalCount
+    lastCompletedId = $LastCompletedId
+    error = $ErrorMessage
+  } | ConvertTo-Json | Set-Content -LiteralPath $tempPath -Encoding utf8
+  Move-Item -LiteralPath $tempPath -Destination $progressPath -Force
+}
+
 $timestampMap = @{}
 if ($TimestampMapPath) {
   $map = Get-Content -LiteralPath $TimestampMapPath -Raw | ConvertFrom-Json
@@ -53,10 +100,33 @@ $videos = @(Invoke-RestMethod -Uri $contentUrl -Method Get) | Where-Object {
   $_.source -eq "self_hosted" -and $_.mediaUrl
 }
 if ($videos.Count -eq 0) { throw "No self-hosted videos were returned for this category." }
+if ($Limit -gt 0) { $videos = @($videos | Select-Object -First $Limit) }
+
+$journalPath = Join-Path $resolvedOutput "completed.jsonl"
+$progressPath = Join-Path $resolvedOutput "progress.json"
+$completed = @{}
+if ((Test-Path -LiteralPath $journalPath) -and -not $Force) {
+  foreach ($line in Get-Content -LiteralPath $journalPath) {
+    if (-not $line.Trim()) { continue }
+    try {
+      $entry = $line | ConvertFrom-Json
+      if ($entry.categoryId -eq $CategoryId -and $entry.bucketName -eq $BucketName -and
+          $entry.r2Prefix -eq $R2Prefix.Trim('/') -and [int]$entry.timestampSeconds -eq $TimestampSeconds) {
+        $completed[[string]$entry.id] = $entry
+      }
+    } catch {
+      Write-Warning "Ignoring an invalid progress journal line."
+    }
+  }
+}
+Write-Host "Videos selected: $($videos.Count). Resumable uploads found: $($completed.Count)."
+Write-ProgressState -Status "running" -CompletedCount 0 -TotalCount $videos.Count
 
 $results = @()
 $sqlCases = @()
 $sqlIds = @()
+$processedCount = 0
+try {
 foreach ($video in $videos) {
   $id = [string]$video.id
   if ($id -notmatch '^[A-Za-z0-9_-]+$') { throw "Unsafe video id: $id" }
@@ -67,22 +137,36 @@ foreach ($video in $videos) {
   $r2Key = "$($R2Prefix.Trim('/'))/$id.webp"
   $publicUrl = "/api/media/$r2Key"
 
-  if (-not $SkipGenerate) {
-    Write-Host "[$id] capture at ${second}s"
-    & $ffmpegPath -hide_banner -loglevel error -ss $second -i ([string]$video.mediaUrl) `
-      -frames:v 1 -vf "scale=640:-2:flags=lanczos" -c:v libwebp -quality 80 -y $outputFile
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $outputFile)) {
-      throw "ffmpeg failed for $id."
+  $completedEntry = $completed[$id]
+  $alreadyComplete = $completedEntry -and (Test-Path -LiteralPath $outputFile)
+
+  if (-not $alreadyComplete -and -not $SkipGenerate -and ($Force -or -not (Test-Path -LiteralPath $outputFile))) {
+    Invoke-WithRetry -Label "Capture $id" -Action {
+      $toolOutput = & $ffmpegPath -hide_banner -loglevel error -ss $second -i ([string]$video.mediaUrl) `
+        -frames:v 1 -vf "scale=640:-2:flags=lanczos" -c:v libwebp -quality 80 -y $outputFile 2>&1 | Out-String
+      if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $outputFile)) {
+        throw "ffmpeg failed for $id. $toolOutput"
+      }
     }
   } elseif (-not (Test-Path -LiteralPath $outputFile)) {
     throw "Missing generated file: $outputFile"
   }
 
-  if (-not $SkipUpload) {
-    Write-Host "[$id] upload r2://$BucketName/$r2Key"
-    & npx wrangler r2 object put "$BucketName/$r2Key" --remote --file=$outputFile `
-      --content-type=image/webp --cache-control="public, max-age=31536000, immutable" --force
-    if ($LASTEXITCODE -ne 0) { throw "R2 upload failed for $id." }
+  if (-not $alreadyComplete -and -not $SkipUpload) {
+    Invoke-WithRetry -Label "Upload $id" -Action {
+      $toolOutput = & npx wrangler r2 object put "$BucketName/$r2Key" --remote --file=$outputFile `
+        --content-type=image/webp --cache-control="public, max-age=31536000, immutable" --force 2>&1 | Out-String
+      if ($LASTEXITCODE -ne 0) { throw "R2 upload failed for $id. $toolOutput" }
+    }
+    [pscustomobject]@{
+      completedAt = (Get-Date).ToUniversalTime().ToString("o")
+      categoryId = $CategoryId
+      id = $id
+      timestampSeconds = $second
+      bucketName = $BucketName
+      r2Prefix = $R2Prefix.Trim('/')
+      r2Key = $r2Key
+    } | ConvertTo-Json -Compress | Add-Content -LiteralPath $journalPath -Encoding utf8
   }
 
   $sqlCases += "  WHEN '$id' THEN '$publicUrl'"
@@ -95,6 +179,16 @@ foreach ($video in $videos) {
     r2Key = $r2Key
     thumbnailUrl = $publicUrl
   }
+  $processedCount++
+  Write-ProgressState -Status "running" -CompletedCount $processedCount -TotalCount $videos.Count -LastCompletedId $id
+  if (($processedCount % $ProgressEvery) -eq 0 -or $processedCount -eq $videos.Count) {
+    Write-Host ("[progress] {0}/{1} completed; last={2}" -f $processedCount, $videos.Count, $id)
+  }
+}
+} catch {
+  Write-ProgressState -Status "failed" -CompletedCount $processedCount -TotalCount $videos.Count `
+    -LastCompletedId $(if ($processedCount -gt 0) { [string]$results[-1].id } else { "" }) -ErrorMessage $_.Exception.Message
+  throw
 }
 $sqlLines = @(
   "UPDATE videos",
@@ -130,6 +224,9 @@ if ($ApplyRemoteD1) {
   if ($LASTEXITCODE -ne 0) { throw "Remote D1 update failed." }
   Write-Host "D1 backup: $backupPath"
 }
+
+Write-ProgressState -Status "completed" -CompletedCount $results.Count -TotalCount $videos.Count `
+  -LastCompletedId $(if ($results.Count -gt 0) { [string]$results[-1].id } else { "" })
 
 Write-Host "Completed $($results.Count) thumbnails."
 Write-Host "Manifest: $manifestPath"

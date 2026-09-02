@@ -979,6 +979,7 @@ function VideoForm({ categories, onCreated }: { categories: AdminCategory[]; onC
 
 function RulesPage() {
   const [rules, setRules] = useState<UsageRule[]>([]);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [todayOverride, setTodayOverride] = useState<DailyOverride | null>(null);
   const [todayPicks, setTodayPicks] = useState<TodayPick[]>([]);
   const [loading, setLoading] = useState(true);
@@ -990,13 +991,15 @@ function RulesPage() {
     setLoading(true);
     setError("");
     try {
-      const [rulesData, picksData] = await Promise.all([
+      const [rulesData, picksData, categoryData] = await Promise.all([
         parentRepository.rules(),
         parentRepository.todayPicks(),
+        parentRepository.categories(),
       ]);
       setRules(rulesData.rules || []);
       setTodayOverride(rulesData.todayOverride || null);
       setTodayPicks(picksData || []);
+      setCategories((categoryData || []).filter((category) => !category.archivedAt));
     } catch (e) {
       setError(e instanceof Error ? e.message : "規則載入失敗。");
     } finally {
@@ -1056,13 +1059,23 @@ function RulesPage() {
     setMessage("");
     try {
       await parentRepository.updateRules(rules);
-      setMessage("使用規則與可觀看時段已儲存！");
+      await Promise.all(categories.map((category) => parentRepository.updateCategory(category.id, {
+        dailyLimitSeconds: category.dailyLimitSeconds || null,
+      })));
+      setMessage("分類上限、使用規則與可觀看時段已儲存！");
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "儲存規則失敗。");
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateCategoryLimit = (categoryId: string, minutes: number) => {
+    const safeMinutes = Math.max(0, Math.min(1440, Number.isFinite(minutes) ? minutes : 0));
+    setCategories((previous) => previous.map((category) => category.id === categoryId
+      ? { ...category, dailyLimitSeconds: safeMinutes > 0 ? safeMinutes * 60 : null }
+      : category));
   };
 
   const removePick = async (videoId: string) => {
@@ -1093,6 +1106,38 @@ function RulesPage() {
 
       {error && <ParentState error={error} retry={() => void load()} />}
       {message && <p className="settings-success"><Check /> {message}</p>}
+
+      <section className="settings-card rule-card category-limit-settings">
+        <div className="rule-card-header">
+          <h3><Clock3 /> 每個分類的每日觀看上限</h3>
+        </div>
+        <p>這是最優先的時間限制，只計算觀看；純聽不計時。輸入 0 代表不限制。</p>
+        <div className="category-limit-grid">
+          {categories.map((category) => (
+            <label className="category-limit-row" key={category.id}>
+              <span className="category-limit-name">
+                <i aria-hidden="true">{category.icon}</i>
+                <strong>{category.name}</strong>
+                <small className={`series-type-pill ${category.seriesType}`}>
+                  {category.seriesType === "learning" ? "學習" : "休閒"}
+                </small>
+              </span>
+              <span className="input-with-unit">
+                <input
+                  type="number"
+                  min={0}
+                  max={1440}
+                  step={5}
+                  aria-label={`${category.name}每日觀看上限`}
+                  value={Math.round((category.dailyLimitSeconds || 0) / 60)}
+                  onChange={(event) => updateCategoryLimit(category.id, Number(event.target.value))}
+                />
+                <span>分鐘</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </section>
 
       <section className="settings-card rule-card">
         <div className="rule-card-header">
@@ -1186,7 +1231,7 @@ function RulesPage() {
 
       <div className="rule-save-actions">
         <Button size="large" disabled={saving} onClick={() => void saveRules()}>
-          <Save /> {saving ? "儲存中…" : "儲存使用規則"}
+          <Save /> {saving ? "儲存中…" : "儲存所有時間設定"}
         </Button>
       </div>
 

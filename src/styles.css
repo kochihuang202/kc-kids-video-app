@@ -514,6 +514,8 @@ svg { flex: 0 0 auto; }
   }
 }
 .player-back {
+  grid-column: 1;
+  grid-row: 1;
   justify-self: start;
   min-height: 54px;
   display: inline-flex;
@@ -1386,7 +1388,7 @@ svg { flex: 0 0 auto; }
 .series-group { margin-top: 34px; }
 .series-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
 .series-heading h2 { margin: 0; font-size: clamp(26px, 4vw, 36px); }
-.series-heading span { color: #5b7567; font-size: 14px; font-weight: 800; }
+.series-heading > span { color: #5b7567; font-size: 14px; font-weight: 800; }
 .cat-reached-pill { max-width: 90%; padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.72); color: #6c5944; font-size: 12px; text-align: center; }
 .series-type-pill { display: inline-flex; align-items: center; padding: 7px 11px; border-radius: 999px; font-size: 13px !important; font-weight: 900 !important; white-space: nowrap; }
 .series-type-pill.learning, .series-history-chip.learning { background: #dcebd9; color: #315b43; }
@@ -1417,24 +1419,32 @@ svg { flex: 0 0 auto; }
 .listen-cover strong { font-size: clamp(28px, 5vw, 48px); }
 .listen-cover span { max-width: 720px; font-size: clamp(18px, 3vw, 28px); font-weight: 800; }
 .listen-cover small { color: #c9ddd2; font-size: 14px; }
-.mode-switch { grid-column: 1; grid-row: 1; justify-self: end; display: inline-flex; gap: 4px; padding: 4px; border-radius: 14px; background: #e5efe3; }
-.mode-switch button { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 0; border-radius: 11px; background: transparent; color: #496252; font-weight: 850; cursor: pointer; }
-.mode-switch button.active { background: #557665; color: #fff; box-shadow: 0 5px 14px rgba(57,90,72,.18); }
-.mode-switch svg { width: 18px; height: 18px; }
+.playback-mode-selector { display: inline-flex; flex: 0 0 auto; gap: 4px; padding: 4px; border-radius: 14px; background: #e5efe3; }
+.playback-mode-selector button { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border: 0; border-radius: 11px; background: transparent; color: #496252; font-weight: 850; cursor: pointer; }
+.playback-mode-selector button.active { background: #557665; color: #fff; box-shadow: 0 5px 14px rgba(57,90,72,.18); }
+.playback-mode-selector svg { width: 18px; height: 18px; }
 .series-history-chip, .playback-mode-chip { display: inline-flex; padding: 5px 8px; border-radius: 999px; font-size: 12px; font-weight: 850; }
 .playback-mode-chip.video { background: #e5e9e6; color: #4e5f56; }
 .playback-mode-chip.listen { background: #dde6f4; color: #425b78; }
 .disabled-option { opacity: .45; }
 .admin-list-row > select { min-height: 44px; min-width: 132px; }
+.category-limit-settings { border: 2px solid rgba(85,118,101,.24); background: linear-gradient(145deg, #f4f8f1, #fffdf7); }
+.category-limit-grid { display: grid; gap: 10px; margin-top: 18px; }
+.category-limit-row { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 14px; border: 1px solid rgba(85,118,101,.14); border-radius: 16px; background: rgba(255,255,255,.82); }
+.category-limit-name { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.category-limit-name i { font-style: normal; font-size: 24px; }
+.category-limit-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.category-limit-row .input-with-unit { flex: 0 0 auto; }
+.category-limit-row input { width: 110px; }
 
 @media (max-width: 720px) {
   .leisure-balance { grid-template-columns: 1fr; }
   .series-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
   .section-heading { align-items: flex-start; flex-wrap: wrap; }
   .learning-status-group.learned-group { margin-inline: -8px; padding: 14px; border-radius: 24px; }
-  .mode-switch { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
-  .player-back { grid-row: 3; }
-  .volume-control { grid-row: 3; }
+  .playback-mode-selector button { min-height: 42px; padding-inline: 11px; }
+  .category-limit-row { align-items: stretch; flex-direction: column; }
+  .category-limit-row .input-with-unit, .category-limit-row input { width: 100%; }
 }
 
 /* Category-Specific Daily Limits UI */

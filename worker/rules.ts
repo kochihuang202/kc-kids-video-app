@@ -247,6 +247,7 @@ export async function ensureDailyUsageRollup(env: AppEnv, targetDate: Date = new
 
 export interface RollupHeartbeatInput {
   viewSessionId: string;
+  videoId: string;
   deltaSeconds: number;
   intervalStartedAt: string | null;
   intervalEndedAt: string | null;
@@ -274,6 +275,11 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
   }
 
   const statements: D1PreparedStatement[] = [];
+  const categoryIds = input.playbackMode === "video"
+    ? ((await env.DB.prepare(
+        "SELECT category_id FROM category_videos WHERE video_id = ? ORDER BY sort_order, category_id",
+      ).bind(input.videoId).all<{ category_id: string }>()).results || []).map((row) => row.category_id)
+    : [];
   const newSession: UsageSession = {
     id: input.viewSessionId,
     video_id: "",
@@ -344,13 +350,22 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
         updated_at = ?
       WHERE usage_date = ?
     `).bind(leisureDelta, learningDelta, listenDelta, totalDelta, input.receivedAt, dateStr));
+    for (const categoryId of categoryIds) {
+      statements.push(env.DB.prepare(`
+        INSERT INTO daily_category_usage_totals (
+          usage_date, category_id, video_seconds, updated_at
+        ) VALUES (?, ?, ?, ?)
+        ON CONFLICT(usage_date, category_id) DO UPDATE SET
+          video_seconds = MAX(0, video_seconds + excluded.video_seconds),
+          updated_at = excluded.updated_at
+      `).bind(dateStr, categoryId, Math.max(0, totalDelta), input.receivedAt));
+    }
   }
   return statements;
 }
 
 export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = new Date()) {
   const { dateStr, dayType, currentHHmm } = getTaipeiDateParts(targetDate);
-  const dayRange = getDayRangeInTimeZone(TIME_ZONE, targetDate);
 
   // 1. Load active rule & windows for current dayType
   let rule = await env.DB.prepare(
@@ -383,59 +398,21 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
 
   // Calculate Category-specific played seconds and limits
   const categoriesResult = await env.DB.prepare(`
-    SELECT id, name, icon, tone, daily_limit_seconds
-    FROM categories
-    WHERE is_active = 1 AND archived_at IS NULL
-    ORDER BY sort_order, id
-  `).all<{ id: string; name: string; icon: string; tone: "sage" | "sky" | "apricot"; daily_limit_seconds: number | null }>();
+    SELECT c.id, c.name, c.icon, c.tone, c.daily_limit_seconds,
+      COALESCE(t.video_seconds, 0) AS today_video_seconds
+    FROM categories c
+    LEFT JOIN daily_category_usage_totals t
+      ON t.category_id = c.id AND t.usage_date = ?
+    WHERE c.is_active = 1 AND c.archived_at IS NULL
+    ORDER BY c.sort_order, c.id
+  `).bind(dateStr).all<{
+    id: string; name: string; icon: string; tone: "sage" | "sky" | "apricot";
+    daily_limit_seconds: number | null; today_video_seconds: number;
+  }>();
   const activeCategories = categoriesResult.results || [];
 
-  const categoryPlayedMap = new Map<string, number>();
-  if (activeCategories.some((category) => (category.daily_limit_seconds || 0) > 0)) {
-    const { sessions, heartbeats } = await loadUsageHistory(env, dayRange);
-    const heartbeatsBySession = new Map<string, UsageHeartbeat[]>();
-    for (const heartbeat of heartbeats) {
-      const matching = heartbeatsBySession.get(heartbeat.view_session_id) || [];
-      matching.push(heartbeat);
-      heartbeatsBySession.set(heartbeat.view_session_id, matching);
-    }
-    const sessionSecondsMap = new Map<string, number>();
-    for (const session of sessions) {
-      const matching = heartbeatsBySession.get(session.id) || [];
-      let sec = 0;
-      if (matching.length) {
-        sec = matching.reduce((sum, hb) => {
-          if (!hb.interval_started_at || !hb.interval_ended_at) {
-            return hb.received_at >= dayRange.start && hb.received_at < dayRange.end ? sum + hb.delta_seconds : sum;
-          }
-          const from = Date.parse(hb.interval_started_at);
-          const to = Date.parse(hb.interval_ended_at);
-          if (to <= from) {
-            return from >= Date.parse(dayRange.start) && from < Date.parse(dayRange.end) ? sum + hb.delta_seconds : sum;
-          }
-          const overlap = Math.max(0, Math.min(to, Date.parse(dayRange.end)) - Math.max(from, Date.parse(dayRange.start)));
-          const full = Math.max(1, to - from);
-          return sum + Math.round(hb.delta_seconds * Math.min(1, overlap / full));
-        }, 0);
-      } else if (session.started_at >= dayRange.start && session.started_at < dayRange.end) {
-        sec = session.played_seconds;
-      }
-      sessionSecondsMap.set(session.id, sec);
-    }
-    const mappings = await env.DB.prepare(`
-      SELECT DISTINCT vs.id AS session_id, cv.category_id
-      FROM view_sessions vs
-      JOIN category_videos cv ON cv.video_id = vs.video_id
-      WHERE vs.started_at < ? AND COALESCE(vs.ended_at, vs.updated_at) >= ?
-    `).bind(dayRange.end, dayRange.start).all<{ session_id: string; category_id: string }>();
-    for (const mapping of mappings.results || []) {
-      const sec = sessionSecondsMap.get(mapping.session_id) || 0;
-      if (sec > 0) categoryPlayedMap.set(mapping.category_id, (categoryPlayedMap.get(mapping.category_id) || 0) + sec);
-    }
-  }
-
   const categoryStates = activeCategories.map((c) => {
-    const played = categoryPlayedMap.get(c.id) || 0;
+    const played = c.today_video_seconds || 0;
     const limit = c.daily_limit_seconds;
     const remaining = (limit !== null && limit !== undefined && limit > 0) ? Math.max(0, limit - played) : null;
     const isReached = limit !== null && limit !== undefined && limit > 0 ? remaining === 0 : false;

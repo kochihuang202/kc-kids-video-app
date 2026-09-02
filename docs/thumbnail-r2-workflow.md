@@ -34,6 +34,10 @@ powershell -ExecutionPolicy Bypass -File scripts/publish-video-thumbnails.ps1 `
 5. 產生 SQL 與 JSON manifest。
 6. 有指定 `-ApplyRemoteD1` 時，先完整備份正式 D1，再更新縮圖網址。
 
+每部影片成功上傳後會立即追加 `completed.jsonl`，並原子更新 `progress.json`。工作中斷時重跑相同命令，會跳過已完成項目；FFmpeg 或 R2 暫時失敗會自動重試三次。使用 `-Force` 才會忽略既有進度並重新產生。
+
+大量影片建議降低終端輸出，例如 `-ProgressEvery 50`。AI 只需定期讀取 `progress.json`，不必逐部讀取 FFmpeg 或 Wrangler 的完整輸出。
+
 產物預設放在 `artifacts/r2-thumbnails/`。可用 `-OutputDirectory` 指定其他目錄。
 
 ## 每部影片使用不同秒數
@@ -85,6 +89,7 @@ powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
 - 只重新產圖：加上 `-SkipUpload`，不要加 `-ApplyRemoteD1`。
 - 已有 WebP，只上傳：加上 `-SkipGenerate`。
 - 先產圖與上傳、稍後更新 D1：先不加 `-ApplyRemoteD1`，確認後再執行產物中的 `update-thumbnail-urls.sql`。
+- 少量測試：使用 `-Limit 2`；為避免只更新部分資料，`-Limit` 不能與 `-ApplyRemoteD1` 同時使用。
 
 ```powershell
 npx wrangler d1 execute kc-kids-video-app-db --remote `

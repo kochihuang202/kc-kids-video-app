@@ -1,6 +1,6 @@
 import { ArrowLeft, Clock, Clock3, Headphones, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
@@ -130,6 +130,23 @@ function KidError({ message, retry }: { message: string; retry: () => void }) {
   return <div className="kid-error" role="alert"><p>{message}</p><Button variant="secondary" onClick={retry}><RefreshCw />再試一次</Button></div>;
 }
 
+function PlaybackModeSelector({ mode, onChange, label = "播放模式" }: {
+  mode: PlaybackMode;
+  onChange: (mode: PlaybackMode) => void;
+  label?: string;
+}) {
+  return (
+    <div className="playback-mode-selector" role="group" aria-label={label}>
+      <button type="button" className={mode === "video" ? "active" : ""} aria-pressed={mode === "video"} onClick={() => onChange("video")}>
+        <Play />觀看
+      </button>
+      <button type="button" className={mode === "listen" ? "active" : ""} aria-pressed={mode === "listen"} onClick={() => onChange("listen")}>
+        <Headphones />純聽
+      </button>
+    </div>
+  );
+}
+
 export function HomePage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [todayPicks, setTodayPicks] = useState<TodayPick[]>([]);
@@ -139,6 +156,15 @@ export function HomePage() {
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(false);
+  const [leisureMode, setLeisureMode] = useState<PlaybackMode>(() => {
+    if (typeof window === "undefined") return "video";
+    return window.sessionStorage.getItem("kid_leisure_mode") === "listen" ? "listen" : "video";
+  });
+
+  const changeLeisureMode = (mode: PlaybackMode) => {
+    setLeisureMode(mode);
+    window.sessionStorage.setItem("kid_leisure_mode", mode);
+  };
 
   const load = useCallback(async () => {
     setError("");
@@ -282,14 +308,21 @@ export function HomePage() {
         { type: "leisure", title: "🎈 休閒系列", items: leisureCategories },
       ].map((group) => group.items.length > 0 && (
         <section className="series-group" aria-label={group.title} key={group.type}>
-          <div className="series-heading"><h2>{group.title}</h2>{group.type === "learning" && <span>不限時間 · 看 2 分鐘，多 1 分鐘休閒</span>}</div>
+          <div className="series-heading">
+            <h2>{group.title}</h2>
+            {group.type === "learning" ? (
+              <span>不限休閒額度 · 看 2 分鐘，多 1 分鐘休閒</span>
+            ) : (
+              <PlaybackModeSelector mode={leisureMode} onChange={changeLeisureMode} label="休閒系列播放模式" />
+            )}
+          </div>
           <div className={`category-grid ${isOutsideWindow ? "is-disabled" : ""}`}>
             {group.items.map((category) => isOutsideWindow ? (
               <div className={`category-card tone-${category.tone} disabled-card`} key={category.id}>
                 <span className="category-icon" aria-hidden="true">{category.icon}</span><span className="category-name-text">{category.name}</span>
               </div>
             ) : (
-              <Link className={`category-card tone-${category.tone}`} to={`/category/${category.id}`} key={category.id}>
+              <Link className={`category-card tone-${category.tone}`} to={`/category/${category.id}?mode=${group.type === "leisure" ? leisureMode : "video"}`} key={category.id}>
                 <span className="category-icon" aria-hidden="true">{category.icon}</span>
                 <span className="category-name-text">{category.name}</span>
                 {group.type === "leisure" && leisureReached && <span className="cat-reached-pill">一般觀看時間已到 · 純聽仍可用</span>}
@@ -307,6 +340,8 @@ export function HomePage() {
 
 export function CategoryPage() {
   const { categoryId = "" } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryMode: PlaybackMode = searchParams.get("mode") === "listen" ? "listen" : "video";
   const [category, setCategory] = useState<Category | null>(null);
   const [videos, setVideos] = useState<VideoFixture[] | null>(null);
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
@@ -351,7 +386,7 @@ export function CategoryPage() {
   const renderVideoCard = (video: VideoFixture) => (
     <article className={cn("video-card", !video.isSelectable && "is-locked", video.isLearned && "is-learned")} key={video.id}>
       {video.isSelectable ? (
-        <Link className="video-card-main" to={`/watch/${video.id}`}>
+        <Link className="video-card-main" to={`/watch/${video.id}?mode=${categoryMode}`}>
           <div className="video-thumb-container">
             <CategoryThumbnail src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} categoryName={category?.name || "本機影片"} />
             {video.isLearned && <span className="learned-status-badge">✓ 已學會</span>}
@@ -399,6 +434,13 @@ export function CategoryPage() {
                 <Clock3 /> 今日休閒剩餘 {Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘
               </span>
             )}
+            {category.seriesType === "leisure" && (
+              <PlaybackModeSelector
+                mode={categoryMode}
+                onChange={(mode) => setSearchParams({ mode })}
+                label={`${category.name}播放模式`}
+              />
+            )}
           </header>
 
           {!device?.authorized && (
@@ -445,6 +487,7 @@ export function WatchPage() {
   const { videoId = "" } = useParams();
   const initialParams = new URLSearchParams(window.location.search);
   const rawInitialPos = Math.max(0, Number(initialParams.get("at") || initialParams.get("t") || 0) || 0);
+  const requestedMode: PlaybackMode = initialParams.get("mode") === "listen" ? "listen" : "video";
 
   const [video, setVideo] = useState<VideoFixture | null>(null);
   const [device, setDevice] = useState<DeviceStatus | null>(null);
@@ -501,7 +544,7 @@ export function WatchPage() {
         contentRepository.getAccessState().catch(() => null),
       ]);
       setVideo(nextVideo);
-      const initialMode: PlaybackMode = nextVideo.mediaType === "audio" ? "listen" : "video";
+      const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
       setPlaybackMode(initialMode);
       const resumePosition = rawInitialPos > 0 ? rawInitialPos : Math.max(0, nextVideo.lastPositionSeconds || 0);
       setStartPosition(resumePosition);
@@ -785,21 +828,6 @@ export function WatchPage() {
     }
   };
 
-  const switchPlaybackMode = async (mode: PlaybackMode) => {
-    if (mode === playbackMode || !video || video.source !== "self_hosted") return;
-    playerRef.current?.pause();
-    await flushTracking("ended");
-    capabilityRef.current = null;
-    sessionPromiseRef.current = null;
-    clientSessionIdRef.current = crypto.randomUUID();
-    heartbeatSeqRef.current = 0;
-    queueRef.current = [];
-    setPlaybackMode(mode);
-    if (mode === "listen") {
-      setTimeUp(false);
-    }
-  };
-
   const restartVideo = () => {
     setIsEnded(false);
     playerRef.current?.seekTo(0);
@@ -807,13 +835,29 @@ export function WatchPage() {
     playerRef.current?.play();
   };
 
-  const seekRelative = (delta: number) => {
+  const seekRelative = useCallback((delta: number) => {
     const current = playerRef.current?.getCurrentTime() ?? currentPos;
     const max = totalDuration > 0 ? totalDuration : 999999;
     const target = Math.max(0, Math.min(max, current + delta));
     playerRef.current?.seekTo(target);
     setCurrentPos(target);
-  };
+  }, [currentPos, totalDuration]);
+
+  useEffect(() => {
+    const handleKeyboardSeek = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable='true']")) return;
+
+      event.preventDefault();
+      seekRelative(event.key === "ArrowLeft" ? -10 : 10);
+    };
+
+    window.addEventListener("keydown", handleKeyboardSeek);
+    return () => window.removeEventListener("keydown", handleKeyboardSeek);
+  }, [seekRelative]);
 
   const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(event.target.value);
@@ -1082,7 +1126,7 @@ export function WatchPage() {
           <footer className="player-actions">
             <Link
               className="player-back"
-              to={`/category/${video.categoryId}`}
+              to={`/category/${video.categoryId}?mode=${playbackMode}`}
               onClick={() => {
                 playerRef.current?.pause();
                 void flushTracking("ended");
@@ -1090,13 +1134,6 @@ export function WatchPage() {
             >
               <ArrowLeft />回去
             </Link>
-
-            {!isYouTube && video.mediaType === "video" && (
-              <div className="mode-switch" role="group" aria-label="播放模式">
-                <button className={playbackMode === "video" ? "active" : ""} onClick={() => void switchPlaybackMode("video")}><Play />觀看</button>
-                <button className={playbackMode === "listen" ? "active" : ""} onClick={() => void switchPlaybackMode("listen")}><Headphones />純聽</button>
-              </div>
-            )}
 
             <div className="playback-buttons" onClick={(e) => e.stopPropagation()}>
               <Button

@@ -97,6 +97,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM rate_limit_buckets"),
     env.DB.prepare("DELETE FROM daily_overrides"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
+    env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM allowed_windows"),
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),
     env.DB.prepare("DELETE FROM categories WHERE id = 'leisure-test'"),
@@ -213,6 +214,10 @@ describe("learning and leisure rules", () => {
     expect(access.leisureUsedSeconds).toBe(0);
     expect(access.earnedBonusSeconds).toBe(0);
     expect(access.remainingSeconds).toBe(access.baseLimitSeconds);
+    const categoryUsage = await env.DB.prepare(
+      "SELECT COALESCE(SUM(video_seconds), 0) AS seconds FROM daily_category_usage_totals",
+    ).first<{ seconds: number }>();
+    expect(categoryUsage?.seconds).toBe(0);
   });
 
   it("deduplicates overlapping devices with leisure taking precedence", async () => {

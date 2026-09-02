@@ -57,3 +57,19 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The placeholder displays the current category name, such as “DeepEng”; it must not contain a course name hard-coded for another category.
 - Root cause: The shared static placeholder SVG contained the text “泉靈的語文課”.
 - Regression test: `e2e/regressions/local-thumbnail-category-label.spec.ts`
+
+## REG-008 — Player keyboard arrows do not follow the visible 10-second controls
+
+- Problem: On a Mac browser, the player offered visible 10-second back/forward buttons but the keyboard left/right arrows could not perform the same action.
+- Reproduction: Open a watch page, leave focus on the page, then press the left or right arrow key.
+- Correct behavior: Left seeks backward 10 seconds and right seeks forward 10 seconds. Inputs, textareas, selects, and editable text retain their native arrow-key behavior.
+- Root cause: The custom player only wired seeking to pointer button handlers and had no page-level keyboard handler.
+- Regression test: `e2e/regressions/player-keyboard-seek.spec.ts`
+
+## REG-009 — Per-category daily viewing limits disappeared
+
+- Problem: The management center previously allowed a viewing cap for each category, but later playback only enforced the shared leisure allowance.
+- Reproduction: Set a category to 10 minutes, use all 10 minutes, then start another video from that category.
+- Correct behavior: Video mode is blocked when that category reaches its cap, while pure listening remains available. Access polling reads a compact per-day category rollup instead of rescanning heartbeat history.
+- Root cause: The newer learning/leisure allowance flow stopped enforcing the existing `daily_limit_seconds` category setting.
+- Regression tests: `test/phase3.spec.ts` and `test/d1-cost-regressions.spec.ts`

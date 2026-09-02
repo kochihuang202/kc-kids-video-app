@@ -31,8 +31,10 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM view_sessions"),
     env.DB.prepare("DELETE FROM child_devices"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
+    env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM daily_overrides"),
     env.DB.prepare("DELETE FROM allowed_windows"),
+    env.DB.prepare("UPDATE categories SET daily_limit_seconds = NULL"),
   ]);
 });
 
@@ -81,6 +83,36 @@ describe("REG-004 D1 request cost guardrails", () => {
     const lookup = await env.DB.prepare(
       "SELECT leisure_seconds, learning_seconds, listen_seconds, total_seconds FROM daily_usage_totals WHERE usage_date = ?",
     ).bind(dateStr).all();
+    expect(lookup.meta.rows_read).toBeLessThanOrEqual(1);
+  });
+
+  it("reads category limits from the compact daily category rollup", async () => {
+    const { dateStr } = getTaipeiDateParts();
+    const category = await env.DB.prepare(
+      "SELECT id FROM categories WHERE is_active = 1 AND archived_at IS NULL ORDER BY sort_order LIMIT 1",
+    ).first<{ id: string }>();
+    expect(category).toBeTruthy();
+    await env.DB.batch([
+      env.DB.prepare("UPDATE categories SET daily_limit_seconds = 600 WHERE id = ?").bind(category!.id),
+      env.DB.prepare(`
+        INSERT INTO daily_category_usage_totals (usage_date, category_id, video_seconds, updated_at)
+        VALUES (?, ?, 420, ?)
+      `).bind(dateStr, category!.id, new Date().toISOString()),
+    ]);
+
+    const response = await call("/api/child/access-state");
+    expect(response.status).toBe(200);
+    const body = await response.json<any>();
+    expect(body.categoryStates.find((item: any) => item.categoryId === category!.id)).toMatchObject({
+      dailyLimitSeconds: 600,
+      todayPlayedSeconds: 420,
+      remainingSeconds: 180,
+      isReached: false,
+    });
+
+    const lookup = await env.DB.prepare(
+      "SELECT video_seconds FROM daily_category_usage_totals WHERE usage_date = ? AND category_id = ?",
+    ).bind(dateStr, category!.id).all();
     expect(lookup.meta.rows_read).toBeLessThanOrEqual(1);
   });
 
