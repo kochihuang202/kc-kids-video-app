@@ -1730,6 +1730,8 @@ function DeviceSettingsRow({ device, run }: { device: ChildDevice; run: (job: Pr
 
 function SettingsPage() {
   const [timezone, setTimezone] = useState("Asia/Taipei");
+  const [devices, setDevices] = useState<ChildDevice[]>([]);
+  const [deviceName, setDeviceName] = useState("家庭 iPad");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -1738,8 +1740,12 @@ function SettingsPage() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const settings = await parentRepository.settings();
+      const [settings, nextDevices] = await Promise.all([
+        parentRepository.settings(),
+        parentRepository.devices(),
+      ]);
       if (typeof settings.timezone === "string") setTimezone(settings.timezone);
+      setDevices(nextDevices);
     } catch (e) {
       setError(e instanceof Error ? e.message : "設定載入失敗。");
     }
@@ -1779,6 +1785,21 @@ function SettingsPage() {
             <option value="America/Los_Angeles">America/Los_Angeles（洛杉磯）</option>
           </select>
           <Button onClick={() => void run(parentRepository.updateSettings({ timezone }), "時區已更新。")}>儲存</Button>
+        </div>
+      </section>
+
+      {/* Authorized family devices */}
+      <section className="settings-card" aria-labelledby="family-devices-heading">
+        <h3 id="family-devices-heading"><Smartphone /> 家庭裝置</h3>
+        <p>授權後，即使家長登出，這台裝置仍能播放、保存觀看紀錄與切換學會狀態；可隨時撤銷。</p>
+        {!devices.some((device) => device.isCurrent && !device.revokedAt) && (
+          <div className="settings-inline">
+            <input aria-label="目前裝置名稱" value={deviceName} maxLength={80} onChange={(event) => setDeviceName(event.target.value)} />
+            <Button disabled={!deviceName.trim()} onClick={() => void run(parentRepository.authorizeDevice(deviceName.trim()), "目前裝置已授權。")}>授權目前裝置</Button>
+          </div>
+        )}
+        <div className="device-list">
+          {devices.map((device) => <DeviceSettingsRow key={device.id} device={device} run={run} />)}
         </div>
       </section>
 

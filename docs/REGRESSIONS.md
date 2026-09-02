@@ -73,3 +73,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Video mode is blocked when that category reaches its cap, while pure listening remains available. Access polling reads a compact per-day category rollup instead of rescanning heartbeat history.
 - Root cause: The newer learning/leisure allowance flow stopped enforcing the existing `daily_limit_seconds` category setting.
 - Regression tests: `test/phase3.spec.ts` and `test/d1-cost-regressions.spec.ts`
+
+## REG-010 — Authorized device list disappeared from parent settings
+
+- Problem: The parent Settings page no longer showed authorized family devices, so the parent could not see the current device, rename devices, revoke access, or authorize the current browser.
+- Reproduction: Log in as a parent, open `/parent/settings`, and look below the timezone section.
+- Correct behavior: Settings loads and displays all family devices with current-device status and last-used time. Active devices can be renamed or revoked, and an unauthorized current browser can be authorized.
+- Root cause: A parent-page rewrite left the device API, repository methods, styles, and row component intact, but removed the `parentRepository.devices()` call and the device section from `SettingsPage`.
+- Regression test: `e2e/regressions/parent-device-list.spec.ts`
