@@ -15,6 +15,8 @@
 
 先確認 Mac 與 Windows 都登入同一個 Tailscale 帳號，且正式 App API 能回傳該分類的 `mediaUrl`。
 
+專案已安裝 `ffmpeg-static`。腳本會優先使用系統 FFmpeg；找不到時自動改用 `node_modules/ffmpeg-static/ffmpeg.exe`，不需要另外修改 Windows PATH。
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/publish-video-thumbnails.ps1 `
   -CategoryId "泉靈的語文課(一上)" `
@@ -58,6 +60,25 @@ powershell -ExecutionPolicy Bypass -File scripts/publish-video-thumbnails.ps1 `
 ```
 
 JSON 只需列出例外；沒有列出的影片會使用 `-TimestampSeconds`。
+
+## 新增一個 Mac 資料夾
+
+先以私密 Tailscale 網址讀取 `/library`，產生 D1 匯入檔。`LibraryFolder` 只接受 `/media/` 下的一層資料夾；工具只選取該資料夾的直接子檔案，任何子目錄中的 MP4 都會排除。`ExpectedCount` 不符時會直接停止。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
+  -MediaServerBaseUrl "https://<private-mac-host>.<tailnet>.ts.net" `
+  -LibraryFolder "example-course" `
+  -CategoryId "example-course" `
+  -CategoryName "Example Course" `
+  -VideoIdPrefix "example" `
+  -SeriesType "learning" `
+  -ExpectedCount 10 `
+  -ThumbnailAtSeconds 5 `
+  -ApplyRemoteD1
+```
+
+匯入 SQL、manifest 與 D1 備份放在被 Git 忽略的 `artifacts/`，避免私人媒體檔名或 Tailscale 網址進入公開 repository。縮圖時間仍由 `publish-video-thumbnails.ps1` 的 `TimestampSeconds` 決定；manifest 中的值用於留下這次匯入的操作紀錄。
 
 ## 分階段操作
 

@@ -31,8 +31,12 @@ if (-not $BackupDirectory) {
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $resolvedOutput = (Resolve-Path $OutputDirectory).Path
 
-if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) { throw "ffmpeg is required." }
+$systemFfmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+$bundledFfmpeg = Join-Path $repoRoot "node_modules\ffmpeg-static\ffmpeg.exe"
+$ffmpegPath = if ($systemFfmpeg) { $systemFfmpeg.Source } elseif (Test-Path -LiteralPath $bundledFfmpeg) { $bundledFfmpeg } else { $null }
+if (-not $ffmpegPath) { throw "ffmpeg is required. Run npm install first to restore the bundled ffmpeg-static binary." }
 if (-not (Get-Command npx -ErrorAction SilentlyContinue)) { throw "npx is required." }
+Write-Host "Using FFmpeg: $ffmpegPath"
 
 $timestampMap = @{}
 if ($TimestampMapPath) {
@@ -65,7 +69,7 @@ foreach ($video in $videos) {
 
   if (-not $SkipGenerate) {
     Write-Host "[$id] capture at ${second}s"
-    & ffmpeg -hide_banner -loglevel error -ss $second -i ([string]$video.mediaUrl) `
+    & $ffmpegPath -hide_banner -loglevel error -ss $second -i ([string]$video.mediaUrl) `
       -frames:v 1 -vf "scale=640:-2:flags=lanczos" -c:v libwebp -quality 80 -y $outputFile
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $outputFile)) {
       throw "ffmpeg failed for $id."
