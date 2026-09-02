@@ -895,7 +895,7 @@ svg { flex: 0 0 auto; }
 .recents-section { margin-top: 28px; }
 .recents-title { font-size: 20px; font-weight: 800; color: var(--foreground); margin: 0 0 12px 2px; }
 .recents-scroll-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
-.recent-card { flex: 0 0 150px; text-decoration: none; color: inherit; scroll-snap-align: start; }
+.recent-card { flex: 0 0 150px; min-width: 0; text-decoration: none; color: inherit; scroll-snap-align: start; }
 .recent-thumb-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #101613; }
 .recent-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 .recent-card h3 { font-size: 14px; font-weight: 700; margin: 6px 0 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

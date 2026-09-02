@@ -33,3 +33,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Loading a video happens once; access polling reads one indexed daily rollup row; a heartbeat updates that rollup idempotently while preserving learning/leisure overlap rules; video-first category lookup uses its covering index; device activity is written at most once per 15 minutes.
 - Root cause: A React effect used a freshly replaced video object as a dependency and recursively reloaded the route. Independently, the server rebuilt the whole day's usage on every poll, lacked a reverse `category_videos` index, and touched the device row on every request.
 - Regression tests: `e2e/regressions/playback-position-stability.spec.ts`, `test/d1-cost-regressions.spec.ts`, and the overlapping-rollup flow in `test/learning-leisure.spec.ts`
+
+## REG-005 — Long recent-video titles make thumbnail cards wider
+
+- Problem: Cards in the “最近看過” row had visibly different widths; longer titles produced much larger thumbnails.
+- Reproduction: Load the child home page with recent videos whose labels range from a short title to “第13季【可愛巧虎島】飛吧！SUPER YA！”.
+- Correct behavior: Every recent card remains 150px wide and long labels are truncated with an ellipsis.
+- Root cause: The card used a 150px flex basis but retained the flex item default `min-width: auto`. Its no-wrap heading therefore became the min-content width and expanded the entire card.
+- Regression test: `e2e/regressions/recent-card-width.spec.ts`
