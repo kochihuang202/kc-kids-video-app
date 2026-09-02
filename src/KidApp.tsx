@@ -17,6 +17,24 @@ function showThumbnailFallback(event: React.SyntheticEvent<HTMLImageElement>) {
   image.src = "/local-media-placeholder.svg";
 }
 
+function CategoryThumbnail({ src, alt, categoryName }: { src: string; alt: string; categoryName: string }) {
+  const [isPlaceholder, setIsPlaceholder] = useState(src === "/local-media-placeholder.svg");
+  useEffect(() => setIsPlaceholder(src === "/local-media-placeholder.svg"), [src]);
+  return (
+    <>
+      <img
+        src={src}
+        alt={alt}
+        onError={(event) => {
+          showThumbnailFallback(event);
+          setIsPlaceholder(true);
+        }}
+      />
+      {isPlaceholder && <span className="category-thumbnail-label">{categoryName}</span>}
+    </>
+  );
+}
+
 function withMediaRetry(src: string, retryKey: number) {
   if (retryKey === 0) return src;
   try {
@@ -335,7 +353,7 @@ export function CategoryPage() {
       {video.isSelectable ? (
         <Link className="video-card-main" to={`/watch/${video.id}`}>
           <div className="video-thumb-container">
-            <img src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} onError={showThumbnailFallback} />
+            <CategoryThumbnail src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} categoryName={category?.name || "本機影片"} />
             {video.isLearned && <span className="learned-status-badge">✓ 已學會</span>}
             {video.isWatched && <span className="watched-badge">✓ 看過</span>}
             {!!video.lastPositionSeconds && !!video.durationSeconds && (
@@ -349,7 +367,7 @@ export function CategoryPage() {
         </Link>
       ) : (
         <div className="video-card-main" aria-disabled="true">
-          <div className="video-thumb-container"><img src={video.thumbnailUrl} alt="" onError={showThumbnailFallback} /><span className="locked-badge">🔒 先從前五部選擇</span></div>
+          <div className="video-thumb-container"><CategoryThumbnail src={video.thumbnailUrl} alt="" categoryName={category?.name || "本機影片"} /><span className="locked-badge">🔒 先從前五部選擇</span></div>
           <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
         </div>
       )}

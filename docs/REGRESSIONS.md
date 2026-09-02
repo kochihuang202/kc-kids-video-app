@@ -49,3 +49,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Unlearned and learned videos appear in separate labeled groups. Learned cards have a strong completion treatment and show the actual `Asia/Taipei` completion date and time; cancelling learned restores the original ordering.
 - Root cause: The category page rendered one grid and the child content DTO discarded the existing `video_learned_state.learned_at` value.
 - Regression tests: `e2e/features/learning-leisure-flow.spec.ts` and `test/learning-leisure.spec.ts`
+
+## REG-007 — Local-video placeholder shows the wrong course name
+
+- Problem: Opening DeepEng before its R2 thumbnails were generated showed “泉靈的語文課” in the middle of every video card.
+- Reproduction: Open the DeepEng category while its self-hosted videos use `/local-media-placeholder.svg`.
+- Correct behavior: The placeholder displays the current category name, such as “DeepEng”; it must not contain a course name hard-coded for another category.
+- Root cause: The shared static placeholder SVG contained the text “泉靈的語文課”.
+- Regression test: `e2e/regressions/local-thumbnail-category-label.spec.ts`
