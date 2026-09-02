@@ -29,6 +29,7 @@ interface VideoRow {
   sort_order?: number;
   last_position_seconds?: number | null;
   is_learned?: number | null;
+  learned_at?: string | null;
 }
 
 const categoryDto = (row: CategoryRow) => ({
@@ -47,7 +48,7 @@ const videoDto = (
   row: VideoRow,
   categoryIds: string[] = [],
   threshold = 0.9,
-  options: { isLearned?: boolean; isSelectable?: boolean; seriesType?: "learning" | "leisure" } = {},
+  options: { isLearned?: boolean; learnedAt?: string | null; isSelectable?: boolean; seriesType?: "learning" | "leisure" } = {},
 ) => {
   const duration = row.duration_seconds || 0;
   const position = env.RECORDING_ENABLED === "false" ? 0 : row.last_position_seconds || 0;
@@ -64,6 +65,7 @@ const videoDto = (
     lastPositionSeconds: position,
     isWatched,
     isLearned: options.isLearned ?? false,
+    learnedAt: options.learnedAt ?? null,
     isSelectable: options.isSelectable ?? true,
     seriesType: options.seriesType,
   };
@@ -83,12 +85,13 @@ async function getCompletionThreshold(env: AppEnv): Promise<number> {
 async function getVideoSeriesState(env: AppEnv, videoId: string) {
   const categories = await env.DB.prepare(`
     SELECT c.id, c.series_type, cv.sort_order,
-      COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = cv.video_id), 0) AS is_learned
+      COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = cv.video_id), 0) AS is_learned,
+      (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = cv.video_id) AS learned_at
     FROM category_videos cv
     JOIN categories c ON c.id = cv.category_id
     WHERE cv.video_id = ? AND c.is_active = 1 AND c.archived_at IS NULL
     ORDER BY c.sort_order, c.id
-  `).bind(videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; is_learned: number }>();
+  `).bind(videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; is_learned: number; learned_at: string | null }>();
   const rows = categories.results || [];
   if (!rows.length) throw new HttpError("這部影片目前沒有可用分類。", 404, "VIDEO_NOT_FOUND");
   const types = new Set(rows.map((row) => row.series_type));
@@ -118,6 +121,7 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
     categoryIds: rows.map((row) => row.id),
     seriesType: rows[0].series_type,
     isLearned,
+    learnedAt: isLearned ? rows[0].learned_at : null,
     isSelectable,
   };
 }
@@ -144,6 +148,9 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
   const learnedColumn = device
     ? "COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0)"
     : "0";
+  const learnedAtColumn = device
+    ? "(SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id)"
+    : "NULL";
   const progressColumn = device
     ? `(SELECT vs.last_position_seconds FROM view_sessions vs
         WHERE vs.video_id = v.id ORDER BY vs.updated_at DESC LIMIT 1)`
@@ -153,6 +160,7 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
       v.media_type, v.media_path, v.thumbnail_path,
       v.duration_seconds, cv.sort_order,
       ${learnedColumn} AS is_learned,
+      ${learnedAtColumn} AS learned_at,
       ${progressColumn} AS last_position_seconds
     FROM category_videos cv
     JOIN videos v ON v.id = cv.video_id
@@ -165,7 +173,12 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
   return json((result.results || []).map((row) => {
     const isLearned = !!device && row.is_learned === 1;
     const isSelectable = category.series_type !== "learning" || isLearned || unlearnedIndex++ < 5;
-    return videoDto(env, row, [categoryId], threshold, { isLearned, isSelectable, seriesType: category.series_type });
+    return videoDto(env, row, [categoryId], threshold, {
+      isLearned,
+      learnedAt: isLearned ? row.learned_at : null,
+      isSelectable,
+      seriesType: category.series_type,
+    });
   }));
 }
 
@@ -177,6 +190,7 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path, v.duration_seconds,
       COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0) AS is_learned,
+      (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id) AS learned_at,
       (
         SELECT vs.last_position_seconds
         FROM view_sessions vs
@@ -194,6 +208,7 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
   if (!series.isSelectable) throw new HttpError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
   return json(videoDto(env, video, series.categoryIds, threshold, {
     isLearned: series.isLearned,
+    learnedAt: series.learnedAt,
     isSelectable: series.isSelectable,
     seriesType: series.seriesType,
   }));
@@ -315,7 +330,7 @@ export async function updateLearnedState(request: Request, env: AppEnv, videoId:
   } else {
     await env.DB.prepare("DELETE FROM video_learned_state WHERE video_id = ?").bind(videoId).run();
   }
-  return json({ ok: true, videoId, isLearned: learned });
+  return json({ ok: true, videoId, isLearned: learned, learnedAt: learned ? now : null });
 }
 
 async function requireActiveVideo(env: AppEnv, videoId: string) {

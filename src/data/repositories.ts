@@ -45,7 +45,7 @@ export const contentRepository = {
   getTodayPicks: () => api<TodayPick[]>("/api/child/today-picks"),
   getResume: () => api<{ resume: import("../types").ResumeInfo | null }>("/api/content/resume"),
   getRecents: () => api<import("../types").RecentVideo[]>("/api/content/recents"),
-  setLearned: (videoId: string, learned: boolean) => write<{ ok: true; videoId: string; isLearned: boolean }>(
+  setLearned: (videoId: string, learned: boolean) => write<{ ok: true; videoId: string; isLearned: boolean; learnedAt: string | null }>(
     `/api/child/videos/${encodeURIComponent(videoId)}/learned`, "PUT", { learned },
   ),
 };

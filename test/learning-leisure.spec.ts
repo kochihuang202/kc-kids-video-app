@@ -124,8 +124,10 @@ describe("learning and leisure rules", () => {
       method: "PUT", headers: { cookie: device.cookie }, body: jsonBody({ learned: true }),
     });
     expect(learned.status).toBe(200);
+    const learnedPayload = await learned.json<any>();
+    expect(learnedPayload.learnedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     const afterLearned = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
-    expect(afterLearned.at(-1)).toMatchObject({ id: "why-sky-blue", isLearned: true });
+    expect(afterLearned.at(-1)).toMatchObject({ id: "why-sky-blue", isLearned: true, learnedAt: learnedPayload.learnedAt });
     expect(afterLearned.find((video) => video.id === "science-extra-6")?.isSelectable).toBe(true);
     expect((await call("/api/content/videos/science-extra-6", { headers: { cookie: device.cookie } })).status).toBe(200);
 
@@ -135,6 +137,7 @@ describe("learning and leisure rules", () => {
     expect(unlearned.status).toBe(200);
     const restored = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
     expect(restored.map((video) => video.id)).toEqual(list.map((video) => video.id));
+    expect(restored.find((video) => video.id === "why-sky-blue")?.learnedAt).toBeNull();
     expect(restored.at(-1)?.isSelectable).toBe(false);
   });
 

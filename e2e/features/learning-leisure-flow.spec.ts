@@ -34,6 +34,7 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
       lastPositionSeconds: 0,
       isWatched: false,
       isLearned: firstLearned && index === 0,
+      learnedAt: firstLearned && index === 0 ? "2026-09-02T00:30:00.000Z" : null,
       isSelectable: index < 5,
       seriesType: "learning",
     }));
@@ -73,6 +74,9 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
 
   await expect(page.locator(".video-card h2").first()).toHaveText("科學 2");
   await expect(page.locator(".video-card h2").last()).toHaveText("科學 1");
+  const learnedGroup = page.getByRole("region", { name: "已學會" });
+  await expect(learnedGroup).toBeVisible();
+  await expect(learnedGroup).toContainText("2026/09/02 08:30 學會");
   await expect(page.getByText("🔒 先從前五部選擇")).toBeHidden();
   await expect(page.getByRole("link", { name: /科學 6/ })).toBeVisible();
 });

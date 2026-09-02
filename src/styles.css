@@ -1378,17 +1378,26 @@ svg { flex: 0 0 auto; }
 .series-type-pill { display: inline-flex; align-items: center; padding: 7px 11px; border-radius: 999px; font-size: 13px !important; font-weight: 900 !important; white-space: nowrap; }
 .series-type-pill.learning, .series-history-chip.learning { background: #dcebd9; color: #315b43; }
 .series-type-pill.leisure, .series-history-chip.leisure { background: #f7dfca; color: #7b5231; }
+.learning-status-group { margin-top: 28px; }
+.learning-status-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.learning-status-heading h2 { margin: 0; color: #33483d; font-size: clamp(22px, 3vw, 30px); }
+.learning-status-heading span { padding: 6px 11px; border-radius: 999px; background: #ecefe9; color: #65736b; font-size: 13px; font-weight: 850; }
+.learning-status-group.learned-group { margin-top: 44px; padding: 24px; border: 2px solid #b9d5bf; border-radius: 30px; background: linear-gradient(145deg, rgba(225,240,224,.78), rgba(246,248,239,.92)); }
+.learned-group .learning-status-heading span { background: #cfe4d1; color: #315b43; }
 .video-card-main { display: block; color: inherit; text-decoration: none; }
-.video-card.is-learned { order: 2; background: #f3f1ea; }
+.video-card.is-learned { border: 2px solid #8fb79a; background: #fbfdf8; box-shadow: 0 15px 38px rgba(48,92,65,.15); }
 .video-card.is-locked { opacity: .72; }
 .video-thumb-container { position: relative; padding: 0 !important; }
 .locked-badge, .watched-badge { position: absolute; left: 10px; bottom: 10px; z-index: 2; padding: 6px 10px; border-radius: 999px; background: rgba(24,32,29,.88); color: #fff; font-size: 12px; font-weight: 850; }
 .watched-badge { top: 10px; bottom: auto; background: rgba(61,103,80,.92); }
+.learned-status-badge { position: absolute; top: 10px; right: 10px; z-index: 3; padding: 7px 11px; border: 1px solid rgba(255,255,255,.6); border-radius: 999px; background: rgba(55,112,75,.94); color: #fff; font-size: 13px; font-weight: 900; box-shadow: 0 4px 12px rgba(25,67,41,.2); }
+.video-card p.learned-at { display: flex; align-items: center; gap: 6px; width: fit-content; margin-top: 14px; padding: 7px 10px; border-radius: 10px; background: #e3f0e1; color: #315b43; font-size: 13px; font-weight: 850; -webkit-line-clamp: unset; }
+.learned-at svg { width: 15px; height: 15px; }
 .mini-progress-track { position: absolute !important; inset: auto 0 0 !important; height: 5px; padding: 0 !important; background: rgba(255,255,255,.55); }
 .mini-progress-fill { height: 100%; padding: 0 !important; background: #5d8b70; }
 .learned-toggle { width: calc(100% - 28px); min-height: 44px; margin: 0 14px 14px; border: 1px solid #cfdcd3; border-radius: 13px; background: #f5f8f3; color: #496252; font-weight: 850; cursor: pointer; }
 .learned-toggle span { display: inline-grid; width: 20px; height: 20px; place-items: center; margin-right: 7px; border: 2px solid #73907e; border-radius: 6px; }
-.learned-toggle.checked { background: #dcebd9; color: #315b43; }
+.learned-toggle.checked { border-color: #8fb79a; background: #d3e8d3; color: #29523a; }
 .learned-toggle:disabled { cursor: not-allowed; opacity: .5; }
 .listen-cover { position: absolute; inset: 0; z-index: 7; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 30px; background: radial-gradient(circle at 50% 35%, #385447, #17231e 72%); color: #fff; text-align: center; pointer-events: none; }
 .listen-cover svg { width: 72px; height: 72px; padding: 17px; border-radius: 50%; background: rgba(255,255,255,.12); }
@@ -1409,6 +1418,7 @@ svg { flex: 0 0 auto; }
   .leisure-balance { grid-template-columns: 1fr; }
   .series-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
   .section-heading { align-items: flex-start; flex-wrap: wrap; }
+  .learning-status-group.learned-group { margin-inline: -8px; padding: 14px; border-radius: 24px; }
   .mode-switch { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
   .player-back { grid-row: 3; }
   .volume-control { grid-row: 3; }

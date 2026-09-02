@@ -29,6 +29,22 @@ function withMediaRetry(src: string, retryKey: number) {
   }
 }
 
+function formatLearnedAt(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "標記時間未記錄";
+  const parts = new Intl.DateTimeFormat("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}/${values.month}/${values.day} ${values.hour}:${values.minute}`;
+}
+
 export const thinkingPromptsList = [
   { icon: "💡", text: "你覺得剛剛最有趣的地方是什麼呢？", shortText: "💡 最有趣的地方", prompt: "我覺得最有趣的地方是：" },
   { icon: "🌟", text: "影片的主角是誰？他遇到了什麼事？", shortText: "🌟 主角是誰", prompt: "這部影片的主角是：" },
@@ -314,6 +330,41 @@ export function CategoryPage() {
     }
   };
 
+  const renderVideoCard = (video: VideoFixture) => (
+    <article className={cn("video-card", !video.isSelectable && "is-locked", video.isLearned && "is-learned")} key={video.id}>
+      {video.isSelectable ? (
+        <Link className="video-card-main" to={`/watch/${video.id}`}>
+          <div className="video-thumb-container">
+            <img src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} onError={showThumbnailFallback} />
+            {video.isLearned && <span className="learned-status-badge">✓ 已學會</span>}
+            {video.isWatched && <span className="watched-badge">✓ 看過</span>}
+            {!!video.lastPositionSeconds && !!video.durationSeconds && (
+              <div className="mini-progress-track" aria-hidden="true"><div className="mini-progress-fill" style={{ width: `${Math.min(100, video.lastPositionSeconds / video.durationSeconds * 100)}%` }} /></div>
+            )}
+          </div>
+          <div>
+            <h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p>
+            {video.isLearned && video.learnedAt && <p className="learned-at"><Clock3 />{formatLearnedAt(video.learnedAt)} 學會</p>}
+          </div>
+        </Link>
+      ) : (
+        <div className="video-card-main" aria-disabled="true">
+          <div className="video-thumb-container"><img src={video.thumbnailUrl} alt="" onError={showThumbnailFallback} /><span className="locked-badge">🔒 先從前五部選擇</span></div>
+          <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
+        </div>
+      )}
+      <button
+        type="button"
+        className={cn("learned-toggle", video.isLearned && "checked")}
+        disabled={!device?.authorized || savingLearnedId === video.id}
+        onClick={() => void toggleLearned(video)}
+        aria-pressed={!!video.isLearned}
+      >
+        <span aria-hidden="true">{video.isLearned ? "✓" : ""}</span>{video.isLearned ? "取消學會" : "標記學會了"}
+      </button>
+    </article>
+  );
+
   return (
     <main className="kid-shell category-page">
       <Link className="back-link" to="/"><ArrowLeft />回去</Link>
@@ -339,38 +390,17 @@ export function CategoryPage() {
             </div>
           )}
 
-          <section className="video-grid" aria-label={`${category.name}影片`}>
-              {videos.map((video) => (
-                <article className={cn("video-card", !video.isSelectable && "is-locked", video.isLearned && "is-learned")} key={video.id}>
-                  {video.isSelectable ? (
-                    <Link className="video-card-main" to={`/watch/${video.id}`}>
-                      <div className="video-thumb-container">
-                        <img src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} onError={showThumbnailFallback} />
-                        {video.isWatched && <span className="watched-badge">✓ 看過</span>}
-                        {!!video.lastPositionSeconds && !!video.durationSeconds && (
-                          <div className="mini-progress-track" aria-hidden="true"><div className="mini-progress-fill" style={{ width: `${Math.min(100, video.lastPositionSeconds / video.durationSeconds * 100)}%` }} /></div>
-                        )}
-                      </div>
-                      <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
-                    </Link>
-                  ) : (
-                    <div className="video-card-main" aria-disabled="true">
-                      <div className="video-thumb-container"><img src={video.thumbnailUrl} alt="" onError={showThumbnailFallback} /><span className="locked-badge">🔒 先從前五部選擇</span></div>
-                      <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className={cn("learned-toggle", video.isLearned && "checked")}
-                    disabled={!device?.authorized || savingLearnedId === video.id}
-                    onClick={() => void toggleLearned(video)}
-                    aria-pressed={!!video.isLearned}
-                  >
-                    <span aria-hidden="true">{video.isLearned ? "✓" : ""}</span>{video.isLearned ? "學會了" : "標記學會了"}
-                  </button>
-                </article>
-              ))}
+          <section className="learning-status-group" aria-label="還沒學會">
+            <div className="learning-status-heading"><h2>🌱 還沒學會</h2><span>{videos.filter((video) => !video.isLearned).length} 部</span></div>
+            <div className="video-grid">{videos.filter((video) => !video.isLearned).map(renderVideoCard)}</div>
           </section>
+
+          {videos.some((video) => video.isLearned) && (
+            <section className="learning-status-group learned-group" aria-label="已學會">
+              <div className="learning-status-heading"><h2>✅ 已學會</h2><span>{videos.filter((video) => video.isLearned).length} 部</span></div>
+              <div className="video-grid">{videos.filter((video) => video.isLearned).map(renderVideoCard)}</div>
+            </section>
+          )}
         </>
       )}
     </main>

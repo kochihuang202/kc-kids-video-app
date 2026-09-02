@@ -41,3 +41,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Every recent card remains 150px wide and long labels are truncated with an ellipsis.
 - Root cause: The card used a 150px flex basis but retained the flex item default `min-width: auto`. Its no-wrap heading therefore became the min-content width and expanded the entire card.
 - Regression test: `e2e/regressions/recent-card-width.spec.ts`
+
+## REG-006 — Learned videos are not visually distinct and have no completion time
+
+- Problem: After marking a video learned, it only moved to the end with a subtle color change, making it difficult to distinguish from videos that were still being learned; the child could not see when it was completed.
+- Reproduction: Open a category, mark its first video learned, and compare it with the remaining cards.
+- Correct behavior: Unlearned and learned videos appear in separate labeled groups. Learned cards have a strong completion treatment and show the actual `Asia/Taipei` completion date and time; cancelling learned restores the original ordering.
+- Root cause: The category page rendered one grid and the child content DTO discarded the existing `video_learned_state.learned_at` value.
+- Regression tests: `e2e/features/learning-leisure-flow.spec.ts` and `test/learning-leisure.spec.ts`
