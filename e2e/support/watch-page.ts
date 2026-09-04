@@ -36,6 +36,7 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
     const states = new WeakMap<HTMLMediaElement, { base: number; startedAt: number; playing: boolean }>();
     let loadCount = 0;
     let sourceRemovalCount = 0;
+    let dispatchingEnded = false;
 
     const nativeRemoveAttribute = Element.prototype.removeAttribute;
     Element.prototype.removeAttribute = function removeAttribute(name: string) {
@@ -82,6 +83,12 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
     };
     HTMLMediaElement.prototype.play = function play() {
       const state = stateFor(this);
+      // iPadOS can acknowledge a synchronous play() issued inside an ended
+      // handler without actually restarting the finished media timeline.
+      if (dispatchingEnded) {
+        this.dispatchEvent(new Event("playing"));
+        return Promise.resolve();
+      }
       if (!state.playing) {
         state.playing = true;
         state.startedAt = performance.now();
@@ -96,11 +103,39 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
       state.playing = false;
       this.dispatchEvent(new Event("pause"));
     };
+
+    (window as Window & { __finishMediaForTest?: () => void }).__finishMediaForTest = () => {
+      const element = document.querySelector("audio.native-media-player") as HTMLMediaElement | null;
+      if (!element) throw new Error("No native audio player");
+      const state = stateFor(element);
+      if (element.loop) {
+        state.base = 0;
+        state.startedAt = performance.now();
+        state.playing = true;
+        element.dispatchEvent(new Event("timeupdate"));
+        return;
+      }
+      if (state.playing) {
+        state.base += (performance.now() - state.startedAt) / 1000;
+        state.playing = false;
+      }
+      dispatchingEnded = true;
+      element.dispatchEvent(new Event("ended"));
+      dispatchingEnded = false;
+    };
   }, { failures: failLoads });
 
   await page.route("**/e2e-media/regression-media.wav*", (route) => options.abortNetwork === false
     ? route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() })
     : route.abort("connectionfailed"));
+}
+
+export function finishMediaForTest(page: Page) {
+  return page.evaluate(() => {
+    const finish = (window as Window & { __finishMediaForTest?: () => void }).__finishMediaForTest;
+    if (!finish) throw new Error("Deterministic media finish helper is not installed");
+    finish();
+  });
 }
 
 export function getMediaLoadCount(page: Page) {

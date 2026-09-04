@@ -16,6 +16,7 @@ interface NativeMediaPlayerProps {
   volume?: number;
   playbackRate?: number;
   autoPlay?: boolean;
+  loopPlayback?: boolean;
   onStateChange?: (state: PlayerState) => void;
   onProgress?: (currentTime: number, duration: number) => void;
   onError?: (error?: MediaError | null) => void;
@@ -23,7 +24,7 @@ interface NativeMediaPlayerProps {
 }
 
 export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlayerProps>(
-  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, onStateChange, onProgress, onError, onReady }, ref) => {
+  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onStateChange, onProgress, onError, onReady }, ref) => {
     const elementRef = useRef<HTMLMediaElement | null>(null);
     const visualVideoRef = useRef<HTMLVideoElement | null>(null);
     const readySentRef = useRef(false);
@@ -73,6 +74,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       // script-only play() after the screen locks can be rejected, while the
       // existing user-started media session may continue to the next source.
       element.autoplay = autoPlay;
+      element.loop = loopPlayback;
       element.controls = false;
       element.setAttribute("playsinline", "");
       element.setAttribute("webkit-playsinline", "");
@@ -97,7 +99,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       return () => {
         element.removeEventListener("webkitbeginfullscreen", keepInline);
       };
-    }, [autoPlay, src]);
+    }, [autoPlay, loopPlayback, src]);
 
     // Only tear down the media session when the player really unmounts. A
     // playlist source change reuses this element; pausing and clearing `src`
@@ -185,6 +187,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       onWaiting: () => onStateChange?.("BUFFERING"),
       onEnded: () => onStateChange?.("ENDED"),
       onError: () => onError?.(elementRef.current?.error),
+      loop: loopPlayback,
     };
 
     if (mediaType === "audio") {

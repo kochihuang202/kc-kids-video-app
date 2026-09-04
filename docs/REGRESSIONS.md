@@ -153,3 +153,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The next YouTube episode is already queued in the same player before the initial user play gesture. Advancing must not issue a new `loadVideoById()` autoplay request, and the route, title, listening mode, and listening Session follow the video that YouTube advances to.
 - Root cause: Keeping one iframe fixed REG-014, but the app still called `loadVideoById()` only after each episode ended. iPadOS treated that background call as a fresh scripted autoplay: production diagnostics showed the previous episode ending normally at 538 seconds, followed by the next episode stuck in `BUFFERING` at 0 seconds with `AUTOPLAY_NOT_STARTED`. A second race let the new route's `autoplay=1` parameter briefly reload the previous video before its content record finished loading.
 - Regression test: `e2e/regressions/youtube-listen-continuation.spec.ts`
+
+## REG-020 — Learning audio reports playback but does not restart after screen lock
+
+- Problem: DeepEng pure listening continues while an iPad is locked, but after the lesson repeats the progress display appears active with no sound; unlocking shows either 0:00 or the final second.
+- Reproduction: Start a self-hosted learning video in pure-listening mode, lock the iPad, wake the still-locked screen near the end, and let the same lesson repeat. The timing is intermittent and may also occur without waking the display.
+- Correct behavior: The same native audio media session loops from the beginning and its real current time continues advancing with sound while the screen remains locked.
+- Root cause: The React `ended` handler synchronously called `seekTo(0)` and `play()`. Production diagnostics showed iPadOS emitting a new `playing` event within 0.1–0.2 seconds while the underlying timeline remained fixed at either 0 or 902 seconds. Learning audio now uses the media element's native `loop` behavior, so iPadOS performs the transition inside the already-authorized media session.
+- Regression test: `e2e/regressions/listen-background-audio.spec.ts`

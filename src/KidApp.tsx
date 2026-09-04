@@ -1248,6 +1248,7 @@ export function WatchPage() {
               volume={volume}
               playbackRate={playbackRate}
               autoPlay={isAutoplay}
+              loopPlayback={playbackMode === "listen" && video.seriesType === "learning"}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
               onError={handleMediaError}

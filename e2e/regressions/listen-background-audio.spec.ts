@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { getMediaSourceRemovalCount, installDeterministicMedia, mockAuthorizedWatchApi, TEST_VIDEO_ID } from "../support/watch-page";
+import { finishMediaForTest, getMediaSourceRemovalCount, installDeterministicMedia, mockAuthorizedWatchApi, TEST_VIDEO_ID } from "../support/watch-page";
 
 test("REG-012 uses a real audio element for self-hosted pure listening", async ({ page }) => {
   await installDeterministicMedia(page, 0, { abortNetwork: false });
@@ -13,6 +13,26 @@ test("REG-012 uses a real audio element for self-hosted pure listening", async (
   await expect(page.getByLabel("純聽模式")).toBeVisible();
   await expect(page.locator("audio.native-media-player")).toHaveCount(1);
   await expect(page.locator("video.native-media-player")).toHaveCount(0);
+});
+
+test("REG-020 loops learning audio inside the native media session", async ({ page }) => {
+  await installDeterministicMedia(page, 0, { abortNetwork: false });
+  await mockAuthorizedWatchApi(page, undefined, {
+    mediaType: "video",
+    mediaUrl: "/e2e-media/regression-media.wav",
+    seriesType: "learning",
+  });
+
+  await page.goto(`/watch/${TEST_VIDEO_ID}?mode=listen`);
+  const player = page.locator("audio.native-media-player");
+  await page.locator(".main-play-btn").click();
+  await expect.poll(() => player.evaluate((element) => (element as HTMLMediaElement).currentTime)).toBeGreaterThan(0.2);
+
+  await finishMediaForTest(page);
+
+  await expect(player).toHaveJSProperty("loop", true);
+  await expect.poll(() => player.evaluate((element) => (element as HTMLMediaElement).currentTime)).toBeGreaterThan(0.5);
+  await expect(page.locator(".main-play-btn")).toHaveAttribute("aria-label", "暫停");
 });
 
 test("REG-012 continues a leisure listening playlist with native autoplay", async ({ page }) => {
