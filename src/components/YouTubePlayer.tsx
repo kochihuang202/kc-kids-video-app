@@ -14,6 +14,13 @@ interface PlayerInstance {
   unMute(): void;
   loadVideoById(videoId: string, startSeconds?: number): void;
   cueVideoById(videoId: string, startSeconds?: number): void;
+  cuePlaylist?(videoIds: string[], index?: number, startSeconds?: number): void;
+  loadPlaylist?(videoIds: string[], index?: number, startSeconds?: number): void;
+  setLoop?(loop: boolean): void;
+  getPlayerState?(): number;
+  getVideoData?(): { video_id?: string };
+  getVolume?(): number;
+  isMuted?(): boolean;
 }
 
 interface PlayerEvent { target: PlayerInstance; data: number; }
@@ -57,6 +64,7 @@ export interface YouTubePlayerHandle {
   pause(): void;
   seekTo(seconds: number): void;
   setPlaybackRate?(rate: number): void;
+  getAudioState?(): { volume: number | null; muted: boolean | null };
 }
 
 interface YouTubePlayerProps {
@@ -65,21 +73,26 @@ interface YouTubePlayerProps {
   volume?: number;
   playbackRate?: number;
   autoPlay?: boolean;
+  playlist?: string[];
+  playlistStartIndex?: number;
+  onVideoChange?: (youtubeVideoId: string) => void;
   onStateChange?: (state: PlayerState) => void;
   onError?: (code?: number) => void;
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  ({ videoId, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, onStateChange, onError }, ref) => {
+  ({ videoId, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, playlist = [], playlistStartIndex = 0, onVideoChange, onStateChange, onError }, ref) => {
     const hostRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<PlayerInstance | null>(null);
     const loadedVideoIdRef = useRef(videoId);
     const requestedVideoRef = useRef({ videoId, startAt, autoPlay });
     const stateCallbackRef = useRef(onStateChange);
     const errorCallbackRef = useRef(onError);
+    const videoChangeCallbackRef = useRef(onVideoChange);
     const volumeRef = useRef(volume);
     stateCallbackRef.current = onStateChange;
     errorCallbackRef.current = onError;
+    videoChangeCallbackRef.current = onVideoChange;
     volumeRef.current = volume;
     requestedVideoRef.current = { videoId, startAt, autoPlay };
 
@@ -103,12 +116,19 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
     // playlist. Recreating it makes iOS treat the next item as a new autoplay.
     useEffect(() => {
       const player = playerRef.current;
-      if (!player || loadedVideoIdRef.current === videoId) return;
+      if (!player) return;
+      if (loadedVideoIdRef.current === videoId) {
+        const currentState = player.getPlayerState?.();
+        const state = currentState === 1 ? "PLAYING" : currentState === 2 ? "PAUSED" : currentState === 3 ? "BUFFERING" : undefined;
+        if (state) stateCallbackRef.current?.(state);
+        return;
+      }
       loadedVideoIdRef.current = videoId;
-      const position = Math.max(0, Math.floor(startAt));
-      if (autoPlay) player.loadVideoById(videoId, position);
+      const requested = requestedVideoRef.current;
+      const position = Math.max(0, Math.floor(requested.startAt));
+      if (requested.autoPlay) player.loadVideoById(videoId, position);
       else player.cueVideoById(videoId, position);
-    }, [autoPlay, startAt, videoId]);
+    }, [videoId]);
 
     useImperativeHandle(ref, () => ({
       getCurrentTime: () => typeof playerRef.current?.getCurrentTime === "function" ? playerRef.current.getCurrentTime() || startAt : startAt,
@@ -124,6 +144,10 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           player.setPlaybackRate(rate);
         }
       },
+      getAudioState: () => ({
+        volume: typeof playerRef.current?.getVolume === "function" ? playerRef.current.getVolume() : null,
+        muted: typeof playerRef.current?.isMuted === "function" ? playerRef.current.isMuted() : null,
+      }),
     }), [startAt]);
 
     useEffect(() => {
@@ -155,6 +179,18 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
               if (initialVolume === 0) event.target.mute();
               else event.target.unMute();
               const requested = requestedVideoRef.current;
+              const activePlaylist = playlist.length > 1 && playlist.includes(requested.videoId) ? playlist : [];
+              if (activePlaylist.length && event.target.cuePlaylist && event.target.loadPlaylist) {
+                const requestedIndex = activePlaylist.indexOf(requested.videoId);
+                const index = requestedIndex >= 0 ? requestedIndex : Math.max(0, playlistStartIndex);
+                const position = Math.max(0, Math.floor(requested.startAt));
+                loadedVideoIdRef.current = requested.videoId;
+                if (requested.autoPlay) event.target.loadPlaylist(activePlaylist, index, position);
+                else event.target.cuePlaylist(activePlaylist, index, position);
+                event.target.setLoop?.(true);
+                stateCallbackRef.current?.("READY");
+                return;
+              }
               if (requested.videoId !== videoId) {
                 loadedVideoIdRef.current = requested.videoId;
                 const position = Math.max(0, Math.floor(requested.startAt));
@@ -172,6 +208,17 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
             },
             onStateChange: (event: PlayerEvent) => {
               const state: PlayerState | undefined = ({ 0: "ENDED", 1: "PLAYING", 2: "PAUSED", 3: "BUFFERING" } as Record<number, PlayerState>)[event.data];
+              if (state === "PLAYING") {
+                const intendedVolume = Math.round(Math.min(1, Math.max(0, volumeRef.current)) * 100);
+                event.target.setVolume(intendedVolume);
+                if (intendedVolume === 0) event.target.mute();
+                else event.target.unMute();
+                const activeVideoId = event.target.getVideoData?.().video_id;
+                if (activeVideoId) {
+                  loadedVideoIdRef.current = activeVideoId;
+                  videoChangeCallbackRef.current?.(activeVideoId);
+                }
+              }
               if (state) stateCallbackRef.current?.(state);
             },
             onError: (event: PlayerEvent) => errorCallbackRef.current?.(event.data),

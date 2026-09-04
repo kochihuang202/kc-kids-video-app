@@ -145,3 +145,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Recent and explicit continue links preserve both the saved mode and position. Home/category selectors share one preference per learning/leisure series. Every other entry point, including normal cards, direct URLs and automatic next, starts at `0:00`; automatic next still preserves the current mode.
 - Root cause: `view_sessions.playback_mode` was stored but omitted from resume/recent DTOs. Series preferences were only written by Home into `sessionStorage`, and WatchPage implicitly used the latest saved position whenever no `t` parameter was present.
 - Regression tests: `test/phase2.spec.ts`, `e2e/features/learning-leisure-flow.spec.ts`, `e2e/regressions/recent-card-width.spec.ts`, `e2e/regressions/playback-position-stability.spec.ts`, and `e2e/regressions/youtube-listen-continuation.spec.ts`
+
+## REG-019 — YouTube pure listening advances in the background with no audio
+
+- Problem: After an iPad user resumes a Qiaohu episode from the lock screen, the current episode finishes, but the next episode appears to advance without sound; pausing from the lock screen can show the new item at 0:00.
+- Reproduction: Start Qiaohu in pure-listening mode, lock the iPad, resume from the lock-screen media control, and let the episode advance.
+- Correct behavior: The next YouTube episode is already queued in the same player before the initial user play gesture. Advancing must not issue a new `loadVideoById()` autoplay request, and the route, title, listening mode, and listening Session follow the video that YouTube advances to.
+- Root cause: Keeping one iframe fixed REG-014, but the app still called `loadVideoById()` only after each episode ended. iPadOS treated that background call as a fresh scripted autoplay: production diagnostics showed the previous episode ending normally at 538 seconds, followed by the next episode stuck in `BUFFERING` at 0 seconds with `AUTOPLAY_NOT_STARTED`. A second race let the new route's `autoplay=1` parameter briefly reload the previous video before its content record finished loading.
+- Regression test: `e2e/regressions/youtube-listen-continuation.spec.ts`

@@ -714,6 +714,16 @@ export function WatchPage() {
   nextTrackRef.current = nextTrack;
   const nextListenTrackRef = useRef<VideoFixture | null>(null);
   nextListenTrackRef.current = nextListenTrack;
+  const youtubeListenPlaylist = useMemo(() => {
+    if (playbackMode !== "listen" || video?.source !== "youtube" || video.seriesType !== "leisure") return [];
+    return categoryVideos
+      .filter((item) => item.source === "youtube" && !!item.youtubeVideoId)
+      .map((item) => item.youtubeVideoId!);
+  }, [categoryVideos, playbackMode, video?.seriesType, video?.source]);
+  const usesYouTubeListenPlaylist = youtubeListenPlaylist.length > 1 && !!video?.youtubeVideoId
+    && youtubeListenPlaylist.includes(video.youtubeVideoId);
+  const usesYouTubeListenPlaylistRef = useRef(false);
+  usesYouTubeListenPlaylistRef.current = usesYouTubeListenPlaylist;
   const playbackModeRef = useRef<PlaybackMode>(playbackMode);
   playbackModeRef.current = playbackMode;
 
@@ -747,15 +757,17 @@ export function WatchPage() {
         contentRepository.getVideo(videoId),
         contentRepository.getAccessState().catch(() => null),
       ]);
-      setVideo(nextVideo);
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
+      let nextCategoryVideos: VideoFixture[] = [];
       if (nextVideo.categoryId) {
-        void contentRepository.getVideos(nextVideo.categoryId).then((list) => {
-          setCategoryVideos(list);
-          syncPlaybackQueue(nextVideo.categoryId!, initialMode, list, nextVideo.id);
-        }).catch(() => {});
+        nextCategoryVideos = await contentRepository.getVideos(nextVideo.categoryId).catch(() => []);
+        syncPlaybackQueue(nextVideo.categoryId, initialMode, nextCategoryVideos, nextVideo.id);
       }
+      // Load the category queue before mounting YouTube. Pure-listening mode
+      // can then cue the complete playlist before the child's first play tap.
+      setCategoryVideos(nextCategoryVideos);
       setPlaybackMode(initialMode);
+      setVideo(nextVideo);
       const resumePosition = forceFreshStart || !hasExplicitResumePosition ? 0 : rawInitialPos;
       setStartPosition(resumePosition);
       setCurrentPos(resumePosition);
@@ -1010,7 +1022,10 @@ export function WatchPage() {
     playerStateRef.current = state;
     setIsPlaying(state === "PLAYING");
     const diagnosticEvent = ({ READY: "player_ready", PLAYING: "playing", PAUSED: "paused", BUFFERING: "buffering", ENDED: "ended" } as const)[state];
-    diagnosticsRef.current?.event(diagnosticEvent, { state }, undefined, currentPosRef.current);
+    diagnosticsRef.current?.event(diagnosticEvent, {
+      state,
+      ...(playerRef.current?.getAudioState?.() || {}),
+    }, undefined, currentPosRef.current);
     if (state === "PLAYING") void diagnosticsRef.current?.flush();
     if (state === "BUFFERING") {
       if (bufferingDiagnosticTimerRef.current !== null) window.clearTimeout(bufferingDiagnosticTimerRef.current);
@@ -1042,7 +1057,7 @@ export function WatchPage() {
         if (video?.seriesType === "learning") {
           // 學習系列純聽模式：重複播放當前的內容
           restartVideo();
-        } else {
+        } else if (!usesYouTubeListenPlaylistRef.current) {
           // 休閒系列純聽模式：自動接續播放下一集
           if (nextListenTrackRef.current) {
             const queue = readPlaybackQueue();
@@ -1065,6 +1080,16 @@ export function WatchPage() {
       }
     }
   }, [ensureSession, flushTracking, navigate, restartVideo, video?.mediaType, video?.seriesType]);
+
+  const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
+    if (!usesYouTubeListenPlaylistRef.current || youtubeVideoId === video?.youtubeVideoId) return;
+    const target = categoryVideos.find((item) => item.youtubeVideoId === youtubeVideoId);
+    if (!target) return;
+    const queue = readPlaybackQueue();
+    if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: target.id });
+    diagnosticsRef.current?.event("next_requested", { state: target.id, transition: "youtube_playlist" }, undefined, currentPosRef.current);
+    navigate(`/watch/${target.id}?mode=listen&autoplay=1&fresh=1`, { replace: true });
+  }, [categoryVideos, navigate, video?.youtubeVideoId]);
 
   const handleNativeProgress = useCallback((time: number, duration: number) => {
     if (!isDragging) setCurrentPos(time);
@@ -1203,6 +1228,9 @@ export function WatchPage() {
               volume={volume}
               playbackRate={playbackRate}
               autoPlay={isAutoplay}
+              playlist={usesYouTubeListenPlaylist ? youtubeListenPlaylist : undefined}
+              playlistStartIndex={usesYouTubeListenPlaylist ? youtubeListenPlaylist.indexOf(video.youtubeVideoId) : 0}
+              onVideoChange={handleYouTubePlaylistVideoChange}
               onStateChange={handlePlayerState}
               onError={(code) => {
                 setPlayerError(true);

@@ -13,6 +13,9 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
     const state = {
       constructorCount: 0,
       loadedVideos: [] as Array<{ videoId: string; startSeconds: number }>,
+      queuedPlaylists: [] as Array<{ videoIds: string[]; index: number; startSeconds: number }>,
+      playlistIndex: 0,
+      activeVideoId: "youtube-one",
       currentTime: 0,
       duration: 120,
       options: null as PlayerOptions | null,
@@ -23,6 +26,13 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
       end() {
         const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
         current.options?.events.onStateChange({ target: current.instance, data: 0 });
+        const playlist = current.queuedPlaylists.at(-1)?.videoIds || [];
+        if (current.playlistIndex < playlist.length - 1) {
+          current.playlistIndex += 1;
+          current.activeVideoId = playlist[current.playlistIndex];
+          current.currentTime = 0;
+          current.options?.events.onStateChange({ target: current.instance, data: 1 });
+        }
       },
     };
 
@@ -37,6 +47,11 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
       destroy() {}
       getCurrentTime() { return 0; }
       getDuration() { return 120; }
+      getPlayerState() { return 1; }
+      getVideoData() {
+        const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
+        return { video_id: current.activeVideoId };
+      }
       playVideo() {
         const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
         current.options?.events.onStateChange({ target: this, data: 1 });
@@ -53,6 +68,17 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
         current.options?.events.onStateChange({ target: this, data: 1 });
       }
       cueVideoById() {}
+      cuePlaylist(videoIds: string[], index = 0, startSeconds = 0) {
+        const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
+        current.queuedPlaylists.push({ videoIds: [...videoIds], index, startSeconds });
+        current.playlistIndex = index;
+        current.activeVideoId = videoIds[index];
+      }
+      loadPlaylist(videoIds: string[], index = 0, startSeconds = 0) {
+        this.cuePlaylist(videoIds, index, startSeconds);
+        this.playVideo();
+      }
+      setLoop() {}
     }
 
     (window as typeof window & { YT: { Player: typeof FakePlayer } }).YT = { Player: FakePlayer };
@@ -106,6 +132,11 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
   });
 
   await page.goto("/watch/qiaohu-1?mode=listen");
+  await expect.poll(() => page.evaluate(() => (window as typeof window & {
+    __youtubeTest: { queuedPlaylists: Array<{ videoIds: string[]; index: number; startSeconds: number }> };
+  }).__youtubeTest.queuedPlaylists)).toEqual([{
+    videoIds: ["youtube-one", "youtube-two"], index: 0, startSeconds: 0,
+  }]);
   await page.locator(".main-play-btn").click();
   await expect.poll(() => sessionModes).toEqual(["listen"]);
 
@@ -116,7 +147,7 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
     __youtubeTest: { constructorCount: number; loadedVideos: Array<{ videoId: string; startSeconds: number }> };
   }).__youtubeTest)).toMatchObject({
     constructorCount: 1,
-    loadedVideos: [{ videoId: "youtube-two", startSeconds: 0 }],
+    loadedVideos: [],
   });
   await expect(page.locator(".main-play-btn")).toHaveAttribute("aria-label", "暫停");
   await expect(page.getByLabel("純聽模式")).toBeVisible();
