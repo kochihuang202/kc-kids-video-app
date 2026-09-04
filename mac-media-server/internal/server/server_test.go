@@ -155,6 +155,12 @@ func TestLibraryAndCORS(t *testing.T) {
 
 func TestMediaDiagnosticsHeadersAndLog(t *testing.T) {
 	srv := testServer(t)
+	now := time.Date(2026, 8, 31, 0, 0, 0, 0, time.UTC)
+	srv.now = func() time.Time {
+		now = now.Add(5 * time.Millisecond)
+		return now
+	}
+	srv.diagnostics.now = srv.now
 	res := request(t, srv, http.MethodGet, "/media/videos/sample.mp4", map[string]string{
 		"Range":              "bytes=0-15",
 		"X-KC-Diagnostic-Id": "diag-123",
@@ -173,6 +179,8 @@ func TestMediaDiagnosticsHeadersAndLog(t *testing.T) {
 	}
 	if got := res.Header.Get("Server-Timing"); !strings.Contains(got, "open;dur=") {
 		t.Fatalf("missing Server-Timing: %q", got)
+	} else if strings.Contains(got, "first-byte;dur=0") {
+		t.Fatalf("Server-Timing first-byte was not computed before headers: %q", got)
 	}
 
 	eventBytes, err := os.ReadFile(filepath.Join(srv.cfg.DiagnosticsLogDir, "events.jsonl"))
@@ -261,13 +269,77 @@ func TestDiagnosticHelpers(t *testing.T) {
 	if start == nil || end == nil || planned == nil || *start != 80 || *end != 99 || *planned != 20 {
 		t.Fatalf("bad suffix range parse: %v %v %v", start, end, planned)
 	}
-	writer := newEventWriter(t.TempDir())
+	writer := newEventWriter(t.TempDir(), time.Now)
 	writer.max = 1
 	writer.write(eventRecord{Timestamp: time.Now().Format(time.RFC3339), Event: "stream_started"})
 	writer.write(eventRecord{Timestamp: time.Now().Format(time.RFC3339), Event: "stream_completed"})
 	matches, err := filepath.Glob(filepath.Join(writer.dir, "events.jsonl.*"))
 	if err != nil || len(matches) == 0 {
 		t.Fatalf("expected rotated log, matches=%v err=%v", matches, err)
+	}
+}
+
+func TestEventWriterRetentionCleansExpiredSmallFiles(t *testing.T) {
+	now := time.Date(2026, 8, 31, 12, 0, 0, 0, time.UTC)
+	dir := t.TempDir()
+	events := filepath.Join(dir, "events.jsonl")
+	errorsPath := filepath.Join(dir, "errors.jsonl")
+	if err := os.WriteFile(events, []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(errorsPath, []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldEvent := now.Add(-8 * 24 * time.Hour)
+	oldError := now.Add(-31 * 24 * time.Hour)
+	if err := os.Chtimes(events, oldEvent, oldEvent); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(errorsPath, oldError, oldError); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = newEventWriter(dir, func() time.Time { return now })
+	if _, err := os.Stat(events); !os.IsNotExist(err) {
+		t.Fatalf("expired small events log still exists, err=%v", err)
+	}
+	if _, err := os.Stat(errorsPath); !os.IsNotExist(err) {
+		t.Fatalf("expired small errors log still exists, err=%v", err)
+	}
+}
+
+func TestEventWriterPeriodicCleanupAndDateRotation(t *testing.T) {
+	now := time.Date(2026, 8, 31, 12, 0, 0, 0, time.UTC)
+	writer := newEventWriter(t.TempDir(), func() time.Time { return now })
+
+	expired := filepath.Join(writer.dir, "events.jsonl.20260822000000.gz")
+	if err := os.WriteFile(expired, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	old := now.Add(-8 * 24 * time.Hour)
+	if err := os.Chtimes(expired, old, old); err != nil {
+		t.Fatal(err)
+	}
+	writer.write(eventRecord{Timestamp: now.Format(time.RFC3339), Event: "stream_started"})
+	if _, err := os.Stat(expired); err != nil {
+		t.Fatalf("cleanup ran before interval elapsed, err=%v", err)
+	}
+
+	now = now.Add(7 * time.Hour)
+	writer.write(eventRecord{Timestamp: now.Format(time.RFC3339), Event: "stream_completed"})
+	if _, err := os.Stat(expired); !os.IsNotExist(err) {
+		t.Fatalf("expired rotated log still exists after periodic cleanup, err=%v", err)
+	}
+
+	active := filepath.Join(writer.dir, "events.jsonl")
+	yesterday := now.Add(-24 * time.Hour)
+	if err := os.Chtimes(active, yesterday, yesterday); err != nil {
+		t.Fatal(err)
+	}
+	writer.write(eventRecord{Timestamp: now.Format(time.RFC3339), Event: "stream_started"})
+	matches, err := filepath.Glob(filepath.Join(writer.dir, "events.jsonl.*.gz"))
+	if err != nil || len(matches) == 0 {
+		t.Fatalf("expected date rotation for active log, matches=%v err=%v", matches, err)
 	}
 }
 

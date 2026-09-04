@@ -177,7 +177,7 @@ type eventRecord struct {
 func NewDiagnostics(cfg Config, startedAt time.Time, now func() time.Time) *Diagnostics {
 	d := &Diagnostics{cfg: cfg, startedAt: startedAt, now: now}
 	if cfg.DiagnosticsLogDir != "" {
-		d.writer = newEventWriter(cfg.DiagnosticsLogDir)
+		d.writer = newEventWriter(cfg.DiagnosticsLogDir, now)
 		d.writeEvent(eventRecord{
 			Timestamp: startedAt.Format(time.RFC3339),
 			Event:     "service_started",
@@ -557,7 +557,8 @@ func (w *diagnosticResponseWriter) WriteHeader(status int) {
 	if w.status == 0 {
 		w.status = status
 	}
-	w.ResponseWriter.Header().Set("Server-Timing", fmt.Sprintf("open;dur=%d, first-byte;dur=%d", millis(w.info.OpenLatency), millis(w.info.FirstByteLatency)))
+	w.diag.FirstByte(w.info)
+	w.ResponseWriter.Header().Set("Server-Timing", serverTiming(w.info))
 	w.ResponseWriter.WriteHeader(status)
 }
 
@@ -568,28 +569,40 @@ func (w *diagnosticResponseWriter) Write(data []byte) (int, error) {
 	if !w.info.firstByteLogged {
 		w.diag.FirstByte(w.info)
 	}
-	w.ResponseWriter.Header().Set("Server-Timing", fmt.Sprintf("open;dur=%d, first-byte;dur=%d", millis(w.info.OpenLatency), millis(w.info.FirstByteLatency)))
+	w.ResponseWriter.Header().Set("Server-Timing", serverTiming(w.info))
 	n, err := w.ResponseWriter.Write(data)
 	w.bytes += int64(n)
 	return n, err
 }
 
 type eventWriter struct {
-	mu     sync.Mutex
-	dir    string
-	max    int64
-	normal string
-	errors string
+	mu              sync.Mutex
+	dir             string
+	max             int64
+	totalMax        int64
+	cleanupInterval time.Duration
+	nextCleanup     time.Time
+	now             func() time.Time
+	normal          string
+	errors          string
 }
 
-func newEventWriter(dir string) *eventWriter {
-	_ = os.MkdirAll(dir, 0o755)
-	return &eventWriter{
-		dir:    dir,
-		max:    10 * 1024 * 1024,
-		normal: filepath.Join(dir, "events.jsonl"),
-		errors: filepath.Join(dir, "errors.jsonl"),
+func newEventWriter(dir string, now func() time.Time) *eventWriter {
+	if now == nil {
+		now = time.Now
 	}
+	_ = os.MkdirAll(dir, 0o755)
+	w := &eventWriter{
+		dir:             dir,
+		max:             10 * 1024 * 1024,
+		totalMax:        128 * 1024 * 1024,
+		cleanupInterval: 6 * time.Hour,
+		now:             now,
+		normal:          filepath.Join(dir, "events.jsonl"),
+		errors:          filepath.Join(dir, "errors.jsonl"),
+	}
+	w.cleanup()
+	return w
 }
 
 func (d *Diagnostics) writeEvent(record eventRecord) {
@@ -606,6 +619,7 @@ func (w *eventWriter) write(record eventRecord) {
 	if record.ErrorCode != nil {
 		target = w.errors
 	}
+	w.cleanupIfDue()
 	w.rotate(target)
 	file, err := os.OpenFile(target, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
@@ -617,14 +631,33 @@ func (w *eventWriter) write(record eventRecord) {
 	_ = buf.Flush()
 }
 
-func (w *eventWriter) rotate(path string) {
-	info, err := os.Stat(path)
-	if err != nil || info.Size() < w.max {
+func (w *eventWriter) cleanupIfDue() {
+	now := w.now()
+	if !w.nextCleanup.IsZero() && now.Before(w.nextCleanup) {
 		return
 	}
-	rotated := path + "." + time.Now().UTC().Format("20060102150405") + ".gz"
+	w.cleanup()
+}
+
+func (w *eventWriter) rotate(path string) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	if info.Size() < w.max && sameLocalDate(info.ModTime(), w.now()) {
+		return
+	}
+	w.rotateFile(path)
+}
+
+func (w *eventWriter) rotateFile(path string) {
+	rotated := path + "." + w.now().UTC().Format("20060102150405") + ".gz"
 	_ = compressFile(path, rotated)
 	_ = os.Remove(path)
+}
+
+func (w *eventWriter) cleanup() {
+	now := w.now()
 	_ = filepath.WalkDir(w.dir, func(path string, entry os.DirEntry, err error) error {
 		if err != nil || entry.IsDir() {
 			return nil
@@ -633,7 +666,7 @@ func (w *eventWriter) rotate(path string) {
 		if err != nil {
 			return nil
 		}
-		age := time.Since(info.ModTime())
+		age := now.Sub(info.ModTime())
 		if strings.Contains(entry.Name(), "errors") && age > 30*24*time.Hour {
 			_ = os.Remove(path)
 		} else if strings.Contains(entry.Name(), "events") && age > 7*24*time.Hour {
@@ -641,7 +674,8 @@ func (w *eventWriter) rotate(path string) {
 		}
 		return nil
 	})
-	w.enforceTotalLimit(128 * 1024 * 1024)
+	w.enforceTotalLimit(w.totalMax)
+	w.nextCleanup = now.Add(w.cleanupInterval)
 }
 
 func (w *eventWriter) enforceTotalLimit(limit int64) {
@@ -676,6 +710,16 @@ func (w *eventWriter) enforceTotalLimit(limit int64) {
 			total -= file.size
 		}
 	}
+}
+
+func sameLocalDate(a, b time.Time) bool {
+	ay, am, ad := a.Local().Date()
+	by, bm, bd := b.Local().Date()
+	return ay == by && am == bm && ad == bd
+}
+
+func serverTiming(info *mediaRequestInfo) string {
+	return fmt.Sprintf("open;dur=%.3f, first-byte;dur=%.3f", durationMillis(info.OpenLatency), durationMillis(info.FirstByteLatency))
 }
 
 func compressFile(srcPath, dstPath string) error {
@@ -819,6 +863,13 @@ func millis(d time.Duration) int64 {
 		return 0
 	}
 	return int64(d / time.Millisecond)
+}
+
+func durationMillis(d time.Duration) float64 {
+	if d <= 0 {
+		return 0
+	}
+	return float64(d) / float64(time.Millisecond)
 }
 
 func boolPtrValue(value *bool) bool {
