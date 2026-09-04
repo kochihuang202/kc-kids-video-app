@@ -9,7 +9,7 @@ test("REG-008 uses the Mac left and right arrow keys to seek exactly 10 seconds"
   await installDeterministicMedia(page, 0, { abortNetwork: false });
   await mockAuthorizedWatchApi(page);
 
-  await page.goto(`/watch/${TEST_VIDEO_ID}`);
+  await page.goto(`/watch/${TEST_VIDEO_ID}?t=36`);
   const controls = page.getByRole("region", { name: "影片播放控制" });
   const elapsed = controls.locator(".time-text").first();
 

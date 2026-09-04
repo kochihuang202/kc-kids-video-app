@@ -129,3 +129,19 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: While the screen is visible, video and sound play normally. On iPhone/iPad the sound is driven by a synchronized audio master, so locking the screen may stop visual rendering but does not stop the lesson audio; unlocking resynchronizes the picture. Desktop playback remains on the normal single-video path.
 - Root cause: iOS intentionally suspends background `<video>` playback. Pure listening already worked because it used `<audio>`, but viewing mode still used the video element as its only media session.
 - Regression test: `e2e/regressions/ios-video-background-audio.spec.ts`
+
+## REG-017 — iPad cannot resume by tapping the paused player
+
+- Problem: After pausing on iPad, repeatedly tapping the video area did not resume playback.
+- Reproduction: Play beyond two seconds, tap the player to pause, then tap one of the visible reminder questions instead of the small continue button.
+- Correct behavior: The reminder remains visible while paused, but tapping anywhere on it resumes playback; the explicit continue button still performs exactly one play action.
+- Root cause: The full-screen pause reminder was above the shared player tap target and intercepted every pointer event, while only its dedicated continue button called `togglePlay`.
+- Regression test: `e2e/regressions/ipad-pause-overlay-resume.spec.ts`
+
+## REG-018 — Playback mode and saved position leak into unrelated entry points
+
+- Problem: Recent cards did not remember whether the session was viewing or pure listening; Home and category mode selectors drifted apart; selecting a regular video or auto-advancing could resume near the end and immediately skip again.
+- Reproduction: Listen to a video, leave it near the end, switch a series mode inside its category, return Home, then enter through Recent, a normal video card, and automatic next.
+- Correct behavior: Recent and explicit continue links preserve both the saved mode and position. Home/category selectors share one preference per learning/leisure series. Every other entry point, including normal cards, direct URLs and automatic next, starts at `0:00`; automatic next still preserves the current mode.
+- Root cause: `view_sessions.playback_mode` was stored but omitted from resume/recent DTOs. Series preferences were only written by Home into `sessionStorage`, and WatchPage implicitly used the latest saved position whenever no `t` parameter was present.
+- Regression tests: `test/phase2.spec.ts`, `e2e/features/learning-leisure-flow.spec.ts`, `e2e/regressions/recent-card-width.spec.ts`, `e2e/regressions/playback-position-stability.spec.ts`, and `e2e/regressions/youtube-listen-continuation.spec.ts`

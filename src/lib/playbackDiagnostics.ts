@@ -9,11 +9,13 @@ function clientInfo() {
   const android = ua.match(/Android\s([\d.]+)/i);
   const windows = ua.match(/Windows NT\s([\d.]+)/i);
   const mac = ua.match(/Mac OS X\s([\d_]+)/i);
+  const iPadDesktopMode = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
   const edge = ua.match(/Edg\/([\d.]+)/);
   const chrome = ua.match(/(?:Chrome|CriOS)\/([\d.]+)/);
   const safari = !chrome && ua.match(/Version\/([\d.]+).*Safari/);
   const browser = edge ? ["Edge", edge[1]] : chrome ? ["Chrome", chrome[1]] : safari ? ["Safari", safari[1]] : ["Unknown", ""];
-  const os = apple ? [apple[1] === "iPad" ? "iPadOS" : "iOS", apple[2].replaceAll("_", ".")]
+  const os = iPadDesktopMode ? ["iPadOS", "unknown"]
+    : apple ? [apple[1] === "iPad" ? "iPadOS" : "iOS", apple[2].replaceAll("_", ".")]
     : android ? ["Android", android[1]] : windows ? ["Windows", windows[1]]
       : mac ? ["macOS", mac[1].replaceAll("_", ".")] : ["Unknown", ""];
   const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
@@ -78,6 +80,10 @@ export class PlaybackDiagnostics {
     if (type === "playing") this.played = true;
     this.queue.push({ seq: ++this.seq, type, occurredAt: new Date().toISOString(), detail, errorCode, positionSeconds });
     if (errorCode || this.queue.length >= 20) void this.flush();
+  }
+
+  hasPlayedSuccessfully() {
+    return this.played;
   }
 
   async flush(keepalive = false) {

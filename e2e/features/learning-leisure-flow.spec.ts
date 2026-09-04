@@ -51,6 +51,7 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
     const fulfill = (body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
     if (path === "/api/content/categories") return fulfill(categories);
     if (path === "/api/content/categories/science/videos") return fulfill(videos());
+    if (path === "/api/content/categories/cartoons/videos") return fulfill([]);
     if (path === "/api/child/access-state") return fulfill(access);
     if (path === "/api/child/today-picks") return fulfill([]);
     if (path === "/api/content/resume") return fulfill({ resume: null });
@@ -67,6 +68,21 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
   await expect(page.getByRole("region", { name: "📚 學習系列" })).toContainText("科學");
   await expect(page.getByRole("region", { name: "🎈 休閒系列" })).toContainText("卡通");
   await expect(page.getByRole("region", { name: "今日休閒時間" })).toContainText("15 分鐘");
+
+  await page.getByLabel("學習系列播放模式").getByRole("button", { name: "純聽" }).click();
+  await page.getByRole("link", { name: /科學/ }).click();
+  await expect(page).toHaveURL(/\/category\/science\?mode=listen/);
+  await expect(page.getByLabel("科學播放模式").getByRole("button", { name: "純聽" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("科學播放模式").getByRole("button", { name: "觀看" }).click();
+  await page.locator(".back-link").click();
+  await expect(page.getByLabel("學習系列播放模式").getByRole("button", { name: "觀看" })).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByLabel("休閒系列播放模式").getByRole("button", { name: "純聽" }).click();
+  await page.getByRole("link", { name: /卡通/ }).click();
+  await expect(page).toHaveURL(/\/category\/cartoons\?mode=listen/);
+  await page.getByLabel("卡通播放模式").getByRole("button", { name: "觀看" }).click();
+  await page.locator(".back-link").click();
+  await expect(page.getByLabel("休閒系列播放模式").getByRole("button", { name: "觀看" })).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("link", { name: /科學/ }).click();
   await expect(page.getByRole("region", { name: "今天的學習開始囉，好好動動大腦吧!!" })).toBeVisible();

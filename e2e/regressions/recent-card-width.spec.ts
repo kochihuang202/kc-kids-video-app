@@ -28,6 +28,7 @@ test("REG-005 keeps recent cards equal width when titles have different lengths"
     lastPositionSeconds: 30,
     isWatched: false,
     lastPlayedAt: "2026-09-02T04:00:00.000Z",
+    playbackMode: index === 0 ? "listen" : "video",
   }));
 
   await page.route("**/api/**", async (route) => {
@@ -48,4 +49,6 @@ test("REG-005 keeps recent cards equal width when titles have different lengths"
   const widths = await cards.evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().width));
 
   expect(widths).toEqual(widths.map(() => 150));
+  await expect(cards.first()).toHaveAttribute("href", /mode=listen/);
+  await expect(cards.first()).toContainText("純聽");
 });

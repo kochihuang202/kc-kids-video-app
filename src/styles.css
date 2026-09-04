@@ -1031,6 +1031,8 @@ svg { flex: 0 0 auto; }
 .recent-card { flex: 0 0 150px; min-width: 0; text-decoration: none; color: inherit; scroll-snap-align: start; }
 .recent-thumb-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #101613; }
 .recent-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.recent-mode-badge { position: absolute; left: 7px; bottom: 7px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 999px; background: rgba(24, 32, 29, 0.84); color: #fff; font-size: 11px; font-weight: 800; }
+.recent-mode-badge svg { width: 12px; height: 12px; }
 .recent-card h3 { font-size: 14px; font-weight: 700; margin: 6px 0 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .video-thumb-container { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 18px; overflow: hidden; background: #101613; }

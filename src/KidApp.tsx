@@ -161,6 +161,24 @@ function PlaybackModeSelector({ mode, onChange, label = "播放模式" }: {
   );
 }
 
+function preferredModeKey(seriesType: "learning" | "leisure") {
+  return seriesType === "learning" ? "kid_learning_mode" : "kid_leisure_mode";
+}
+
+function readPreferredMode(seriesType: "learning" | "leisure"): PlaybackMode {
+  if (typeof window === "undefined") return "video";
+  const key = preferredModeKey(seriesType);
+  return window.localStorage.getItem(key) === "listen" || window.sessionStorage.getItem(key) === "listen"
+    ? "listen"
+    : "video";
+}
+
+function savePreferredMode(seriesType: "learning" | "leisure", mode: PlaybackMode) {
+  const key = preferredModeKey(seriesType);
+  window.localStorage.setItem(key, mode);
+  window.sessionStorage.setItem(key, mode);
+}
+
 export function HomePage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [todayPicks, setTodayPicks] = useState<TodayPick[]>([]);
@@ -170,23 +188,17 @@ export function HomePage() {
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(false);
-  const [learningMode, setLearningMode] = useState<PlaybackMode>(() => {
-    if (typeof window === "undefined") return "video";
-    return window.sessionStorage.getItem("kid_learning_mode") === "listen" ? "listen" : "video";
-  });
-  const [leisureMode, setLeisureMode] = useState<PlaybackMode>(() => {
-    if (typeof window === "undefined") return "video";
-    return window.sessionStorage.getItem("kid_leisure_mode") === "listen" ? "listen" : "video";
-  });
+  const [learningMode, setLearningMode] = useState<PlaybackMode>(() => readPreferredMode("learning"));
+  const [leisureMode, setLeisureMode] = useState<PlaybackMode>(() => readPreferredMode("leisure"));
 
   const changeLearningMode = (mode: PlaybackMode) => {
     setLearningMode(mode);
-    window.sessionStorage.setItem("kid_learning_mode", mode);
+    savePreferredMode("learning", mode);
   };
 
   const changeLeisureMode = (mode: PlaybackMode) => {
     setLeisureMode(mode);
-    window.sessionStorage.setItem("kid_leisure_mode", mode);
+    savePreferredMode("leisure", mode);
   };
 
   const load = useCallback(async () => {
@@ -281,13 +293,13 @@ export function HomePage() {
 
       {!isOutsideWindow && resume && (
         <section className="resume-section" aria-label="繼續觀看">
-          <div className="resume-header"><span className="resume-tag"><Play />繼續看</span></div>
-          <Link className="resume-card" to={`/watch/${resume.videoId}?t=${Math.round(resume.lastPositionSeconds)}`}>
+          <div className="resume-header"><span className="resume-tag">{resume.playbackMode === "listen" ? <Headphones /> : <Play />}{resume.playbackMode === "listen" ? "繼續聽" : "繼續看"}</span></div>
+          <Link className="resume-card" to={`/watch/${resume.videoId}?mode=${resume.playbackMode}&t=${Math.round(resume.lastPositionSeconds)}`}>
             <div className="resume-thumb-wrapper">
               <img src={resume.thumbnailUrl} alt="" onError={showThumbnailFallback} />
-              <span className="resume-pos-pill">看到 {formatPosition(resume.lastPositionSeconds)}</span>
+              <span className="resume-pos-pill">{resume.playbackMode === "listen" ? "聽到 " : "看到 "}{formatPosition(resume.lastPositionSeconds)}</span>
             </div>
-            <div className="resume-content"><h2>{resume.parentLabel}</h2><span className="resume-action-btn"><Play />繼續播放</span></div>
+            <div className="resume-content"><h2>{resume.parentLabel}</h2><span className="resume-action-btn">{resume.playbackMode === "listen" ? <Headphones /> : <Play />}{resume.playbackMode === "listen" ? "繼續聽" : "繼續播放"}</span></div>
           </Link>
         </section>
       )}
@@ -297,8 +309,8 @@ export function HomePage() {
           <h2 className="recents-title">最近看過</h2>
           <div className="recents-scroll-row">
             {recents.map((recent) => (
-              <Link className="recent-card" to={`/watch/${recent.id}?t=${Math.round(recent.lastPositionSeconds)}`} key={recent.id}>
-                <div className="recent-thumb-wrapper"><img src={recent.thumbnailUrl} alt="" onError={showThumbnailFallback} /></div>
+              <Link className="recent-card" to={`/watch/${recent.id}?mode=${recent.playbackMode}&t=${Math.round(recent.lastPositionSeconds)}`} key={recent.id}>
+                <div className="recent-thumb-wrapper"><img src={recent.thumbnailUrl} alt="" onError={showThumbnailFallback} /><span className="recent-mode-badge">{recent.playbackMode === "listen" ? <><Headphones />純聽</> : <><Play />觀看</>}</span></div>
                 <h3>{recent.parentLabel}</h3>
               </Link>
             ))}
@@ -380,6 +392,7 @@ export function CategoryPage() {
   const { categoryId = "" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryMode: PlaybackMode = searchParams.get("mode") === "listen" ? "listen" : "video";
+  const categoryModeParam = searchParams.get("mode");
   const [category, setCategory] = useState<Category | null>(null);
   const [videos, setVideos] = useState<VideoFixture[] | null>(null);
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
@@ -424,6 +437,15 @@ export function CategoryPage() {
   }, [categoryId]);
 
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    if (!category) return;
+    if (categoryModeParam === "video" || categoryModeParam === "listen") {
+      savePreferredMode(category.seriesType, categoryModeParam);
+      return;
+    }
+    setSearchParams({ mode: readPreferredMode(category.seriesType) }, { replace: true });
+  }, [category, categoryModeParam, setSearchParams]);
 
   const toggleLearned = async (video: VideoFixture) => {
     setSavingLearnedId(video.id);
@@ -490,7 +512,10 @@ export function CategoryPage() {
             )}
             <PlaybackModeSelector
               mode={categoryMode}
-              onChange={(mode) => setSearchParams({ mode })}
+              onChange={(mode) => {
+                savePreferredMode(category.seriesType, mode);
+                setSearchParams({ mode });
+              }}
               label={`${category.name}播放模式`}
             />
           </header>
@@ -619,6 +644,8 @@ export function WatchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawInitialPos = Math.max(0, Number(searchParams.get("at") || searchParams.get("t") || 0) || 0);
+  const hasExplicitResumePosition = searchParams.has("at") || searchParams.has("t");
+  const forceFreshStart = searchParams.get("fresh") === "1";
   const requestedMode: PlaybackMode = modeForVideo(searchParams, videoId);
   const isAutoplay = searchParams.get("autoplay") === "1";
 
@@ -729,7 +756,7 @@ export function WatchPage() {
         }).catch(() => {});
       }
       setPlaybackMode(initialMode);
-      const resumePosition = rawInitialPos > 0 ? rawInitialPos : Math.max(0, nextVideo.lastPositionSeconds || 0);
+      const resumePosition = forceFreshStart || !hasExplicitResumePosition ? 0 : rawInitialPos;
       setStartPosition(resumePosition);
       setCurrentPos(resumePosition);
       setDragPos(resumePosition);
@@ -749,7 +776,7 @@ export function WatchPage() {
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
     }
-  }, [requestedMode, videoId]);
+  }, [forceFreshStart, hasExplicitResumePosition, rawInitialPos, requestedMode, videoId]);
 
   useEffect(() => {
     void load();
@@ -773,7 +800,7 @@ export function WatchPage() {
     window.addEventListener("unhandledrejection", onUnhandled);
     window.addEventListener("pagehide", onPageHide);
     const autoplayTimer = isAutoplay ? window.setTimeout(() => {
-      if (playerStateRef.current !== "PLAYING") diagnostics.event(
+      if (!diagnostics.hasPlayedSuccessfully()) diagnostics.event(
         "autoplay_blocked", { state: playerStateRef.current }, "AUTOPLAY_NOT_STARTED", currentPosRef.current,
       );
     }, 4_000) : null;
@@ -1024,7 +1051,7 @@ export function WatchPage() {
               : nextListenTrackRef.current.id;
             if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: targetId });
             diagnosticsRef.current?.event("next_requested", { state: targetId }, undefined, currentPosRef.current);
-            navigate(`/watch/${targetId}?mode=listen&autoplay=1`, { replace: true });
+            navigate(`/watch/${targetId}?mode=listen&autoplay=1&fresh=1`, { replace: true });
           }
         }
       }
@@ -1305,7 +1332,7 @@ export function WatchPage() {
                   {nextTrack && (
                     <Button
                       size="large"
-                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1`)}
+                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1`)}
                     >
                       <Play /> 下一集：{nextTrack.parentLabel}
                     </Button>
@@ -1323,7 +1350,7 @@ export function WatchPage() {
 
           {/* 暫停時提醒與 5 組隨機思考問題 */}
           {!isPlaying && !isEnded && !timeUp && !parentPaused && !outsideWindow && pausePrompts.length > 0 && currentPos > 2 && (
-            <div className="pause-reminder-overlay" role="region" aria-label="暫停思考提示">
+            <div className="pause-reminder-overlay" role="region" aria-label="暫停思考提示" onClick={togglePlay}>
               <div className="pause-reminder-card">
                 <div className="pause-reminder-header">
                   <span className="pause-icon-badge">⏸️</span>
@@ -1341,7 +1368,10 @@ export function WatchPage() {
                   ))}
                 </div>
                 <div className="pause-reminder-actions">
-                  <Button size="large" variant="secondary" onClick={togglePlay}>
+                  <Button size="large" variant="secondary" onClick={(event) => {
+                    event.stopPropagation();
+                    togglePlay();
+                  }}>
                     <Play /> 繼續播放
                   </Button>
                 </div>
@@ -1375,7 +1405,7 @@ export function WatchPage() {
                   {nextTrack && (
                     <Button
                       size="large"
-                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1`)}
+                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1`)}
                     >
                       <Play /> 下一集：{nextTrack.parentLabel}
                     </Button>
@@ -1502,7 +1532,7 @@ export function WatchPage() {
                   title={`下一集：${nextTrack.parentLabel}`}
                   onClick={() => {
                     diagnosticsRef.current?.event("next_requested", { state: nextTrack.id }, undefined, currentPosRef.current);
-                    navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1`);
+                    navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1`);
                   }}
                 >
                   <span>下一集 ⏭️</span>

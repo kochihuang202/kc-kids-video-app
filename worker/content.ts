@@ -29,6 +29,7 @@ interface VideoRow {
   sort_order?: number;
   last_position_seconds?: number | null;
   last_played_at?: string | null;
+  playback_mode?: "video" | "listen" | null;
   is_learned?: number | null;
   learned_at?: string | null;
 }
@@ -229,7 +230,8 @@ export async function getPublicResume(request: Request, env: AppEnv) {
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path,
-      v.duration_seconds, vs.last_position_seconds, vs.updated_at AS last_played_at
+      v.duration_seconds, vs.last_position_seconds, vs.updated_at AS last_played_at,
+      COALESCE(vs.playback_mode, 'video') AS playback_mode
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
     WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
@@ -243,6 +245,7 @@ export async function getPublicResume(request: Request, env: AppEnv) {
   const row = await env.DB.prepare(query).bind(threshold).first<VideoRow & {
     last_position_seconds: number;
     last_played_at: string;
+    playback_mode: "video" | "listen";
   }>();
 
   if (!row) return json({ resume: null });
@@ -256,6 +259,7 @@ export async function getPublicResume(request: Request, env: AppEnv) {
       durationSeconds: row.duration_seconds,
       lastPositionSeconds: row.last_position_seconds,
       lastPlayedAt: row.last_played_at,
+      playbackMode: row.playback_mode,
     },
   });
 }
@@ -271,9 +275,14 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
       v.duration_seconds, MAX(vs.updated_at) AS last_played_at,
       (
         SELECT last_position_seconds FROM view_sessions
-        WHERE video_id = v.id
+        WHERE video_id = v.id AND played_seconds > 0
         ORDER BY updated_at DESC LIMIT 1
-      ) AS last_position_seconds
+      ) AS last_position_seconds,
+      (
+        SELECT COALESCE(playback_mode, 'video') FROM view_sessions
+        WHERE video_id = v.id AND played_seconds > 0
+        ORDER BY updated_at DESC LIMIT 1
+      ) AS playback_mode
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
     WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
@@ -286,6 +295,7 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
   const rows = await env.DB.prepare(query).all<VideoRow & {
     last_played_at: string;
     last_position_seconds: number | null;
+    playback_mode: "video" | "listen";
   }>();
 
   const recents = (rows.results || []).map((row) => {
@@ -301,6 +311,7 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
       lastPositionSeconds: pos,
       isWatched,
       lastPlayedAt: row.last_played_at,
+      playbackMode: row.playback_mode,
     };
   });
 

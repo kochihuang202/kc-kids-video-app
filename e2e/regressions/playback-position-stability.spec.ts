@@ -15,7 +15,7 @@ test("REG-001 keeps playback moving across the 15-second access refresh", async 
   await installDeterministicMedia(page, 0);
   await mockAuthorizedWatchApi(page, () => { videoRequests += 1; });
 
-  await page.goto(`/watch/${TEST_VIDEO_ID}`);
+  await page.goto(`/watch/${TEST_VIDEO_ID}?t=36`);
   const controls = page.getByRole("region", { name: "影片播放控制" });
   await expect(controls.getByRole("button", { name: "播放" })).toBeVisible();
   const initialVideoRequests = videoRequests;
@@ -33,4 +33,16 @@ test("REG-001 keeps playback moving across the 15-second access refresh", async 
   expect(videoRequests).toBe(initialVideoRequests);
 
   await page.locator(".stage-click-capture").click();
+});
+
+test("REG-018 starts a normal video-list selection at the beginning", async ({ page }) => {
+  await installDeterministicMedia(page, 0, { abortNetwork: false });
+  await mockAuthorizedWatchApi(page);
+
+  await page.goto(`/watch/${TEST_VIDEO_ID}`);
+  const elapsed = page.locator(".kid-scrubber-row .time-text").first();
+  await expect(elapsed).toHaveText("00:00");
+
+  await page.goto(`/watch/${TEST_VIDEO_ID}?mode=listen&t=36`);
+  await expect(elapsed).toHaveText("00:36");
 });

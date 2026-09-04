@@ -50,6 +50,7 @@ export interface ResumeInfo extends MediaDescriptor {
   durationSeconds: number | null;
   lastPositionSeconds: number;
   lastPlayedAt: string;
+  playbackMode: PlaybackMode;
 }
 
 export interface RecentVideo extends MediaDescriptor {
@@ -61,6 +62,7 @@ export interface RecentVideo extends MediaDescriptor {
   lastPositionSeconds: number;
   isWatched: boolean;
   lastPlayedAt: string;
+  playbackMode: PlaybackMode;
 }
 
 export interface Note {

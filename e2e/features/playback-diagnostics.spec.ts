@@ -73,3 +73,23 @@ test("parent diagnostics shows named devices and problem sessions", async ({ pag
   await expect(page.getByText("重試後成功", { exact: true }).last()).toBeVisible();
   await expect(page.getByText("MEDIA_PROBE_FAILED", { exact: true })).toBeVisible();
 });
+
+test("identifies an iPad using Safari desktop-mode user agent", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.1 Mobile/15E148 Safari/604.1",
+    });
+    Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 5 });
+  });
+  await installDeterministicMedia(page, 0, { abortNetwork: false });
+  await mockAuthorizedWatchApi(page);
+  let startBody: Record<string, unknown> | null = null;
+  await page.route("**/api/diagnostics/sessions", async (route) => {
+    startBody = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ id: "ipad-diagnostic" }) });
+  });
+
+  await page.goto(`/watch/${TEST_VIDEO_ID}`);
+  await expect.poll(() => startBody).toMatchObject({ osName: "iPadOS", osVersion: "unknown" });
+});

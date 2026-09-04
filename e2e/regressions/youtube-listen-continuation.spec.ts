@@ -12,7 +12,7 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
 
     const state = {
       constructorCount: 0,
-      loadedIds: [] as string[],
+      loadedVideos: [] as Array<{ videoId: string; startSeconds: number }>,
       currentTime: 0,
       duration: 120,
       options: null as PlayerOptions | null,
@@ -47,9 +47,9 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
       mute() {}
       unMute() {}
       setPlaybackRate() {}
-      loadVideoById(videoId: string) {
+      loadVideoById(videoId: string, startSeconds = 0) {
         const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
-        current.loadedIds.push(videoId);
+        current.loadedVideos.push({ videoId, startSeconds });
         current.options?.events.onStateChange({ target: this, data: 1 });
       }
       cueVideoById() {}
@@ -60,7 +60,7 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
 
   const videos = [
     { id: "qiaohu-1", youtubeVideoId: "youtube-one", parentLabel: "巧虎第一集", sortOrder: 1 },
-    { id: "qiaohu-2", youtubeVideoId: "youtube-two", parentLabel: "巧虎第二集", sortOrder: 2 },
+    { id: "qiaohu-2", youtubeVideoId: "youtube-two", parentLabel: "巧虎第二集", sortOrder: 2, lastPositionSeconds: 119 },
   ].map((video) => ({
     ...video,
     categoryId: "qiaohu",
@@ -68,7 +68,7 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
     youtubeTitle: video.parentLabel,
     thumbnailUrl: "https://i.ytimg.com/vi/example/hqdefault.jpg",
     durationSeconds: 120,
-    lastPositionSeconds: 0,
+    lastPositionSeconds: video.lastPositionSeconds || 0,
     isWatched: false,
     isLearned: false,
     isSelectable: true,
@@ -111,10 +111,13 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
 
   await page.evaluate(() => (window as typeof window & { __youtubeTest: { end(): void } }).__youtubeTest.end());
 
-  await expect(page).toHaveURL(/\/watch\/qiaohu-2\?mode=listen&autoplay=1/);
+  await expect(page).toHaveURL(/\/watch\/qiaohu-2\?mode=listen&autoplay=1&fresh=1/);
   await expect.poll(() => page.evaluate(() => (window as typeof window & {
-    __youtubeTest: { constructorCount: number; loadedIds: string[] };
-  }).__youtubeTest)).toMatchObject({ constructorCount: 1, loadedIds: ["youtube-two"] });
+    __youtubeTest: { constructorCount: number; loadedVideos: Array<{ videoId: string; startSeconds: number }> };
+  }).__youtubeTest)).toMatchObject({
+    constructorCount: 1,
+    loadedVideos: [{ videoId: "youtube-two", startSeconds: 0 }],
+  });
   await expect(page.locator(".main-play-btn")).toHaveAttribute("aria-label", "暫停");
   await expect(page.getByLabel("純聽模式")).toBeVisible();
   await expect.poll(() => sessionModes).toEqual(["listen", "listen"]);

@@ -63,7 +63,7 @@ describe("Phase 2 End-to-End Suite", () => {
     const startRes = await call("/api/view-sessions", {
       method: "POST",
       headers: { cookie },
-      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: "session-resume-1" }),
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: "session-resume-1", playbackMode: "listen" }),
     });
     const { id: sessionId, writeToken } = await startRes.json<{ id: string; writeToken: string }>();
 
@@ -86,6 +86,9 @@ describe("Phase 2 End-to-End Suite", () => {
     expect(data.resume).not.toBeNull();
     expect(data.resume.videoId).toBe("why-sky-blue");
     expect(data.resume.lastPositionSeconds).toBe(512);
+    expect(data.resume.playbackMode).toBe("listen");
+    const recents = await (await call("/api/content/recents", { headers: { cookie } })).json<any[]>();
+    expect(recents[0]).toMatchObject({ id: "why-sky-blue", playbackMode: "listen", lastPositionSeconds: 512 });
   });
 
   // Test E2E 02: Watched & Completion
