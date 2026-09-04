@@ -20,6 +20,7 @@ export default defineConfig(async () => {
 						// Keep the historical recording suite as a rollback regression test.
 						// Production explicitly sets this to "false" in wrangler.jsonc.
 						RECORDING_ENABLED: "true",
+						DIAGNOSTICS_READ_TOKEN: "test-read-only-diagnostics-token",
 					},
 				},
 			}),

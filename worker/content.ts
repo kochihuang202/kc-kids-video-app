@@ -28,6 +28,7 @@ interface VideoRow {
   duration_seconds: number | null;
   sort_order?: number;
   last_position_seconds?: number | null;
+  last_played_at?: string | null;
   is_learned?: number | null;
   learned_at?: string | null;
 }
@@ -63,6 +64,7 @@ const videoDto = (
     durationSeconds: row.duration_seconds,
     sortOrder: row.sort_order || 0,
     lastPositionSeconds: position,
+    lastPlayedAt: row.last_played_at || null,
     isWatched,
     isLearned: options.isLearned ?? false,
     learnedAt: options.learnedAt ?? null,
@@ -155,13 +157,18 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
     ? `(SELECT vs.last_position_seconds FROM view_sessions vs
         WHERE vs.video_id = v.id ORDER BY vs.updated_at DESC LIMIT 1)`
     : "NULL";
+  const lastPlayedAtColumn = device
+    ? `(SELECT vs.updated_at FROM view_sessions vs
+        WHERE vs.video_id = v.id ORDER BY vs.updated_at DESC LIMIT 1)`
+    : "NULL";
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path,
       v.duration_seconds, cv.sort_order,
       ${learnedColumn} AS is_learned,
       ${learnedAtColumn} AS learned_at,
-      ${progressColumn} AS last_position_seconds
+      ${progressColumn} AS last_position_seconds,
+      ${lastPlayedAtColumn} AS last_played_at
     FROM category_videos cv
     JOIN videos v ON v.id = cv.video_id
     WHERE cv.category_id = ? AND v.is_active = 1 AND v.archived_at IS NULL

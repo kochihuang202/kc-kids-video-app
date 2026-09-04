@@ -35,6 +35,16 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
   await page.addInitScript(({ failures }) => {
     const states = new WeakMap<HTMLMediaElement, { base: number; startedAt: number; playing: boolean }>();
     let loadCount = 0;
+    let sourceRemovalCount = 0;
+
+    const nativeRemoveAttribute = Element.prototype.removeAttribute;
+    Element.prototype.removeAttribute = function removeAttribute(name: string) {
+      if ((this instanceof HTMLAudioElement || this instanceof HTMLVideoElement) && name.toLowerCase() === "src") {
+        sourceRemovalCount += 1;
+        (window as Window & { __mediaSourceRemovalCount?: number }).__mediaSourceRemovalCount = sourceRemovalCount;
+      }
+      return nativeRemoveAttribute.call(this, name);
+    };
 
     const stateFor = (element: HTMLMediaElement) => {
       let state = states.get(element);
@@ -97,7 +107,15 @@ export function getMediaLoadCount(page: Page) {
   return page.evaluate(() => (window as Window & { __mediaLoadCount?: number }).__mediaLoadCount || 0);
 }
 
-export async function mockAuthorizedWatchApi(page: Page, onVideoRequest?: () => void) {
+export function getMediaSourceRemovalCount(page: Page) {
+  return page.evaluate(() => (window as Window & { __mediaSourceRemovalCount?: number }).__mediaSourceRemovalCount || 0);
+}
+
+export async function mockAuthorizedWatchApi(
+  page: Page,
+  onVideoRequest?: () => void,
+  videoOverrides: Record<string, unknown> = {},
+) {
   await page.route("**/api/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -128,6 +146,7 @@ export async function mockAuthorizedWatchApi(page: Page, onVideoRequest?: () => 
         mediaPath: "regression-media.wav",
         mediaUrl: TEST_MEDIA_URL,
         thumbnailPath: null,
+        ...videoOverrides,
       });
       return;
     }

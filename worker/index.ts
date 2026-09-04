@@ -12,6 +12,10 @@ import {
   updateLearnedState,
 } from "./content";
 import { exportSessions } from "./export";
+import {
+  addDiagnosticEvents, exportDiagnostics, finishDiagnosticSession, getDiagnosticsSummary,
+  getParentDiagnosticDetail, getParentDiagnostics, startDiagnosticSession,
+} from "./diagnostics";
 import { runHealthCheck } from "./health";
 import { fail, HttpError, json } from "./http";
 import { serveMediaAsset } from "./media";
@@ -103,6 +107,13 @@ async function route(request: Request, env: AppEnv) {
   id = routeId(path, /^\/api\/view-sessions\/([^/]+)$/);
   if (method === "PATCH" && id) return heartbeatViewSession(request, env, id);
 
+  if (method === "POST" && path === "/api/diagnostics/sessions") return startDiagnosticSession(request, env);
+  id = routeId(path, /^\/api\/diagnostics\/sessions\/([^/]+)\/events$/);
+  if (method === "POST" && id) return addDiagnosticEvents(request, env, id);
+  id = routeId(path, /^\/api\/diagnostics\/sessions\/([^/]+)$/);
+  if (method === "PATCH" && id) return finishDiagnosticSession(request, env, id);
+  if (method === "GET" && path === "/api/diagnostics/export") return exportDiagnostics(request, env);
+
   if (path === "/api/parent/session") {
     if (method === "GET") return parentSessionStatus(request, env);
     if (method === "POST") return loginParent(request, env);
@@ -112,6 +123,10 @@ async function route(request: Request, env: AppEnv) {
   if (method === "GET" && (path === "/api/parent/dashboard/today" || path === "/api/parent/history")) return getDashboard(request, env);
   if (method === "GET" && path === "/api/parent/history/calendar") return getCalendarHistory(request, env);
   if (method === "GET" && path === "/api/parent/summary") return getSummaryAnalytics(request, env);
+  if (method === "GET" && path === "/api/parent/diagnostics/summary") return getDiagnosticsSummary(request, env);
+  if (method === "GET" && path === "/api/parent/diagnostics/sessions") return getParentDiagnostics(request, env);
+  id = routeId(path, /^\/api\/parent\/diagnostics\/sessions\/([^/]+)$/);
+  if (method === "GET" && id) return getParentDiagnosticDetail(request, env, id);
 
   if (path === "/api/parent/rules") {
     if (method === "GET") return getParentRules(request, env);

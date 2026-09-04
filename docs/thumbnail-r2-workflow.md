@@ -82,6 +82,25 @@ powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
   -ApplyRemoteD1
 ```
 
+`LibraryFolder` 支援中文與其他 URL 編碼字元；D1 仍保存媒體服務回傳的安全編碼路徑。
+大量課程會自動以每 25 部一批產生 SQL，避免 D1 的單一 statement 長度限制。
+
+若要用新資料夾完整替換既有分類，加入 `-ReplaceCategoryVideos`。工具會先把只屬於該分類的舊影片封存，再移除舊分類關聯；觀看 Session 與歷史紀錄不會永久刪除。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
+  -MediaServerBaseUrl "https://<private-mac-host>.<tailnet>.ts.net" `
+  -LibraryFolder "09_科乐多科学探索中心" `
+  -CategoryId "science" `
+  -CategoryName "科學" `
+  -VideoIdPrefix "keleduo" `
+  -SeriesType "learning" `
+  -ExpectedCount 259 `
+  -ThumbnailAtSeconds 6 `
+  -ReplaceCategoryVideos `
+  -ApplyRemoteD1
+```
+
 匯入 SQL、manifest 與 D1 備份放在被 Git 忽略的 `artifacts/`，避免私人媒體檔名或 Tailscale 網址進入公開 repository。縮圖時間仍由 `publish-video-thumbnails.ps1` 的 `TimestampSeconds` 決定；manifest 中的值用於留下這次匯入的操作紀錄。
 
 ## 分階段操作

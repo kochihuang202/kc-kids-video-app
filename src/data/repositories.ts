@@ -15,6 +15,8 @@ import type {
   UsageRule,
   VideoFixture,
   VideoHistoryResponse,
+  DiagnosticSessionSummary,
+  DiagnosticSummary,
 } from "../types";
 
 export class ApiError extends Error {
@@ -70,6 +72,29 @@ export const activityRepository = {
       keepalive,
     });
   },
+};
+
+export interface DiagnosticEventInput {
+  seq: number;
+  type: string;
+  occurredAt: string;
+  positionSeconds?: number;
+  errorCode?: string;
+  detail?: Record<string, string | number | boolean | null | undefined>;
+}
+
+export const diagnosticRepository = {
+  start: (body: Record<string, unknown>) => write<{ id: string }>("/api/diagnostics/sessions", "POST", body),
+  events: (id: string, events: DiagnosticEventInput[], keepalive = false) => api<{ ok: true }>(
+    `/api/diagnostics/sessions/${encodeURIComponent(id)}/events`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ events }), keepalive,
+    },
+  ),
+  finish: (id: string, outcome: "success" | "recovered" | "error", keepalive = false) => api<{ ok: true }>(
+    `/api/diagnostics/sessions/${encodeURIComponent(id)}`, {
+      method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ outcome }), keepalive,
+    },
+  ),
 };
 
 export interface VideoPreview {
@@ -131,6 +156,17 @@ export const parentRepository = {
   updateSettings: (body: { timezone?: string; playback?: { completionThreshold?: number; recentLimit?: number } }) => write<{ ok: true }>("/api/parent/settings", "PATCH", body),
   changePassword: (currentPassword: string, newPassword: string) => write<{ ok: true }>("/api/parent/password", "POST", { currentPassword, newPassword }),
   devices: () => api<ChildDevice[]>("/api/parent/devices"),
+  diagnosticSummary: () => api<DiagnosticSummary>("/api/parent/diagnostics/summary"),
+  diagnosticSessions: (params?: { deviceId?: string; outcome?: string; limit?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.deviceId) query.set("deviceId", params.deviceId);
+    if (params?.outcome) query.set("outcome", params.outcome);
+    if (params?.limit) query.set("limit", String(params.limit));
+    return api<{ sessions: DiagnosticSessionSummary[] }>(`/api/parent/diagnostics/sessions?${query}`);
+  },
+  diagnosticDetail: (id: string) => api<{ session: Record<string, unknown>; events: Array<Record<string, unknown>> }>(
+    `/api/parent/diagnostics/sessions/${encodeURIComponent(id)}`,
+  ),
   authorizeDevice: (name: string) => write<{ id: string; name: string }>("/api/parent/devices", "POST", { name }),
   updateDevice: (id: string, name: string) => write<{ ok: true }>(`/api/parent/devices/${encodeURIComponent(id)}`, "PATCH", { name }),
   revokeDevice: (id: string) => write<{ ok: true }>(`/api/parent/devices/${encodeURIComponent(id)}`, "DELETE", {}),

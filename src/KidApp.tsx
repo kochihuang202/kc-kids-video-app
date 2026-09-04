@@ -1,10 +1,12 @@
 import { ArrowLeft, Clock, Clock3, Headphones, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
+import { advancePlaybackQueue, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
+import { PlaybackDiagnostics } from "./lib/playbackDiagnostics";
 import { cn, formatPosition } from "./lib/utils";
 import type {
   Category, ChildAccessState, DeviceStatus, PlaybackMode, RecentVideo, ResumeInfo, TodayPick,
@@ -61,6 +63,18 @@ function formatLearnedAt(value: string) {
   }).formatToParts(date);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}/${values.month}/${values.day} ${values.hour}:${values.minute}`;
+}
+
+function formatCategoryPlayedTime(seconds: number): string {
+  if (!seconds || seconds <= 0) return "今日 0 分鐘";
+  const mins = Math.floor(seconds / 60);
+  if (mins === 0) return "今日 < 1 分鐘";
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  if (hours > 0) {
+    return remMins > 0 ? `今日 ${hours} 小時 ${remMins} 分鐘` : `今日 ${hours} 小時`;
+  }
+  return `今日 ${mins} 分鐘`;
 }
 
 export const thinkingPromptsList = [
@@ -156,10 +170,19 @@ export function HomePage() {
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(false);
+  const [learningMode, setLearningMode] = useState<PlaybackMode>(() => {
+    if (typeof window === "undefined") return "video";
+    return window.sessionStorage.getItem("kid_learning_mode") === "listen" ? "listen" : "video";
+  });
   const [leisureMode, setLeisureMode] = useState<PlaybackMode>(() => {
     if (typeof window === "undefined") return "video";
     return window.sessionStorage.getItem("kid_leisure_mode") === "listen" ? "listen" : "video";
   });
+
+  const changeLearningMode = (mode: PlaybackMode) => {
+    setLearningMode(mode);
+    window.sessionStorage.setItem("kid_learning_mode", mode);
+  };
 
   const changeLeisureMode = (mode: PlaybackMode) => {
     setLeisureMode(mode);
@@ -311,23 +334,38 @@ export function HomePage() {
           <div className="series-heading">
             <h2>{group.title}</h2>
             {group.type === "learning" ? (
-              <span>不限休閒額度 · 看 2 分鐘，多 1 分鐘休閒</span>
+              <div className="series-heading-right">
+                <span className="series-subtitle">不限休閒額度 · 看 2 分鐘，多 1 分鐘休閒</span>
+                <PlaybackModeSelector mode={learningMode} onChange={changeLearningMode} label="學習系列播放模式" />
+              </div>
             ) : (
               <PlaybackModeSelector mode={leisureMode} onChange={changeLeisureMode} label="休閒系列播放模式" />
             )}
           </div>
           <div className={`category-grid ${isOutsideWindow ? "is-disabled" : ""}`}>
-            {group.items.map((category) => isOutsideWindow ? (
-              <div className={`category-card tone-${category.tone} disabled-card`} key={category.id}>
-                <span className="category-icon" aria-hidden="true">{category.icon}</span><span className="category-name-text">{category.name}</span>
-              </div>
-            ) : (
-              <Link className={`category-card tone-${category.tone}`} to={`/category/${category.id}?mode=${group.type === "leisure" ? leisureMode : "video"}`} key={category.id}>
-                <span className="category-icon" aria-hidden="true">{category.icon}</span>
-                <span className="category-name-text">{category.name}</span>
-                {group.type === "leisure" && leisureReached && <span className="cat-reached-pill">一般觀看時間已到 · 純聽仍可用</span>}
-              </Link>
-            ))}
+            {group.items.map((category) => {
+              const catState = accessState?.categoryStates?.find((cs) => cs.categoryId === category.id);
+              const playedSeconds = catState?.todayPlayedSeconds || 0;
+              const currentMode = group.type === "learning" ? learningMode : leisureMode;
+              return isOutsideWindow ? (
+                <div className={`category-card tone-${category.tone} disabled-card`} key={category.id}>
+                  <span className="category-icon" aria-hidden="true">{category.icon}</span>
+                  <span className="category-name-text">{category.name}</span>
+                  <span className="category-time-pill">
+                    ⏱️ {formatCategoryPlayedTime(playedSeconds)}
+                  </span>
+                </div>
+              ) : (
+                <Link className={`category-card tone-${category.tone}`} to={`/category/${category.id}?mode=${currentMode}`} key={category.id}>
+                  <span className="category-icon" aria-hidden="true">{category.icon}</span>
+                  <span className="category-name-text">{category.name}</span>
+                  <span className="category-time-pill">
+                    ⏱️ {formatCategoryPlayedTime(playedSeconds)}
+                  </span>
+                  {group.type === "leisure" && leisureReached && <span className="cat-reached-pill">一般觀看時間已到 · 純聽仍可用</span>}
+                </Link>
+              );
+            })}
           </div>
         </section>
       ))}
@@ -348,6 +386,22 @@ export function CategoryPage() {
   const [device, setDevice] = useState<DeviceStatus | null>(null);
   const [error, setError] = useState("");
   const [savingLearnedId, setSavingLearnedId] = useState("");
+  const [confirmVideo, setConfirmVideo] = useState<VideoFixture | null>(null);
+
+  const resumeVideo = useMemo(() => {
+    if (!videos || videos.length === 0) return null;
+    const played = videos
+      .filter((v) => v.lastPlayedAt || (v.lastPositionSeconds && v.lastPositionSeconds > 0))
+      .sort((a, b) => {
+        if (a.lastPlayedAt && b.lastPlayedAt) {
+          return new Date(b.lastPlayedAt).getTime() - new Date(a.lastPlayedAt).getTime();
+        }
+        if (a.lastPlayedAt) return -1;
+        if (b.lastPlayedAt) return 1;
+        return (b.lastPositionSeconds || 0) - (a.lastPositionSeconds || 0);
+      });
+    return played[0] || null;
+  }, [videos]);
 
   const load = useCallback(async () => {
     setError("");
@@ -410,7 +464,7 @@ export function CategoryPage() {
         type="button"
         className={cn("learned-toggle", video.isLearned && "checked")}
         disabled={!device?.authorized || savingLearnedId === video.id}
-        onClick={() => void toggleLearned(video)}
+        onClick={() => setConfirmVideo(video)}
         aria-pressed={!!video.isLearned}
       >
         <span aria-hidden="true">{video.isLearned ? "✓" : ""}</span>{video.isLearned ? "取消學會" : "標記學會了"}
@@ -434,13 +488,11 @@ export function CategoryPage() {
                 <Clock3 /> 今日休閒剩餘 {Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘
               </span>
             )}
-            {category.seriesType === "leisure" && (
-              <PlaybackModeSelector
-                mode={categoryMode}
-                onChange={(mode) => setSearchParams({ mode })}
-                label={`${category.name}播放模式`}
-              />
-            )}
+            <PlaybackModeSelector
+              mode={categoryMode}
+              onChange={(mode) => setSearchParams({ mode })}
+              label={`${category.name}播放模式`}
+            />
           </header>
 
           {!device?.authorized && (
@@ -448,6 +500,43 @@ export function CategoryPage() {
               <div><strong>請家長先授權這台裝置</strong><p>可以先看看有哪些影片；授權後才能播放、同步進度與標記學會。</p></div>
               <Link to="/parent/settings">家長設定</Link>
             </div>
+          )}
+
+          {resumeVideo && (
+            <section className="resume-section category-resume-section" aria-label="上次播放位置">
+              <div className="resume-header">
+                <span className="resume-tag">
+                  {resumeVideo.mediaType === "audio" || categoryMode === "listen" ? <Headphones /> : <Play />}
+                  {resumeVideo.mediaType === "audio" || categoryMode === "listen" ? "上次聽到這裡" : "上次看到這裡"}
+                </span>
+              </div>
+              <Link
+                className="resume-card category-resume-card"
+                to={`/watch/${resumeVideo.id}?mode=${categoryMode}&t=${Math.round(resumeVideo.lastPositionSeconds || 0)}`}
+              >
+                <div className="resume-thumb-wrapper">
+                  <CategoryThumbnail
+                    src={resumeVideo.thumbnailUrl}
+                    alt={resumeVideo.parentLabel}
+                    categoryName={category.name}
+                  />
+                  {!!resumeVideo.lastPositionSeconds && (
+                    <span className="resume-pos-pill">
+                      {resumeVideo.mediaType === "audio" || categoryMode === "listen" ? "聽到 " : "看到 "}
+                      {formatPosition(resumeVideo.lastPositionSeconds)}
+                    </span>
+                  )}
+                </div>
+                <div className="resume-content">
+                  <h2>{resumeVideo.parentLabel}</h2>
+                  <p className="resume-subtitle">{resumeVideo.youtubeTitle}</p>
+                  <span className="resume-action-btn">
+                    {resumeVideo.mediaType === "audio" || categoryMode === "listen" ? <Headphones /> : <Play />}
+                    {resumeVideo.mediaType === "audio" || categoryMode === "listen" ? "繼續聽" : "繼續播放"}
+                  </span>
+                </div>
+              </Link>
+            </section>
           )}
 
           <section className="learning-status-group" aria-label="今天的學習開始囉，好好動動大腦吧!!">
@@ -460,6 +549,48 @@ export function CategoryPage() {
               <div className="learning-status-heading"><h2>✅ 已學會</h2><span>{videos.filter((video) => video.isLearned).length} 部</span></div>
               <div className="video-grid">{videos.filter((video) => video.isLearned).map(renderVideoCard)}</div>
             </section>
+          )}
+
+          {confirmVideo && (
+            <div className="dialog-overlay" onClick={() => setConfirmVideo(null)}>
+              <div
+                className="dialog-content learned-confirm-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="learned-dialog-title"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 id="learned-dialog-title" className="dialog-title">
+                  {confirmVideo.isLearned ? "取消學會標記？" : "🌟 標記學會了？"}
+                </h2>
+                <p className="dialog-description">
+                  {confirmVideo.isLearned
+                    ? `要將「${confirmVideo.parentLabel}」改回未學會嗎？`
+                    : `確定已經學會「${confirmVideo.parentLabel}」了嗎？標記後會移到「已學會」清單喔！`}
+                </p>
+                <div className="dialog-footer">
+                  <button
+                    type="button"
+                    className="ui-button ui-button-secondary"
+                    onClick={() => setConfirmVideo(null)}
+                  >
+                    先不要
+                  </button>
+                  <button
+                    type="button"
+                    className="ui-button ui-button-primary"
+                    disabled={savingLearnedId === confirmVideo.id}
+                    onClick={() => {
+                      const v = confirmVideo;
+                      setConfirmVideo(null);
+                      void toggleLearned(v);
+                    }}
+                  >
+                    {confirmVideo.isLearned ? "確定取消" : "確定學會了 ✓"}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </>
       )}
@@ -485,11 +616,14 @@ interface PendingHeartbeat { sessionId: string; payload: UpdateViewSessionInput;
 
 export function WatchPage() {
   const { videoId = "" } = useParams();
-  const initialParams = new URLSearchParams(window.location.search);
-  const rawInitialPos = Math.max(0, Number(initialParams.get("at") || initialParams.get("t") || 0) || 0);
-  const requestedMode: PlaybackMode = initialParams.get("mode") === "listen" ? "listen" : "video";
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawInitialPos = Math.max(0, Number(searchParams.get("at") || searchParams.get("t") || 0) || 0);
+  const requestedMode: PlaybackMode = modeForVideo(searchParams, videoId);
+  const isAutoplay = searchParams.get("autoplay") === "1";
 
   const [video, setVideo] = useState<VideoFixture | null>(null);
+  const [categoryVideos, setCategoryVideos] = useState<VideoFixture[]>([]);
   const [device, setDevice] = useState<DeviceStatus | null>(null);
   const [startPosition, setStartPosition] = useState(rawInitialPos);
   const [loadError, setLoadError] = useState("");
@@ -504,6 +638,8 @@ export function WatchPage() {
   const accumulatedPlayMsRef = useRef<number>(0);
   const playingStartWallRef = useRef<string | null>(null);
   const playerStateRef = useRef<PlayerState>("READY");
+  const diagnosticsRef = useRef<PlaybackDiagnostics | null>(null);
+  const bufferingDiagnosticTimerRef = useRef<number | null>(null);
 
   const [playerError, setPlayerError] = useState(false);
   const [mediaRetryKey, setMediaRetryKey] = useState(0);
@@ -511,6 +647,7 @@ export function WatchPage() {
   const [autoRetrySecondsLeft, setAutoRetrySecondsLeft] = useState(60);
   const retryDeadlineRef = useRef(0);
   const autoRetryActiveRef = useRef(false);
+  const mediaRetryAttemptRef = useRef(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
   const [currentPos, setCurrentPos] = useState(rawInitialPos);
@@ -520,6 +657,7 @@ export function WatchPage() {
   const [dragPos, setDragPos] = useState(rawInitialPos);
   const [showEdgeMasks, setShowEdgeMasks] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("video");
 
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
@@ -529,6 +667,45 @@ export function WatchPage() {
   const [pausePrompts, setPausePrompts] = useState<Array<{ icon: string; text: string; shortText: string; prompt: string }>>([]);
   const [endPrompts, setEndPrompts] = useState<Array<{ icon: string; text: string; shortText: string; prompt: string }>>(() => getRandomThinkingPrompts(5));
   const remainingSecsRef = useRef<number>(999999);
+
+  const nextTrack = useMemo(() => {
+    if (!categoryVideos.length || !video) return null;
+    const currentIndex = categoryVideos.findIndex((v) => v.id === video.id);
+    if (currentIndex >= 0 && currentIndex < categoryVideos.length - 1) {
+      return categoryVideos[currentIndex + 1];
+    }
+    return null;
+  }, [categoryVideos, video]);
+
+  const nextListenTrack = useMemo(() => {
+    if (nextTrack) return nextTrack;
+    if (categoryVideos.length > 1 && video && categoryVideos[0]?.id !== video.id) return categoryVideos[0];
+    return null;
+  }, [categoryVideos, nextTrack, video]);
+
+  const nextTrackRef = useRef<VideoFixture | null>(null);
+  nextTrackRef.current = nextTrack;
+  const nextListenTrackRef = useRef<VideoFixture | null>(null);
+  nextListenTrackRef.current = nextListenTrack;
+  const playbackModeRef = useRef<PlaybackMode>(playbackMode);
+  playbackModeRef.current = playbackMode;
+
+  // A route can advance to another episode without unmounting WatchPage. Each
+  // episode still needs its own write capability and heartbeat sequence.
+  useEffect(() => {
+    capabilityRef.current = null;
+    sessionPromiseRef.current = null;
+    clientSessionIdRef.current = crypto.randomUUID();
+    heartbeatSeqRef.current = 0;
+    accumulatedPlayMsRef.current = 0;
+    playingStartPerfRef.current = null;
+    playingStartWallRef.current = null;
+    playerStateRef.current = "READY";
+    setIsEnded(false);
+    setTimeUp(false);
+    setPlayerError(false);
+    setTotalDuration(0);
+  }, [videoId]);
 
   const load = useCallback(async () => {
     setLoadError("");
@@ -545,6 +722,12 @@ export function WatchPage() {
       ]);
       setVideo(nextVideo);
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
+      if (nextVideo.categoryId) {
+        void contentRepository.getVideos(nextVideo.categoryId).then((list) => {
+          setCategoryVideos(list);
+          syncPlaybackQueue(nextVideo.categoryId!, initialMode, list, nextVideo.id);
+        }).catch(() => {});
+      }
       setPlaybackMode(initialMode);
       const resumePosition = rawInitialPos > 0 ? rawInitialPos : Math.max(0, nextVideo.lastPositionSeconds || 0);
       setStartPosition(resumePosition);
@@ -566,11 +749,47 @@ export function WatchPage() {
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
     }
-  }, [videoId]);
+  }, [requestedMode, videoId]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!video || !device?.authorized) return;
+    const diagnostics = new PlaybackDiagnostics(device, video, playbackMode);
+    diagnosticsRef.current = diagnostics;
+    diagnostics.event("player_created", { state: video.source });
+    if (video.source === "self_hosted" && video.mediaUrl) void diagnostics.probeMedia(video.mediaUrl, "playback_start");
+    const onWindowError = (event: ErrorEvent) => diagnostics.event(
+      "javascript_error", { message: event.error?.name || "window_error" }, "JAVASCRIPT_ERROR", currentPosRef.current,
+    );
+    const onUnhandled = (event: PromiseRejectionEvent) => diagnostics.event(
+      "javascript_error", { message: event.reason instanceof Error ? event.reason.name : "unhandled_rejection" },
+      "UNHANDLED_REJECTION", currentPosRef.current,
+    );
+    const onPageHide = () => { void diagnostics.finish(true); };
+    window.addEventListener("error", onWindowError);
+    window.addEventListener("unhandledrejection", onUnhandled);
+    window.addEventListener("pagehide", onPageHide);
+    const autoplayTimer = isAutoplay ? window.setTimeout(() => {
+      if (playerStateRef.current !== "PLAYING") diagnostics.event(
+        "autoplay_blocked", { state: playerStateRef.current }, "AUTOPLAY_NOT_STARTED", currentPosRef.current,
+      );
+    }, 4_000) : null;
+    return () => {
+      window.removeEventListener("error", onWindowError);
+      window.removeEventListener("unhandledrejection", onUnhandled);
+      window.removeEventListener("pagehide", onPageHide);
+      if (autoplayTimer !== null) window.clearTimeout(autoplayTimer);
+      if (bufferingDiagnosticTimerRef.current !== null) {
+        window.clearTimeout(bufferingDiagnosticTimerRef.current);
+        bufferingDiagnosticTimerRef.current = null;
+      }
+      if (diagnosticsRef.current === diagnostics) diagnosticsRef.current = null;
+      void diagnostics.finish(true);
+    };
+  }, [device?.authorized, device?.device?.id, isAutoplay, playbackMode, video?.id]);
 
   useEffect(() => {
     const interval = window.setInterval(async () => {
@@ -606,28 +825,43 @@ export function WatchPage() {
     setStartPosition(Math.max(0, retryPosition));
     retryDeadlineRef.current = Date.now() + 60_000;
     autoRetryActiveRef.current = true;
+    mediaRetryAttemptRef.current = 1;
     setAutoRetrySecondsLeft(60);
     setAutoRetryActive(true);
     setPlayerError(true);
+    diagnosticsRef.current?.event("retry_started", { retryNumber: mediaRetryAttemptRef.current, networkOnline: navigator.onLine }, undefined, retryPosition);
+    if (video?.mediaUrl) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "retry_start");
     setMediaRetryKey((key) => key + 1);
-  }, []);
+  }, [video?.mediaUrl]);
 
-  const handleMediaError = useCallback(() => {
+  const handleMediaError = useCallback((mediaError?: MediaError | null) => {
     setPlayerError(true);
+    const code = mediaError?.code ? `MEDIA_ERROR_${mediaError.code}` : "MEDIA_ERROR";
+    diagnosticsRef.current?.event("media_error", { mediaErrorCode: mediaError?.code || 0, networkOnline: navigator.onLine }, code, currentPosRef.current);
+    if (video?.mediaUrl) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "media_error");
     if (video?.source !== "self_hosted" || autoRetryActiveRef.current) return;
     startMediaRetry();
-  }, [startMediaRetry, video?.source]);
+  }, [startMediaRetry, video?.mediaUrl, video?.source]);
 
   const handleMediaReady = useCallback(() => {
+    const recoveredFromRetry = autoRetryActiveRef.current;
     retryDeadlineRef.current = 0;
     autoRetryActiveRef.current = false;
     setAutoRetryActive(false);
     setAutoRetrySecondsLeft(60);
     setPlayerError(false);
+    if (recoveredFromRetry) {
+      diagnosticsRef.current?.event("retry_succeeded", { retryNumber: mediaRetryAttemptRef.current }, undefined, currentPosRef.current);
+    }
   }, []);
 
   const retryMediaNow = useCallback(() => {
     if (autoRetryActive) {
+      mediaRetryAttemptRef.current += 1;
+      diagnosticsRef.current?.event("retry_started", {
+        retryNumber: mediaRetryAttemptRef.current,
+        networkOnline: navigator.onLine,
+      }, undefined, currentPosRef.current);
       setMediaRetryKey((key) => key + 1);
       return;
     }
@@ -649,7 +883,14 @@ export function WatchPage() {
     tick();
     const countdown = window.setInterval(tick, 1000);
     const retry = window.setInterval(() => {
-      if (Date.now() < retryDeadlineRef.current) setMediaRetryKey((key) => key + 1);
+      if (Date.now() < retryDeadlineRef.current) {
+        mediaRetryAttemptRef.current += 1;
+        diagnosticsRef.current?.event("retry_started", {
+          retryNumber: mediaRetryAttemptRef.current,
+          networkOnline: navigator.onLine,
+        }, undefined, currentPosRef.current);
+        setMediaRetryKey((key) => key + 1);
+      }
     }, 4000);
     return () => {
       window.clearInterval(countdown);
@@ -731,9 +972,28 @@ export function WatchPage() {
     void drainQueue();
   }, [device?.authorized, drainQueue, ensureSession, playbackMode, video?.seriesType]);
 
+  const restartVideo = useCallback(() => {
+    setIsEnded(false);
+    playerRef.current?.seekTo(0);
+    setCurrentPos(0);
+    playerRef.current?.play();
+  }, []);
+
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
     setIsPlaying(state === "PLAYING");
+    const diagnosticEvent = ({ READY: "player_ready", PLAYING: "playing", PAUSED: "paused", BUFFERING: "buffering", ENDED: "ended" } as const)[state];
+    diagnosticsRef.current?.event(diagnosticEvent, { state }, undefined, currentPosRef.current);
+    if (state === "PLAYING") void diagnosticsRef.current?.flush();
+    if (state === "BUFFERING") {
+      if (bufferingDiagnosticTimerRef.current !== null) window.clearTimeout(bufferingDiagnosticTimerRef.current);
+      bufferingDiagnosticTimerRef.current = window.setTimeout(() => {
+        diagnosticsRef.current?.event("media_error", { state: "buffering_timeout", networkOnline: navigator.onLine }, "BUFFERING_OVER_8S", currentPosRef.current);
+      }, 8_000);
+    } else if (bufferingDiagnosticTimerRef.current !== null) {
+      window.clearTimeout(bufferingDiagnosticTimerRef.current);
+      bufferingDiagnosticTimerRef.current = null;
+    }
     if (state === "PLAYING") {
       setIsEnded(false);
       setPausePrompts([]);
@@ -749,8 +1009,24 @@ export function WatchPage() {
       void flushTracking("ended");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
-      if (playbackMode === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
+      if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
         setTimeUp(true);
+      } else if (playbackModeRef.current === "listen" || video?.mediaType === "audio") {
+        if (video?.seriesType === "learning") {
+          // 學習系列純聽模式：重複播放當前的內容
+          restartVideo();
+        } else {
+          // 休閒系列純聽模式：自動接續播放下一集
+          if (nextListenTrackRef.current) {
+            const queue = readPlaybackQueue();
+            const targetId = queue?.mode === "listen"
+              ? advancePlaybackQueue(queue, video!.id) || nextListenTrackRef.current.id
+              : nextListenTrackRef.current.id;
+            if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: targetId });
+            diagnosticsRef.current?.event("next_requested", { state: targetId }, undefined, currentPosRef.current);
+            navigate(`/watch/${targetId}?mode=listen&autoplay=1`, { replace: true });
+          }
+        }
       }
     } else if (state === "PAUSED") {
       void flushTracking("active");
@@ -761,7 +1037,7 @@ export function WatchPage() {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [ensureSession, flushTracking, playbackMode, video?.seriesType]);
+  }, [ensureSession, flushTracking, navigate, restartVideo, video?.mediaType, video?.seriesType]);
 
   const handleNativeProgress = useCallback((time: number, duration: number) => {
     if (!isDragging) setCurrentPos(time);
@@ -803,7 +1079,15 @@ export function WatchPage() {
       if (playerStateRef.current === "PLAYING") void flushTracking();
       else void drainQueue();
     }, 10_000);
-    const onVisibility = () => { if (document.visibilityState === "hidden") void flushTracking("active", true); };
+    const onVisibility = () => {
+      diagnosticsRef.current?.event(document.visibilityState === "hidden" ? "visibility_hidden" : "visibility_visible", {
+        state: document.visibilityState, networkOnline: navigator.onLine,
+      }, undefined, currentPosRef.current);
+      if (document.visibilityState === "hidden") {
+        void diagnosticsRef.current?.flush(true);
+        void flushTracking("active", true);
+      }
+    };
     const onPageHide = () => { void flushTracking("active", true); };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pagehide", onPageHide);
@@ -821,18 +1105,12 @@ export function WatchPage() {
       setTimeUp(true);
       return;
     }
+    diagnosticsRef.current?.event("play_requested", { state: playerStateRef.current }, undefined, currentPosRef.current);
     if (playerStateRef.current === "PLAYING") {
       playerRef.current?.pause();
     } else {
       playerRef.current?.play();
     }
-  };
-
-  const restartVideo = () => {
-    setIsEnded(false);
-    playerRef.current?.seekTo(0);
-    setCurrentPos(0);
-    playerRef.current?.play();
   };
 
   const seekRelative = useCallback((delta: number) => {
@@ -841,6 +1119,7 @@ export function WatchPage() {
     const target = Math.max(0, Math.min(max, current + delta));
     playerRef.current?.seekTo(target);
     setCurrentPos(target);
+    diagnosticsRef.current?.event("seeked", { state: delta < 0 ? "backward_10" : "forward_10" }, undefined, target);
   }, [currentPos, totalDuration]);
 
   useEffect(() => {
@@ -869,6 +1148,7 @@ export function WatchPage() {
     setIsDragging(false);
     playerRef.current?.seekTo(val);
     setCurrentPos(val);
+    diagnosticsRef.current?.event("seeked", { state: "scrubber" }, undefined, val);
   };
 
   if (!video && !loadError) return <main className="watch-page watch-loading"><LoadingCard label="正在準備播放器…" /></main>;
@@ -894,18 +1174,25 @@ export function WatchPage() {
               videoId={video.youtubeVideoId}
               startAt={startPosition}
               volume={volume}
+              playbackRate={playbackRate}
+              autoPlay={isAutoplay}
               onStateChange={handlePlayerState}
-              onError={() => setPlayerError(true)}
+              onError={(code) => {
+                setPlayerError(true);
+                diagnosticsRef.current?.event("youtube_error", { youtubeErrorCode: code || 0 }, `YT_ERROR_${code || "UNKNOWN"}`, currentPosRef.current);
+              }}
             />
           ) : video.mediaUrl && video.mediaType ? (
             <NativeMediaPlayer
               key={mediaRetryKey}
               ref={playerRef}
               src={withMediaRetry(video.mediaUrl, mediaRetryKey)}
-              mediaType={video.mediaType}
+              mediaType={playbackMode === "listen" ? "audio" : video.mediaType}
               poster={video.thumbnailUrl}
               startAt={startPosition}
               volume={volume}
+              playbackRate={playbackRate}
+              autoPlay={isAutoplay}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
               onError={handleMediaError}
@@ -918,7 +1205,11 @@ export function WatchPage() {
               <Headphones aria-hidden="true" />
               <strong>純聽模式</strong>
               <span>{video.parentLabel}</span>
-              <small>不顯示影片畫面，也不計入休閒時間</small>
+              <small>
+                {video.seriesType === "learning"
+                  ? "學習系列 · 重複播放當前內容 🔁"
+                  : "休閒系列 · 自動接續下一集 ⏭️"}
+              </small>
             </div>
           )}
 
@@ -1011,6 +1302,17 @@ export function WatchPage() {
                 </div>
 
                 <div className="ended-buttons">
+                  {nextTrack && (
+                    <Button
+                      size="large"
+                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1`)}
+                    >
+                      <Play /> 下一集：{nextTrack.parentLabel}
+                    </Button>
+                  )}
+                  <Button size="large" variant="secondary" onClick={restartVideo}>
+                    <RotateCcw /> 再看一次
+                  </Button>
                   <Link className={buttonVariants({ variant: "secondary", size: "large" })} to="/">
                     回首頁
                   </Link>
@@ -1070,6 +1372,14 @@ export function WatchPage() {
                 </div>
 
                 <div className="ended-buttons">
+                  {nextTrack && (
+                    <Button
+                      size="large"
+                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1`)}
+                    >
+                      <Play /> 下一集：{nextTrack.parentLabel}
+                    </Button>
+                  )}
                   <Button size="large" variant="secondary" onClick={restartVideo}>
                     <RotateCcw /> 再看一次
                   </Button>
@@ -1124,16 +1434,32 @@ export function WatchPage() {
           </div>
 
           <footer className="player-actions">
-            <Link
-              className="player-back"
-              to={`/category/${video.categoryId}?mode=${playbackMode}`}
-              onClick={() => {
-                playerRef.current?.pause();
-                void flushTracking("ended");
-              }}
-            >
-              <ArrowLeft />回去
-            </Link>
+            <div className="player-left-group" onClick={(e) => e.stopPropagation()}>
+              <Link
+                className="player-back"
+                to={`/category/${video.categoryId}?mode=${playbackMode}`}
+                onClick={() => {
+                  playerRef.current?.pause();
+                  void flushTracking("ended");
+                }}
+              >
+                <ArrowLeft />回去
+              </Link>
+
+              <div className="speed-control" title="播放速度">
+                <select
+                  id="playback-speed-select"
+                  value={playbackRate}
+                  onChange={(e) => setPlaybackRate(Number(e.target.value))}
+                  className="speed-select"
+                  aria-label="播放速度"
+                >
+                  <option value={0.6}>0.6</option>
+                  <option value={0.8}>0.8</option>
+                  <option value={1.0}>1.0</option>
+                </select>
+              </div>
+            </div>
 
             <div className="playback-buttons" onClick={(e) => e.stopPropagation()}>
               <Button
@@ -1166,6 +1492,22 @@ export function WatchPage() {
                 <RotateCw />
                 <span>10秒</span>
               </Button>
+
+              {nextTrack && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="seek-btn next-track-btn"
+                  aria-label="下一集"
+                  title={`下一集：${nextTrack.parentLabel}`}
+                  onClick={() => {
+                    diagnosticsRef.current?.event("next_requested", { state: nextTrack.id }, undefined, currentPosRef.current);
+                    navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1`);
+                  }}
+                >
+                  <span>下一集 ⏭️</span>
+                </Button>
+              )}
             </div>
 
             <div className="volume-control" onClick={(e) => e.stopPropagation()}>

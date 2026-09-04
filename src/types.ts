@@ -39,6 +39,7 @@ export interface VideoFixture extends MediaDescriptor {
   learnedAt?: string | null;
   isSelectable?: boolean;
   seriesType?: SeriesType;
+  lastPlayedAt?: string | null;
 }
 
 export interface ResumeInfo extends MediaDescriptor {
@@ -314,4 +315,45 @@ export interface ChildDevice {
   lastUsedAt: string;
   revokedAt: string | null;
   isCurrent: boolean;
+}
+
+export type DiagnosticOutcome = "open" | "success" | "recovered" | "error";
+
+export interface DiagnosticSessionSummary {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  videoId: string | null;
+  videoLabel: string | null;
+  categoryId: string | null;
+  source: MediaSource;
+  playbackMode: PlaybackMode;
+  outcome: DiagnosticOutcome;
+  retryCount: number;
+  errorCount: number;
+  lastErrorCode: string | null;
+  firstPlayMs: number | null;
+  browserName: string | null;
+  browserVersion: string | null;
+  osName: string | null;
+  osVersion: string | null;
+  viewportWidth: number | null;
+  viewportHeight: number | null;
+  isStandalone: number;
+  networkType: string | null;
+  ipPrefix: string | null;
+  country: string | null;
+  colo: string | null;
+  httpProtocol: string | null;
+  tlsVersion: string | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export interface DiagnosticSummary {
+  devices: Array<{
+    deviceId: string; deviceName: string; sessionCount: number; successCount: number;
+    problemCount: number; lastSeenAt: string | null;
+  }>;
+  errors: Array<{ errorCode: string; source: MediaSource; sessionCount: number; lastSeenAt: string }>;
 }

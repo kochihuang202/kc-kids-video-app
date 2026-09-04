@@ -18,7 +18,7 @@ import { parentRepository, type VideoPreview } from "./data/repositories";
 import { formatClock, formatPosition, getDayRangeInTimeZone } from "./lib/utils";
 import type {
   AdminCategory, AdminVideo, AllowedWindow, ChildDevice, DailyBar, DailyOverride, NoteSearchResult, SummaryAnalytics,
-  TodayDashboard, TodayPick, UsageRule, VideoHistoryResponse,
+  TodayDashboard, TodayPick, UsageRule, VideoHistoryResponse, DiagnosticSessionSummary, DiagnosticSummary,
 } from "./types";
 
 function formatPlayedDuration(seconds: number) {
@@ -132,6 +132,7 @@ function ParentLayout({ children }: { children: ReactNode }) {
         <NavLink to="/parent/rules">提醒與時段</NavLink>
         <NavLink to="/parent/videos">影片管理</NavLink>
         <NavLink to="/parent/categories">分類管理</NavLink>
+        <NavLink to="/parent/diagnostics">裝置診斷</NavLink>
         <NavLink to="/parent/settings">設定</NavLink>
       </nav>
       {children}
@@ -1709,6 +1710,101 @@ function CategoriesPage() {
 // 7. Settings & Export Page (Spec #47 ~ #56)
 // ─────────────────────────────────────────────────────────────────────────────
 
+function DiagnosticsPage() {
+  const [summary, setSummary] = useState<DiagnosticSummary | null>(null);
+  const [sessions, setSessions] = useState<DiagnosticSessionSummary[]>([]);
+  const [deviceId, setDeviceId] = useState("");
+  const [outcome, setOutcome] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<{ session: Record<string, unknown>; events: Array<Record<string, unknown>> } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [nextSummary, nextSessions] = await Promise.all([
+        parentRepository.diagnosticSummary(),
+        parentRepository.diagnosticSessions({ deviceId: deviceId || undefined, outcome: outcome || undefined, limit: 100 }),
+      ]);
+      setSummary(nextSummary);
+      setSessions(nextSessions.sessions);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "診斷資料載入失敗。");
+    } finally {
+      setLoading(false);
+    }
+  }, [deviceId, outcome]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const openDetail = async (id: string) => {
+    if (selectedId === id) { setSelectedId(null); setDetail(null); return; }
+    setSelectedId(id);
+    setDetail(null);
+    try { setDetail(await parentRepository.diagnosticDetail(id)); }
+    catch (detailError) { setError(detailError instanceof Error ? detailError.message : "診斷詳情載入失敗。"); }
+  };
+  const outcomeLabel = (value: string) => ({ open: "進行中", success: "成功", recovered: "重試後成功", error: "失敗" }[value] || value);
+
+  return (
+    <div className="parent-content diagnostics-page">
+      <header className="parent-page-title">
+        <div><p>播放與連線狀態</p><h2>裝置診斷</h2></div>
+        <Button variant="secondary" onClick={() => void load()}><RefreshCw />重新整理</Button>
+      </header>
+      <p className="diagnostics-note">成功紀錄每台保留最近 100 次；錯誤與重試詳情保留 30 天。這裡不保存密碼、Cookie、完整媒體網址或影音內容。</p>
+      {error && <ParentState error={error} retry={() => void load()} />}
+
+      <section className="diagnostic-device-grid" aria-label="裝置狀態摘要">
+        {(summary?.devices || []).map((device) => (
+          <article key={device.deviceId} className={device.problemCount > 0 ? "has-problem" : "is-healthy"}>
+            <Smartphone />
+            <div><strong>{device.deviceName}</strong><span>最近 30 天：{device.sessionCount} 次</span></div>
+            <div><b>{device.successCount} 成功</b><b>{device.problemCount} 異常</b></div>
+          </article>
+        ))}
+      </section>
+
+      <div className="diagnostics-filters">
+        <label>裝置<select value={deviceId} onChange={(event) => setDeviceId(event.target.value)}><option value="">全部裝置</option>{(summary?.devices || []).map((device) => <option key={device.deviceId} value={device.deviceId}>{device.deviceName}</option>)}</select></label>
+        <label>結果<select value={outcome} onChange={(event) => setOutcome(event.target.value)}><option value="">全部結果</option><option value="success">成功</option><option value="recovered">重試後成功</option><option value="error">失敗</option><option value="open">進行中</option></select></label>
+      </div>
+
+      {loading ? <ParentState>正在載入診斷資料…</ParentState> : (
+        <section className="diagnostic-session-list" aria-label="播放診斷紀錄">
+          {sessions.length === 0 && <ParentState>目前沒有符合條件的診斷紀錄。</ParentState>}
+          {sessions.map((session) => (
+            <article key={session.id} className={`diagnostic-session outcome-${session.outcome}`}>
+              <button type="button" onClick={() => void openDetail(session.id)}>
+                <span className="diagnostic-outcome">{session.outcome === "success" ? <Check /> : <AlertTriangle />}{outcomeLabel(session.outcome)}</span>
+                <strong>{session.deviceName} · {session.videoLabel || session.videoId || "未知影片"}</strong>
+                <span>{session.source === "youtube" ? "YouTube" : "Mac/Tailscale"} · {session.playbackMode === "listen" ? "純聽" : "觀看"}</span>
+                <span>{new Date(session.startedAt).toLocaleString("zh-TW")} · 首次播放 {session.firstPlayMs === null ? "—" : `${session.firstPlayMs}ms`}</span>
+                <span>{session.osName || "未知系統"} {session.osVersion || ""} · {session.browserName || "未知瀏覽器"} {session.browserVersion || ""}</span>
+                {session.lastErrorCode && <code>{session.lastErrorCode}</code>}
+              </button>
+              {selectedId === session.id && (
+                <div className="diagnostic-detail">
+                  {!detail ? <p>正在載入事件時間線…</p> : detail.events.map((event) => (
+                    <div key={String(event.seq)}>
+                      <time>{new Date(String(event.occurredAt)).toLocaleTimeString("zh-TW")}</time>
+                      <strong>{String(event.type)}</strong>
+                      {event.errorCode ? <code>{String(event.errorCode)}</code> : null}
+                      {event.positionSeconds !== null && event.positionSeconds !== undefined ? <span>{Math.round(Number(event.positionSeconds))} 秒</span> : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+          ))}
+        </section>
+      )}
+    </div>
+  );
+}
+
 function DeviceSettingsRow({ device, run }: { device: ChildDevice; run: (job: Promise<unknown>, success: string) => Promise<void> }) {
   const [name, setName] = useState(device.name);
   useEffect(() => setName(device.name), [device.name]);
@@ -1835,6 +1931,7 @@ export default function ParentApp() {
               <Route path="rules" element={<RulesPage />} />
               <Route path="videos" element={<VideosPage />} />
               <Route path="categories" element={<CategoriesPage />} />
+              <Route path="diagnostics" element={<DiagnosticsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/parent/today" replace />} />
             </Routes>

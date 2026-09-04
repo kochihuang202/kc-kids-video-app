@@ -14,6 +14,7 @@ This project protects bugs that have actually happened. It does not aim for broa
 - Local Mac/Tailscale media loading: `npm run test:regression:media-retry`
 - Learning/leisure child flow: `npm run test:feature:learning-leisure`
 - D1 polling, rollup, indexes, or device authorization cost: `npm run test:regression:d1-cost`
+- Playback/device diagnostics: `npx vitest run test/diagnostics.spec.ts test/d1-cost-regressions.spec.ts` and `npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/media-auto-retry.spec.ts`
 - Child-home recent cards or title styling: `npm run test:regression:recents`
 - A new feature: its focused unit/integration test plus related regressions
 - Shared routing, repositories, player abstractions, authentication, or a large change: `npm run test:regression`

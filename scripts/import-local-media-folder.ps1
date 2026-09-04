@@ -16,6 +16,7 @@ param(
   [string]$Icon = "",
   [int]$ExpectedCount = 0,
   [int]$ThumbnailAtSeconds = 3,
+  [switch]$ReplaceCategoryVideos,
   [string]$DatabaseName = "kc-kids-video-app-db",
   [string]$OutputDirectory = "",
   [string]$BackupDirectory = "",
@@ -56,8 +57,9 @@ $prefix = "/media/$LibraryFolder/"
 
 $directVideos = @($library.items | Where-Object {
   $path = [string]$_.path
-  if ($_.mediaType -ne "video" -or -not $path.StartsWith($prefix, [StringComparison]::Ordinal)) { return $false }
-  $relative = $path.Substring($prefix.Length)
+  try { $decodedPath = [Uri]::UnescapeDataString($path) } catch { $decodedPath = $path }
+  if ($_.mediaType -ne "video" -or -not $decodedPath.StartsWith($prefix, [StringComparison]::Ordinal)) { return $false }
+  $relative = $decodedPath.Substring($prefix.Length)
   return $relative -and -not $relative.Contains("/") -and $relative.EndsWith(".mp4", [StringComparison]::OrdinalIgnoreCase)
 } | Sort-Object @{ Expression = {
   if ([string]$_.name -match '^(\d+)') { [int]$Matches[1] } else { [int]::MaxValue }
@@ -65,8 +67,9 @@ $directVideos = @($library.items | Where-Object {
 
 $nestedCount = @($library.items | Where-Object {
   $path = [string]$_.path
-  if ($_.mediaType -ne "video" -or -not $path.StartsWith($prefix, [StringComparison]::Ordinal)) { return $false }
-  return $path.Substring($prefix.Length).Contains("/") -and $path.EndsWith(".mp4", [StringComparison]::OrdinalIgnoreCase)
+  try { $decodedPath = [Uri]::UnescapeDataString($path) } catch { $decodedPath = $path }
+  if ($_.mediaType -ne "video" -or -not $decodedPath.StartsWith($prefix, [StringComparison]::Ordinal)) { return $false }
+  return $decodedPath.Substring($prefix.Length).Contains("/") -and $decodedPath.EndsWith(".mp4", [StringComparison]::OrdinalIgnoreCase)
 }).Count
 
 if ($directVideos.Count -eq 0) { throw "No direct-child MP4 files were found below $prefix" }
@@ -115,12 +118,35 @@ ON CONFLICT(id) DO UPDATE SET
   series_type = excluded.series_type;
 "@
 
+$replacementSql = if ($ReplaceCategoryVideos) {
+@"
+-- Preserve viewing history while removing the old category contents.
+-- Videos used only by this category are archived instead of permanently deleted.
+UPDATE videos
+SET is_active = 0,
+    archived_at = COALESCE(archived_at, CURRENT_TIMESTAMP),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id IN (SELECT video_id FROM category_videos WHERE category_id = $(ConvertTo-SqlText $CategoryId))
+  AND NOT EXISTS (
+    SELECT 1 FROM category_videos other
+    WHERE other.video_id = videos.id AND other.category_id <> $(ConvertTo-SqlText $CategoryId)
+  );
+
+DELETE FROM category_videos WHERE category_id = $(ConvertTo-SqlText $CategoryId);
+"@
+} else { "" }
+
 $videoValues = @($rows | ForEach-Object {
   $duration = if ($null -eq $_.durationSeconds) { "NULL" } else { [string]$_.durationSeconds }
   "  ($(ConvertTo-SqlText $_.id), 'self_hosted', NULL, NULL, $(ConvertTo-SqlText $_.title), $(ConvertTo-SqlText $_.title), '', $duration, 'available', NULL, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'healthy', 'video', $(ConvertTo-SqlText $_.mediaPath), $(ConvertTo-SqlText $_.thumbnailPath))"
 })
 
-$videosSql = @"
+$videoStatements = @()
+$batchSize = 25
+for ($offset = 0; $offset -lt $videoValues.Count; $offset += $batchSize) {
+  $lastIndex = [Math]::Min($offset + $batchSize - 1, $videoValues.Count - 1)
+  $batchValues = @($videoValues[$offset..$lastIndex])
+  $videoStatements += @"
 INSERT INTO videos (
   id, source, youtube_video_id, youtube_url, youtube_title, parent_label,
   thumbnail_url, duration_seconds, availability_status, metadata_error,
@@ -128,7 +154,7 @@ INSERT INTO videos (
   health_status, media_type, media_path, thumbnail_path
 )
 VALUES
-$($videoValues -join ",`n")
+$($batchValues -join ",`n")
 ON CONFLICT(id) DO UPDATE SET
   source = excluded.source,
   youtube_video_id = NULL,
@@ -146,23 +172,32 @@ ON CONFLICT(id) DO UPDATE SET
   media_path = excluded.media_path,
   thumbnail_path = excluded.thumbnail_path;
 "@
+}
+$videosSql = $videoStatements -join "`n`n"
 
 $mappingValues = @($rows | ForEach-Object {
   "  ($(ConvertTo-SqlText $CategoryId), $(ConvertTo-SqlText $_.id), $($_.sortOrder), CURRENT_TIMESTAMP)"
 })
-$mappingSql = @"
+$mappingStatements = @()
+for ($offset = 0; $offset -lt $mappingValues.Count; $offset += $batchSize) {
+  $lastIndex = [Math]::Min($offset + $batchSize - 1, $mappingValues.Count - 1)
+  $batchValues = @($mappingValues[$offset..$lastIndex])
+  $mappingStatements += @"
 INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
 VALUES
-$($mappingValues -join ",`n")
+$($batchValues -join ",`n")
 ON CONFLICT(category_id, video_id) DO UPDATE SET
   sort_order = excluded.sort_order;
 "@
+}
+$mappingSql = $mappingStatements -join "`n`n"
 
 $sqlPath = Join-Path $resolvedOutput "import.sql"
 $manifestPath = Join-Path $resolvedOutput "manifest.json"
 @(
   "-- Generated local-media import. Private filenames: keep this artifact out of Git.",
   $categorySql,
+  $replacementSql,
   $videosSql,
   $mappingSql
 ) | Set-Content -LiteralPath $sqlPath -Encoding utf8
@@ -176,6 +211,7 @@ $manifestPath = Join-Path $resolvedOutput "manifest.json"
   directVideoCount = $rows.Count
   excludedNestedVideoCount = $nestedCount
   thumbnailAtSeconds = $ThumbnailAtSeconds
+  replacedCategoryVideos = [bool]$ReplaceCategoryVideos
   videos = $rows
 } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 

@@ -72,6 +72,7 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
   await expect(page.getByRole("region", { name: "今天的學習開始囉，好好動動大腦吧!!" })).toBeVisible();
   await expect(page.getByText("🔒 先從前五部選擇")).toBeVisible();
   await page.locator(".video-card").first().getByRole("button", { name: "標記學會了" }).click();
+  await page.getByRole("button", { name: "確定學會了" }).click();
 
   await expect(page.locator(".video-card h2").first()).toHaveText("科學 2");
   await expect(page.locator(".video-card h2").last()).toHaveText("科學 1");

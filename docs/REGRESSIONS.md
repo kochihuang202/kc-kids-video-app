@@ -81,3 +81,51 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Settings loads and displays all family devices with current-device status and last-used time. Active devices can be renamed or revoked, and an unauthorized current browser can be authorized.
 - Root cause: A parent-page rewrite left the device API, repository methods, styles, and row component intact, but removed the `parentRepository.devices()` call and the device section from `SettingsPage`.
 - Regression test: `e2e/regressions/parent-device-list.spec.ts`
+
+## REG-011 — Portrait local videos are cropped on desktop
+
+- Problem: A portrait self-hosted video looked correct on iPad, but desktop playback expanded beyond the viewport and the top and bottom were missing.
+- Reproduction: Open a portrait local-media watch page at a 1194×834 desktop viewport and start playback.
+- Correct behavior: Both the local-video poster and the video element preserve the full frame with letterboxing when their aspect ratio differs from the player stage.
+- Root cause: The native video used `object-fit: contain`, but its replaced-element intrinsic ratio still expanded the CSS Grid row (a real 720×960 video produced a 1920×2560 element). The fixed-height page then clipped that oversized row. The poster also inherited the shared YouTube `object-fit: cover` rule. Local video and poster now stay absolutely constrained to the player stage, with `contain` preserving the full frame.
+- Regression test: `e2e/regressions/portrait-local-video-fit.spec.ts`
+
+## REG-012 — Pure listening stops when an iPad screen locks
+
+- Problem: A self-hosted leisure video played in pure-listening mode, but locking the iPad screen paused it.
+- Reproduction: Open a self-hosted MP4 in pure-listening mode, start playback, and lock the iPad screen.
+- Correct behavior: Pure-listening mode uses the browser's audio playback path so iPadOS can keep playing while the screen is locked. A leisure playlist advances in category order, loops from the final item to the first, remains in listening mode after every transition, and creates a distinct listening Session for each item even after viewing time is exhausted.
+- Root cause: Pure listening only covered the visible `<video>` with CSS. The underlying media element was still a video, which Safari may suspend when it becomes invisible or the screen locks. Playlist navigation also passed `autoplay=1` while the native player forcibly reset its autoplay property to false. Finally, playback mode lived only in a route query and WatchPage retained the previous video's capability when React reused the route component, so advancing could lose listening intent or write through the previous Session.
+- Regression test: `e2e/regressions/listen-background-audio.spec.ts`
+
+## REG-013 — Phone portrait player controls overlap and are clipped
+
+- Problem: On a phone in portrait orientation, the speed selector overlapped the play button, the right-side controls were clipped, and the back button wrapped awkwardly.
+- Reproduction: Open a pure-listening watch page at a 390×844 viewport after the speed and next-item controls were added.
+- Correct behavior: The scrubber, playback buttons, back/speed group, and volume slider all remain completely inside the viewport without overlapping.
+- Root cause: The mobile grid tried to fit two wide utility groups in one row. A later desktop `.player-left-group` rule also overrode the earlier mobile row assignment due to cascade order, placing it back on top of the playback buttons.
+- Regression test: `e2e/regressions/mobile-player-controls-fit.spec.ts`
+
+## REG-014 — YouTube pure listening pauses after advancing to the next episode
+
+- Problem: Qiaohu advances to the next episode in pure-listening mode, but the next episode remains paused.
+- Reproduction: Start a Qiaohu YouTube episode in pure-listening mode, let it end, and wait for the playlist to advance automatically.
+- Correct behavior: The next episode stays in pure-listening mode and starts playing automatically, including when the leisure viewing allowance is exhausted. Each episode still creates its own listening Session.
+- Root cause: Every route-level `videoId` change destroyed the YouTube iframe and created a new one. Mobile Safari treated the replacement iframe as a new autoplay request and blocked it. The player now remains mounted and switches episodes through `loadVideoById()` so the active media session is preserved.
+- Regression test: `e2e/regressions/youtube-listen-continuation.spec.ts`
+
+## REG-015 — Self-hosted audio pauses after advancing to the next episode
+
+- Problem: A leisure series backed by self-hosted audio, notably 神奇圖書館, advances to the next item in pure-listening mode but leaves it paused.
+- Reproduction: Start a 神奇圖書館 item, let it finish in pure-listening mode, and wait for the next item.
+- Correct behavior: The same native audio element changes source and continues playing automatically. Self-hosted MP4 pure listening follows the same path, and leaving the watch page still releases the media resource.
+- Root cause: The native player's source-change effect ran its cleanup on every `src` update. That cleanup paused the element, removed its source, and called `load()`, breaking the user-started iOS media session before the next item could autoplay.
+- Regression test: `e2e/regressions/listen-background-audio.spec.ts`
+
+## REG-016 — iPhone stops self-hosted video sound when the screen locks
+
+- Problem: Wow English keeps playing after an iPhone screen lock in pure-listening mode, but stops when it was started in viewing mode.
+- Reproduction: Start a self-hosted Wow English MP4 in viewing mode on an iPhone, then lock the screen.
+- Correct behavior: While the screen is visible, video and sound play normally. On iPhone/iPad the sound is driven by a synchronized audio master, so locking the screen may stop visual rendering but does not stop the lesson audio; unlocking resynchronizes the picture. Desktop playback remains on the normal single-video path.
+- Root cause: iOS intentionally suspends background `<video>` playback. Pure listening already worked because it used `<audio>`, but viewing mode still used the video element as its only media session.
+- Regression test: `e2e/regressions/ios-video-background-audio.spec.ts`

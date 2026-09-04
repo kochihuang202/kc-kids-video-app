@@ -9,6 +9,7 @@ export interface AppEnv {
   PARENT_PASSWORD_HASH?: string;
   MEDIA_SERVER_BASE_URL?: string;
   RECORDING_ENABLED?: string;
+  DIAGNOSTICS_READ_TOKEN?: string;
 }
 
 export type JsonObject = Record<string, unknown>;
