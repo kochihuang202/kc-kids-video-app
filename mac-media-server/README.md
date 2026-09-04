@@ -39,9 +39,16 @@ http://127.0.0.1:8080
 go test ./...
 ```
 
+Run the local smoke test against a running server:
+
+```sh
+./scripts/smoke-test.sh
+```
+
 ## Endpoints
 
 - `GET|HEAD /health`
+- `GET|HEAD /diagnostics/deep`
 - `GET|HEAD /library`
 - `GET|HEAD /media/{relativePath}`
 - `OPTIONS` for CORS preflight
@@ -49,6 +56,12 @@ go test ./...
 Only `.mp4` and `.mp3` files are served. Paths are normalized and must stay inside `MEDIA_ROOT`.
 
 `/library` keeps `durationSeconds` as `null` by default so large home libraries return quickly. Set `PROBE_DURATIONS=true` to ask the server to run `ffprobe` while building the library response.
+
+## Diagnostics
+
+`/health` is a fast no-store endpoint with cached Tailscale, disk, system, and streaming status. `/diagnostics/deep` performs bounded probes for playback troubleshooting and is intended for startup, retry, and error flows rather than polling.
+
+Media responses include `X-KC-Request-Id`, `X-KC-Service-Version`, and `Server-Timing`. If a browser sends a safe `X-KC-Diagnostic-Id`, the server writes it to local JSONL events for correlation. Logs use hashed media keys and never include absolute media paths.
 
 ## Inspect Media Compatibility
 

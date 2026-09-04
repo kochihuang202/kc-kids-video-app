@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -27,6 +29,12 @@ func TestHealth(t *testing.T) {
 	}
 	if body.Status != "ok" || !body.MediaRootAvailable {
 		t.Fatalf("unexpected health body: %+v", body)
+	}
+	if body.ServiceVersion == "" || body.UptimeSeconds < 0 || !body.MediaRootReadable {
+		t.Fatalf("missing diagnostics health fields: %+v", body)
+	}
+	if got := res.Header.Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("Cache-Control = %q, want no-store", got)
 	}
 }
 
@@ -70,6 +78,16 @@ func TestMediaGetHeadAndRange(t *testing.T) {
 	}
 	if got := res.Header.Get("Content-Range"); got != "bytes 2048-3071/4096" {
 		t.Fatalf("middle Content-Range = %q", got)
+	}
+
+	res = request(t, srv, http.MethodGet, "/media/videos/sample.mp4", map[string]string{"Range": "bytes=-512"})
+	body, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusPartialContent {
+		t.Fatalf("tail Range status = %d, want 206", res.StatusCode)
+	}
+	if len(body) != 512 {
+		t.Fatalf("tail Range length = %d, want 512", len(body))
 	}
 }
 
@@ -130,6 +148,127 @@ func TestLibraryAndCORS(t *testing.T) {
 	if res.StatusCode != http.StatusNoContent {
 		t.Fatalf("OPTIONS status = %d, want 204", res.StatusCode)
 	}
+	if got := res.Header.Get("Access-Control-Expose-Headers"); !strings.Contains(got, "X-KC-Request-Id") || !strings.Contains(got, "Server-Timing") {
+		t.Fatalf("Expose headers missing diagnostics fields: %q", got)
+	}
+}
+
+func TestMediaDiagnosticsHeadersAndLog(t *testing.T) {
+	srv := testServer(t)
+	res := request(t, srv, http.MethodGet, "/media/videos/sample.mp4", map[string]string{
+		"Range":              "bytes=0-15",
+		"X-KC-Diagnostic-Id": "diag-123",
+	})
+	_, _ = io.Copy(io.Discard, res.Body)
+	res.Body.Close()
+
+	if res.StatusCode != http.StatusPartialContent {
+		t.Fatalf("status = %d, want 206", res.StatusCode)
+	}
+	if got := res.Header.Get("X-KC-Request-Id"); got == "" {
+		t.Fatal("missing X-KC-Request-Id")
+	}
+	if got := res.Header.Get("X-KC-Service-Version"); got != "test-version" {
+		t.Fatalf("service version = %q", got)
+	}
+	if got := res.Header.Get("Server-Timing"); !strings.Contains(got, "open;dur=") {
+		t.Fatalf("missing Server-Timing: %q", got)
+	}
+
+	eventBytes, err := os.ReadFile(filepath.Join(srv.cfg.DiagnosticsLogDir, "events.jsonl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := string(eventBytes)
+	if !strings.Contains(events, `"diagnosticId":"diag-123"`) {
+		t.Fatalf("event log missing diagnostic id: %s", events)
+	}
+	if strings.Contains(events, srv.cfg.MediaRoot) {
+		t.Fatalf("event log leaked media root: %s", events)
+	}
+}
+
+func TestDeepDiagnosticsAndDegradedHealth(t *testing.T) {
+	srv := testServer(t)
+	res := request(t, srv, http.MethodGet, "/diagnostics/deep", nil)
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", res.StatusCode)
+	}
+	var body deepDiagnosticsResponse
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Health.Status != "ok" || body.Checks["mediaRoot"].OK != true {
+		t.Fatalf("unexpected deep diagnostics: %+v", body)
+	}
+
+	missing := New(Config{
+		MediaRoot:         filepath.Join(t.TempDir(), "missing"),
+		Host:              "127.0.0.1",
+		Port:              "8080",
+		AllowedOrigins:    []string{allowedOrigin},
+		DiagnosticsLogDir: t.TempDir(),
+		TailscaleCommand:  "/bin/false",
+		ServiceVersion:    "test-version",
+	})
+	res = request(t, missing, http.MethodGet, "/health", nil)
+	defer res.Body.Close()
+	var degraded healthResponse
+	if err := json.NewDecoder(res.Body).Decode(&degraded); err != nil {
+		t.Fatal(err)
+	}
+	if degraded.Status != "degraded" || degraded.MediaRootReadable {
+		t.Fatalf("expected degraded health, got %+v", degraded)
+	}
+}
+
+func TestStreamAbortAndActiveCounts(t *testing.T) {
+	srv := testServer(t)
+	req1 := httptest.NewRequest(http.MethodGet, "/media/videos/sample.mp4", nil)
+	req2 := httptest.NewRequest(http.MethodGet, "/media/videos/sample.mp4", nil)
+	info1 := srv.diagnostics.BeginMediaRequest(httptest.NewRecorder(), req1, srv.cfg.ServiceVersion)
+	info2 := srv.diagnostics.BeginMediaRequest(httptest.NewRecorder(), req2, srv.cfg.ServiceVersion)
+	info1.MediaKeyHash = hashMediaKey("videos/sample-1.mp4")
+	info2.MediaKeyHash = hashMediaKey("videos/sample-2.mp4")
+
+	srv.diagnostics.StreamStarted(info1)
+	srv.diagnostics.StreamStarted(info2)
+	if got := srv.diagnostics.Streaming(); got.ActiveRequests != 2 || got.ActiveStreams != 2 {
+		t.Fatalf("active counts = %+v, want 2 requests and 2 streams", got)
+	}
+
+	srv.diagnostics.EndMediaRequest(info1, http.StatusOK, 10, "", context.Canceled)
+	srv.diagnostics.EndMediaRequest(info2, http.StatusOK, 20, "", nil)
+	if got := srv.diagnostics.Streaming(); got.ActiveRequests != 0 || got.ActiveStreams != 0 {
+		t.Fatalf("active counts after end = %+v, want zero", got)
+	}
+	summary := srv.diagnostics.metricsSince(5 * time.Minute)
+	if summary.ClientAbort != 1 || summary.StreamAborted != 1 || summary.StreamCompleted != 1 {
+		t.Fatalf("unexpected stream summary: %+v", summary)
+	}
+}
+
+func TestDiagnosticHelpers(t *testing.T) {
+	if safeDiagnosticID("../bad") != "" {
+		t.Fatal("unsafe diagnostic id accepted")
+	}
+	start, end, planned := parseRangeHeader("bytes=10-19", 100)
+	if start == nil || end == nil || planned == nil || *start != 10 || *end != 19 || *planned != 10 {
+		t.Fatalf("bad explicit range parse: %v %v %v", start, end, planned)
+	}
+	start, end, planned = parseRangeHeader("bytes=-20", 100)
+	if start == nil || end == nil || planned == nil || *start != 80 || *end != 99 || *planned != 20 {
+		t.Fatalf("bad suffix range parse: %v %v %v", start, end, planned)
+	}
+	writer := newEventWriter(t.TempDir())
+	writer.max = 1
+	writer.write(eventRecord{Timestamp: time.Now().Format(time.RFC3339), Event: "stream_started"})
+	writer.write(eventRecord{Timestamp: time.Now().Format(time.RFC3339), Event: "stream_completed"})
+	matches, err := filepath.Glob(filepath.Join(writer.dir, "events.jsonl.*"))
+	if err != nil || len(matches) == 0 {
+		t.Fatalf("expected rotated log, matches=%v err=%v", matches, err)
+	}
 }
 
 func testServer(t *testing.T) *Server {
@@ -140,11 +279,14 @@ func testServer(t *testing.T) *Server {
 	mustWrite(t, filepath.Join(root, "ignore.txt"), 128)
 
 	srv := New(Config{
-		MediaRoot:      root,
-		Host:           "127.0.0.1",
-		Port:           "8080",
-		AllowedOrigins: []string{allowedOrigin},
-		FFProbePath:    "",
+		MediaRoot:         root,
+		Host:              "127.0.0.1",
+		Port:              "8080",
+		AllowedOrigins:    []string{allowedOrigin},
+		FFProbePath:       "",
+		ServiceVersion:    "test-version",
+		DiagnosticsLogDir: t.TempDir(),
+		TailscaleCommand:  "/bin/false",
 	})
 	srv.now = func() time.Time { return time.Date(2026, 8, 31, 0, 0, 0, 0, time.UTC) }
 	return srv

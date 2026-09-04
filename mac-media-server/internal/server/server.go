@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"mime"
 	"net/http"
 	"net/url"
@@ -18,25 +17,37 @@ import (
 )
 
 type Config struct {
-	MediaRoot      string
-	Host           string
-	Port           string
-	AllowedOrigins []string
-	FFProbePath    string
-	ProbeDurations bool
+	MediaRoot         string
+	Host              string
+	Port              string
+	AllowedOrigins    []string
+	FFProbePath       string
+	ProbeDurations    bool
+	ServiceVersion    string
+	DiagnosticsLogDir string
+	TailscaleCommand  string
+	TailscaleSocket   string
 }
 
 type Server struct {
 	cfg            Config
 	allowedOrigins map[string]struct{}
 	now            func() time.Time
+	startedAt      time.Time
+	diagnostics    *Diagnostics
 }
 
 type healthResponse struct {
-	Status             string `json:"status"`
-	MediaRootAvailable bool   `json:"mediaRootAvailable"`
-	ServerTime         string `json:"serverTime"`
-	Error              string `json:"error,omitempty"`
+	Status             string           `json:"status"`
+	ServiceVersion     string           `json:"serviceVersion"`
+	ServerTime         string           `json:"serverTime"`
+	UptimeSeconds      int64            `json:"uptimeSeconds"`
+	MediaRootReadable  bool             `json:"mediaRootReadable"`
+	MediaRootAvailable bool             `json:"mediaRootAvailable"`
+	Tailscale          tailscaleSummary `json:"tailscale"`
+	System             systemSummary    `json:"system"`
+	Streaming          streamingSummary `json:"streaming"`
+	Error              string           `json:"error,omitempty"`
 }
 
 type libraryResponse struct {
@@ -56,11 +67,15 @@ type libraryItem struct {
 
 func ConfigFromEnv() (Config, error) {
 	cfg := Config{
-		MediaRoot:      strings.TrimSpace(os.Getenv("MEDIA_ROOT")),
-		Host:           valueOrDefault(os.Getenv("SERVER_HOST"), "127.0.0.1"),
-		Port:           valueOrDefault(os.Getenv("SERVER_PORT"), "8080"),
-		FFProbePath:    valueOrDefault(os.Getenv("FFPROBE_PATH"), "ffprobe"),
-		ProbeDurations: parseBool(os.Getenv("PROBE_DURATIONS")),
+		MediaRoot:         strings.TrimSpace(os.Getenv("MEDIA_ROOT")),
+		Host:              valueOrDefault(os.Getenv("SERVER_HOST"), "127.0.0.1"),
+		Port:              valueOrDefault(os.Getenv("SERVER_PORT"), "8080"),
+		FFProbePath:       valueOrDefault(os.Getenv("FFPROBE_PATH"), "ffprobe"),
+		ProbeDurations:    parseBool(os.Getenv("PROBE_DURATIONS")),
+		ServiceVersion:    valueOrDefault(os.Getenv("SERVICE_VERSION"), "dev"),
+		DiagnosticsLogDir: strings.TrimSpace(os.Getenv("DIAGNOSTICS_LOG_DIR")),
+		TailscaleCommand:  valueOrDefault(os.Getenv("TAILSCALE_COMMAND"), "tailscale"),
+		TailscaleSocket:   strings.TrimSpace(os.Getenv("TAILSCALE_SOCKET")),
 	}
 	if cfg.MediaRoot == "" {
 		return cfg, errors.New("MEDIA_ROOT is required")
@@ -78,10 +93,14 @@ func New(cfg Config) *Server {
 	for _, origin := range cfg.AllowedOrigins {
 		allowed[origin] = struct{}{}
 	}
+	now := time.Now
+	startedAt := now()
 	return &Server{
 		cfg:            cfg,
 		allowedOrigins: allowed,
-		now:            func() time.Time { return time.Now().UTC() },
+		now:            now,
+		startedAt:      startedAt,
+		diagnostics:    NewDiagnostics(cfg, startedAt, now),
 	}
 }
 
@@ -95,6 +114,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.URL.Path == "/health":
 		s.handleHealth(w, r)
+	case r.URL.Path == "/diagnostics/deep":
+		s.handleDeepDiagnostics(w, r)
 	case r.URL.Path == "/library":
 		s.handleLibrary(w, r)
 	case strings.HasPrefix(r.URL.Path, "/media/"):
@@ -110,20 +131,66 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	available := dirExists(s.cfg.MediaRoot)
+	w.Header().Set("Cache-Control", "no-store")
+	snap := s.diagnostics.HealthSnapshot(r.Context(), s.cfg.MediaRoot)
+	available := snap.mediaRootReadable
 	status := "ok"
 	errText := ""
 	if !available {
-		status = "error"
+		status = "degraded"
 		errText = "MEDIA_ROOT is not available"
 	}
 
 	writeJSON(w, r, http.StatusOK, healthResponse{
 		Status:             status,
-		MediaRootAvailable: available,
+		ServiceVersion:     s.cfg.ServiceVersion,
 		ServerTime:         s.now().Format(time.RFC3339),
+		UptimeSeconds:      s.uptimeSeconds(),
+		MediaRootReadable:  available,
+		MediaRootAvailable: available,
+		Tailscale:          snap.tailscale,
+		System:             snap.system,
+		Streaming:          s.diagnostics.Streaming(),
 		Error:              errText,
 	})
+}
+
+func (s *Server) handleDeepDiagnostics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		methodNotAllowed(w)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	health := s.diagnostics.HealthSnapshot(ctx, s.cfg.MediaRoot)
+	mediaRootReadable := health.mediaRootReadable
+	status := "ok"
+	if !mediaRootReadable {
+		status = "degraded"
+	}
+	deep := s.diagnostics.DeepSnapshot(ctx, s.cfg.MediaRoot)
+	deep.Health = healthResponse{
+		Status:             status,
+		ServiceVersion:     s.cfg.ServiceVersion,
+		ServerTime:         s.now().Format(time.RFC3339),
+		UptimeSeconds:      s.uptimeSeconds(),
+		MediaRootReadable:  mediaRootReadable,
+		MediaRootAvailable: mediaRootReadable,
+		Tailscale:          health.tailscale,
+		System:             health.system,
+		Streaming:          s.diagnostics.Streaming(),
+	}
+	writeJSON(w, r, http.StatusOK, deep)
+}
+
+func (s *Server) uptimeSeconds() int64 {
+	seconds := int64(s.now().Sub(s.startedAt).Seconds())
+	if seconds < 0 {
+		return 0
+	}
+	return seconds
 }
 
 func (s *Server) handleLibrary(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +208,16 @@ func (s *Server) handleLibrary(w http.ResponseWriter, r *http.Request) {
 
 	items := make([]libraryItem, 0)
 	_ = filepath.WalkDir(s.cfg.MediaRoot, func(path string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil || entry.IsDir() || !isAllowedMediaName(entry.Name()) {
+		if walkErr != nil {
+			return nil
+		}
+		if entry.IsDir() {
+			if shouldSkipLibraryDir(entry.Name(), path, s.cfg.MediaRoot) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !isAllowedMediaName(entry.Name()) {
 			return nil
 		}
 		info, err := entry.Info()
@@ -177,26 +253,38 @@ func (s *Server) handleLibrary(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
+	reqInfo := s.diagnostics.BeginMediaRequest(w, r, s.cfg.ServiceVersion)
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		s.diagnostics.EndMediaRequest(reqInfo, http.StatusMethodNotAllowed, 0, "MEDIA_METHOD_NOT_ALLOWED", r.Context().Err())
 		methodNotAllowed(w)
 		return
 	}
 	target, err := s.safeMediaPath(r)
 	if err != nil {
+		s.diagnostics.EndMediaRequest(reqInfo, http.StatusNotFound, 0, "MEDIA_NOT_FOUND", r.Context().Err())
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
 	info, err := os.Stat(target)
 	if err != nil || info.IsDir() || !isAllowedMediaName(target) {
+		s.diagnostics.EndMediaRequest(reqInfo, http.StatusNotFound, 0, "MEDIA_NOT_FOUND", r.Context().Err())
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
 	mimeType, _ := mediaMetadata(target)
+	reqInfo.MediaRel = sanitizedMediaRel(s.cfg.MediaRoot, target)
+	reqInfo.MediaKeyHash = hashMediaKey(reqInfo.MediaRel)
+	reqInfo.RangeStart, reqInfo.RangeEnd, reqInfo.BytesPlanned = parseRangeHeader(r.Header.Get("Range"), info.Size())
+	s.diagnostics.StreamStarted(reqInfo)
+
+	openStart := s.now()
 	file, err := os.Open(target)
+	reqInfo.OpenLatency = s.now().Sub(openStart)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to open media: %v", err), http.StatusInternalServerError)
+		s.diagnostics.EndMediaRequest(reqInfo, http.StatusInternalServerError, 0, "FILE_OPEN_FAILED", r.Context().Err())
+		http.Error(w, "failed to open media", http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
@@ -204,7 +292,17 @@ func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", mimeType)
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Cache-Control", "private, max-age=3600")
-	http.ServeContent(w, r, filepath.Base(target), info.ModTime(), file)
+	rec := newDiagnosticResponseWriter(w, reqInfo, s.diagnostics)
+	http.ServeContent(rec, r, filepath.Base(target), info.ModTime(), file)
+	status := rec.status
+	if status == 0 {
+		status = http.StatusOK
+	}
+	errorCode := ""
+	if status == http.StatusRequestedRangeNotSatisfiable {
+		errorCode = "INVALID_RANGE"
+	}
+	s.diagnostics.EndMediaRequest(reqInfo, status, rec.bytes, errorCode, r.Context().Err())
 }
 
 func (s *Server) safeMediaPath(r *http.Request) (string, error) {
@@ -249,8 +347,8 @@ func (s *Server) applyCORS(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Vary", "Origin")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Range, Content-Type")
-		w.Header().Set("Access-Control-Expose-Headers", "Accept-Ranges, Content-Range, Content-Length, Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Range, Content-Type, X-KC-Diagnostic-Id")
+		w.Header().Set("Access-Control-Expose-Headers", "X-KC-Request-Id, X-KC-Service-Version, Server-Timing, Accept-Ranges, Content-Range, Content-Length, Content-Type")
 	}
 }
 
@@ -310,6 +408,21 @@ func dirExists(path string) bool {
 func isAllowedMediaName(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".mp4" || ext == ".mp3"
+}
+
+func shouldSkipLibraryDir(name, path, mediaRoot string) bool {
+	if path == mediaRoot {
+		return false
+	}
+	if strings.HasPrefix(name, ".") {
+		return true
+	}
+	switch name {
+	case "kc-kids-video-app", "node_modules", ".git":
+		return true
+	default:
+		return false
+	}
 }
 
 func mediaMetadata(path string) (mimeType string, mediaType string) {

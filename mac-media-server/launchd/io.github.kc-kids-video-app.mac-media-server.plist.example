@@ -17,7 +17,19 @@
     <key>SERVER_PORT</key>
     <string>8080</string>
     <key>ALLOWED_ORIGINS</key>
-    <string>https://kc-kids-video-app.ji3cp31p4.workers.dev</string>
+    <string>https://kc-kids-video-app.ji3cp31p4.workers.dev,http://localhost:5173,http://127.0.0.1:5173</string>
+    <key>PROBE_DURATIONS</key>
+    <string>false</string>
+    <key>FFPROBE_PATH</key>
+    <string>ffprobe</string>
+    <key>SERVICE_VERSION</key>
+    <string>dev</string>
+    <key>DIAGNOSTICS_LOG_DIR</key>
+    <string>/path/to/private/diagnostics-logs</string>
+    <key>TAILSCALE_COMMAND</key>
+    <string>/opt/homebrew/bin/tailscale</string>
+    <key>TAILSCALE_SOCKET</key>
+    <string>/path/to/tailscaled.sock</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
