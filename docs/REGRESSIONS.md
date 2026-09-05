@@ -193,3 +193,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Downloaded viewing uses the local file without contacting the Mac, one native video timeline advances, and a stalled timeline never consumes allowance or creates learning credit.
 - Root cause: The iOS viewing path opened the same large OPFS-backed `blob:` URL in both an audio master and a visual video. WebKit could resolve `play()` and emit `playing` while the audio master's timeline stayed at zero. Heartbeats then incorrectly converted elapsed wall-clock time into played time without confirming media progress.
 - Regression test: `e2e/regressions/downloaded-video-playback.spec.ts`
+
+## REG-025 — Downloaded series loses its thumbnails offline
+
+- Problem: DeepEng media plays after the phone goes offline, but every video thumbnail disappears.
+- Reproduction: Download a self-hosted series while online, turn off all networking, and reopen the category.
+- Correct behavior: The download operation saves each non-placeholder thumbnail, the offline category displays it through the Service Worker, retrying fills missing thumbnails without re-downloading completed videos, and deleting the series removes unused cached thumbnails.
+- Root cause: Phase 1 of offline downloads stored MP4/MP3 files and metadata only. Thumbnail URLs still pointed to R2, while the Service Worker deliberately ignored all cross-origin image requests.
+- Regression test: `e2e/features/download-series.spec.ts`

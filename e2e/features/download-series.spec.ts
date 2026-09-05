@@ -15,7 +15,7 @@ test("downloads a series, resumes after failure, plays local audio without media
   const videos = [TEST_VIDEO_ID, "download-second"].map((id, i) => ({
     id, categoryId: category.id, categoryIds: [category.id], source: "self_hosted", mediaType: "audio",
     mediaUrl: `/download-test/${i}.wav`, mediaPath: `/media/${i}.wav`, youtubeVideoId: null,
-    parentLabel: `下載課程${i + 1}`, youtubeTitle: `下載課程${i + 1}`, thumbnailUrl: "/local-media-placeholder.svg",
+    parentLabel: `下載課程${i + 1}`, youtubeTitle: `下載課程${i + 1}`, thumbnailUrl: `/download-test/${i}.png`,
     thumbnailPath: null, seriesType: "leisure", isSelectable: true, sortOrder: i, durationSeconds: 3,
   }));
   await mockAuthorizedWatchApi(page, undefined, videos[0]);
@@ -27,6 +27,10 @@ test("downloads a series, resumes after failure, plays local audio without media
     requests[i]++;
     return failSecond && i === 1 ? route.fulfill({ status: 503 }) : route.fulfill({ contentType: "audio/wav", body: wav() });
   });
+  await page.route("**/download-test/*.png", route => route.fulfill({
+    contentType: "image/png",
+    body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
+  }));
   page.on("dialog", dialog => dialog.accept());
   await page.goto(`/category/${category.id}`);
   await page.getByRole("button", { name: "下載／繼續下載整個系列" }).click();
@@ -36,6 +40,8 @@ test("downloads a series, resumes after failure, plays local audio without media
   await page.getByRole("button", { name: "下載／繼續下載整個系列" }).click();
   await expect(page.getByRole("status")).toContainText("整個系列已下載完成");
   expect(requests).toEqual([1, 2]);
+  await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/0.png"))).toBe(true);
+  await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/1.png"))).toBe(true);
   await page.getByRole("link", { name: "已下載", exact: true }).click();
   await expect(page.getByText("2/2 部可離線播放", { exact: false })).toBeVisible();
   // iOS may report navigator.onLine=true while the Worker request never
@@ -68,6 +74,11 @@ test("downloads a series, resumes after failure, plays local audio without media
   if (process.env.PLAYWRIGHT_TEST_OFFLINE_SHELL === "1") {
     await page.reload();
     await expect(page.getByRole("heading", { name: "已下載", exact: true })).toBeVisible();
+    await page.goto(`/category/${category.id}`);
+    const offlineThumbnail = page.getByRole("img", { name: "下載課程1影片縮圖" });
+    await expect(offlineThumbnail).toBeVisible();
+    await expect.poll(() => offlineThumbnail.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+    await page.goto("/downloads");
   }
   await page.getByRole("link", { name: "純聽", exact: true }).first().click();
   const audio = page.locator("audio.native-media-player");
@@ -94,4 +105,6 @@ test("downloads a series, resumes after failure, plays local audio without media
   await page.goto("/downloads");
   await page.getByRole("button", { name: "刪除整個系列下載" }).click();
   await expect(page.getByText("尚未下載。", { exact: false })).toBeVisible();
+  await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/0.png"))).toBe(false);
+  await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/1.png"))).toBe(false);
 });

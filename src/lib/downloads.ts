@@ -2,6 +2,7 @@ import type { Category, VideoFixture } from "../types";
 
 const KEY = "kids-downloads-v1";
 const SNAPSHOT = "kids-offline-metadata:";
+const THUMBNAIL_CACHE = "kids-thumbnails-v1";
 export function rememberOffline(path: string, value: unknown) {
   try { localStorage.setItem(SNAPSHOT + path, JSON.stringify(value)); } catch { /* Online use must survive storage quota failures. */ }
 }
@@ -20,6 +21,27 @@ async function directory() {
   return (await navigator.storage.getDirectory()).getDirectoryHandle("kids-media-v1", { create: true });
 }
 const filename = (id: string) => `${encodeURIComponent(id)}.media`;
+function thumbnailRequest(src: string) {
+  const url = new URL(src, window.location.href);
+  return new Request(url.href, {
+    mode: url.origin === window.location.origin ? "same-origin" : "no-cors",
+  });
+}
+async function cacheThumbnail(video: VideoFixture, signal: AbortSignal) {
+  if (!video.thumbnailUrl || video.thumbnailUrl === "/local-media-placeholder.svg" || video.thumbnailUrl.startsWith("data:")) return true;
+  try {
+    const cache = await caches.open(THUMBNAIL_CACHE);
+    const request = thumbnailRequest(video.thumbnailUrl);
+    if (await cache.match(request, { ignoreVary: true })) return true;
+    const response = await fetch(new Request(request, { cache: "no-store", signal }));
+    if (!response.ok && response.type !== "opaque") return false;
+    await cache.put(request, response.clone());
+    return true;
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return false;
+  }
+}
 export async function localMedia(id: string): Promise<Blob | null> {
   if (!savedSeries().some(s => s.completed[id])) return null;
   try {
@@ -41,9 +63,13 @@ async function removeSeriesFiles(id: string) {
   const target = all.find(s => s.category.id === id);
   const rest = all.filter(s => s.category.id !== id);
   const dir = await directory();
+  const thumbnailCache = await caches.open(THUMBNAIL_CACHE);
   for (const video of target?.videos || []) {
     if (!rest.some(s => s.videos.some(v => v.id === video.id))) {
       await dir.removeEntry(filename(video.id)).catch(error => { if (error.name !== "NotFoundError") throw error; });
+      if (video.thumbnailUrl && !video.thumbnailUrl.startsWith("data:")) {
+        await thumbnailCache.delete(thumbnailRequest(video.thumbnailUrl), { ignoreVary: true });
+      }
     }
   }
   save(rest);
@@ -67,9 +93,11 @@ async function downloadSeriesFiles(category: Category, videos: VideoFixture[], s
   rememberOffline(`/api/content/categories/${encodeURIComponent(category.id)}/videos`, videos);
   save([...all.filter(s => s.category.id !== category.id), series]);
   const dir = await directory();
+  let missingThumbnails = 0;
   for (let i = 0; i < eligible.length; i++) {
     signal.throwIfAborted();
     const video = eligible[i];
+    if (!await cacheThumbnail(video, signal)) missingThumbnails += 1;
     if (await localMedia(video.id)) continue;
     progress(`下載 ${i + 1}/${eligible.length}：${video.parentLabel}`);
     const response = await fetch(video.mediaUrl!, { signal, cache: "no-store" });
@@ -104,5 +132,7 @@ async function downloadSeriesFiles(category: Category, videos: VideoFixture[], s
     series.mimeTypes![video.id] = type || (video.mediaType === "audio" ? "audio/mpeg" : "video/mp4");
     save(savedSeries().map(s => s.category.id === category.id ? series : s));
   }
-  progress("整個系列已下載完成。");
+  progress(missingThumbnails
+    ? `整個系列已下載完成；${missingThumbnails} 張縮圖暫時未完成，連網後再按一次即可補齊。`
+    : "整個系列已下載完成（包含離線縮圖）。");
 }
