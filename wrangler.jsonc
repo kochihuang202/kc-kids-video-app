@@ -11,6 +11,7 @@
 		"global_fetch_strictly_public"
 	],
 	"assets": {
+		"binding": "ASSETS",
 		"not_found_handling": "single-page-application"
 	},
 	"d1_databases": [

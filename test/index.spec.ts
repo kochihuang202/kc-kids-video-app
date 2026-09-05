@@ -61,6 +61,18 @@ beforeEach(async () => {
 });
 
 describe("Phase 1B units", () => {
+  it("serves direct SPA routes through the static asset binding", async () => {
+    const context = createExecutionContext();
+    const response = await worker.fetch(new Request(`${origin}/downloads`), {
+      ...appEnv,
+      ASSETS: { fetch: async () => new Response('<div id="root"></div>', { headers: { "content-type": "text/html" } }) } as Fetcher,
+    }, context);
+    await waitOnExecutionContext(context);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(await response.text()).toContain('<div id="root"></div>');
+  });
+
   it("serves a private R2 thumbnail through the Worker with cache headers", async () => {
     const bucket = appEnv.MEDIA_ASSETS;
     expect(bucket).toBeDefined();

@@ -169,3 +169,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The first user gesture remains the pending play request; becoming ready must not pause it, duplicate taps must not create duplicate play promises, and an app-initiated `AbortError` must not start the 60-second network retry flow.
 - Root cause: The ready handler always paused non-autoplay media, cancelling the pending user `play()` promise. Its expected `AbortError` was then handled as a Mac/Tailscale connection failure.
 - Regression test: `e2e/regressions/media-auto-retry.spec.ts`
+
+## REG-022 — Directly opening the downloaded-media page returns Worker 404
+
+- Problem: Navigating from the home page to `/downloads` works, but typing or reloading that URL returns a JSON `Not Found` response in production.
+- Reproduction: Deploy the Worker and directly request `/downloads` instead of reaching it through React Router.
+- Correct behavior: Every non-API GET/HEAD route is resolved by Cloudflare's SPA asset binding and returns the app shell; `/api/*` routing remains handled by the Worker.
+- Root cause: The Worker handled every request first and rejected non-API paths before Cloudflare's SPA fallback could serve `index.html`.
+- Regression tests: `test/index.spec.ts` and `e2e/features/download-series.spec.ts`

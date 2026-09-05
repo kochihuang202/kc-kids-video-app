@@ -66,7 +66,10 @@ async function route(request: Request, env: AppEnv) {
   const url = new URL(request.url);
   const { method } = request;
   const path = url.pathname;
-  if (!path.startsWith("/api/")) throw new HttpError("Not Found", 404);
+  if (!path.startsWith("/api/")) {
+    if ((method === "GET" || method === "HEAD") && env.ASSETS) return env.ASSETS.fetch(request);
+    throw new HttpError("Not Found", 404);
+  }
   if (method === "GET" && path.startsWith("/api/media/")) {
     const asset = await serveMediaAsset(path, env);
     if (!asset) throw new HttpError("找不到這張縮圖。", 404, "MEDIA_ASSET_NOT_FOUND");
