@@ -670,6 +670,7 @@ export function WatchPage() {
   const playingStartPerfRef = useRef<number | null>(null);
   const accumulatedPlayMsRef = useRef<number>(0);
   const playingStartWallRef = useRef<string | null>(null);
+  const playingStartPositionRef = useRef<number | null>(null);
   const playerStateRef = useRef<PlayerState>("READY");
   const diagnosticsRef = useRef<PlaybackDiagnostics | null>(null);
   const bufferingDiagnosticTimerRef = useRef<number | null>(null);
@@ -743,6 +744,7 @@ export function WatchPage() {
     accumulatedPlayMsRef.current = 0;
     playingStartPerfRef.current = null;
     playingStartWallRef.current = null;
+    playingStartPositionRef.current = null;
     playerStateRef.current = "READY";
     setIsEnded(false);
     setTimeUp(false);
@@ -1002,10 +1004,17 @@ export function WatchPage() {
   const flushTracking = useCallback(async (status: "active" | "ended" = "active", keepalive = false) => {
     const nowPerf = performance.now();
     const nowIso = new Date().toISOString();
+    const playbackPosition = Math.max(0, playerRef.current?.getCurrentTime() || currentPosRef.current);
     if (playingStartPerfRef.current !== null) {
       const elapsedMs = Math.max(0, nowPerf - playingStartPerfRef.current);
-      accumulatedPlayMsRef.current += elapsedMs;
+      // WebKit may emit `playing` even though an OPFS-backed media timeline is
+      // stalled. Only account for the interval after real position movement.
+      const startPosition = playingStartPositionRef.current;
+      if (startPosition === null || Math.abs(playbackPosition - startPosition) >= 0.25) {
+        accumulatedPlayMsRef.current += elapsedMs;
+      }
       playingStartPerfRef.current = nowPerf;
+      playingStartPositionRef.current = playbackPosition;
     }
     const deltaSeconds = Math.floor(accumulatedPlayMsRef.current / 1000);
     if (deltaSeconds > 0) accumulatedPlayMsRef.current -= deltaSeconds * 1000;
@@ -1026,7 +1035,7 @@ export function WatchPage() {
       writeToken: capability.writeToken,
       heartbeatSeq: ++heartbeatSeqRef.current,
       deltaSeconds,
-      positionSeconds: Math.max(0, Math.round(playerRef.current?.getCurrentTime() || currentPosRef.current)),
+      positionSeconds: Math.round(playbackPosition),
       intervalStartedAt: playingStartWallRef.current,
       intervalEndedAt: playingStartWallRef.current ? nowIso : null,
       status,
@@ -1067,6 +1076,7 @@ export function WatchPage() {
       if (playingStartPerfRef.current === null) {
         playingStartPerfRef.current = performance.now();
         playingStartWallRef.current = new Date().toISOString();
+        playingStartPositionRef.current = Math.max(0, playerRef.current?.getCurrentTime() || currentPosRef.current);
       }
       void ensureSession();
     } else if (state === "ENDED") {
@@ -1076,6 +1086,7 @@ export function WatchPage() {
       void flushTracking("ended");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
+      playingStartPositionRef.current = null;
       if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
         setTimeUp(true);
       } else if (video?.seriesType === "learning") {
@@ -1099,6 +1110,7 @@ export function WatchPage() {
       void flushTracking("active");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
+      playingStartPositionRef.current = null;
       const cur = playerRef.current?.getCurrentTime() || 0;
       if (cur > 2) {
         setPausePrompts(getRandomThinkingPrompts(5));

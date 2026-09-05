@@ -34,9 +34,9 @@ function silentWav() {
 export async function installDeterministicMedia(
   page: Page,
   failLoads: number,
-  options: { abortNetwork?: boolean; readyDelayMs?: number; deferPlayUntilReady?: boolean } = {},
+  options: { abortNetwork?: boolean; readyDelayMs?: number; deferPlayUntilReady?: boolean; stallBlobAudio?: boolean } = {},
 ) {
-  await page.addInitScript(({ failures, readyDelayMs, deferPlayUntilReady }) => {
+  await page.addInitScript(({ failures, readyDelayMs, deferPlayUntilReady, stallBlobAudio }) => {
     const states = new WeakMap<HTMLMediaElement, {
       base: number;
       startedAt: number;
@@ -101,6 +101,13 @@ export async function installDeterministicMedia(
     };
     HTMLMediaElement.prototype.play = function play() {
       const state = stateFor(this);
+      // WebKit can resolve play() and emit `playing` for an OPFS-backed MP4
+      // audio master while its timeline remains at 0. Model that production
+      // failure so downloaded viewing cannot regress to the dual-player path.
+      if (stallBlobAudio && this instanceof HTMLAudioElement && this.src.startsWith("blob:")) {
+        this.dispatchEvent(new Event("playing"));
+        return Promise.resolve();
+      }
       // iPadOS can acknowledge a synchronous play() issued inside an ended
       // handler without actually restarting the finished media timeline.
       if (dispatchingEnded) {
@@ -154,6 +161,7 @@ export async function installDeterministicMedia(
     failures: failLoads,
     readyDelayMs: options.readyDelayMs ?? 25,
     deferPlayUntilReady: options.deferPlayUntilReady ?? false,
+    stallBlobAudio: options.stallBlobAudio ?? false,
   });
 
   await page.route("**/e2e-media/regression-media.wav*", async (route) => {

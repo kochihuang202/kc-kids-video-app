@@ -185,3 +185,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Links from「已下載」read device, video and category snapshots immediately without requesting the network. Other entry points wait at most 1.2 seconds per cached request before using the snapshot; the player mounts with a local Blob URL.
 - Root cause: Offline fallback ran only when `navigator.onLine=false` or `fetch()` rejected. iOS can keep `navigator.onLine=true` while an unreachable request remains pending indefinitely.
 - Regression test: `e2e/features/download-series.spec.ts`
+
+## REG-024 — Downloaded DeepEng reports playing but remains at 0:00 on iPhone
+
+- Problem: After downloading DeepEng, opening it in viewing mode on an online iPhone changes the player to a playing state, but the picture and timeline remain at `0:00`.
+- Reproduction: Download the DeepEng series, open a downloaded lesson in viewing mode on iPhone, and press Play.
+- Correct behavior: Downloaded viewing uses the local file without contacting the Mac, one native video timeline advances, and a stalled timeline never consumes allowance or creates learning credit.
+- Root cause: The iOS viewing path opened the same large OPFS-backed `blob:` URL in both an audio master and a visual video. WebKit could resolve `play()` and emit `playing` while the audio master's timeline stayed at zero. Heartbeats then incorrectly converted elapsed wall-clock time into played time without confirming media progress.
+- Regression test: `e2e/regressions/downloaded-video-playback.spec.ts`

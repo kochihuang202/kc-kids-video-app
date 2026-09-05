@@ -2,8 +2,11 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { MediaType } from "../types";
 import type { PlayerState, YouTubePlayerHandle } from "./YouTubePlayer";
 
-function shouldUseBackgroundAudioMaster(mediaType: MediaType) {
-  if (mediaType !== "video" || typeof navigator === "undefined") return false;
+function shouldUseBackgroundAudioMaster(mediaType: MediaType, src: string) {
+  // Opening the same large OPFS-backed blob in both an audio master and a
+  // visual video can leave WebKit reporting `playing` at 0:00. Local viewing
+  // therefore uses one native video element.
+  if (mediaType !== "video" || src.startsWith("blob:") || typeof navigator === "undefined") return false;
   return /iPhone|iPad|iPod/i.test(navigator.userAgent)
     || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 }
@@ -30,7 +33,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     const readySentRef = useRef(false);
     const playRequestedRef = useRef(autoPlay);
     const pendingPlayRef = useRef<Promise<void> | null>(null);
-    const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType);
+    const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType, src);
 
     const syncVisualVideo = (play: boolean) => {
       const master = elementRef.current;
