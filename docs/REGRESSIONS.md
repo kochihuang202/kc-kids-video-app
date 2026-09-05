@@ -177,3 +177,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Every non-API GET/HEAD route is resolved by Cloudflare's SPA asset binding and returns the app shell; `/api/*` routing remains handled by the Worker.
 - Root cause: The Worker handled every request first and rejected non-API paths before Cloudflare's SPA fallback could serve `index.html`.
 - Regression tests: `test/index.spec.ts` and `e2e/features/download-series.spec.ts`
+
+## REG-023 — Downloaded video stays forever on “preparing player” when the network is unusable
+
+- Problem: A downloaded DeepEng lesson remains on「正在準備播放器」when the phone has a network interface but cannot reach the Worker.
+- Reproduction: Download a series, keep `navigator.onLine=true`, make content/device API requests remain pending without resolving or rejecting, and open the downloaded lesson.
+- Correct behavior: Links from「已下載」read device, video and category snapshots immediately without requesting the network. Other entry points wait at most 1.2 seconds per cached request before using the snapshot; the player mounts with a local Blob URL.
+- Root cause: Offline fallback ran only when `navigator.onLine=false` or `fetch()` rejected. iOS can keep `navigator.onLine=true` while an unreachable request remains pending indefinitely.
+- Regression test: `e2e/features/download-series.spec.ts`

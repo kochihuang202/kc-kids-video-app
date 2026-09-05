@@ -33,17 +33,34 @@ async function readJson<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
-async function api<T>(path: string, init?: RequestInit) {
+async function api<T>(path: string, init?: RequestInit, preferSnapshot = false) {
   const headers = new Headers(init?.headers);
   if (init?.body && !headers.has("content-type")) headers.set("content-type", "application/json");
   const snapshotAllowed = (!init?.method || init.method === "GET") &&
-    (path.startsWith("/api/content/") || path === "/api/device/status");
+    (path.startsWith("/api/content/") || path === "/api/device/status" || path === "/api/child/access-state");
+  const saved = snapshotAllowed ? offlineSnapshot<T>(path) : undefined;
+  if (preferSnapshot) {
+    if (saved !== undefined) return saved;
+    throw new ApiError("這部影片的離線資料不存在，請重新下載。", 503, "OFFLINE_SNAPSHOT_MISSING");
+  }
   if (snapshotAllowed && !navigator.onLine) {
-    const saved = offlineSnapshot<T>(path);
     if (saved !== undefined) return saved;
   }
+  // iOS can keep navigator.onLine=true while a request remains pending forever
+  // (for example Wi-Fi without an Internet route). If an offline snapshot is
+  // available, wait briefly for fresh data and then fall back deterministically.
+  const fallbackController = saved !== undefined ? new AbortController() : null;
+  const abortFromCaller = () => fallbackController?.abort(init?.signal?.reason);
+  if (init?.signal?.aborted) abortFromCaller();
+  else init?.signal?.addEventListener("abort", abortFromCaller, { once: true });
+  const fallbackTimer = fallbackController
+    ? window.setTimeout(() => fallbackController.abort("offline-snapshot-timeout"), 1_200)
+    : null;
   try {
-    const value = await readJson<T>(await fetch(path, { cache: "no-store", ...init, headers }));
+    const value = await readJson<T>(await fetch(path, {
+      cache: "no-store", ...init, headers,
+      signal: fallbackController?.signal || init?.signal,
+    }));
     if (snapshotAllowed) rememberOffline(path, value);
     return value;
   } catch (error) {
@@ -53,6 +70,9 @@ async function api<T>(path: string, init?: RequestInit) {
       if (saved !== undefined) return saved;
     }
     throw error;
+  } finally {
+    if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
+    init?.signal?.removeEventListener("abort", abortFromCaller);
   }
 }
 
@@ -60,9 +80,9 @@ const write = <T>(path: string, method: string, body: unknown) => api<T>(path, {
 
 export const contentRepository = {
   getCategories: () => api<Category[]>("/api/content/categories"),
-  getVideos: (categoryId: string) => api<VideoFixture[]>(`/api/content/categories/${encodeURIComponent(categoryId)}/videos`),
-  getVideo: (videoId: string) => api<VideoFixture>(`/api/content/videos/${encodeURIComponent(videoId)}`),
-  getAccessState: () => api<ChildAccessState>("/api/child/access-state"),
+  getVideos: (categoryId: string, preferSnapshot = false) => api<VideoFixture[]>(`/api/content/categories/${encodeURIComponent(categoryId)}/videos`, undefined, preferSnapshot),
+  getVideo: (videoId: string, preferSnapshot = false) => api<VideoFixture>(`/api/content/videos/${encodeURIComponent(videoId)}`, undefined, preferSnapshot),
+  getAccessState: (preferSnapshot = false) => api<ChildAccessState>("/api/child/access-state", undefined, preferSnapshot),
   getTodayPicks: () => api<TodayPick[]>("/api/child/today-picks"),
   getResume: () => api<{ resume: import("../types").ResumeInfo | null }>("/api/content/resume"),
   getRecents: () => api<import("../types").RecentVideo[]>("/api/content/recents"),
@@ -72,7 +92,7 @@ export const contentRepository = {
 };
 
 export const deviceRepository = {
-  status: () => api<DeviceStatus>("/api/device/status"),
+  status: (preferSnapshot = false) => api<DeviceStatus>("/api/device/status", undefined, preferSnapshot),
 };
 
 export const activityRepository = {

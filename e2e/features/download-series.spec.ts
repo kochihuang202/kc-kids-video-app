@@ -38,6 +38,21 @@ test("downloads a series, resumes after failure, plays local audio without media
   expect(requests).toEqual([1, 2]);
   await page.getByRole("link", { name: "已下載", exact: true }).click();
   await expect(page.getByText("2/2 部可離線播放", { exact: false })).toBeVisible();
+  // iOS may report navigator.onLine=true while the Worker request never
+  // settles (for example Wi-Fi without an Internet route). Cached metadata
+  // must still open the already-downloaded file instead of hanging forever.
+  const releaseRequests: Array<() => void> = [];
+  const hangApi = async (route: import("@playwright/test").Route) => {
+    await new Promise<void>(resolve => releaseRequests.push(resolve));
+    await route.abort("timedout").catch(() => {});
+  };
+  await page.route("**/api/**", hangApi);
+  await page.goto(`/watch/${TEST_VIDEO_ID}?mode=listen`);
+  await expect(page.locator("audio.native-media-player")).toHaveAttribute("src", /^blob:/, { timeout: 6_000 });
+  releaseRequests.splice(0).forEach(release => release());
+  await page.unroute("**/api/**", hangApi);
+  await page.goto("/downloads");
+  await expect(page.getByRole("link", { name: "純聽", exact: true }).first()).toHaveAttribute("href", /offline=1/);
   if (process.env.PLAYWRIGHT_TEST_OFFLINE_SHELL === "1") {
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);

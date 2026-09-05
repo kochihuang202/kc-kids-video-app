@@ -647,6 +647,8 @@ export function WatchPage() {
   const { videoId = "" } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const preferOffline = searchParams.get("offline") === "1";
+  const offlineQuery = preferOffline ? "&offline=1" : "";
   const rawInitialPos = Math.max(0, Number(searchParams.get("at") || searchParams.get("t") || 0) || 0);
   const hasExplicitResumePosition = searchParams.has("at") || searchParams.has("t");
   const forceFreshStart = searchParams.get("fresh") === "1";
@@ -751,15 +753,15 @@ export function WatchPage() {
   const load = useCallback(async () => {
     setLoadError("");
     try {
-      const nextDevice = await deviceRepository.status().catch(() => ({ authorized: false, device: null }));
+      const nextDevice = await deviceRepository.status(preferOffline).catch(() => ({ authorized: false, device: null }));
       setDevice(nextDevice);
       if (!nextDevice.authorized) {
         setLoadError("DEVICE_AUTH_REQUIRED");
         return;
       }
       const [nextVideo, rawAccess] = await Promise.all([
-        contentRepository.getVideo(videoId),
-        contentRepository.getAccessState().catch(() => null),
+        contentRepository.getVideo(videoId, preferOffline),
+        contentRepository.getAccessState(preferOffline).catch(() => null),
       ]);
       if (nextVideo.source === "self_hosted") {
         if (nextVideo.isSelectable === false) throw new Error("請先從前五部影片選擇。");
@@ -774,7 +776,7 @@ export function WatchPage() {
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
       let nextCategoryVideos: VideoFixture[] = [];
       if (nextVideo.categoryId) {
-        nextCategoryVideos = await contentRepository.getVideos(nextVideo.categoryId).catch(() => []);
+        nextCategoryVideos = await contentRepository.getVideos(nextVideo.categoryId, preferOffline).catch(() => []);
         syncPlaybackQueue(nextVideo.categoryId, initialMode, nextCategoryVideos, nextVideo.id);
       }
       // Load the category queue before mounting YouTube. Pure-listening mode
@@ -802,7 +804,7 @@ export function WatchPage() {
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
     }
-  }, [forceFreshStart, hasExplicitResumePosition, rawInitialPos, requestedMode, videoId]);
+  }, [forceFreshStart, hasExplicitResumePosition, preferOffline, rawInitialPos, requestedMode, videoId]);
 
   useEffect(() => {
     void load();
@@ -1089,7 +1091,7 @@ export function WatchPage() {
               : nextListenTrackRef.current.id;
             if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: targetId });
             diagnosticsRef.current?.event("next_requested", { state: targetId }, undefined, currentPosRef.current);
-            navigate(`/watch/${targetId}?mode=listen&autoplay=1&fresh=1`, { replace: true });
+            navigate(`/watch/${targetId}?mode=listen&autoplay=1&fresh=1${offlineQuery}`, { replace: true });
           }
         }
       }
@@ -1102,7 +1104,7 @@ export function WatchPage() {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [ensureSession, flushTracking, navigate, restartVideo, video?.mediaType, video?.seriesType]);
+  }, [ensureSession, flushTracking, navigate, offlineQuery, restartVideo, video?.mediaType, video?.seriesType]);
 
   const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
     if (!usesYouTubeListenPlaylistRef.current || youtubeVideoId === video?.youtubeVideoId) return;
@@ -1111,8 +1113,8 @@ export function WatchPage() {
     const queue = readPlaybackQueue();
     if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: target.id });
     diagnosticsRef.current?.event("next_requested", { state: target.id, transition: "youtube_playlist" }, undefined, currentPosRef.current);
-    navigate(`/watch/${target.id}?mode=listen&autoplay=1&fresh=1`, { replace: true });
-  }, [categoryVideos, navigate, video?.youtubeVideoId]);
+    navigate(`/watch/${target.id}?mode=listen&autoplay=1&fresh=1${offlineQuery}`, { replace: true });
+  }, [categoryVideos, navigate, offlineQuery, video?.youtubeVideoId]);
 
   const handleNativeProgress = useCallback((time: number, duration: number) => {
     if (!isDragging) setCurrentPos(time);
@@ -1384,7 +1386,7 @@ export function WatchPage() {
                   {nextTrack && (
                     <Button
                       size="large"
-                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1`)}
+                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1${offlineQuery}`)}
                     >
                       <Play /> 下一集：{nextTrack.parentLabel}
                     </Button>
@@ -1457,7 +1459,7 @@ export function WatchPage() {
                   {nextTrack && (
                     <Button
                       size="large"
-                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1`)}
+                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1${offlineQuery}`)}
                     >
                       <Play /> 下一集：{nextTrack.parentLabel}
                     </Button>
@@ -1584,7 +1586,7 @@ export function WatchPage() {
                   title={`下一集：${nextTrack.parentLabel}`}
                   onClick={() => {
                     diagnosticsRef.current?.event("next_requested", { state: nextTrack.id }, undefined, currentPosRef.current);
-                    navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1`);
+                    navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1${offlineQuery}`);
                   }}
                 >
                   <span>下一集 ⏭️</span>

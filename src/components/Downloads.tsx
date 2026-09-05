@@ -62,7 +62,7 @@ export function DownloadsPage() {
         try { await removeSeries(s.category.id); } catch (error) { setError(error instanceof Error ? error.message : "刪除失敗，請稍後重試。"); }
       }}>刪除整個系列下載</button>
       <ul>{s.videos.map(v => <li key={v.id}>{v.parentLabel}　{v.isSelectable === false ? <span>先從前五部選擇（連網後更新）</span> : available[v.id] ? <>
-        <Link to={`/watch/${v.id}?mode=video`}>觀看</Link>　<Link to={`/watch/${v.id}?mode=listen`}>純聽</Link>
+        <Link to={`/watch/${v.id}?mode=video&offline=1`}>觀看</Link>　<Link to={`/watch/${v.id}?mode=listen&offline=1`}>純聽</Link>
       </> : <span>尚未下載／需要重新下載</span>}</li>)}</ul>
     </section>)}
   </main>;
