@@ -9,6 +9,7 @@ import {
   getPublicVideo,
   heartbeatViewSession,
   startViewSession,
+  syncOfflineVideoViews,
   updateLearnedState,
 } from "./content";
 import { exportSessions } from "./export";
@@ -107,6 +108,7 @@ async function route(request: Request, env: AppEnv) {
   if (method === "PUT" && id) return updateLearnedState(request, env, id);
   if (method === "GET" && path === "/api/device/status") return getDeviceStatus(request, env);
   if (method === "POST" && path === "/api/view-sessions") return startViewSession(request, env);
+  if (method === "POST" && path === "/api/offline-video-views/sync") return syncOfflineVideoViews(request, env);
   id = routeId(path, /^\/api\/view-sessions\/([^/]+)$/);
   if (method === "PATCH" && id) return heartbeatViewSession(request, env, id);
 

@@ -63,6 +63,7 @@ export interface RecentVideo extends MediaDescriptor {
   isWatched: boolean;
   lastPlayedAt: string;
   playbackMode: PlaybackMode;
+  offlineViewed?: boolean;
 }
 
 export interface Note {
@@ -88,6 +89,7 @@ export interface ViewSession {
   noteCount: number;
   playbackMode?: PlaybackMode;
   seriesType?: SeriesType | null;
+  offlineViewed?: boolean;
 }
 
 export interface TodaySummary {

@@ -430,8 +430,10 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
 
   const bonusSeconds = override?.bonus_seconds ?? 0;
   const baseLimitSeconds = override?.limit_override_seconds ?? rule.daily_limit_seconds;
-  const earnedBonusSeconds = Math.floor(sharedUsage.learningSeconds / 2);
-  const effectiveLimitSeconds = baseLimitSeconds + bonusSeconds + earnedBonusSeconds;
+  // Learning time remains part of family statistics, but no longer converts
+  // into leisure allowance. Parent-added bonus time is intentionally separate.
+  const earnedBonusSeconds = 0;
+  const effectiveLimitSeconds = baseLimitSeconds + bonusSeconds;
   const remainingSeconds = Math.max(0, effectiveLimitSeconds - sharedUsage.leisureUsedSeconds);
 
   const sharedFields = {

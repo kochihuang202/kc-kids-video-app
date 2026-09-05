@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button, buttonVariants } from "./components/ui/button";
+import { ParentDownloadsPage } from "./components/Downloads";
 import { parentRepository, type VideoPreview } from "./data/repositories";
 import { formatClock, formatPosition, getDayRangeInTimeZone } from "./lib/utils";
 import type {
@@ -132,6 +133,7 @@ function ParentLayout({ children }: { children: ReactNode }) {
         <NavLink to="/parent/rules">提醒與時段</NavLink>
         <NavLink to="/parent/videos">影片管理</NavLink>
         <NavLink to="/parent/categories">分類管理</NavLink>
+        <NavLink to="/parent/downloads">離線下載</NavLink>
         <NavLink to="/parent/diagnostics">裝置診斷</NavLink>
         <NavLink to="/parent/settings">設定</NavLink>
       </nav>
@@ -275,7 +277,6 @@ function HistoryPage() {
             <strong className="control-progress">
               今日休閒已用 {Math.round((dashboard.ruleState.leisureUsedSeconds || 0) / 60)} 分鐘，
               剩餘約 {Math.round(dashboard.ruleState.remainingSeconds / 60)} 分鐘
-              {dashboard.ruleState.earnedBonusSeconds ? `（學習增加 ${Math.floor(dashboard.ruleState.earnedBonusSeconds / 60)} 分鐘）` : ""}
             </strong>
           </div>
           <div className="quick-control-actions">
@@ -444,6 +445,7 @@ function HistoryPage() {
                           <span className={`playback-mode-chip ${session.playbackMode || "video"}`}>
                             {session.playbackMode === "listen" ? "🎧 純聽" : "▶ 觀看"}
                           </span>
+                          {session.offlineViewed && <span className="playback-mode-chip listen">離線看過 · 不計時</span>}
                           <span className="play-time-badge">
                             <Clock3 /> 開始於 {formatClock(session.startedAt)}
                           </span>
@@ -457,6 +459,7 @@ function HistoryPage() {
                     </div>
 
                     <div className="play-history-details">
+                      {session.offlineViewed ? <div className="play-detail-item"><strong className="detail-value">已同步看過紀錄，不補算播放時間</strong></div> : <>
                       <div className="play-detail-item">
                         <span className="detail-label">實際觀看時長：</span>
                         <strong className="detail-value played-time">
@@ -467,6 +470,7 @@ function HistoryPage() {
                         <span className="detail-label">上次觀看位置：</span>
                         <span className="detail-value">{formatPosition(session.lastPositionSeconds)}</span>
                       </div>
+                      </>}
                     </div>
                   </article>
                 ))}
@@ -1931,6 +1935,7 @@ export default function ParentApp() {
               <Route path="rules" element={<RulesPage />} />
               <Route path="videos" element={<VideosPage />} />
               <Route path="categories" element={<CategoriesPage />} />
+              <Route path="downloads" element={<ParentDownloadsPage />} />
               <Route path="diagnostics" element={<DiagnosticsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/parent/today" replace />} />

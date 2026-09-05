@@ -1,8 +1,8 @@
-import React, { Component, type ErrorInfo, type ReactNode } from "react";
+import React, { Component, useEffect, type ErrorInfo, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { CategoryPage, HomePage, WatchPage } from "./KidApp";
 import ParentApp from "./ParentApp";
-import { DownloadsPage } from "./components/Downloads";
+import { syncOfflineViews } from "./lib/offlineViews";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -70,11 +70,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
 export default function App() {
+  useEffect(() => {
+    const sync = () => { void syncOfflineViews(); };
+    const syncWhenVisible = () => { if (document.visibilityState === "visible") sync(); };
+    sync();
+    window.addEventListener("online", sync);
+    document.addEventListener("visibilitychange", syncWhenVisible);
+    return () => {
+      window.removeEventListener("online", sync);
+      document.removeEventListener("visibilitychange", syncWhenVisible);
+    };
+  }, []);
   return (
     <ErrorBoundary>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/downloads" element={<DownloadsPage />} />
+        <Route path="/downloads" element={<Navigate to="/parent/downloads" replace />} />
         <Route path="/category/:categoryId" element={<CategoryPage />} />
         <Route path="/watch/:videoId" element={<WatchPage />} />
         <Route path="/parent/*" element={<ParentApp />} />

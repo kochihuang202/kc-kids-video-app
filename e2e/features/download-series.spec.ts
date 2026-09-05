@@ -19,6 +19,12 @@ test("downloads a series, resumes after failure, plays local audio without media
     thumbnailPath: null, seriesType: "leisure", isSelectable: true, sortOrder: i, durationSeconds: 3,
   }));
   await mockAuthorizedWatchApi(page, undefined, videos[0]);
+  const offlineViewSyncs: Array<{ items: Array<{ videoId: string; playbackMode: string; seenAt: string }> }> = [];
+  await page.route("**/api/offline-video-views/sync", async route => {
+    offlineViewSyncs.push(route.request().postDataJSON());
+    await route.fulfill({ json: { ok: true, synced: route.request().postDataJSON().items.length } });
+  });
+  await page.route("**/api/parent/session", route => route.fulfill({ json: { authenticated: true } }));
   await page.route("**/api/content/categories**", route => route.fulfill({ json: route.request().url().endsWith("/videos") ? videos : [category] }));
   let failSecond = true;
   const requests = [0, 0];
@@ -33,17 +39,21 @@ test("downloads a series, resumes after failure, plays local audio without media
   }));
   page.on("dialog", dialog => dialog.accept());
   await page.goto(`/category/${category.id}`);
-  await page.getByRole("button", { name: "下載／繼續下載整個系列" }).click();
+  await expect(page.getByRole("button", { name: "下載／繼續下載整個系列" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "已下載", exact: true })).toHaveCount(0);
+  await page.goto("/parent/downloads");
+  await expect(page.getByRole("heading", { name: "離線下載", exact: true })).toBeVisible();
+  await expect(page.getByText("Regression iPad", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "下載整個系列" }).click();
   await expect(page.getByRole("status")).toContainText("下載失敗");
   expect(requests).toEqual([1, 1]);
   failSecond = false;
-  await page.getByRole("button", { name: "下載／繼續下載整個系列" }).click();
+  await page.getByRole("button", { name: "繼續下載" }).click();
   await expect(page.getByRole("status")).toContainText("整個系列已下載完成");
   expect(requests).toEqual([1, 2]);
   await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/0.png"))).toBe(true);
   await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/1.png"))).toBe(true);
-  await page.getByRole("link", { name: "已下載", exact: true }).click();
-  await expect(page.getByText("2/2 部可離線播放", { exact: false })).toBeVisible();
+  await expect(page.getByText("2 / 2 部可離線播放", { exact: false })).toBeVisible();
   // iOS may report navigator.onLine=true while the Worker request never
   // settles (for example Wi-Fi without an Internet route). Cached metadata
   // must still open the already-downloaded file instead of hanging forever.
@@ -57,8 +67,6 @@ test("downloads a series, resumes after failure, plays local audio without media
   await expect(page.locator("audio.native-media-player")).toHaveAttribute("src", /^blob:/, { timeout: 6_000 });
   releaseRequests.splice(0).forEach(release => release());
   await page.unroute("**/api/**", hangApi);
-  await page.goto("/downloads");
-  await expect(page.getByRole("link", { name: "純聽", exact: true }).first()).toHaveAttribute("href", /offline=1/);
   if (process.env.PLAYWRIGHT_TEST_OFFLINE_SHELL === "1") {
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
@@ -69,18 +77,18 @@ test("downloads a series, resumes after failure, plays local audio without media
       return !!cached && (await cached.clone().blob()).size > 1000;
     });
   }
+  await page.goto(`/category/${category.id}`);
+  await page.getByRole("button", { name: "純聽", exact: true }).click();
   await context.setOffline(true);
-  await page.route("**/api/**", route => route.abort("internetdisconnected"));
+  const offlineApi = (route: import("@playwright/test").Route) => route.abort("internetdisconnected");
+  await page.route("**/api/**", offlineApi);
   if (process.env.PLAYWRIGHT_TEST_OFFLINE_SHELL === "1") {
     await page.reload();
-    await expect(page.getByRole("heading", { name: "已下載", exact: true })).toBeVisible();
-    await page.goto(`/category/${category.id}`);
     const offlineThumbnail = page.getByRole("img", { name: "下載課程1影片縮圖" });
     await expect(offlineThumbnail).toBeVisible();
     await expect.poll(() => offlineThumbnail.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
-    await page.goto("/downloads");
   }
-  await page.getByRole("link", { name: "純聽", exact: true }).first().click();
+  await page.getByRole("link", { name: /下載課程1/ }).first().click();
   const audio = page.locator("audio.native-media-player");
   await expect(audio).toHaveAttribute("src", /^blob:/);
   await page.locator(".main-play-btn").click();
@@ -90,6 +98,15 @@ test("downloads a series, resumes after failure, plays local audio without media
   await expect.poll(() => audio.evaluate((node: HTMLAudioElement) => node.currentTime)).toBeGreaterThan(.2);
   expect(requests).toEqual([1, 2]);
   await context.setOffline(false);
+  await page.unroute("**/api/**", offlineApi);
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect.poll(() => offlineViewSyncs.flatMap(request => request.items)).toContainEqual(expect.objectContaining({
+    videoId: "download-second",
+    playbackMode: "listen",
+  }));
+  const syncedMarker = offlineViewSyncs.flatMap(request => request.items).find(item => item.videoId === "download-second");
+  expect(syncedMarker).not.toHaveProperty("playedSeconds");
+  expect(syncedMarker).not.toHaveProperty("lastPositionSeconds");
   // Simulate browser storage reclamation: the catalogue survives, the file does not.
   await page.evaluate(async id => {
     const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("kids-media-v1");
@@ -98,13 +115,13 @@ test("downloads a series, resumes after failure, plays local audio without media
   page.removeAllListeners("dialog");
   page.on("dialog", dialog => dialog.dismiss());
   await page.goto(`/watch/${TEST_VIDEO_ID}?mode=listen`);
-  await expect(page.getByText("請回到「已下載」重新下載影片。", { exact: true })).toBeVisible();
+  await expect(page.getByText("請家長到管理中心的「離線下載」重新下載影片。", { exact: true })).toBeVisible();
   expect(requests).toEqual([1, 2]);
   page.removeAllListeners("dialog");
   page.on("dialog", dialog => dialog.accept());
-  await page.goto("/downloads");
-  await page.getByRole("button", { name: "刪除整個系列下載" }).click();
-  await expect(page.getByText("尚未下載。", { exact: false })).toBeVisible();
+  await page.goto("/parent/downloads");
+  await page.getByRole("button", { name: "刪除" }).click();
+  await expect(page.getByText("0 / 2 部可離線播放", { exact: false })).toBeVisible();
   await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/0.png"))).toBe(false);
   await expect.poll(() => page.evaluate(async () => !!await caches.match("/download-test/1.png"))).toBe(false);
 });

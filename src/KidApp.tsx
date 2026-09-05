@@ -2,8 +2,8 @@ import { ArrowLeft, Clock, Clock3, Headphones, Pause, Play, RefreshCw, RotateCcw
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
-import { SeriesDownload } from "./components/Downloads";
 import { localMedia, managedVideo } from "./lib/downloads";
+import { rememberOfflineView, syncOfflineViews } from "./lib/offlineViews";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
@@ -265,7 +265,6 @@ export function HomePage() {
     <main className="kid-shell home-page">
       <header className="home-header">
         <ParentGate />
-        <Link to="/downloads">已下載</Link>
         <h1>今天想看什麼？</h1>
         {accessState && !isOutsideWindow && accessState.message && (
           <div className="gentle-time-badge" aria-label={accessState.message}>
@@ -282,7 +281,6 @@ export function HomePage() {
       {accessState && !isOutsideWindow && (
         <section className="leisure-balance" aria-label="今日休閒時間">
           <div><span>今日休閒剩餘</span><strong>{Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘</strong></div>
-          <div><span>學習增加</span><strong>+{Math.floor((accessState.earnedBonusSeconds || 0) / 60)} 分鐘</strong></div>
           <div><span>休閒已用</span><strong>{Math.floor((accessState.leisureUsedSeconds || 0) / 60)} 分鐘</strong></div>
         </section>
       )}
@@ -530,7 +528,6 @@ export function CategoryPage() {
             </div>
           )}
 
-          {category && videos && device?.authorized && <SeriesDownload category={category} videos={videos} />}
           {resumeVideo && (
             <section className="resume-section category-resume-section" aria-label="上次播放位置">
               <div className="resume-header">
@@ -771,7 +768,7 @@ export function WatchPage() {
         if (file) {
           nextVideo.mediaUrl = URL.createObjectURL(file);
         } else if (managedVideo(nextVideo.id) && !confirm("這部影片尚未下載或已被清除。要使用網路串流嗎？這會消耗流量。")) {
-          setLoadError("請回到「已下載」重新下載影片。");
+          setLoadError("請家長到管理中心的「離線下載」重新下載影片。");
           return;
         }
       }
@@ -895,7 +892,7 @@ export function WatchPage() {
 
   const handleMediaError = useCallback((mediaError?: MediaError | null) => {
     if (video?.mediaUrl?.startsWith("blob:")) {
-      setLoadError("本機影片無法播放。請到已下載刪除該系列後重新下載；若仍失敗，可能是裝置不支援此影音格式。");
+      setLoadError("本機影片無法播放。請家長到管理中心的「離線下載」刪除該系列後重新下載；若仍失敗，可能是裝置不支援此影音格式。");
       return;
     }
     setPlayerError(true);
@@ -970,7 +967,10 @@ export function WatchPage() {
           capabilityRef.current = { id, writeToken };
           return capabilityRef.current;
         })
-        .catch(() => null)
+        .catch(() => {
+          if (video.mediaUrl?.startsWith("blob:")) rememberOfflineView(video.id, playbackMode);
+          return null;
+        })
         .finally(() => { sessionPromiseRef.current = null; });
     }
     return sessionPromiseRef.current;
@@ -1071,6 +1071,8 @@ export function WatchPage() {
       bufferingDiagnosticTimerRef.current = null;
     }
     if (state === "PLAYING") {
+      if (video?.mediaUrl?.startsWith("blob:") && !navigator.onLine) rememberOfflineView(video.id, playbackMode);
+      else void syncOfflineViews();
       setIsEnded(false);
       setPausePrompts([]);
       if (playingStartPerfRef.current === null) {
@@ -1116,7 +1118,7 @@ export function WatchPage() {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [ensureSession, flushTracking, navigate, offlineQuery, restartVideo, video?.mediaType, video?.seriesType]);
+  }, [ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
 
   const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
     if (!usesYouTubeListenPlaylistRef.current || youtubeVideoId === video?.youtubeVideoId) return;
@@ -1244,7 +1246,7 @@ export function WatchPage() {
   if (loadError === "DEVICE_AUTH_REQUIRED") return (
     <main className="kid-shell"><div className="limit-card"><span className="ended-badge">🔐</span><h1>請家長先授權這台裝置</h1><p>授權一次後，孩子不需要登入，觀看紀錄與時間會自動同步。</p><Link className={buttonVariants({ size: "large" })} to="/parent/settings">前往家長設定</Link></div></main>
   );
-  if (loadError) return <main className="kid-shell"><Link to="/downloads">已下載</Link>　<Link to="/">孩子首頁</Link><KidError message={loadError} retry={() => void load()} /></main>;
+  if (loadError) return <main className="kid-shell"><Link to="/parent/downloads">家長離線下載</Link>　<Link to="/">孩子首頁</Link><KidError message={loadError} retry={() => void load()} /></main>;
   if (!video) return <Navigate to="/" replace />;
 
   const activePos = isDragging ? dragPos : currentPos;

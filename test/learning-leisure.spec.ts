@@ -90,6 +90,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM view_heartbeats"),
     env.DB.prepare("DELETE FROM notes"),
     env.DB.prepare("DELETE FROM view_sessions"),
+    env.DB.prepare("DELETE FROM offline_video_views"),
     env.DB.prepare("DELETE FROM video_learned_state"),
     env.DB.prepare("DELETE FROM admin_sessions"),
     env.DB.prepare("DELETE FROM admin_credentials"),
@@ -159,7 +160,7 @@ describe("learning and leisure rules", () => {
     expect(await response.json()).toMatchObject({ code: "SERIES_TYPE_CONFLICT" });
   });
 
-  it("turns 120 seconds of learning into 60 seconds of shared leisure allowance", async () => {
+  it("keeps learning time in statistics without converting it into leisure allowance", async () => {
     const device = await pairDevice("learning-reward");
     const started = await call("/api/view-sessions", {
       method: "POST", headers: { cookie: device.cookie },
@@ -176,9 +177,44 @@ describe("learning and leisure rules", () => {
 
     const access = await (await call("/api/child/access-state")).json<any>();
     expect(access.learningSeconds).toBe(120);
-    expect(access.earnedBonusSeconds).toBe(60);
+    expect(access.earnedBonusSeconds).toBe(0);
     expect(access.leisureUsedSeconds).toBe(0);
-    expect(access.remainingSeconds).toBe(access.baseLimitSeconds + 60);
+    expect(access.remainingSeconds).toBe(access.baseLimitSeconds);
+  });
+
+  it("syncs an offline seen marker idempotently without creating playback time", async () => {
+    const device = await pairDevice("offline-seen");
+    const seenAt = new Date().toISOString();
+    const body = jsonBody({ items: [{ videoId: "why-sky-blue", playbackMode: "listen", seenAt }] });
+
+    const first = await call("/api/offline-video-views/sync", { method: "POST", headers: { cookie: device.cookie }, body });
+    const retry = await call("/api/offline-video-views/sync", { method: "POST", headers: { cookie: device.cookie }, body });
+    expect(first.status).toBe(200);
+    expect(retry.status).toBe(200);
+
+    const markers = await env.DB.prepare(
+      "SELECT video_id, playback_mode, last_seen_at FROM offline_video_views WHERE child_device_id = ?",
+    ).bind(device.id).all<{ video_id: string; playback_mode: string; last_seen_at: string }>();
+    expect(markers.results).toEqual([{ video_id: "why-sky-blue", playback_mode: "listen", last_seen_at: seenAt }]);
+    const sessions = await env.DB.prepare(
+      "SELECT COUNT(*) AS count, COALESCE(SUM(played_seconds), 0) AS seconds FROM view_sessions WHERE child_device_id = ?",
+    ).bind(device.id).first<{ count: number; seconds: number }>();
+    expect(sessions).toEqual({ count: 0, seconds: 0 });
+
+    const recents = await (await call("/api/content/recents", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(recents[0]).toMatchObject({ id: "why-sky-blue", playbackMode: "listen", offlineViewed: true, lastPositionSeconds: 0 });
+    const access = await (await call("/api/child/access-state")).json<any>();
+    expect(access).toMatchObject({ learningSeconds: 0, leisureUsedSeconds: 0, earnedBonusSeconds: 0 });
+
+    const parentCookie = await addParent();
+    const dashboard = await (await call(`/api/parent/history?start=${encodeURIComponent(new Date(Date.now() - 86400_000).toISOString())}&end=${encodeURIComponent(new Date(Date.now() + 86400_000).toISOString())}`, {
+      headers: { cookie: parentCookie },
+    })).json<any>();
+    expect(dashboard.timeline[0]).toMatchObject({ videoId: "why-sky-blue", playbackMode: "listen", offlineViewed: true, playedSeconds: 0 });
+    expect(dashboard.summary).toMatchObject({ learningSeconds: 0, leisureSeconds: 0, sessionCount: 0, playedVideoCount: 1 });
+    const calendar = await (await call("/api/parent/history/calendar", { headers: { cookie: parentCookie } })).json<any>();
+    const taipeiDate = new Date(seenAt).toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei", year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "-");
+    expect(calendar.dates).toContain(taipeiDate);
   });
 
   it("records pure listening without spending leisure or earning a learning reward", async () => {

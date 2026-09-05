@@ -41,6 +41,7 @@ test("REG-024 downloaded iPhone video uses one advancing local player", async ({
     durationSeconds: 120,
   };
   await mockAuthorizedWatchApi(page, undefined, video);
+  await page.route("**/api/parent/session", route => route.fulfill({ json: { authenticated: true } }));
   await page.route("**/api/content/categories**", route => route.fulfill({
     json: route.request().url().endsWith("/videos") ? [video] : [category],
   }));
@@ -51,11 +52,10 @@ test("REG-024 downloaded iPhone video uses one advancing local player", async ({
   }));
   page.on("dialog", dialog => dialog.accept());
 
-  await page.goto(`/category/${category.id}`);
-  await page.getByRole("button", { name: "下載／繼續下載整個系列" }).click();
+  await page.goto("/parent/downloads");
+  await page.getByRole("button", { name: "下載整個系列" }).click();
   await expect(page.getByRole("status")).toContainText("整個系列已下載完成");
-  await page.goto("/downloads");
-  await page.getByRole("link", { name: "觀看", exact: true }).click();
+  await page.goto(`/watch/${TEST_VIDEO_ID}?mode=video&offline=1`);
 
   await expect(page.locator("video.native-media-player")).toHaveCount(1);
   await expect(page.locator("audio.native-background-audio")).toHaveCount(0);

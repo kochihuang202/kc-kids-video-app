@@ -10,7 +10,7 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
   ];
   const access = {
     state: "AVAILABLE", remainingSeconds: 900, todayPlayedSeconds: 340, dailyLimitSeconds: 2400,
-    bonusSeconds: 0, baseLimitSeconds: 2400, earnedBonusSeconds: 120, learningSeconds: 240,
+    bonusSeconds: 0, baseLimitSeconds: 2400, earnedBonusSeconds: 0, learningSeconds: 240,
     leisureUsedSeconds: 100, listenSeconds: 0, gracePeriodSeconds: 0, nextAllowedAt: null,
     isPaused: false, serverTimeTaipei: "12:00", todayDate: "2026-09-02", message: "今天還有約 15 分鐘休閒時間",
     categoryStates: [],

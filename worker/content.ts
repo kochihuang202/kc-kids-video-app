@@ -298,7 +298,22 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
     playback_mode: "video" | "listen";
   }>();
 
-  const recents = (rows.results || []).map((row) => {
+  const offlineRows = await env.DB.prepare(`
+    SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
+      v.media_type, v.media_path, v.thumbnail_path, v.duration_seconds,
+      ov.last_seen_at AS last_played_at, ov.playback_mode
+    FROM offline_video_views ov
+    JOIN videos v ON v.id = ov.video_id
+    WHERE ov.child_device_id = ?
+      AND v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
+    ORDER BY ov.last_seen_at DESC
+    LIMIT 10
+  `).bind(device.id).all<VideoRow & {
+    last_played_at: string;
+    playback_mode: "video" | "listen";
+  }>();
+
+  const sessionRecents = (rows.results || []).map((row) => {
     const dur = row.duration_seconds || 0;
     const pos = row.last_position_seconds || 0;
     const isWatched = dur > 0 ? pos / dur >= threshold : false;
@@ -312,8 +327,26 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
       isWatched,
       lastPlayedAt: row.last_played_at,
       playbackMode: row.playback_mode,
+      offlineViewed: false,
     };
   });
+
+  const markerRecents = (offlineRows.results || []).map((row) => ({
+    id: row.id,
+    ...mediaDto(row, env),
+    youtubeTitle: row.youtube_title,
+    parentLabel: row.parent_label,
+    durationSeconds: row.duration_seconds,
+    lastPositionSeconds: 0,
+    isWatched: false,
+    lastPlayedAt: row.last_played_at,
+    playbackMode: row.playback_mode,
+    offlineViewed: true,
+  }));
+  const recents = [...sessionRecents, ...markerRecents]
+    .sort((a, b) => b.lastPlayedAt.localeCompare(a.lastPlayedAt))
+    .filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index)
+    .slice(0, 10);
 
   return json(recents);
 }
@@ -330,6 +363,45 @@ export async function getChildTodayPicks(request: Request, env: AppEnv) {
 export async function getDeviceStatus(request: Request, env: AppEnv) {
   const device = await getChildDevice(request, env, false);
   return json({ authorized: !!device, device });
+}
+
+export async function syncOfflineVideoViews(request: Request, env: AppEnv) {
+  const device = await getChildDevice(request, env, true);
+  const body = await readJson(request);
+  if (!Array.isArray(body.items) || body.items.length < 1 || body.items.length > 100) {
+    throw new HttpError("離線觀看資料格式不正確。", 400, "INVALID_OFFLINE_VIEWS");
+  }
+  await consumeRateLimit(env, await rateKey(env, "offline-views", device!.id), 20, 60);
+  const now = new Date().toISOString();
+  const statements = body.items.map((raw) => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new HttpError("離線觀看資料格式不正確。", 400, "INVALID_OFFLINE_VIEW");
+    const item = raw as Record<string, unknown>;
+    const videoId = text(item.videoId, "影片", 1, 120);
+    const playbackMode = item.playbackMode === "listen" ? "listen" : "video";
+    const seenAt = text(item.seenAt, "觀看時間", 20, 40);
+    const parsed = Date.parse(seenAt);
+    if (!Number.isFinite(parsed) || parsed > Date.now() + 5 * 60_000 || parsed < Date.now() - 366 * 86400_000) {
+      throw new HttpError("離線觀看時間不正確。", 400, "INVALID_OFFLINE_VIEW_TIME");
+    }
+    return env.DB.prepare(`
+      INSERT INTO offline_video_views (
+        child_device_id, video_id, playback_mode, first_seen_at, last_seen_at, synced_at
+      )
+      SELECT ?, v.id, ?, ?, ?, ? FROM videos v
+      WHERE v.id = ? AND v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
+      ON CONFLICT(child_device_id, video_id) DO UPDATE SET
+        playback_mode = CASE
+          WHEN excluded.last_seen_at >= offline_video_views.last_seen_at THEN excluded.playback_mode
+          ELSE offline_video_views.playback_mode
+        END,
+        first_seen_at = MIN(offline_video_views.first_seen_at, excluded.first_seen_at),
+        last_seen_at = MAX(offline_video_views.last_seen_at, excluded.last_seen_at),
+        synced_at = excluded.synced_at
+    `).bind(device!.id, playbackMode, seenAt, seenAt, now, videoId);
+  });
+  const results = await env.DB.batch(statements);
+  const synced = results.reduce((total, result) => total + (result.meta.changes || 0), 0);
+  return json({ ok: true, synced });
 }
 
 export async function updateLearnedState(request: Request, env: AppEnv, videoId: string) {

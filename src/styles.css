@@ -1704,8 +1704,35 @@ svg { flex: 0 0 auto; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 /* Device-local downloads deliberately reuse the app's warm, simple controls. */
-.downloads-page { max-width: 960px; margin: auto; padding: 24px; overflow-wrap: anywhere; }
-.downloads-page section, .download-panel { padding: 16px; margin: 16px 0; background: #e5eee2; border-radius: 18px; }
-.download-panel button, .downloads-page button { padding: 12px; margin: 4px; border: 1px solid #abc0ae; border-radius: 12px; background: #fff; color: #294d3c; cursor: pointer; }
-.download-panel button:disabled { opacity: .5; }
-.downloads-page li { padding: 12px 0; }
+.parent-downloads-page { display: grid; gap: 18px; }
+.parent-page-intro { margin: -8px 0 4px; color: var(--muted); font-weight: 650; }
+.current-download-device { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: #416451; font-weight: 850; }
+.current-download-device svg { width: 18px; height: 18px; }
+.download-device-warning { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 16px 18px; border: 1px solid #e4c990; border-radius: 18px; background: #fff9e9; }
+.download-device-warning > svg { width: 24px; color: #936f2c; }
+.download-device-warning p { margin: 3px 0 0; color: var(--muted); }
+.download-device-warning a { color: #345746; font-weight: 850; }
+.offline-series-list { display: grid; gap: 12px; }
+.offline-series-card { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 17px 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--card); box-shadow: 0 7px 20px rgba(50, 77, 61, 0.05); }
+.offline-series-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: #e7f0e5; font-size: 27px; }
+.offline-series-main { min-width: 0; }
+.offline-series-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.offline-series-title h3 { margin: 0; font-size: 1.15rem; }
+.offline-series-main > p { margin: 5px 0 0; color: var(--muted); }
+.offline-series-main small { display: block; margin-top: 5px; color: var(--muted); }
+.download-state { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 999px; background: #eef1ed; color: #69776f; font-size: .78rem; font-weight: 850; }
+.download-state svg { width: 15px; height: 15px; }
+.download-state.complete { background: #deeee0; color: #376248; }
+.download-state.partial { background: #fff0cf; color: #825f22; }
+.download-progress-message { overflow-wrap: anywhere; font-weight: 750; color: #416451 !important; }
+.offline-series-actions { display: flex; align-items: center; gap: 8px; }
+.offline-series-actions svg { width: 18px; height: 18px; }
+.offline-series-actions .download-delete { color: #9a4f49; }
+@media (max-width: 720px) {
+  .download-device-warning { grid-template-columns: auto 1fr; }
+  .download-device-warning a { grid-column: 2; }
+  .offline-series-card { grid-template-columns: 44px minmax(0, 1fr); padding: 15px; }
+  .offline-series-icon { width: 44px; height: 44px; border-radius: 14px; font-size: 23px; }
+  .offline-series-actions { grid-column: 1 / -1; justify-content: stretch; }
+  .offline-series-actions .ui-button { flex: 1; }
+}

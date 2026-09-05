@@ -674,7 +674,26 @@ export async function getDashboard(request: Request, env: AppEnv) {
     videoToCatIds[row.video_id].push(row.category_id);
   }
 
-  const timeline = sessions.map((session) => {
+  let offlineViews: Array<{
+    child_device_id: string; video_id: string; video_label: string | null; device_name: string;
+    last_seen_at: string; playback_mode: "video" | "listen"; series_type: "learning" | "leisure" | null;
+  }> = [];
+  try {
+    const result = await env.DB.prepare(`
+      SELECT ov.child_device_id, ov.video_id, v.parent_label AS video_label,
+        COALESCE(cd.name, '家庭裝置') AS device_name, ov.last_seen_at, ov.playback_mode,
+        (SELECT c.series_type FROM category_videos cv JOIN categories c ON c.id = cv.category_id
+          WHERE cv.video_id = ov.video_id ORDER BY c.sort_order LIMIT 1) AS series_type
+      FROM offline_video_views ov
+      JOIN videos v ON v.id = ov.video_id
+      LEFT JOIN child_devices cd ON cd.id = ov.child_device_id
+      WHERE ov.last_seen_at >= ? AND ov.last_seen_at < ?
+      ORDER BY ov.last_seen_at DESC
+    `).bind(start, end).all<typeof offlineViews[number]>();
+    offlineViews = result.results || [];
+  } catch { errors.timeline = "離線觀看紀錄暫時無法載入。"; }
+
+  const timedTimeline = sessions.map((session) => {
     const matching = heartbeats.filter((heartbeat) => heartbeat.view_session_id === session.id);
     const played = matching.length
       ? matching.reduce((total, heartbeat) => total + heartbeatSeconds(heartbeat, start, end), 0)
@@ -691,12 +710,29 @@ export async function getDashboard(request: Request, env: AppEnv) {
     };
   }).filter((session) => session.playedSeconds > 0 || notes.some((note) => note.view_session_id === session.id));
 
+  const offlineTimeline = offlineViews.map((view) => ({
+    id: `offline:${view.child_device_id}:${view.video_id}`,
+    videoId: view.video_id,
+    videoLabel: view.video_label || "已封存影片",
+    deviceName: view.device_name || "家庭裝置",
+    categoryNames: catMap[view.video_id] || [],
+    playedSeconds: 0,
+    lastPositionSeconds: 0,
+    startedAt: view.last_seen_at,
+    updatedAt: view.last_seen_at,
+    noteCount: 0,
+    playbackMode: view.playback_mode,
+    seriesType: view.series_type,
+    offlineViewed: true,
+  }));
+  const timeline = [...timedTimeline, ...offlineTimeline].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+
   const sharedUsage = calculateSharedUsage(sessions, heartbeats, { start, end });
   const sessionsWithHeartbeats = new Set(heartbeats.map((heartbeat) => heartbeat.view_session_id));
   let fallbackLearningSeconds = 0;
   let fallbackLeisureSeconds = 0;
   let fallbackListenSeconds = 0;
-  for (const session of timeline) {
+  for (const session of timedTimeline) {
     if (sessionsWithHeartbeats.has(session.id)) continue;
     if (session.playbackMode === "listen") fallbackListenSeconds += session.playedSeconds;
     else if (session.seriesType === "learning") fallbackLearningSeconds += session.playedSeconds;
@@ -714,7 +750,7 @@ export async function getDashboard(request: Request, env: AppEnv) {
     catStatsMap[cat.id] = { playedSeconds: 0, videoIds: new Set(), sessionCount: 0, noteCount: 0 };
   }
 
-  for (const session of timeline) {
+  for (const session of timedTimeline) {
     const catIds = videoToCatIds[session.videoId] || [];
     for (const cid of catIds) {
       if (!catStatsMap[cid]) catStatsMap[cid] = { playedSeconds: 0, videoIds: new Set(), sessionCount: 0, noteCount: 0 };
@@ -791,7 +827,7 @@ export async function getDashboard(request: Request, env: AppEnv) {
       leisureSeconds,
       listenSeconds,
       playedVideoCount: new Set(timeline.map((session) => session.videoId)).size,
-      sessionCount: timeline.length,
+      sessionCount: timedTimeline.length,
       noteCount: notes.length,
     },
     categoryStats,
@@ -809,18 +845,21 @@ export async function getCalendarHistory(request: Request, env: AppEnv) {
 
   let noteQuery = "SELECT created_at FROM notes WHERE deleted_at IS NULL";
   let sessionQuery = "SELECT started_at FROM view_sessions WHERE played_seconds > 0";
+  let offlineViewQuery = "SELECT last_seen_at FROM offline_video_views";
   const params: unknown[] = [];
 
   if (month && /^\d{4}-\d{2}$/.test(month)) {
     const startIso = `${month}-01T00:00:00+08:00`;
     noteQuery += " AND created_at >= ?";
     sessionQuery += " AND started_at >= ?";
+    offlineViewQuery += " WHERE last_seen_at >= ?";
     params.push(new Date(startIso).toISOString());
   }
 
-  const [noteRows, sessionRows] = await Promise.all([
+  const [noteRows, sessionRows, offlineViewRows] = await Promise.all([
     env.DB.prepare(noteQuery).bind(...params).all<{ created_at: string }>(),
     env.DB.prepare(sessionQuery).bind(...params).all<{ started_at: string }>(),
+    env.DB.prepare(offlineViewQuery).bind(...params).all<{ last_seen_at: string }>(),
   ]);
 
   const datesWithData = new Set<string>();
@@ -834,6 +873,7 @@ export async function getCalendarHistory(request: Request, env: AppEnv) {
 
   for (const r of noteRows.results || []) datesWithData.add(toDateStr(r.created_at));
   for (const r of sessionRows.results || []) datesWithData.add(toDateStr(r.started_at));
+  for (const r of offlineViewRows.results || []) datesWithData.add(toDateStr(r.last_seen_at));
 
   return json({
     month: month || "all",

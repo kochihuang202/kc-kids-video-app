@@ -78,7 +78,7 @@ describe("REG-004 D1 request cost guardrails", () => {
       learningSeconds: 120,
       listenSeconds: 15,
       todayPlayedSeconds: 165,
-      earnedBonusSeconds: 60,
+      earnedBonusSeconds: 0,
     });
     const lookup = await env.DB.prepare(
       "SELECT leisure_seconds, learning_seconds, listen_seconds, total_seconds FROM daily_usage_totals WHERE usage_date = ?",

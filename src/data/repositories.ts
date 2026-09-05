@@ -113,6 +113,11 @@ export const activityRepository = {
   },
 };
 
+export const offlineViewRepository = {
+  sync: (items: Array<{ videoId: string; playbackMode: "video" | "listen"; seenAt: string }>) =>
+    write<{ ok: true; synced: number }>("/api/offline-video-views/sync", "POST", { items }),
+};
+
 export interface DiagnosticEventInput {
   seq: number;
   type: string;
