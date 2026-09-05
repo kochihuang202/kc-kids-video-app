@@ -37,6 +37,21 @@ export async function installDeterministicMedia(
   options: { abortNetwork?: boolean; readyDelayMs?: number; deferPlayUntilReady?: boolean; stallBlobAudio?: boolean } = {},
 ) {
   await page.addInitScript(({ failures, readyDelayMs, deferPlayUntilReady, stallBlobAudio }) => {
+    const mediaSessionHandlers = new Map<string, MediaSessionActionHandler | null>();
+    Object.defineProperty(navigator, "mediaSession", {
+      configurable: true,
+      value: {
+        playbackState: "none",
+        setActionHandler(action: string, handler: MediaSessionActionHandler | null) {
+          mediaSessionHandlers.set(action, handler);
+        },
+      },
+    });
+    (window as Window & { __invokeMediaSessionAction?: (action: string) => void }).__invokeMediaSessionAction = (action) => {
+      const handler = mediaSessionHandlers.get(action);
+      if (!handler) throw new Error(`No Media Session handler for ${action}`);
+      handler({ action } as MediaSessionActionDetails);
+    };
     const states = new WeakMap<HTMLMediaElement, {
       base: number;
       startedAt: number;
@@ -186,6 +201,14 @@ export function getMediaLoadCount(page: Page) {
 
 export function getMediaSourceRemovalCount(page: Page) {
   return page.evaluate(() => (window as Window & { __mediaSourceRemovalCount?: number }).__mediaSourceRemovalCount || 0);
+}
+
+export function invokeMediaSessionAction(page: Page, action: "play" | "pause") {
+  return page.evaluate((requestedAction) => {
+    const invoke = (window as Window & { __invokeMediaSessionAction?: (action: string) => void }).__invokeMediaSessionAction;
+    if (!invoke) throw new Error("Media Session test helper is not installed");
+    invoke(requestedAction);
+  }, action);
 }
 
 export async function mockAuthorizedWatchApi(

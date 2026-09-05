@@ -33,6 +33,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     const readySentRef = useRef(false);
     const playRequestedRef = useRef(autoPlay);
     const pendingPlayRef = useRef<Promise<void> | null>(null);
+    const remotePauseRef = useRef(false);
     const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType, src);
 
     const syncVisualVideo = (play: boolean) => {
@@ -168,6 +169,49 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     }, [playbackRate]);
 
     useEffect(() => {
+      if (mediaType !== "audio" || typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+      const mediaSession = navigator.mediaSession;
+      const pauseFromSystem = () => {
+        remotePauseRef.current = true;
+        playRequestedRef.current = false;
+        elementRef.current?.pause();
+      };
+      const playFromSystem = () => {
+        const element = elementRef.current;
+        if (!element) return;
+        playRequestedRef.current = true;
+
+        if (remotePauseRef.current) {
+          remotePauseRef.current = false;
+          const position = Math.max(0, element.currentTime || 0);
+          const activeSource = element.getAttribute("src") || src;
+          // WebKit can resolve play() and advance currentTime while the PWA's
+          // audio output remains silent after a lock-screen pause. Rebinding
+          // the source immediately before remote play reattaches native audio.
+          element.setAttribute("src", activeSource);
+          element.load();
+          const restorePosition = () => {
+            if (Math.abs(element.currentTime - position) > 0.25) element.currentTime = position;
+          };
+          element.addEventListener("loadedmetadata", restorePosition, { once: true });
+          try { element.currentTime = position; } catch { /* restored after metadata */ }
+        }
+        playElement(element);
+      };
+
+      try {
+        mediaSession.setActionHandler("pause", pauseFromSystem);
+        mediaSession.setActionHandler("play", playFromSystem);
+      } catch { return; }
+      return () => {
+        try {
+          mediaSession.setActionHandler("pause", null);
+          mediaSession.setActionHandler("play", null);
+        } catch { /* older WebKit may reject unsupported actions */ }
+      };
+    }, [mediaType, src]);
+
+    useEffect(() => {
       if (!useBackgroundAudioMaster) return;
       const handleVisibility = () => {
         const master = elementRef.current;
@@ -227,10 +271,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       },
       onPlaying: () => {
         playRequestedRef.current = true;
+        if (typeof navigator !== "undefined" && "mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
         syncVisualVideo(true);
         onStateChange?.("PLAYING");
       },
       onPause: () => {
+        if (typeof navigator !== "undefined" && "mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
         if (!elementRef.current?.ended) onStateChange?.("PAUSED");
       },
       onWaiting: () => onStateChange?.("BUFFERING"),

@@ -1,15 +1,8 @@
 import type { Plugin } from "vite";
 
-// Only immutable app assets and the public shell are cached. Never cache parent
-// APIs, credentials, media streams, or arbitrary navigation responses.
-export function offlineShell(): Plugin {
-  return {
-    name: "kids-offline-shell",
-    apply: "build",
-    generateBundle(_, bundle) {
-      const files = Object.keys(bundle).filter(name => /\.(js|css)$/.test(name)).map(name => `/${name}`);
-      const version = files.join("|");
-      this.emitFile({ type: "asset", fileName: "offline-sw.js", source: `
+export function offlineShellSource(files: string[]) {
+  const version = files.join("|");
+  return `
 const CACHE = 'kids-shell-' + ${JSON.stringify(version)};
 const FILES = ${JSON.stringify(["/", ...files])};
 self.addEventListener('install', event => event.waitUntil(
@@ -33,7 +26,12 @@ self.addEventListener('fetch', event => {
   }
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(async () => (await caches.open(CACHE)).match('/')));
+    // The versioned install already fetched a fresh shell. Serving it first
+    // avoids iOS waiting for an unreachable network request before opening an
+    // installed Web App offline.
+    event.respondWith(caches.open(CACHE)
+      .then(cache => cache.match('/'))
+      .then(cached => cached || fetch(request)));
   } else if (url.pathname.startsWith('/assets/')) {
     // Match across shell caches so an already-controlled tab also survives the
     // short service-worker upgrade window after a new hashed build is deployed.
@@ -41,7 +39,18 @@ self.addEventListener('fetch', event => {
     // which must not prevent the same-origin document request matching here.
     event.respondWith(caches.match(request, { ignoreVary: true }).then(async cached => cached || fetch(request)));
   }
-});` });
+});`;
+}
+
+// Only immutable app assets and the public shell are cached. Never cache parent
+// APIs, credentials, media streams, or arbitrary navigation responses.
+export function offlineShell(): Plugin {
+  return {
+    name: "kids-offline-shell",
+    apply: "build",
+    generateBundle(_, bundle) {
+      const files = Object.keys(bundle).filter(name => /\.(js|css)$/.test(name)).map(name => `/${name}`);
+      this.emitFile({ type: "asset", fileName: "offline-sw.js", source: offlineShellSource(files) });
     },
   };
 }

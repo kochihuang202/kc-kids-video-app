@@ -201,3 +201,19 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The download operation saves each non-placeholder thumbnail, the offline category displays it through the Service Worker, retrying fills missing thumbnails without re-downloading completed videos, and deleting the series removes unused cached thumbnails.
 - Root cause: Phase 1 of offline downloads stored MP4/MP3 files and metadata only. Thumbnail URLs still pointed to R2, while the Service Worker deliberately ignored all cross-origin image requests.
 - Regression test: `e2e/features/download-series.spec.ts`
+
+## REG-026 — Installed Web App waits too long before opening offline
+
+- Problem: After networking is disabled, reopening the installed iPhone Web App shows a blank/loading state for a noticeable time before the downloaded UI appears.
+- Reproduction: Open the installed Web App once online so its shell is cached, disable all networking, fully close it, then launch it again from the Home Screen.
+- Correct behavior: A controlled launch returns the cached app shell immediately; downloaded data then renders from local snapshots without waiting for a failed navigation request.
+- Root cause: The Service Worker used network-first navigation. iOS can take a long time to reject an unreachable `fetch()`, even though a valid app shell is already cached.
+- Regression test: `test/offline-shell.spec.ts`
+
+## REG-027 — Lock-screen pause then play advances silently in pure listening
+
+- Problem: Pure listening works while an iPhone is locked, but pausing and resuming from the still-locked screen can advance the timeline with no sound.
+- Reproduction: Start a self-hosted item in pure-listening mode, lock the phone, press Pause in the lock-screen media controls, then press Play without unlocking.
+- Correct behavior: The lock-screen controls explicitly pause and resume the app's audio element. Resume rebinds the same source, keeps the previous position, and reattaches the native audio output session before playback continues.
+- Root cause: The app relied on WebKit's default Media Session action. A WebKit failure mode allows `HTMLMediaElement.play()` to resolve and time to advance while the PWA's audio output remains silent after a system-level pause.
+- Regression test: `e2e/regressions/listen-background-audio.spec.ts`

@@ -14,7 +14,7 @@ YouTube 不提供下載。若某部影片曾屬於下載系列，但裝置檔案
 
 - 影音逐塊寫入 Origin Private File System（OPFS），不把整部影片放進記憶體。
 - 只有完整寫入、關閉且檔案大小核對成功後才標記完成。
-- 分類、影片與授權狀態留下小型本機快照；系列的影片縮圖另外存入專用 Cache Storage，Service Worker 在離線時提供縮圖。它不快取 API、Cookie 或媒體串流。
+- 分類、影片與授權狀態留下小型本機快照；系列的影片縮圖另外存入專用 Cache Storage，Service Worker 在離線時提供縮圖。App 外殼採快取優先，離線冷啟動不等待網路逾時；每次部署的新版本仍會在 Service Worker 安裝時更新外殼。它不快取 API、Cookie 或媒體串流。
 - 從「已下載」進入播放器時直接讀取本機快照，不等待網路；其他入口若網路介面仍顯示在線但 API 沒有回應，會在短暫等待後自動使用快照。
 - 本機 Blob URL 接回既有 NativeMediaPlayer，因此觀看、純聽、循環與自動接續沿用同一套邏輯。
 - 下載及刪除使用 Web Lock，避免兩個分頁同時改寫相同檔案。
