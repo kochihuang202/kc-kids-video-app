@@ -31,9 +31,19 @@ function silentWav() {
   return wav;
 }
 
-export async function installDeterministicMedia(page: Page, failLoads: number, options: { abortNetwork?: boolean } = {}) {
-  await page.addInitScript(({ failures }) => {
-    const states = new WeakMap<HTMLMediaElement, { base: number; startedAt: number; playing: boolean }>();
+export async function installDeterministicMedia(
+  page: Page,
+  failLoads: number,
+  options: { abortNetwork?: boolean; readyDelayMs?: number; deferPlayUntilReady?: boolean } = {},
+) {
+  await page.addInitScript(({ failures, readyDelayMs, deferPlayUntilReady }) => {
+    const states = new WeakMap<HTMLMediaElement, {
+      base: number;
+      startedAt: number;
+      playing: boolean;
+      ready: boolean;
+      pendingPlay: Array<{ resolve: () => void; reject: (error: Error) => void }>;
+    }>();
     let loadCount = 0;
     let sourceRemovalCount = 0;
     let dispatchingEnded = false;
@@ -50,7 +60,7 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
     const stateFor = (element: HTMLMediaElement) => {
       let state = states.get(element);
       if (!state) {
-        state = { base: 0, startedAt: performance.now(), playing: false };
+        state = { base: 0, startedAt: performance.now(), playing: false, ready: false, pendingPlay: [] };
         states.set(element, state);
       }
       return state;
@@ -78,8 +88,16 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
       (window as Window & { __mediaLoadCount?: number }).__mediaLoadCount = loadCount;
       const element = this;
       window.setTimeout(() => {
+        stateFor(element).ready = attempt > failures;
         element.dispatchEvent(new Event(attempt <= failures ? "error" : "loadedmetadata"));
-      }, 25);
+        const state = stateFor(element);
+        if (state.ready && state.pendingPlay.length) {
+          state.playing = true;
+          state.startedAt = performance.now();
+          element.dispatchEvent(new Event("playing"));
+          for (const pending of state.pendingPlay.splice(0)) pending.resolve();
+        }
+      }, readyDelayMs);
     };
     HTMLMediaElement.prototype.play = function play() {
       const state = stateFor(this);
@@ -88,6 +106,10 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
       if (dispatchingEnded) {
         this.dispatchEvent(new Event("playing"));
         return Promise.resolve();
+      }
+      if (deferPlayUntilReady && !state.ready) {
+        this.dispatchEvent(new Event("waiting"));
+        return new Promise<void>((resolve, reject) => state.pendingPlay.push({ resolve, reject }));
       }
       if (!state.playing) {
         state.playing = true;
@@ -98,6 +120,9 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
     };
     HTMLMediaElement.prototype.pause = function pause() {
       const state = stateFor(this);
+      for (const pending of state.pendingPlay.splice(0)) {
+        pending.reject(new DOMException("The play() request was interrupted by pause()", "AbortError"));
+      }
       if (!state.playing) return;
       state.base += (performance.now() - state.startedAt) / 1000;
       state.playing = false;
@@ -105,7 +130,9 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
     };
 
     (window as Window & { __finishMediaForTest?: () => void }).__finishMediaForTest = () => {
-      const element = document.querySelector("audio.native-media-player") as HTMLMediaElement | null;
+      const element = (document.querySelector("audio.native-media-player")
+        || document.querySelector("audio.native-background-audio")
+        || document.querySelector("video.native-media-player")) as HTMLMediaElement | null;
       if (!element) throw new Error("No native audio player");
       const state = stateFor(element);
       if (element.loop) {
@@ -123,11 +150,18 @@ export async function installDeterministicMedia(page: Page, failLoads: number, o
       element.dispatchEvent(new Event("ended"));
       dispatchingEnded = false;
     };
-  }, { failures: failLoads });
+  }, {
+    failures: failLoads,
+    readyDelayMs: options.readyDelayMs ?? 25,
+    deferPlayUntilReady: options.deferPlayUntilReady ?? false,
+  });
 
-  await page.route("**/e2e-media/regression-media.wav*", (route) => options.abortNetwork === false
-    ? route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() })
-    : route.abort("connectionfailed"));
+  await page.route("**/e2e-media/regression-media.wav*", async (route) => {
+    if (options.deferPlayUntilReady) await new Promise((resolve) => setTimeout(resolve, options.readyDelayMs ?? 25));
+    return options.abortNetwork === false
+      ? route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() })
+      : route.abort("connectionfailed");
+  });
 }
 
 export function finishMediaForTest(page: Page) {

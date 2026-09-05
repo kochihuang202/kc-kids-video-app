@@ -161,3 +161,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The same native audio media session loops from the beginning and its real current time continues advancing with sound while the screen remains locked.
 - Root cause: The React `ended` handler synchronously called `seekTo(0)` and `play()`. Production diagnostics showed iPadOS emitting a new `playing` event within 0.1–0.2 seconds while the underlying timeline remained fixed at either 0 or 902 seconds. Learning audio now uses the media element's native `loop` behavior, so iPadOS performs the transition inside the already-authorized media session.
 - Regression test: `e2e/regressions/listen-background-audio.spec.ts`
+
+## REG-021 — A play request made before local media is ready becomes a false connection error
+
+- Problem: DeepEng viewing mode can briefly show the connection-error and retry screen even though the Mac, Tailscale and media request are healthy.
+- Reproduction: Open a self-hosted video, press Play while metadata is still loading, and press Play again before the player becomes ready.
+- Correct behavior: The first user gesture remains the pending play request; becoming ready must not pause it, duplicate taps must not create duplicate play promises, and an app-initiated `AbortError` must not start the 60-second network retry flow.
+- Root cause: The ready handler always paused non-autoplay media, cancelling the pending user `play()` promise. Its expected `AbortError` was then handled as a Mac/Tailscale connection failure.
+- Regression test: `e2e/regressions/media-auto-retry.spec.ts`

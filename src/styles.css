@@ -1703,3 +1703,9 @@ svg { flex: 0 0 auto; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+/* Device-local downloads deliberately reuse the app's warm, simple controls. */
+.downloads-page { max-width: 960px; margin: auto; padding: 24px; overflow-wrap: anywhere; }
+.downloads-page section, .download-panel { padding: 16px; margin: 16px 0; background: #e5eee2; border-radius: 18px; }
+.download-panel button, .downloads-page button { padding: 12px; margin: 4px; border: 1px solid #abc0ae; border-radius: 12px; background: #fff; color: #294d3c; cursor: pointer; }
+.download-panel button:disabled { opacity: .5; }
+.downloads-page li { padding: 12px 0; }

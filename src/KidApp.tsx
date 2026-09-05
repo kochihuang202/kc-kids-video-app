@@ -2,6 +2,8 @@ import { ArrowLeft, Clock, Clock3, Headphones, Pause, Play, RefreshCw, RotateCcw
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
+import { SeriesDownload } from "./components/Downloads";
+import { localMedia, managedVideo } from "./lib/downloads";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
@@ -38,7 +40,7 @@ function CategoryThumbnail({ src, alt, categoryName }: { src: string; alt: strin
 }
 
 function withMediaRetry(src: string, retryKey: number) {
-  if (retryKey === 0) return src;
+  if (retryKey === 0 || src.startsWith("blob:")) return src;
   try {
     const url = new URL(src);
     url.searchParams.set("kc_retry", String(retryKey));
@@ -263,6 +265,7 @@ export function HomePage() {
     <main className="kid-shell home-page">
       <header className="home-header">
         <ParentGate />
+        <Link to="/downloads">已下載</Link>
         <h1>今天想看什麼？</h1>
         {accessState && !isOutsideWindow && accessState.message && (
           <div className="gentle-time-badge" aria-label={accessState.message}>
@@ -527,6 +530,7 @@ export function CategoryPage() {
             </div>
           )}
 
+          {category && videos && device?.authorized && <SeriesDownload category={category} videos={videos} />}
           {resumeVideo && (
             <section className="resume-section category-resume-section" aria-label="上次播放位置">
               <div className="resume-header">
@@ -757,6 +761,16 @@ export function WatchPage() {
         contentRepository.getVideo(videoId),
         contentRepository.getAccessState().catch(() => null),
       ]);
+      if (nextVideo.source === "self_hosted") {
+        if (nextVideo.isSelectable === false) throw new Error("請先從前五部影片選擇。");
+        const file = await localMedia(nextVideo.id);
+        if (file) {
+          nextVideo.mediaUrl = URL.createObjectURL(file);
+        } else if (managedVideo(nextVideo.id) && !confirm("這部影片尚未下載或已被清除。要使用網路串流嗎？這會消耗流量。")) {
+          setLoadError("請回到「已下載」重新下載影片。");
+          return;
+        }
+      }
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
       let nextCategoryVideos: VideoFixture[] = [];
       if (nextVideo.categoryId) {
@@ -795,11 +809,16 @@ export function WatchPage() {
   }, [load]);
 
   useEffect(() => {
+    const src = video?.mediaUrl;
+    return () => { if (src?.startsWith("blob:")) URL.revokeObjectURL(src); };
+  }, [video?.mediaUrl]);
+
+  useEffect(() => {
     if (!video || !device?.authorized) return;
     const diagnostics = new PlaybackDiagnostics(device, video, playbackMode);
     diagnosticsRef.current = diagnostics;
     diagnostics.event("player_created", { state: video.source });
-    if (video.source === "self_hosted" && video.mediaUrl) void diagnostics.probeMedia(video.mediaUrl, "playback_start");
+    if (video.source === "self_hosted" && video.mediaUrl && !video.mediaUrl.startsWith("blob:")) void diagnostics.probeMedia(video.mediaUrl, "playback_start");
     const onWindowError = (event: ErrorEvent) => diagnostics.event(
       "javascript_error", { message: event.error?.name || "window_error" }, "JAVASCRIPT_ERROR", currentPosRef.current,
     );
@@ -830,29 +849,26 @@ export function WatchPage() {
     };
   }, [device?.authorized, device?.device?.id, isAutoplay, playbackMode, video?.id]);
 
-  useEffect(() => {
-    const interval = window.setInterval(async () => {
-      try {
-        const nextAccess = await contentRepository.getAccessState();
-        setAccessState(nextAccess);
-        if (nextAccess.state === "PAUSED_BY_PARENT") {
-          playerRef.current?.pause();
-          setParentPaused(true);
-          setOutsideWindow(false);
-        } else if (nextAccess.state === "OUTSIDE_WINDOW") {
-          playerRef.current?.pause();
-          setParentPaused(false);
-          setOutsideWindow(true);
-        } else {
-          setParentPaused(false);
-          setOutsideWindow(false);
-          const state = video ? reminderRemainingForVideo(nextAccess, video) : { remaining: nextAccess.remainingSeconds, categoryReached: false };
-          remainingSecsRef.current = state.remaining;
-          if (playbackMode === "video" && video?.seriesType === "leisure" && (state.categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED")) setTimeUp(true);
-        }
-      } catch { /* offline tolerance */ }
-    }, 15000);
-    return () => window.clearInterval(interval);
+  const applyAccessState = useCallback((nextAccess: ChildAccessState) => {
+    setAccessState(nextAccess);
+    if (nextAccess.state === "PAUSED_BY_PARENT") {
+      playerRef.current?.pause();
+      setParentPaused(true);
+      setOutsideWindow(false);
+    } else if (nextAccess.state === "OUTSIDE_WINDOW") {
+      playerRef.current?.pause();
+      setParentPaused(false);
+      setOutsideWindow(true);
+    } else {
+      setParentPaused(false);
+      setOutsideWindow(false);
+      const state = video ? reminderRemainingForVideo(nextAccess, video) : { remaining: nextAccess.remainingSeconds, categoryReached: false };
+      remainingSecsRef.current = state.remaining;
+      if (playbackMode === "video" && video?.seriesType === "leisure" && (state.categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED")) {
+        playerRef.current?.pause();
+        setTimeUp(true);
+      }
+    }
   }, [playbackMode, video]);
 
   useEffect(() => {
@@ -869,15 +885,19 @@ export function WatchPage() {
     setAutoRetryActive(true);
     setPlayerError(true);
     diagnosticsRef.current?.event("retry_started", { retryNumber: mediaRetryAttemptRef.current, networkOnline: navigator.onLine }, undefined, retryPosition);
-    if (video?.mediaUrl) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "retry_start");
+    if (video?.mediaUrl && !video.mediaUrl.startsWith("blob:")) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "retry_start");
     setMediaRetryKey((key) => key + 1);
   }, [video?.mediaUrl]);
 
   const handleMediaError = useCallback((mediaError?: MediaError | null) => {
+    if (video?.mediaUrl?.startsWith("blob:")) {
+      setLoadError("本機影片無法播放。請到已下載刪除該系列後重新下載；若仍失敗，可能是裝置不支援此影音格式。");
+      return;
+    }
     setPlayerError(true);
     const code = mediaError?.code ? `MEDIA_ERROR_${mediaError.code}` : "MEDIA_ERROR";
     diagnosticsRef.current?.event("media_error", { mediaErrorCode: mediaError?.code || 0, networkOnline: navigator.onLine }, code, currentPosRef.current);
-    if (video?.mediaUrl) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "media_error");
+    if (video?.mediaUrl && !video.mediaUrl.startsWith("blob:")) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "media_error");
     if (video?.source !== "self_hosted" || autoRetryActiveRef.current) return;
     startMediaRetry();
   }, [startMediaRetry, video?.mediaUrl, video?.source]);
@@ -959,7 +979,10 @@ export function WatchPage() {
       while (queueRef.current.length) {
         const item = queueRef.current[0];
         try {
-          await activityRepository.updateViewSession(item.sessionId, item.payload, item.keepalive);
+          const res = await activityRepository.updateViewSession(item.sessionId, item.payload, item.keepalive);
+          if (res?.accessState) {
+            applyAccessState(res.accessState);
+          }
           queueRef.current.shift();
         } catch (error) {
           if (error instanceof ApiError && [400, 403, 409, 410].includes(error.status)) {
@@ -1053,11 +1076,11 @@ export function WatchPage() {
       playingStartWallRef.current = null;
       if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
         setTimeUp(true);
+      } else if (video?.seriesType === "learning") {
+        // 學習系列：重複播放當前的內容
+        restartVideo();
       } else if (playbackModeRef.current === "listen" || video?.mediaType === "audio") {
-        if (video?.seriesType === "learning") {
-          // 學習系列純聽模式：重複播放當前的內容
-          restartVideo();
-        } else if (!usesYouTubeListenPlaylistRef.current) {
+        if (!usesYouTubeListenPlaylistRef.current) {
           // 休閒系列純聽模式：自動接續播放下一集
           if (nextListenTrackRef.current) {
             const queue = readPlaybackQueue();
@@ -1130,7 +1153,7 @@ export function WatchPage() {
     const heartbeatInterval = window.setInterval(() => {
       if (playerStateRef.current === "PLAYING") void flushTracking();
       else void drainQueue();
-    }, 10_000);
+    }, 30_000);
     const onVisibility = () => {
       diagnosticsRef.current?.event(document.visibilityState === "hidden" ? "visibility_hidden" : "visibility_visible", {
         state: document.visibilityState, networkOnline: navigator.onLine,
@@ -1207,7 +1230,7 @@ export function WatchPage() {
   if (loadError === "DEVICE_AUTH_REQUIRED") return (
     <main className="kid-shell"><div className="limit-card"><span className="ended-badge">🔐</span><h1>請家長先授權這台裝置</h1><p>授權一次後，孩子不需要登入，觀看紀錄與時間會自動同步。</p><Link className={buttonVariants({ size: "large" })} to="/parent/settings">前往家長設定</Link></div></main>
   );
-  if (loadError) return <main className="kid-shell"><KidError message={loadError} retry={() => void load()} /></main>;
+  if (loadError) return <main className="kid-shell"><Link to="/downloads">已下載</Link>　<Link to="/">孩子首頁</Link><KidError message={loadError} retry={() => void load()} /></main>;
   if (!video) return <Navigate to="/" replace />;
 
   const activePos = isDragging ? dragPos : currentPos;
@@ -1248,7 +1271,7 @@ export function WatchPage() {
               volume={volume}
               playbackRate={playbackRate}
               autoPlay={isAutoplay}
-              loopPlayback={playbackMode === "listen" && video.seriesType === "learning"}
+              loopPlayback={video.seriesType === "learning"}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
               onError={handleMediaError}

@@ -2,6 +2,7 @@ import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { CategoryPage, HomePage, WatchPage } from "./KidApp";
 import ParentApp from "./ParentApp";
+import { DownloadsPage } from "./components/Downloads";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -73,6 +74,7 @@ export default function App() {
     <ErrorBoundary>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/downloads" element={<DownloadsPage />} />
         <Route path="/category/:categoryId" element={<CategoryPage />} />
         <Route path="/watch/:videoId" element={<WatchPage />} />
         <Route path="/parent/*" element={<ParentApp />} />

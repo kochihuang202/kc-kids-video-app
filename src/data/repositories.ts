@@ -19,6 +19,8 @@ import type {
   DiagnosticSummary,
 } from "../types";
 
+import { offlineSnapshot, rememberOffline } from "../lib/downloads";
+
 export class ApiError extends Error {
   constructor(message: string, public status: number, public code?: string) {
     super(message);
@@ -34,7 +36,24 @@ async function readJson<T>(response: Response): Promise<T> {
 async function api<T>(path: string, init?: RequestInit) {
   const headers = new Headers(init?.headers);
   if (init?.body && !headers.has("content-type")) headers.set("content-type", "application/json");
-  return readJson<T>(await fetch(path, { cache: "no-store", ...init, headers }));
+  const snapshotAllowed = (!init?.method || init.method === "GET") &&
+    (path.startsWith("/api/content/") || path === "/api/device/status");
+  if (snapshotAllowed && !navigator.onLine) {
+    const saved = offlineSnapshot<T>(path);
+    if (saved !== undefined) return saved;
+  }
+  try {
+    const value = await readJson<T>(await fetch(path, { cache: "no-store", ...init, headers }));
+    if (snapshotAllowed) rememberOffline(path, value);
+    return value;
+  } catch (error) {
+    // HTTP authorization/content errors never fall back to stale authorization.
+    if (snapshotAllowed && !(error instanceof ApiError)) {
+      const saved = offlineSnapshot<T>(path);
+      if (saved !== undefined) return saved;
+    }
+    throw error;
+  }
 }
 
 const write = <T>(path: string, method: string, body: unknown) => api<T>(path, { method, body: JSON.stringify(body) });
@@ -65,7 +84,7 @@ export const activityRepository = {
     });
   },
   updateViewSession(id: string, input: UpdateViewSessionInput, keepalive = false) {
-    return api<{ ok: true }>(`/api/view-sessions/${encodeURIComponent(id)}`, {
+    return api<{ ok: true; aggregate?: unknown; accessState?: ChildAccessState }>(`/api/view-sessions/${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),

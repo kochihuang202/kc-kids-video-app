@@ -28,6 +28,8 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     const elementRef = useRef<HTMLMediaElement | null>(null);
     const visualVideoRef = useRef<HTMLVideoElement | null>(null);
     const readySentRef = useRef(false);
+    const playRequestedRef = useRef(autoPlay);
+    const pendingPlayRef = useRef<Promise<void> | null>(null);
     const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType);
 
     const syncVisualVideo = (play: boolean) => {
@@ -40,6 +42,23 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       else visual.pause();
     };
 
+    const playElement = (element: HTMLMediaElement) => {
+      if (pendingPlayRef.current) return;
+      const request = element.play();
+      pendingPlayRef.current = request;
+      void request.then(() => {
+        if (playRequestedRef.current && elementRef.current === element) syncVisualVideo(true);
+      }).catch((error: unknown) => {
+        // A pending play promise is commonly aborted when our own pause/load
+        // wins the race. That is a control-flow interruption, not a broken
+        // Mac/Tailscale media connection.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        onError?.();
+      }).finally(() => {
+        if (pendingPlayRef.current === request) pendingPlayRef.current = null;
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       getCurrentTime: () => elementRef.current?.currentTime || startAt,
       getDuration: () => {
@@ -47,9 +66,13 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         return duration && Number.isFinite(duration) ? duration : 0;
       },
       play: () => {
-        void elementRef.current?.play().then(() => syncVisualVideo(true)).catch(() => onError?.());
+        playRequestedRef.current = true;
+        const element = elementRef.current;
+        if (!element) return;
+        playElement(element);
       },
       pause: () => {
+        playRequestedRef.current = false;
         elementRef.current?.pause();
         visualVideoRef.current?.pause();
       },
@@ -68,8 +91,13 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
 
     useEffect(() => {
       readySentRef.current = false;
+      playRequestedRef.current = autoPlay;
+      pendingPlayRef.current = null;
       const element = elementRef.current;
       if (!element) return;
+      // StrictMode replays effect cleanup/setup without re-rendering the DOM.
+      // Restore the source that the unmount cleanup removed during that replay.
+      if (element.getAttribute("src") !== src) element.setAttribute("src", src);
       // Keep the native autoplay flag for playlist continuation. On iPadOS a
       // script-only play() after the screen locks can be rejected, while the
       // existing user-started media session may continue to the next source.
@@ -94,12 +122,19 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       if (visual) {
         visual.muted = true;
         visual.playsInline = true;
+        visual.loop = loopPlayback;
         visual.load();
       }
       return () => {
         element.removeEventListener("webkitbeginfullscreen", keepInline);
       };
-    }, [autoPlay, loopPlayback, src]);
+    }, [autoPlay, src]);
+
+    useEffect(() => {
+      const element = elementRef.current;
+      if (element) element.loop = loopPlayback;
+      if (visualVideoRef.current) visualVideoRef.current.loop = loopPlayback;
+    }, [loopPlayback]);
 
     // Only tear down the media session when the player really unmounts. A
     // playlist source change reuses this element; pausing and clearing `src`
@@ -157,15 +192,15 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         const duration = Number.isFinite(element.duration) ? element.duration : Number.MAX_SAFE_INTEGER;
         element.currentTime = Math.min(startAt, duration);
       }
-      if (autoPlay) {
-        void element.play().then(() => syncVisualVideo(true)).catch(() => onError?.());
-      } else {
-        element.pause();
-      }
       readySentRef.current = true;
       reportProgress();
       onReady?.();
       onStateChange?.("READY");
+      if (playRequestedRef.current) {
+        playElement(element);
+      } else {
+        element.pause();
+      }
     };
 
     const commonProps = {
@@ -175,9 +210,20 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       onLoadedMetadata: markReady,
       onCanPlay: markReady,
       onDurationChange: reportProgress,
-      onTimeUpdate: reportProgress,
-      onSeeked: reportProgress,
+      onTimeUpdate: () => {
+        reportProgress();
+        const master = elementRef.current;
+        const visual = visualVideoRef.current;
+        if (master && visual && !document.hidden && Math.abs(visual.currentTime - master.currentTime) > 0.5) {
+          syncVisualVideo(playRequestedRef.current);
+        }
+      },
+      onSeeked: () => {
+        reportProgress();
+        syncVisualVideo(playRequestedRef.current);
+      },
       onPlaying: () => {
+        playRequestedRef.current = true;
         syncVisualVideo(true);
         onStateChange?.("PLAYING");
       },
@@ -185,7 +231,18 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         if (!elementRef.current?.ended) onStateChange?.("PAUSED");
       },
       onWaiting: () => onStateChange?.("BUFFERING"),
-      onEnded: () => onStateChange?.("ENDED"),
+      onEnded: () => {
+        if (loopPlayback) {
+          const el = elementRef.current;
+          if (el) {
+            el.currentTime = 0;
+            void el.play().catch(() => {});
+          }
+          syncVisualVideo(true);
+          return;
+        }
+        onStateChange?.("ENDED");
+      },
       onError: () => onError?.(elementRef.current?.error),
       loop: loopPlayback,
     };
@@ -212,6 +269,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
             preload="metadata"
             controls={false}
             playsInline
+            loop={loopPlayback}
             disablePictureInPicture
             disableRemotePlayback
             controlsList="nofullscreen nodownload noremoteplayback"
