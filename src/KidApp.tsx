@@ -146,17 +146,18 @@ function KidError({ message, retry }: { message: string; retry: () => void }) {
   return <div className="kid-error" role="alert"><p>{message}</p><Button variant="secondary" onClick={retry}><RefreshCw />再試一次</Button></div>;
 }
 
-function PlaybackModeSelector({ mode, onChange, label = "播放模式" }: {
+function PlaybackModeSelector({ mode, onChange, label = "播放模式", disabled = false }: {
   mode: PlaybackMode;
   onChange: (mode: PlaybackMode) => void;
   label?: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="playback-mode-selector" role="group" aria-label={label}>
-      <button type="button" className={mode === "video" ? "active" : ""} aria-pressed={mode === "video"} onClick={() => onChange("video")}>
+      <button type="button" disabled={disabled} className={mode === "video" ? "active" : ""} aria-pressed={mode === "video"} onClick={() => onChange("video")}>
         <Play />觀看
       </button>
-      <button type="button" className={mode === "listen" ? "active" : ""} aria-pressed={mode === "listen"} onClick={() => onChange("listen")}>
+      <button type="button" disabled={disabled} className={mode === "listen" ? "active" : ""} aria-pressed={mode === "listen"} onClick={() => onChange("listen")}>
         <Headphones />純聽
       </button>
     </div>
@@ -663,6 +664,7 @@ export function WatchPage() {
   const playerStateRef = useRef<PlayerState>("READY");
   const diagnosticsRef = useRef<PlaybackDiagnostics | null>(null);
   const bufferingDiagnosticTimerRef = useRef<number | null>(null);
+  const modeSwitchingRef = useRef(false);
 
   const [playerError, setPlayerError] = useState(false);
   const [mediaRetryKey, setMediaRetryKey] = useState(0);
@@ -682,6 +684,8 @@ export function WatchPage() {
   const [volume, setVolume] = useState(1);
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("video");
+  const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const [playerAutoPlay, setPlayerAutoPlay] = useState(isAutoplay);
 
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [timeUp, setTimeUp] = useState(false);
@@ -774,6 +778,7 @@ export function WatchPage() {
       // can then cue the complete playlist before the child's first play tap.
       setCategoryVideos(nextCategoryVideos);
       setPlaybackMode(initialMode);
+      setPlayerAutoPlay(isAutoplay);
       setVideo(nextVideo);
       const resumePosition = forceFreshStart || !hasExplicitResumePosition ? 0 : rawInitialPos;
       setStartPosition(resumePosition);
@@ -795,7 +800,7 @@ export function WatchPage() {
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
     }
-  }, [forceFreshStart, hasExplicitResumePosition, preferOffline, rawInitialPos, requestedMode, videoId]);
+  }, [forceFreshStart, hasExplicitResumePosition, isAutoplay, preferOffline, rawInitialPos, requestedMode, videoId]);
 
   useEffect(() => {
     void load();
@@ -857,12 +862,12 @@ export function WatchPage() {
       setOutsideWindow(false);
       const state = video ? reminderRemainingForVideo(nextAccess, video) : { remaining: nextAccess.remainingSeconds, categoryReached: false };
       remainingSecsRef.current = state.remaining;
-      if (playbackMode === "video" && video?.seriesType === "leisure" && (state.categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED")) {
+      if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && (state.categoryReached || nextAccess.state === "DAILY_LIMIT_REACHED")) {
         playerRef.current?.pause();
         setTimeUp(true);
       }
     }
-  }, [playbackMode, video]);
+  }, [video]);
 
   useEffect(() => {
     currentPosRef.current = currentPos;
@@ -991,7 +996,7 @@ export function WatchPage() {
     } finally {
       drainingRef.current = false;
     }
-  }, []);
+  }, [applyAccessState]);
 
   const flushTracking = useCallback(async (status: "active" | "ended" = "active", keepalive = false) => {
     const nowPerf = performance.now();
@@ -1101,6 +1106,7 @@ export function WatchPage() {
         }
       }
     } else if (state === "PAUSED") {
+      if (modeSwitchingRef.current) return;
       void flushTracking("active");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
@@ -1196,6 +1202,77 @@ export function WatchPage() {
     }
   };
 
+  const switchPlaybackMode = useCallback(async (nextMode: PlaybackMode, resumeAfterSwitch = false) => {
+    if (!video || isSwitchingMode || nextMode === playbackModeRef.current) return;
+    if (nextMode === "video" && video.mediaType === "audio") return;
+
+    setIsSwitchingMode(true);
+    try {
+      if (nextMode === "video" && video.seriesType === "leisure") {
+        const nextAccess = await contentRepository.getAccessState(preferOffline).catch(() => accessState);
+        if (!nextAccess) return;
+        applyAccessState(nextAccess);
+        if (nextAccess.state === "PAUSED_BY_PARENT" || nextAccess.state === "OUTSIDE_WINDOW") return;
+        const { remaining, categoryReached } = reminderRemainingForVideo(nextAccess, video);
+        if (categoryReached || remaining <= 0 || nextAccess.state === "DAILY_LIMIT_REACHED") {
+          setTimeUp(true);
+          return;
+        }
+      }
+
+      const previousMode = playbackModeRef.current;
+      const position = Math.max(0, playerRef.current?.getCurrentTime() || currentPosRef.current);
+      const shouldResume = resumeAfterSwitch || playerStateRef.current === "PLAYING";
+      const hasPendingSession = !!capabilityRef.current || !!sessionPromiseRef.current;
+      modeSwitchingRef.current = true;
+      const closingSession = hasPendingSession ? flushTracking("ended") : Promise.resolve();
+      playerRef.current?.pause();
+      await closingSession;
+
+      capabilityRef.current = null;
+      sessionPromiseRef.current = null;
+      clientSessionIdRef.current = crypto.randomUUID();
+      heartbeatSeqRef.current = 0;
+      accumulatedPlayMsRef.current = 0;
+      playingStartPerfRef.current = null;
+      playingStartWallRef.current = null;
+      playingStartPositionRef.current = null;
+      playerStateRef.current = "READY";
+      setPausePrompts([]);
+      setIsEnded(false);
+      setTimeUp(false);
+      setStartPosition(position);
+      setCurrentPos(position);
+      setDragPos(position);
+      setPlayerAutoPlay(shouldResume);
+      playbackModeRef.current = nextMode;
+      setPlaybackMode(nextMode);
+      if (video.seriesType) savePreferredMode(video.seriesType, nextMode);
+
+      const queue = readPlaybackQueue();
+      if (queue?.currentVideoId === video.id) savePlaybackQueue({ ...queue, mode: nextMode });
+      const url = new URL(window.location.href);
+      url.searchParams.set("mode", nextMode);
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+
+      if (video.source === "youtube" && video.youtubeVideoId) {
+        const playlist = categoryVideos
+          .filter((item) => item.source === "youtube" && !!item.youtubeVideoId)
+          .map((item) => item.youtubeVideoId!);
+        if (nextMode === "listen" && video.seriesType === "leisure" && playlist.length > 1) {
+          playerRef.current?.switchToPlaylist?.(playlist, video.youtubeVideoId, position, shouldResume);
+        } else if (previousMode === "listen" && video.seriesType === "leisure") {
+          playerRef.current?.switchToVideo?.(video.youtubeVideoId, position, shouldResume);
+        } else if (shouldResume) {
+          playerRef.current?.play();
+        }
+      }
+    } finally {
+      modeSwitchingRef.current = false;
+      setIsSwitchingMode(false);
+    }
+  }, [accessState, applyAccessState, categoryVideos, flushTracking, isSwitchingMode, preferOffline, video]);
+
   const seekRelative = useCallback((delta: number) => {
     const current = playerRef.current?.getCurrentTime() ?? currentPos;
     const max = totalDuration > 0 ? totalDuration : 999999;
@@ -1270,7 +1347,7 @@ export function WatchPage() {
             />
           ) : video.mediaUrl && video.mediaType ? (
             <NativeMediaPlayer
-              key={mediaRetryKey}
+              key={`${mediaRetryKey}:${playbackMode}`}
               ref={playerRef}
               src={withMediaRetry(video.mediaUrl, mediaRetryKey)}
               mediaType={playbackMode === "listen" ? "audio" : video.mediaType}
@@ -1278,7 +1355,7 @@ export function WatchPage() {
               startAt={startPosition}
               volume={volume}
               playbackRate={playbackRate}
-              autoPlay={isAutoplay}
+              autoPlay={playerAutoPlay}
               loopPlayback={video.seriesType === "learning"}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
@@ -1374,7 +1451,7 @@ export function WatchPage() {
               <div className="ended-content">
                 <span className="ended-badge" aria-hidden="true">🌙</span>
                 <h1>今天的休閒時間到了</h1>
-                <p>可以回首頁選學習影片；自家影片也能切換成純聽。<br /><span style={{ color: "#b7e3ca", fontWeight: "bold" }}>✨ 休息前，想想今天最有趣的新發現吧！</span></p>
+                <p>可以回首頁選學習影片，或改成純聽繼續。<br /><span style={{ color: "#b7e3ca", fontWeight: "bold" }}>✨ 休息前，想想今天最有趣的新發現吧！</span></p>
 
                 <div className="ended-questions-box">
                   <span className="ended-questions-title">💭 休息前想一想：</span>
@@ -1389,16 +1466,8 @@ export function WatchPage() {
                 </div>
 
                 <div className="ended-buttons">
-                  {nextTrack && (
-                    <Button
-                      size="large"
-                      onClick={() => navigate(`/watch/${nextTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1${offlineQuery}`)}
-                    >
-                      <Play /> 下一集：{nextTrack.parentLabel}
-                    </Button>
-                  )}
-                  <Button size="large" variant="secondary" onClick={restartVideo}>
-                    <RotateCcw /> 再看一次
+                  <Button size="large" onClick={() => void switchPlaybackMode("listen", true)} disabled={isSwitchingMode}>
+                    <Headphones /> 改成純聽並繼續
                   </Button>
                   <Link className={buttonVariants({ variant: "secondary", size: "large" })} to="/">
                     回首頁
@@ -1549,6 +1618,15 @@ export function WatchPage() {
                   <option value={1.0}>1.0</option>
                 </select>
               </div>
+
+              {(video.source === "youtube" || video.mediaType === "video") && (
+                <PlaybackModeSelector
+                  mode={playbackMode}
+                  onChange={(mode) => void switchPlaybackMode(mode)}
+                  label="播放器播放模式"
+                  disabled={isSwitchingMode}
+                />
+              )}
             </div>
 
             <div className="playback-buttons" onClick={(e) => e.stopPropagation()}>

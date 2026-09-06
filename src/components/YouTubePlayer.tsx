@@ -65,6 +65,8 @@ export interface YouTubePlayerHandle {
   seekTo(seconds: number): void;
   setPlaybackRate?(rate: number): void;
   getAudioState?(): { volume: number | null; muted: boolean | null };
+  switchToPlaylist?(videoIds: string[], videoId: string, seconds: number, play: boolean): void;
+  switchToVideo?(videoId: string, seconds: number, play: boolean): void;
 }
 
 interface YouTubePlayerProps {
@@ -148,6 +150,23 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         volume: typeof playerRef.current?.getVolume === "function" ? playerRef.current.getVolume() : null,
         muted: typeof playerRef.current?.isMuted === "function" ? playerRef.current.isMuted() : null,
       }),
+      switchToPlaylist: (videoIds, activeVideoId, seconds, play) => {
+        const player = playerRef.current;
+        if (!player || videoIds.length < 2 || !player.cuePlaylist || !player.loadPlaylist) return;
+        const index = Math.max(0, videoIds.indexOf(activeVideoId));
+        loadedVideoIdRef.current = activeVideoId;
+        if (play) player.loadPlaylist(videoIds, index, Math.max(0, seconds));
+        else player.cuePlaylist(videoIds, index, Math.max(0, seconds));
+        player.setLoop?.(true);
+      },
+      switchToVideo: (activeVideoId, seconds, play) => {
+        const player = playerRef.current;
+        if (!player) return;
+        loadedVideoIdRef.current = activeVideoId;
+        player.setLoop?.(false);
+        if (play) player.loadVideoById(activeVideoId, Math.max(0, seconds));
+        else player.cueVideoById(activeVideoId, Math.max(0, seconds));
+      },
     }), [startAt]);
 
     useEffect(() => {
