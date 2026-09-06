@@ -274,7 +274,7 @@ describe("parent auth and administration", () => {
     expect(rejected.status).toBe(400);
   });
 
-  it("returns 401 without a session and creates a secure 12-hour cookie on login", async () => {
+  it("returns 401 without a session and creates a secure one-year cookie on login", async () => {
     expect((await call("/api/parent/categories")).status).toBe(401);
     await addParent();
     const response = await call("/api/parent/session", { method: "POST", body: jsonBody({ password: "correct horse battery" }) });
@@ -282,7 +282,7 @@ describe("parent auth and administration", () => {
     expect(setCookie).toContain("HttpOnly");
     expect(setCookie).toContain("Secure");
     expect(setCookie).toContain("SameSite=Lax");
-    expect(setCookie).toContain("Max-Age=43200");
+    expect(setCookie).toContain("Max-Age=31536000");
   });
 
   it("requires same-origin JSON for parent mutations", async () => {

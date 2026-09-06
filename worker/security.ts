@@ -4,7 +4,7 @@ import type { AppEnv, ChildDevice, ParentSession } from "./types";
 const encoder = new TextEncoder();
 const PARENT_COOKIE = "parent_session";
 const DEVICE_COOKIE = "kid_device";
-const SESSION_SECONDS = 12 * 60 * 60;
+const SESSION_SECONDS = 365 * 24 * 60 * 60;
 const DEVICE_SECONDS = 365 * 24 * 60 * 60;
 const DEVICE_TOUCH_INTERVAL_MS = 15 * 60 * 1000;
 export const MAX_PBKDF2_ITERATIONS = 100_000;
