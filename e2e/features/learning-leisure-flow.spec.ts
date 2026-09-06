@@ -67,7 +67,8 @@ test("groups learning and leisure and unlocks the next lesson after marking one 
   await page.goto("/");
   await expect(page.getByRole("region", { name: "📚 學習系列" })).toContainText("科學");
   await expect(page.getByRole("region", { name: "🎈 休閒系列" })).toContainText("卡通");
-  await expect(page.getByRole("region", { name: "今日休閒時間" })).toContainText("15 分鐘");
+  await expect(page.getByRole("region", { name: "今日休閒時間" })).toHaveCount(0);
+  await expect(page.getByText(/看 2 分鐘，多 1 分鐘休閒/)).toHaveCount(0);
 
   await page.getByLabel("學習系列播放模式").getByRole("button", { name: "純聽" }).click();
   await page.getByRole("link", { name: /科學/ }).click();

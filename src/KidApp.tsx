@@ -278,13 +278,6 @@ export function HomePage() {
         )}
       </header>
 
-      {accessState && !isOutsideWindow && (
-        <section className="leisure-balance" aria-label="今日休閒時間">
-          <div><span>今日休閒剩餘</span><strong>{Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘</strong></div>
-          <div><span>休閒已用</span><strong>{Math.floor((accessState.leisureUsedSeconds || 0) / 60)} 分鐘</strong></div>
-        </section>
-      )}
-
       {notice && (
         <aside className="device-notice" role="status">
           <div><strong>這台裝置還沒設定好</strong><p>請家長授權一次，才能同步觀看紀錄與每日時間。</p></div>
@@ -348,7 +341,6 @@ export function HomePage() {
             <h2>{group.title}</h2>
             {group.type === "learning" ? (
               <div className="series-heading-right">
-                <span className="series-subtitle">不限休閒額度 · 看 2 分鐘，多 1 分鐘休閒</span>
                 <PlaybackModeSelector mode={learningMode} onChange={changeLearningMode} label="學習系列播放模式" />
               </div>
             ) : (
