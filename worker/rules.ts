@@ -150,6 +150,7 @@ export function calculateSharedUsage(
       all[slot] = 1;
       if (session.playback_mode !== "video") {
         listen[slot] = 1;
+        if (session.series_type_snapshot === "learning") learning[slot] = 1;
         continue;
       }
       if (session.series_type_snapshot === "learning") learning[slot] = 1;
@@ -165,7 +166,7 @@ export function calculateSharedUsage(
     if (all[index]) totalPlayedSeconds += 1;
     if (leisure[index]) leisureUsedSeconds += 1;
     else if (learning[index]) learningSeconds += 1;
-    else if (listen[index]) listenSeconds += 1;
+    if (listen[index]) listenSeconds += 1;
   }
   return { leisureUsedSeconds, learningSeconds, listenSeconds, totalPlayedSeconds };
 }
@@ -275,11 +276,9 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
   }
 
   const statements: D1PreparedStatement[] = [];
-  const categoryIds = input.playbackMode === "video"
-    ? ((await env.DB.prepare(
-        "SELECT category_id FROM category_videos WHERE video_id = ? ORDER BY sort_order, category_id",
-      ).bind(input.videoId).all<{ category_id: string }>()).results || []).map((row) => row.category_id)
-    : [];
+  const categoryIds = ((await env.DB.prepare(
+    "SELECT category_id FROM category_videos WHERE video_id = ? ORDER BY sort_order, category_id",
+  ).bind(input.videoId).all<{ category_id: string }>()).results || []).map((row) => row.category_id);
   const newSession: UsageSession = {
     id: input.viewSessionId,
     video_id: "",
@@ -353,12 +352,19 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
     for (const categoryId of categoryIds) {
       statements.push(env.DB.prepare(`
         INSERT INTO daily_category_usage_totals (
-          usage_date, category_id, video_seconds, updated_at
-        ) VALUES (?, ?, ?, ?)
+          usage_date, category_id, video_seconds, listen_seconds, updated_at
+        ) VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(usage_date, category_id) DO UPDATE SET
           video_seconds = MAX(0, video_seconds + excluded.video_seconds),
+          listen_seconds = MAX(0, listen_seconds + excluded.listen_seconds),
           updated_at = excluded.updated_at
-      `).bind(dateStr, categoryId, Math.max(0, totalDelta), input.receivedAt));
+      `).bind(
+        dateStr,
+        categoryId,
+        input.playbackMode === "video" ? Math.max(0, totalDelta) : 0,
+        input.playbackMode === "listen" ? Math.max(0, totalDelta) : 0,
+        input.receivedAt,
+      ));
     }
   }
   return statements;
@@ -399,7 +405,8 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
   // Calculate Category-specific played seconds and limits
   const categoriesResult = await env.DB.prepare(`
     SELECT c.id, c.name, c.icon, c.tone, c.daily_limit_seconds,
-      COALESCE(t.video_seconds, 0) AS today_video_seconds
+      COALESCE(t.video_seconds, 0) AS today_video_seconds,
+      COALESCE(t.listen_seconds, 0) AS today_listen_seconds
     FROM categories c
     LEFT JOIN daily_category_usage_totals t
       ON t.category_id = c.id AND t.usage_date = ?
@@ -407,14 +414,15 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
     ORDER BY c.sort_order, c.id
   `).bind(dateStr).all<{
     id: string; name: string; icon: string; tone: "sage" | "sky" | "apricot";
-    daily_limit_seconds: number | null; today_video_seconds: number;
+    daily_limit_seconds: number | null; today_video_seconds: number; today_listen_seconds: number;
   }>();
   const activeCategories = categoriesResult.results || [];
 
   const categoryStates = activeCategories.map((c) => {
-    const played = c.today_video_seconds || 0;
+    const watched = c.today_video_seconds || 0;
+    const played = watched + (c.today_listen_seconds || 0);
     const limit = c.daily_limit_seconds;
-    const remaining = (limit !== null && limit !== undefined && limit > 0) ? Math.max(0, limit - played) : null;
+    const remaining = (limit !== null && limit !== undefined && limit > 0) ? Math.max(0, limit - watched) : null;
     const isReached = limit !== null && limit !== undefined && limit > 0 ? remaining === 0 : false;
     return {
       categoryId: c.id,

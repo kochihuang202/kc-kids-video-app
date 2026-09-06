@@ -330,7 +330,7 @@ function HistoryPage() {
                   <strong>{formatPlayedDuration(dashboard.summary.totalPlayedSeconds)}</strong>
                 </div>
                 <div className="summary-card">
-                  <span>📚 學習觀看</span>
+                  <span>📚 學習時間</span>
                   <strong>{formatExactDuration(dashboard.summary.learningSeconds || 0)}</strong>
                 </div>
                 <div className="summary-card">
@@ -338,7 +338,7 @@ function HistoryPage() {
                   <strong>{formatExactDuration(dashboard.summary.leisureSeconds || 0)}</strong>
                 </div>
                 <div className="summary-card">
-                  <span>🎧 純聽</span>
+                  <span>🎧 純聽時間</span>
                   <strong>{formatExactDuration(dashboard.summary.listenSeconds || 0)}</strong>
                 </div>
                 <div className="summary-card">

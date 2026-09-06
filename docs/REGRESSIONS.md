@@ -217,3 +217,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The lock-screen controls explicitly pause and resume the app's audio element. Resume rebinds the same source, keeps the previous position, and reattaches the native audio output session before playback continues.
 - Root cause: The app relied on WebKit's default Media Session action. A WebKit failure mode allows `HTMLMediaElement.play()` to resolve and time to advance while the PWA's audio output remains silent after a system-level pause.
 - Regression test: `e2e/regressions/listen-background-audio.spec.ts`
+
+## REG-028 — Learning-series pure listening is recorded but absent from accumulated time
+
+- Problem: WowEnglish can be played for hours in pure-listening mode and the Sessions/Heartbeats exist in D1, but the learning total and the category card appear not to increase.
+- Reproduction: Start a learning-series item in pure-listening mode, play for at least one heartbeat, then inspect the child access state, the category card, and the parent daily summary.
+- Correct behavior: Pure listening accumulates in the pure-listening total and the category's displayed activity time. When the category is a learning series, the same time also counts as learning time. It never consumes leisure/category viewing limits and never earns leisure bonus time.
+- Root cause: The usage classifier treated `listen` as mutually exclusive from `learning`, and category rollups deliberately queried and updated only video-mode Sessions.
+- Regression test: `test/learning-leisure.spec.ts`

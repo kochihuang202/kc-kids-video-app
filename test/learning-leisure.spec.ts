@@ -217,7 +217,7 @@ describe("learning and leisure rules", () => {
     expect(calendar.dates).toContain(taipeiDate);
   });
 
-  it("records pure listening without spending leisure or earning a learning reward", async () => {
+  it("counts learning-series listening as learning and category activity without spending leisure", async () => {
     const device = await pairDevice("listen-mode");
     const now = new Date().toISOString();
     await env.DB.batch([
@@ -230,7 +230,7 @@ describe("learning and leisure rules", () => {
       `).bind(now, now),
       env.DB.prepare(`
         INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
-        VALUES ('english', 'listen-local', 99, ?)
+        VALUES ('science', 'listen-local', 99, ?)
       `).bind(now),
     ]);
     const started = await call("/api/view-sessions", {
@@ -246,14 +246,16 @@ describe("learning and leisure rules", () => {
 
     const access = await (await call("/api/child/access-state")).json<any>();
     expect(access.listenSeconds).toBe(60);
-    expect(access.learningSeconds).toBe(0);
+    expect(access.learningSeconds).toBe(60);
     expect(access.leisureUsedSeconds).toBe(0);
     expect(access.earnedBonusSeconds).toBe(0);
     expect(access.remainingSeconds).toBe(access.baseLimitSeconds);
     const categoryUsage = await env.DB.prepare(
-      "SELECT COALESCE(SUM(video_seconds), 0) AS seconds FROM daily_category_usage_totals",
-    ).first<{ seconds: number }>();
-    expect(categoryUsage?.seconds).toBe(0);
+      "SELECT COALESCE(SUM(video_seconds), 0) AS video_seconds, COALESCE(SUM(listen_seconds), 0) AS listen_seconds FROM daily_category_usage_totals",
+    ).first<{ video_seconds: number; listen_seconds: number }>();
+    expect(categoryUsage).toEqual({ video_seconds: 0, listen_seconds: 60 });
+    const science = access.categoryStates.find((category: any) => category.categoryId === "science");
+    expect(science).toMatchObject({ todayPlayedSeconds: 60, remainingSeconds: null, isReached: false });
   });
 
   it("deduplicates overlapping devices with leisure taking precedence", async () => {
