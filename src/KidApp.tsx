@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
 import { advancePlaybackQueue, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
 import { PlaybackDiagnostics } from "./lib/playbackDiagnostics";
+import { clampPlaybackPosition, getPlaybackRange, relativePlaybackPosition } from "../shared/playbackRange";
 import { cn, formatPosition } from "./lib/utils";
 import type {
   Category, ChildAccessState, DeviceStatus, PlaybackMode, RecentVideo, ResumeInfo, TodayPick,
@@ -665,6 +666,10 @@ export function WatchPage() {
   const diagnosticsRef = useRef<PlaybackDiagnostics | null>(null);
   const bufferingDiagnosticTimerRef = useRef<number | null>(null);
   const modeSwitchingRef = useRef(false);
+  const trimEndingRef = useRef(false);
+  const completionHandledRef = useRef(false);
+  const rangeStartRef = useRef(0);
+  const rangeEndRef = useRef<number | null>(null);
 
   const [playerError, setPlayerError] = useState(false);
   const [mediaRetryKey, setMediaRetryKey] = useState(0);
@@ -780,7 +785,9 @@ export function WatchPage() {
       setPlaybackMode(initialMode);
       setPlayerAutoPlay(isAutoplay);
       setVideo(nextVideo);
-      const resumePosition = forceFreshStart || !hasExplicitResumePosition ? 0 : rawInitialPos;
+      const resumePosition = forceFreshStart || !hasExplicitResumePosition
+        ? getPlaybackRange(nextVideo).startSeconds
+        : clampPlaybackPosition(nextVideo, rawInitialPos);
       setStartPosition(resumePosition);
       setCurrentPos(resumePosition);
       setDragPos(resumePosition);
@@ -1044,8 +1051,8 @@ export function WatchPage() {
 
   const restartVideo = useCallback(() => {
     setIsEnded(false);
-    playerRef.current?.seekTo(0);
-    setCurrentPos(0);
+    playerRef.current?.seekTo(rangeStartRef.current);
+    setCurrentPos(rangeStartRef.current);
     playerRef.current?.play();
   }, []);
 
@@ -1068,6 +1075,7 @@ export function WatchPage() {
       bufferingDiagnosticTimerRef.current = null;
     }
     if (state === "PLAYING") {
+      completionHandledRef.current = false;
       if (video?.mediaUrl?.startsWith("blob:") && !navigator.onLine) rememberOfflineView(video.id, playbackMode);
       else void syncOfflineViews();
       setIsEnded(false);
@@ -1079,6 +1087,9 @@ export function WatchPage() {
       }
       void ensureSession();
     } else if (state === "ENDED") {
+      if (completionHandledRef.current) return;
+      completionHandledRef.current = true;
+      trimEndingRef.current = false;
       setIsEnded(true);
       setPausePrompts([]);
       setEndPrompts(getRandomThinkingPrompts(5));
@@ -1106,6 +1117,7 @@ export function WatchPage() {
         }
       }
     } else if (state === "PAUSED") {
+      if (trimEndingRef.current) return;
       if (modeSwitchingRef.current) return;
       void flushTracking("active");
       playingStartPerfRef.current = null;
@@ -1122,6 +1134,10 @@ export function WatchPage() {
     if (!usesYouTubeListenPlaylistRef.current || youtubeVideoId === video?.youtubeVideoId) return;
     const target = categoryVideos.find((item) => item.youtubeVideoId === youtubeVideoId);
     if (!target) return;
+    const targetRange = getPlaybackRange(target);
+    rangeStartRef.current = targetRange.startSeconds;
+    rangeEndRef.current = target.playbackEndSeconds ?? null;
+    playerRef.current?.seekTo(targetRange.startSeconds);
     const queue = readPlaybackQueue();
     if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: target.id });
     diagnosticsRef.current?.event("next_requested", { state: target.id, transition: "youtube_playlist" }, undefined, currentPosRef.current);
@@ -1132,6 +1148,13 @@ export function WatchPage() {
     if (!isDragging) setCurrentPos(time);
     if (duration > 0) setTotalDuration((previous) => previous === duration ? previous : duration);
   }, [isDragging]);
+
+  useEffect(() => {
+    if (!video) return;
+    const range = getPlaybackRange({ ...video, durationSeconds: totalDuration || video.durationSeconds });
+    rangeStartRef.current = range.startSeconds;
+    rangeEndRef.current = video.playbackEndSeconds ?? null;
+  }, [totalDuration, video]);
 
   useEffect(() => {
     if (timeUp) {
@@ -1161,6 +1184,13 @@ export function WatchPage() {
           if (!isDragging) setCurrentPos(time);
           const dur = playerRef.current.getDuration();
           if (dur > 0 && dur !== totalDuration) setTotalDuration(dur);
+          const end = rangeEndRef.current;
+          if (end !== null && time >= end - 0.2 && !trimEndingRef.current) {
+            trimEndingRef.current = true;
+            playerRef.current.pause();
+            handlePlayerState("ENDED");
+            if (usesYouTubeListenPlaylistRef.current) playerRef.current.nextVideo?.();
+          }
         }
       }
     }, 500);
@@ -1186,7 +1216,7 @@ export function WatchPage() {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
     };
-  }, [drainQueue, flushTracking, isDragging, totalDuration]);
+  }, [drainQueue, flushTracking, handlePlayerState, isDragging, totalDuration]);
 
   const togglePlay = () => {
     if (!device?.authorized || parentPaused || outsideWindow) return;
@@ -1275,12 +1305,11 @@ export function WatchPage() {
 
   const seekRelative = useCallback((delta: number) => {
     const current = playerRef.current?.getCurrentTime() ?? currentPos;
-    const max = totalDuration > 0 ? totalDuration : 999999;
-    const target = Math.max(0, Math.min(max, current + delta));
+    const target = clampPlaybackPosition({ ...video!, durationSeconds: totalDuration || video?.durationSeconds }, current + delta);
     playerRef.current?.seekTo(target);
     setCurrentPos(target);
     diagnosticsRef.current?.event("seeked", { state: delta < 0 ? "backward_10" : "forward_10" }, undefined, target);
-  }, [currentPos, totalDuration]);
+  }, [currentPos, totalDuration, video]);
 
   useEffect(() => {
     const handleKeyboardSeek = (event: KeyboardEvent) => {
@@ -1305,10 +1334,11 @@ export function WatchPage() {
   };
 
   const handleSliderCommit = (val: number) => {
+    const target = clampPlaybackPosition({ ...video!, durationSeconds: totalDuration || video?.durationSeconds }, val);
     setIsDragging(false);
-    playerRef.current?.seekTo(val);
-    setCurrentPos(val);
-    diagnosticsRef.current?.event("seeked", { state: "scrubber" }, undefined, val);
+    playerRef.current?.seekTo(target);
+    setCurrentPos(target);
+    diagnosticsRef.current?.event("seeked", { state: "scrubber" }, undefined, target);
   };
 
   if (!video && !loadError) return <main className="watch-page watch-loading"><LoadingCard label="正在準備播放器…" /></main>;
@@ -1319,7 +1349,9 @@ export function WatchPage() {
   if (!video) return <Navigate to="/" replace />;
 
   const activePos = isDragging ? dragPos : currentPos;
-  const progressPercent = totalDuration > 0 ? Math.min(100, Math.max(0, (activePos / totalDuration) * 100)) : 0;
+  const playbackRange = getPlaybackRange({ ...video, durationSeconds: totalDuration || video.durationSeconds });
+  const relativePos = relativePlaybackPosition({ ...video, durationSeconds: totalDuration || video.durationSeconds }, activePos);
+  const progressPercent = playbackRange.durationSeconds ? Math.min(100, Math.max(0, (relativePos / playbackRange.durationSeconds) * 100)) : 0;
   const isYouTube = video.source === "youtube";
   const hasPlayableSource = isYouTube ? !!video.youtubeVideoId : !!video.mediaUrl && !!video.mediaType;
 
@@ -1356,7 +1388,7 @@ export function WatchPage() {
               volume={volume}
               playbackRate={playbackRate}
               autoPlay={playerAutoPlay}
-              loopPlayback={video.seriesType === "learning"}
+              loopPlayback={video.seriesType === "learning" && playbackRange.startSeconds === 0 && video.playbackEndSeconds == null}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
               onError={handleMediaError}
@@ -1566,12 +1598,12 @@ export function WatchPage() {
 
         <div className="kid-player-controls" role="region" aria-label="影片播放控制">
           <div className="kid-scrubber-row">
-            <span className="time-text">{formatPosition(activePos)}</span>
+            <span className="time-text">{formatPosition(relativePos)}</span>
             <div className="scrubber-wrapper">
               <input
                 type="range"
-                min={0}
-                max={totalDuration > 0 ? totalDuration : 100}
+                min={playbackRange.startSeconds}
+                max={playbackRange.endSeconds ?? (totalDuration > 0 ? totalDuration : playbackRange.startSeconds + 100)}
                 step={0.5}
                 value={activePos}
                 className="kid-slider"
@@ -1589,7 +1621,7 @@ export function WatchPage() {
                 }}
               />
             </div>
-            <span className="time-text">{totalDuration > 0 ? formatPosition(totalDuration) : "--:--"}</span>
+            <span className="time-text">{playbackRange.durationSeconds !== null ? formatPosition(playbackRange.durationSeconds) : "--:--"}</span>
           </div>
 
           <footer className="player-actions">

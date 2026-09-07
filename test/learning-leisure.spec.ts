@@ -103,12 +103,34 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),
     env.DB.prepare("DELETE FROM categories WHERE id = 'leisure-test'"),
     env.DB.prepare("UPDATE categories SET series_type = CASE WHEN id = 'science' THEN 'learning' ELSE 'leisure' END, daily_limit_seconds = NULL, is_active = 1, archived_at = NULL"),
-    env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available'"),
+    env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', playback_start_seconds = 0, playback_end_seconds = NULL"),
     env.DB.prepare("UPDATE usage_rules SET daily_limit_seconds = 2400, is_active = 1"),
   ]);
 });
 
 describe("learning and leisure rules", () => {
+  it("stores and returns a validated per-video playback range", async () => {
+    const parentCookie = await addParent();
+    const updated = await call("/api/parent/videos/why-sky-blue", {
+      method: "PATCH",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ playbackStartSeconds: 12, playbackEndSeconds: 90 }),
+    });
+    expect(updated.status).toBe(200);
+
+    const device = await pairDevice("playback-range");
+    const video = await (await call("/api/content/videos/why-sky-blue", { headers: { cookie: device.cookie } })).json<any>();
+    expect(video).toMatchObject({ playbackStartSeconds: 12, playbackEndSeconds: 90 });
+
+    const invalid = await call("/api/parent/videos/why-sky-blue", {
+      method: "PATCH",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ playbackStartSeconds: 90, playbackEndSeconds: 12 }),
+    });
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toMatchObject({ code: "INVALID_PLAYBACK_RANGE" });
+  });
+
   it("opens only the first five unlearned videos and restores original order when unlearned", async () => {
     const device = await pairDevice("first-five");
     await addScienceVideos(4);

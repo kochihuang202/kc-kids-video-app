@@ -17,6 +17,16 @@ function save(series: DownloadSeries[]) {
   localStorage.setItem(KEY, JSON.stringify(series));
   window.dispatchEvent(new Event("downloads-changed"));
 }
+export function refreshSavedSeriesMetadata(category: Category, videos: VideoFixture[]) {
+  const all = savedSeries();
+  const previous = all.find((item) => item.category.id === category.id);
+  if (!previous) return;
+  const byId = new Map(videos.map((video) => [video.id, video]));
+  const refreshed = previous.videos.map((video) => byId.get(video.id) || video);
+  for (const video of refreshed) rememberOffline(`/api/content/videos/${encodeURIComponent(video.id)}`, video);
+  rememberOffline(`/api/content/categories/${encodeURIComponent(category.id)}/videos`, videos);
+  save(all.map((item) => item.category.id === category.id ? { ...item, category, videos: refreshed } : item));
+}
 async function directory() {
   return (await navigator.storage.getDirectory()).getDirectoryHandle("kids-media-v1", { create: true });
 }

@@ -2,7 +2,7 @@ import { AlertCircle, CheckCircle2, Download, HardDrive, Pause, Smartphone, Tras
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { contentRepository, deviceRepository } from "../data/repositories";
-import { downloadSeries, localMedia, removeSeries, savedSeries, type DownloadSeries } from "../lib/downloads";
+import { downloadSeries, localMedia, refreshSavedSeriesMetadata, removeSeries, savedSeries, type DownloadSeries } from "../lib/downloads";
 import type { Category, DeviceStatus, VideoFixture } from "../types";
 import { Button } from "./ui/button";
 
@@ -108,6 +108,7 @@ export function ParentDownloadsPage() {
     try {
       const [categories, nextDevice] = await Promise.all([contentRepository.getCategories(), deviceRepository.status()]);
       const remote = await Promise.all(categories.map(async (category) => ({ category, videos: await contentRepository.getVideos(category.id) })));
+      for (const item of remote) refreshSavedSeriesMetadata(item.category, item.videos);
       const downloadable = remote.filter((item) => item.videos.some((video) => video.source === "self_hosted"));
       const savedOnly = savedSeries()
         .filter((item) => !downloadable.some((remoteItem) => remoteItem.category.id === item.category.id))

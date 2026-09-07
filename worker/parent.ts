@@ -285,7 +285,8 @@ export async function getParentVideos(request: Request, env: AppEnv) {
 
   let query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_url, v.youtube_title,
-      v.parent_label, v.thumbnail_url, v.duration_seconds, v.availability_status,
+      v.parent_label, v.thumbnail_url, v.duration_seconds, v.playback_start_seconds,
+      v.playback_end_seconds, v.availability_status,
       v.media_type, v.media_path, v.thumbnail_path,
       v.health_status, v.last_health_check_at, v.metadata_synced_at,
       v.metadata_error, v.is_active, v.created_at, v.updated_at, v.archived_at
@@ -333,6 +334,8 @@ export async function getParentVideos(request: Request, env: AppEnv) {
     youtubeTitle: row.youtube_title,
     parentLabel: row.parent_label,
     durationSeconds: row.duration_seconds,
+    playbackStartSeconds: row.playback_start_seconds || 0,
+    playbackEndSeconds: row.playback_end_seconds,
     availabilityStatus: row.availability_status,
     healthStatus: row.health_status || "healthy",
     lastHealthCheckAt: row.last_health_check_at,
@@ -424,10 +427,24 @@ export async function updateVideo(request: Request, env: AppEnv, id: string) {
   if (!current) throw new HttpError("找不到這部影片。", 404);
   const parentLabel = body.parentLabel !== undefined ? text(body.parentLabel, "影片標題", 1, 120) : current.parent_label;
   const isActive = body.isActive !== undefined ? (boolean(body.isActive, "啟用狀態") ? 1 : 0) : current.is_active;
+  const playbackStartSeconds = body.playbackStartSeconds !== undefined
+    ? integer(body.playbackStartSeconds, "開始時間", 0, 86400)
+    : (current.playback_start_seconds || 0);
+  const playbackEndSeconds = body.playbackEndSeconds === null
+    ? null
+    : body.playbackEndSeconds !== undefined
+      ? integer(body.playbackEndSeconds, "結束時間", 1, 86400)
+      : current.playback_end_seconds;
+  if (playbackEndSeconds !== null && playbackEndSeconds <= playbackStartSeconds) {
+    throw new HttpError("結束時間必須晚於開始時間。", 400, "INVALID_PLAYBACK_RANGE");
+  }
+  if (current.duration_seconds && (playbackStartSeconds >= current.duration_seconds || (playbackEndSeconds !== null && playbackEndSeconds > current.duration_seconds))) {
+    throw new HttpError("播放區間不可超過影片長度。", 400, "INVALID_PLAYBACK_RANGE");
+  }
   const now = new Date().toISOString();
   const queries: D1PreparedStatement[] = [
-    env.DB.prepare("UPDATE videos SET parent_label = ?, is_active = ?, updated_at = ? WHERE id = ?")
-      .bind(parentLabel, isActive, now, id),
+    env.DB.prepare("UPDATE videos SET parent_label = ?, is_active = ?, playback_start_seconds = ?, playback_end_seconds = ?, updated_at = ? WHERE id = ?")
+      .bind(parentLabel, isActive, playbackStartSeconds, playbackEndSeconds, now, id),
   ];
   if (body.categoryIds !== undefined) {
     const categoryIds = stringArray(body.categoryIds, "所屬分類");
@@ -473,9 +490,12 @@ export async function refreshVideoMetadata(request: Request, env: AppEnv, id: st
   await env.DB.prepare(`
     UPDATE videos SET
       youtube_title = ?, thumbnail_url = ?, duration_seconds = ?, availability_status = ?,
+      playback_start_seconds = CASE WHEN playback_start_seconds >= ? THEN 0 ELSE playback_start_seconds END,
+      playback_end_seconds = CASE WHEN playback_end_seconds > ? THEN NULL ELSE playback_end_seconds END,
       health_status = 'healthy', metadata_error = NULL, metadata_synced_at = ?, updated_at = ?
     WHERE id = ?
-  `).bind(metadata.youtubeTitle, metadata.thumbnailUrl, metadata.durationSeconds, metadata.availabilityStatus, now, now, id).run();
+  `).bind(metadata.youtubeTitle, metadata.thumbnailUrl, metadata.durationSeconds, metadata.availabilityStatus,
+    metadata.durationSeconds, metadata.durationSeconds, now, now, id).run();
   return json({ ok: true, metadata });
 }
 

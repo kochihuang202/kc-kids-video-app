@@ -1739,3 +1739,54 @@ svg { flex: 0 0 auto; }
   .offline-series-actions { grid-column: 1 / -1; justify-content: stretch; }
   .offline-series-actions .ui-button { flex: 1; }
 }
+/* One shared editor avoids mounting hundreds of preview players in the video list. */
+.range-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(20 39 33 / 72%);
+}
+
+.range-editor {
+  width: min(920px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--paper, #fffdf6);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
+}
+
+.range-editor > header,
+.range-editor > footer,
+.range-preview-controls,
+.range-fields {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-editor > header { justify-content: space-between; }
+.range-editor > header h2 { margin: 4px 0 14px; }
+.range-editor > header > button { border: 0; background: transparent; font-size: 2rem; cursor: pointer; }
+.range-preview { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 18px; background: #102019; }
+.range-preview > * { width: 100%; height: 100%; }
+.range-preview-controls { justify-content: center; flex-wrap: wrap; margin: 14px 0; }
+.range-editor-slider { width: 100%; }
+.range-current-time, .range-summary { text-align: center; }
+.range-fields { align-items: stretch; margin: 18px 0; }
+.range-fields label { flex: 1; display: grid; grid-template-columns: 1fr auto; gap: 8px; font-weight: 700; }
+.range-fields label input { grid-column: 1 / -1; min-height: 46px; padding: 10px 12px; border: 1px solid #bfd0c7; border-radius: 10px; font: inherit; }
+.range-editor > footer { justify-content: flex-end; flex-wrap: wrap; }
+.range-shortcuts { display: block; margin-top: 12px; color: #68776f; text-align: right; }
+
+@media (max-width: 640px) {
+  .range-editor-backdrop { padding: 0; place-items: stretch; }
+  .range-editor { max-height: 100vh; border-radius: 0; padding: 16px; }
+  .range-fields { flex-direction: column; }
+  .range-editor > footer > * { flex: 1 1 auto; }
+  .range-shortcuts { display: none; }
+}

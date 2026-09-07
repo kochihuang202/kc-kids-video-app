@@ -17,6 +17,7 @@ interface PlayerInstance {
   cuePlaylist?(videoIds: string[], index?: number, startSeconds?: number): void;
   loadPlaylist?(videoIds: string[], index?: number, startSeconds?: number): void;
   setLoop?(loop: boolean): void;
+  nextVideo?(): void;
   getPlayerState?(): number;
   getVideoData?(): { video_id?: string };
   getVolume?(): number;
@@ -67,6 +68,7 @@ export interface YouTubePlayerHandle {
   getAudioState?(): { volume: number | null; muted: boolean | null };
   switchToPlaylist?(videoIds: string[], videoId: string, seconds: number, play: boolean): void;
   switchToVideo?(videoId: string, seconds: number, play: boolean): void;
+  nextVideo?(): void;
 }
 
 interface YouTubePlayerProps {
@@ -167,6 +169,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         if (play) player.loadVideoById(activeVideoId, Math.max(0, seconds));
         else player.cueVideoById(activeVideoId, Math.max(0, seconds));
       },
+      nextVideo: () => playerRef.current?.nextVideo?.(),
     }), [startAt]);
 
     useEffect(() => {

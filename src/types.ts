@@ -33,6 +33,8 @@ export interface VideoFixture extends MediaDescriptor {
   thumbnailUrl: string;
   sortOrder: number;
   durationSeconds?: number | null;
+  playbackStartSeconds?: number;
+  playbackEndSeconds?: number | null;
   lastPositionSeconds?: number;
   isWatched?: boolean;
   isLearned?: boolean;
@@ -48,6 +50,8 @@ export interface ResumeInfo extends MediaDescriptor {
   parentLabel: string;
   thumbnailUrl: string;
   durationSeconds: number | null;
+  playbackStartSeconds: number;
+  playbackEndSeconds: number | null;
   lastPositionSeconds: number;
   lastPlayedAt: string;
   playbackMode: PlaybackMode;
@@ -59,6 +63,8 @@ export interface RecentVideo extends MediaDescriptor {
   parentLabel: string;
   thumbnailUrl: string;
   durationSeconds: number | null;
+  playbackStartSeconds: number;
+  playbackEndSeconds: number | null;
   lastPositionSeconds: number;
   isWatched: boolean;
   lastPlayedAt: string;

@@ -8,15 +8,18 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Activity, AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Calendar, Check,
   ChevronLeft, ChevronRight, Clock3, Download, Eye, EyeOff, Film, GripVertical, History,
-  Home, LogOut, MessageCircle, Play, Plus, RefreshCw, RotateCcw, Save, Search, Settings,
+  Home, LogOut, MessageCircle, Pause, Play, Plus, RefreshCw, RotateCcw, Save, Search, Settings,
   Smartphone, Sparkles, Star, Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button, buttonVariants } from "./components/ui/button";
 import { ParentDownloadsPage } from "./components/Downloads";
+import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
+import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { parentRepository, type VideoPreview } from "./data/repositories";
 import { formatClock, formatPosition, getDayRangeInTimeZone } from "./lib/utils";
+import { getPlaybackRange } from "../shared/playbackRange";
 import type {
   AdminCategory, AdminVideo, AllowedWindow, ChildDevice, DailyBar, DailyOverride, NoteSearchResult, SummaryAnalytics,
   TodayDashboard, TodayPick, UsageRule, VideoHistoryResponse, DiagnosticSessionSummary, DiagnosticSummary,
@@ -1266,12 +1269,153 @@ function RulesPage() {
   );
 }
 
+function parseTimeInput(value: string) {
+  const parts = value.trim().split(":").map(Number);
+  if (!parts.length || parts.some((part) => !Number.isFinite(part) || part < 0)) return null;
+  if (parts.length === 1) return Math.round(parts[0]);
+  if (parts.length === 2 && parts[1] < 60) return Math.round(parts[0] * 60 + parts[1]);
+  if (parts.length === 3 && parts[1] < 60 && parts[2] < 60) return Math.round(parts[0] * 3600 + parts[1] * 60 + parts[2]);
+  return null;
+}
+
+function PlaybackRangeEditor({ video, nextVideo, onClose, onSaved }: {
+  video: AdminVideo;
+  nextVideo: AdminVideo | null;
+  onClose: () => void;
+  onSaved: (next: AdminVideo | null) => Promise<void>;
+}) {
+  const playerRef = useRef<YouTubePlayerHandle>(null);
+  const initial = getPlaybackRange(video);
+  const [start, setStart] = useState(video.playbackStartSeconds || 0);
+  const [end, setEnd] = useState<number | null>(video.playbackEndSeconds ?? null);
+  const [startText, setStartText] = useState(formatPosition(start));
+  const [endText, setEndText] = useState(end === null ? "" : formatPosition(end));
+  const [current, setCurrent] = useState(initial.startSeconds);
+  const [duration, setDuration] = useState(video.durationSeconds || 0);
+  const [playing, setPlaying] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const time = playerRef.current?.getCurrentTime() || 0;
+      const nextDuration = playerRef.current?.getDuration() || 0;
+      setCurrent(time);
+      if (nextDuration > 0) setDuration(nextDuration);
+      if (testing && end !== null && time >= end - 0.15) {
+        playerRef.current?.pause();
+        setTesting(false);
+      }
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [end, testing]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "i") { event.preventDefault(); markStart(); }
+      else if (event.key.toLowerCase() === "o") { event.preventDefault(); markEnd(); }
+      else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        if ((event.target as HTMLElement | null)?.closest("input")) return;
+        event.preventDefault();
+        adjustCurrent((event.key === "ArrowLeft" ? -1 : 1) * (event.shiftKey ? 10 : 1));
+      } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        void save(false);
+      } else if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const seek = (seconds: number) => {
+    const target = Math.max(0, Math.min(duration || Number.MAX_SAFE_INTEGER, seconds));
+    playerRef.current?.seekTo(target);
+    setCurrent(target);
+  };
+  const adjustCurrent = (delta: number) => seek(current + delta);
+  const markStart = () => {
+    const value = Math.round(current);
+    setStart(value);
+    setStartText(formatPosition(value));
+  };
+  const markEnd = () => {
+    const value = Math.round(current);
+    setEnd(value);
+    setEndText(formatPosition(value));
+  };
+  const applyText = (kind: "start" | "end") => {
+    const textValue = kind === "start" ? startText : endText;
+    if (kind === "end" && !textValue.trim()) { setEnd(null); return; }
+    const value = parseTimeInput(textValue);
+    if (value === null) { setError("時間格式請輸入 mm:ss、hh:mm:ss 或秒數。"); return; }
+    setError("");
+    if (kind === "start") { setStart(value); setStartText(formatPosition(value)); }
+    else { setEnd(value); setEndText(formatPosition(value)); }
+  };
+  const save = async (advance: boolean) => {
+    setError("");
+    if (end !== null && end <= start) { setError("結束時間必須晚於開始時間。"); return; }
+    if (duration > 0 && (start >= duration || (end !== null && end > duration))) { setError("播放區間不可超過影片長度。"); return; }
+    setSaving(true);
+    try {
+      await parentRepository.updateVideo(video.id, { playbackStartSeconds: start, playbackEndSeconds: end });
+      await onSaved(advance ? nextVideo : null);
+      if (!advance) onClose();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "播放區間儲存失敗。");
+    } finally { setSaving(false); }
+  };
+  const testRange = () => {
+    seek(start);
+    setTesting(true);
+    playerRef.current?.play();
+  };
+  const onStateChange = (state: PlayerState) => setPlaying(state === "PLAYING");
+
+  return <div className="range-editor-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="range-editor" role="dialog" aria-modal="true" aria-labelledby="range-editor-title">
+      <header><div><small>設定播放區間</small><h2 id="range-editor-title">{video.parentLabel}</h2></div><button aria-label="關閉播放區間設定" onClick={onClose}>×</button></header>
+      <div className="range-preview">
+        {video.source === "youtube" && video.youtubeVideoId
+          ? <YouTubePlayer ref={playerRef} videoId={video.youtubeVideoId} startAt={initial.startSeconds} onStateChange={onStateChange} />
+          : video.mediaUrl && video.mediaType
+            ? <NativeMediaPlayer ref={playerRef} src={video.mediaUrl} mediaType={video.mediaType} poster={video.thumbnailUrl} startAt={initial.startSeconds} onStateChange={onStateChange} onProgress={(time, total) => { setCurrent(time); setDuration(total); }} />
+            : <p>目前沒有可預覽的影片來源。</p>}
+      </div>
+      <div className="range-preview-controls">
+        <Button variant="secondary" onClick={() => adjustCurrent(-10)}>−10 秒</Button>
+        <Button variant="secondary" onClick={() => adjustCurrent(-1)}>−1 秒</Button>
+        <Button onClick={() => playing ? playerRef.current?.pause() : playerRef.current?.play()}>{playing ? <Pause /> : <Play />}{playing ? "暫停" : "播放"}</Button>
+        <Button variant="secondary" onClick={() => adjustCurrent(1)}>＋1 秒</Button>
+        <Button variant="secondary" onClick={() => adjustCurrent(10)}>＋10 秒</Button>
+      </div>
+      <input className="range-editor-slider" type="range" min={0} max={duration || 100} step={0.1} value={Math.min(current, duration || 100)} onChange={(event) => seek(Number(event.target.value))} aria-label="預覽播放位置" />
+      <p className="range-current-time">目前位置 <strong>{formatPosition(current)}</strong> / {duration ? formatPosition(duration) : "--:--"}</p>
+      <div className="range-fields">
+        <label>開始時間<input value={startText} onChange={(event) => setStartText(event.target.value)} onBlur={() => applyText("start")} /><Button variant="secondary" onClick={markStart}>設為目前位置（I）</Button></label>
+        <label>結束時間<input value={endText} placeholder="影片原本結尾" onChange={(event) => setEndText(event.target.value)} onBlur={() => applyText("end")} /><Button variant="secondary" onClick={markEnd}>設為目前位置（O）</Button></label>
+      </div>
+      <p className="range-summary">孩子看到的長度：{formatPosition(Math.max(0, (end ?? duration) - start))}</p>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <footer>
+        <Button variant="quiet" onClick={() => { setStart(0); setEnd(null); setStartText("00:00"); setEndText(""); }}>清除區間</Button>
+        <Button variant="secondary" onClick={testRange}>試播區間</Button>
+        <Button onClick={() => void save(false)} disabled={saving}><Save />儲存</Button>
+        {nextVideo && <Button onClick={() => void save(true)} disabled={saving}>儲存並下一部 <ArrowRight /></Button>}
+      </footer>
+      <small className="range-shortcuts">快捷鍵：I 設開始、O 設結束、←/→ 1 秒、Shift＋←/→ 10 秒、Ctrl/Cmd＋Enter 儲存</small>
+    </section>
+  </div>;
+}
+
 function VideoRow({
-  video, categories, selectedCategory, isSelected, isTodayPick, onSelectToggle, onReload, onMove, onTogglePick,
+  video, categories, selectedCategory, isSelected, isTodayPick, onSelectToggle, onReload, onMove, onTogglePick, onEditRange,
 }: {
   video: AdminVideo; categories: AdminCategory[]; selectedCategory: string; isSelected: boolean; isTodayPick: boolean;
   onSelectToggle: (id: string) => void; onReload: () => void; onMove: (video: AdminVideo, direction: -1 | 1) => void;
   onTogglePick: (videoId: string) => void;
+  onEditRange: (video: AdminVideo) => void;
 }) {
   const [label, setLabel] = useState(video.parentLabel || "");
   const [categoryIds, setCategoryIds] = useState<string[]>(video.categoryIds || []);
@@ -1352,6 +1496,7 @@ function VideoRow({
                 <Sparkles /> {isTodayPick ? "已推薦" : "今天推薦"}
               </Button>
               <Button variant="secondary" onClick={() => void save()}><Save /> 儲存</Button>
+              <Button variant="secondary" onClick={() => onEditRange(video)}><Clock3 /> 播放區間</Button>
               <Button variant="secondary" onClick={() => void action(parentRepository.updateVideo(video.id, { isActive: !video.isActive }))}>
                 {video.isActive ? <EyeOff /> : <Eye />} {video.isActive ? "隱藏" : "顯示"}
               </Button>
@@ -1388,6 +1533,7 @@ function VideosPage() {
   const [healthReport, setHealthReport] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [rangeVideo, setRangeVideo] = useState<AdminVideo | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1553,9 +1699,22 @@ function VideosPage() {
               onReload={() => void load()}
               onMove={(item, direction) => void move(item, direction)}
               onTogglePick={(videoId) => void togglePick(videoId)}
+              onEditRange={setRangeVideo}
             />
           ))}
         </section>
+      )}
+      {rangeVideo && (
+        <PlaybackRangeEditor
+          key={rangeVideo.id}
+          video={rangeVideo}
+          nextVideo={videos[videos.findIndex((item) => item.id === rangeVideo.id) + 1] || null}
+          onClose={() => setRangeVideo(null)}
+          onSaved={async (next) => {
+            await load();
+            setRangeVideo(next);
+          }}
+        />
       )}
     </div>
   );

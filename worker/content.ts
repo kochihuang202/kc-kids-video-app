@@ -3,6 +3,7 @@ import { mediaDto } from "./media";
 import { evaluateChildAccessState, getTodayPicks, prepareDailyUsageRollupUpdates } from "./rules";
 import { consumeRateLimit, getChildDevice, getOrCreateChildDevice, rateKey, randomToken, tokenHash } from "./security";
 import type { AppEnv } from "./types";
+import { playbackCompletionRatio } from "../shared/playbackRange";
 
 interface CategoryRow {
   id: string;
@@ -26,6 +27,8 @@ interface VideoRow {
   media_path: string | null;
   thumbnail_path: string | null;
   duration_seconds: number | null;
+  playback_start_seconds: number | null;
+  playback_end_seconds: number | null;
   sort_order?: number;
   last_position_seconds?: number | null;
   last_played_at?: string | null;
@@ -52,9 +55,12 @@ const videoDto = (
   threshold = 0.9,
   options: { isLearned?: boolean; learnedAt?: string | null; isSelectable?: boolean; seriesType?: "learning" | "leisure" } = {},
 ) => {
-  const duration = row.duration_seconds || 0;
   const position = env.RECORDING_ENABLED === "false" ? 0 : row.last_position_seconds || 0;
-  const isWatched = duration > 0 ? position / duration >= threshold : false;
+  const isWatched = playbackCompletionRatio({
+    durationSeconds: row.duration_seconds,
+    playbackStartSeconds: row.playback_start_seconds,
+    playbackEndSeconds: row.playback_end_seconds,
+  }, position) >= threshold;
   return {
     id: row.id,
     categoryId: categoryIds[0] || "",
@@ -63,6 +69,8 @@ const videoDto = (
     youtubeTitle: row.youtube_title,
     parentLabel: row.parent_label,
     durationSeconds: row.duration_seconds,
+    playbackStartSeconds: row.playback_start_seconds || 0,
+    playbackEndSeconds: row.playback_end_seconds,
     sortOrder: row.sort_order || 0,
     lastPositionSeconds: position,
     lastPlayedAt: row.last_played_at || null,
@@ -165,7 +173,7 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path,
-      v.duration_seconds, cv.sort_order,
+      v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds, cv.sort_order,
       ${learnedColumn} AS is_learned,
       ${learnedAtColumn} AS learned_at,
       ${progressColumn} AS last_position_seconds,
@@ -197,6 +205,7 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path, v.duration_seconds,
+      v.playback_start_seconds, v.playback_end_seconds,
       COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0) AS is_learned,
       (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id) AS learned_at,
       (
@@ -230,13 +239,17 @@ export async function getPublicResume(request: Request, env: AppEnv) {
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path,
-      v.duration_seconds, vs.last_position_seconds, vs.updated_at AS last_played_at,
+      v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds,
+      vs.last_position_seconds, vs.updated_at AS last_played_at,
       COALESCE(vs.playback_mode, 'video') AS playback_mode
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
     WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
-      AND vs.last_position_seconds > 0
-      AND (v.duration_seconds IS NULL OR v.duration_seconds = 0 OR vs.last_position_seconds < (v.duration_seconds * ?))
+      AND vs.last_position_seconds > COALESCE(v.playback_start_seconds, 0)
+      AND (COALESCE(v.playback_end_seconds, v.duration_seconds) IS NULL
+        OR COALESCE(v.playback_end_seconds, v.duration_seconds) = 0
+        OR vs.last_position_seconds < (COALESCE(v.playback_start_seconds, 0)
+          + ((COALESCE(v.playback_end_seconds, v.duration_seconds) - COALESCE(v.playback_start_seconds, 0)) * ?)))
       AND vs.played_seconds > 0
     ORDER BY vs.updated_at DESC
     LIMIT 1
@@ -257,6 +270,8 @@ export async function getPublicResume(request: Request, env: AppEnv) {
       youtubeTitle: row.youtube_title,
       parentLabel: row.parent_label,
       durationSeconds: row.duration_seconds,
+      playbackStartSeconds: row.playback_start_seconds || 0,
+      playbackEndSeconds: row.playback_end_seconds,
       lastPositionSeconds: row.last_position_seconds,
       lastPlayedAt: row.last_played_at,
       playbackMode: row.playback_mode,
@@ -272,7 +287,7 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path,
-      v.duration_seconds, MAX(vs.updated_at) AS last_played_at,
+      v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds, MAX(vs.updated_at) AS last_played_at,
       (
         SELECT last_position_seconds FROM view_sessions
         WHERE video_id = v.id AND played_seconds > 0
@@ -301,6 +316,7 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
   const offlineRows = await env.DB.prepare(`
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path, v.duration_seconds,
+      v.playback_start_seconds, v.playback_end_seconds,
       ov.last_seen_at AS last_played_at, ov.playback_mode
     FROM offline_video_views ov
     JOIN videos v ON v.id = ov.video_id
@@ -314,15 +330,16 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
   }>();
 
   const sessionRecents = (rows.results || []).map((row) => {
-    const dur = row.duration_seconds || 0;
     const pos = row.last_position_seconds || 0;
-    const isWatched = dur > 0 ? pos / dur >= threshold : false;
+    const isWatched = playbackCompletionRatio({ durationSeconds: row.duration_seconds, playbackStartSeconds: row.playback_start_seconds, playbackEndSeconds: row.playback_end_seconds }, pos) >= threshold;
     return {
       id: row.id,
       ...mediaDto(row, env),
       youtubeTitle: row.youtube_title,
       parentLabel: row.parent_label,
       durationSeconds: row.duration_seconds,
+      playbackStartSeconds: row.playback_start_seconds || 0,
+      playbackEndSeconds: row.playback_end_seconds,
       lastPositionSeconds: pos,
       isWatched,
       lastPlayedAt: row.last_played_at,
@@ -337,6 +354,8 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
     youtubeTitle: row.youtube_title,
     parentLabel: row.parent_label,
     durationSeconds: row.duration_seconds,
+    playbackStartSeconds: row.playback_start_seconds || 0,
+    playbackEndSeconds: row.playback_end_seconds,
     lastPositionSeconds: 0,
     isWatched: false,
     lastPlayedAt: row.last_played_at,
