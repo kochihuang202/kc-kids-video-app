@@ -1566,8 +1566,6 @@ function VideosPage() {
   const [status, setStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [healthChecking, setHealthChecking] = useState(false);
-  const [healthReport, setHealthReport] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [rangeVideo, setRangeVideo] = useState<AdminVideo | null>(null);
@@ -1664,20 +1662,6 @@ function VideosPage() {
     }
   };
 
-  const runHealth = async () => {
-    setHealthChecking(true);
-    setHealthReport(null);
-    try {
-      const res = await parentRepository.runHealthCheck(true);
-      setHealthReport(`檢查完成！已檢查 ${res.checkedCount} 部影片，健康 ${res.healthyCount} 部，異常 ${res.unhealthyCount} 部。`);
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "健康檢查失敗。");
-    } finally {
-      setHealthChecking(false);
-    }
-  };
-
   return (
     <div className="parent-content">
       <header className="parent-page-title">
@@ -1685,12 +1669,7 @@ function VideosPage() {
           <p>白名單與 Metadata</p>
           <h2>影片管理</h2>
         </div>
-        <Button variant="secondary" onClick={() => void runHealth()} disabled={healthChecking}>
-          <RefreshCw className={healthChecking ? "is-spinning" : ""} /> {healthChecking ? "檢查中…" : "一鍵健康檢查"}
-        </Button>
       </header>
-
-      {healthReport && <p className="settings-success"><Check />{healthReport}</p>}
 
       {!category && (
         <section className="video-category-picker" aria-labelledby="video-category-picker-title">
@@ -1715,7 +1694,7 @@ function VideosPage() {
           <div className="selected-video-category">
             <span>{categories.find((item) => item.id === category)?.icon}</span>
             <strong>{categories.find((item) => item.id === category)?.name}</strong>
-            <Button variant="quiet" onClick={() => { setCategory(""); setVideos([]); setSelectedIds([]); setSearchQuery(""); }}>更換分類</Button>
+            <Button variant="secondary" onClick={() => { setCategory(""); setVideos([]); setSelectedIds([]); setSearchQuery(""); }}><ArrowLeft />回影片分類</Button>
           </div>
           <label>
             狀態

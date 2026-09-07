@@ -35,10 +35,12 @@ test("parent selects a category before thumbnails load and sees configured range
 
   await page.goto("/parent/videos");
   await expect(page.getByRole("heading", { name: "影片分類" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /健康檢查|檢查目前分類/ })).toHaveCount(0);
   await expect(page.getByText("259 部影片")).toBeVisible();
   expect(videoListRequests).toBe(0);
 
   await page.getByRole("button", { name: /科學/ }).click();
+  await expect(page.getByRole("button", { name: "回影片分類" })).toBeVisible();
   await expect(page.getByRole("button", { name: "設定 科學第一集 的播放區間" })).toBeVisible();
   expect(videoListRequests).toBe(1);
   await expect(page.getByText("完整影片", { exact: true }).first()).toBeVisible();

@@ -195,7 +195,6 @@ export const parentRepository = {
   archiveVideo: (id: string) => write<{ ok: true }>(`/api/parent/videos/${encodeURIComponent(id)}/archive`, "POST", {}),
   restoreVideo: (id: string) => write<{ ok: true }>(`/api/parent/videos/${encodeURIComponent(id)}/restore`, "POST", {}),
   orderCategoryVideos: (categoryId: string, ids: string[]) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(categoryId)}/videos/order`, "PUT", { ids }),
-  runHealthCheck: (forceAll = false) => write<{ ok: true; checkedCount: number; healthyCount: number; unhealthyCount: number }>("/api/parent/health-check", "POST", { forceAll }),
   settings: () => api<Record<string, unknown>>("/api/parent/settings"),
   updateSettings: (body: { timezone?: string; playback?: { completionThreshold?: number; recentLimit?: number } }) => write<{ ok: true }>("/api/parent/settings", "PATCH", body),
   changePassword: (currentPassword: string, newPassword: string) => write<{ ok: true }>("/api/parent/password", "POST", { currentPassword, newPassword }),

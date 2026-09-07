@@ -17,7 +17,6 @@ import {
   addDiagnosticEvents, exportDiagnostics, finishDiagnosticSession, getDiagnosticsSummary,
   getParentDiagnosticDetail, getParentDiagnostics, startDiagnosticSession,
 } from "./diagnostics";
-import { runHealthCheck } from "./health";
 import { fail, HttpError, json } from "./http";
 import { serveMediaAsset } from "./media";
 import {
@@ -178,10 +177,6 @@ async function route(request: Request, env: AppEnv) {
   if (method === "POST" && id) return archiveVideo(request, env, id);
   id = routeId(path, /^\/api\/parent\/videos\/([^/]+)\/restore$/);
   if (method === "POST" && id) return archiveVideo(request, env, id, true);
-
-  if (path === "/api/parent/health-check") {
-    if (method === "POST") return runHealthCheck(request, env);
-  }
 
   if (path === "/api/parent/export/sessions") {
     if (method === "GET") return exportSessions(request, env);

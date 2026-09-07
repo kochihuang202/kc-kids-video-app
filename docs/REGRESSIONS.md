@@ -241,3 +241,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Categories of any current project size load successfully without constructing one SQL placeholder per video.
 - Root cause: The optimized mapping query generated `WHERE video_id IN (?, …)` with every returned video ID. At 112 videos the real D1 runtime reproducibly raised `D1_ERROR: too many SQL variables`; 巧虎 contains about 284 videos.
 - Regression test: `test/learning-leisure.spec.ts` (`loads a large parent category without exceeding D1 bind limits`)
+
+## REG-031 — Global YouTube health check is misleading inside one category
+
+- Problem: While viewing a small category, the video-management page reports hundreds of abnormal videos because its bulk health check silently scans every active YouTube video in the app.
+- Reproduction: Open `/parent/videos`, select 泉靈語文, then press the global health-check action and compare the checked count with the selected category count.
+- Correct behavior: Video management does not expose the misleading global bulk action. A parent can still refresh Metadata for an individual YouTube video from that video's controls.
+- Root cause: The category-scoped management UI retained a legacy account-wide health-check button, and temporary YouTube API failures were also counted as abnormal videos.
+- Regression test: `e2e/features/parent-video-category-loading.spec.ts`
