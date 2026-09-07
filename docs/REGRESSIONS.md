@@ -233,3 +233,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The initial page requests only categories and their counts. It requests videos only after a category is selected, loads thumbnails lazily, and fetches category mappings only for the returned videos. A thumbnail visibly shows whether its playback range is unchanged or configured.
 - Root cause: The page used `category=all` as its initial state, while the Worker unconditionally queried the complete `videos` and `category_videos` tables.
 - Regression test: `e2e/features/parent-video-category-loading.spec.ts`
+
+## REG-030 — Large categories fail to open in parent video management
+
+- Problem: A small category such as 泉靈語文 loads normally, while a large category such as 可愛巧虎島 shows「伺服器暫時發生問題」instead of thumbnails.
+- Reproduction: Create or open a category containing more than D1's allowed number of SQL bind variables, then select it in `/parent/videos`.
+- Correct behavior: Categories of any current project size load successfully without constructing one SQL placeholder per video.
+- Root cause: The optimized mapping query generated `WHERE video_id IN (?, …)` with every returned video ID. At 112 videos the real D1 runtime reproducibly raised `D1_ERROR: too many SQL variables`; 巧虎 contains about 284 videos.
+- Regression test: `test/learning-leisure.spec.ts` (`loads a large parent category without exceeding D1 bind limits`)

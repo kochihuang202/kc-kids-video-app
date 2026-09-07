@@ -327,10 +327,16 @@ export async function getParentVideos(request: Request, env: AppEnv) {
   const stmt = env.DB.prepare(query);
   const result = await (params.length ? stmt.bind(...params) : stmt).all();
   const videos = result.results || [];
-  const videoIds = videos.map((row: any) => row.id);
-  const mappings = videoIds.length
-    ? await env.DB.prepare(`SELECT category_id, video_id, sort_order FROM category_videos WHERE video_id IN (${videoIds.map(() => "?").join(",")})`).bind(...videoIds).all<any>()
-    : { results: [] as any[] };
+  const mappings = categoryFilter
+    ? await env.DB.prepare(`
+        SELECT cv.category_id, cv.video_id, cv.sort_order
+        FROM category_videos cv
+        WHERE EXISTS (
+          SELECT 1 FROM category_videos scope
+          WHERE scope.video_id = cv.video_id AND scope.category_id = ?
+        )
+      `).bind(categoryFilter).all<any>()
+    : await env.DB.prepare("SELECT category_id, video_id, sort_order FROM category_videos").all<any>();
   const mappingMap: Record<string, Record<string, number>> = {};
   for (const row of mappings.results || []) {
     if (!mappingMap[row.video_id]) mappingMap[row.video_id] = {};

@@ -109,6 +109,14 @@ beforeEach(async () => {
 });
 
 describe("learning and leisure rules", () => {
+  it("loads a large parent category without exceeding D1 bind limits", async () => {
+    const parentCookie = await addParent();
+    await addScienceVideos(110);
+    const response = await call("/api/parent/videos?category_id=science", { headers: { cookie: parentCookie } });
+    expect(response.status).toBe(200);
+    expect((await response.json<any[]>()).length).toBe(112);
+  });
+
   it("stores and returns a validated per-video playback range", async () => {
     const parentCookie = await addParent();
     const updated = await call("/api/parent/videos/why-sky-blue", {
