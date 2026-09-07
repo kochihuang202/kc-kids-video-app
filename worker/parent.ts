@@ -157,8 +157,10 @@ export async function changePassword(request: Request, env: AppEnv) {
 export async function getParentCategories(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const result = await env.DB.prepare(`
-    SELECT id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, created_at, updated_at, archived_at
-    FROM categories
+    SELECT c.id, c.name, c.icon, c.image_url, c.tone, c.sort_order, c.is_active,
+      c.daily_limit_seconds, c.series_type, c.created_at, c.updated_at, c.archived_at,
+      (SELECT COUNT(*) FROM category_videos cv JOIN videos v ON v.id = cv.video_id WHERE cv.category_id = c.id) AS video_count
+    FROM categories c
     ORDER BY sort_order, id
   `).all();
   return json((result.results || []).map((row: any) => ({
@@ -166,6 +168,7 @@ export async function getParentCategories(request: Request, env: AppEnv) {
     tone: row.tone, sortOrder: row.sort_order, isActive: row.is_active === 1,
     dailyLimitSeconds: row.daily_limit_seconds ?? null,
     seriesType: row.series_type,
+    videoCount: row.video_count || 0,
     createdAt: row.created_at, updatedAt: row.updated_at, archivedAt: row.archived_at,
   })));
 }
@@ -260,14 +263,12 @@ export async function orderCategoryVideos(request: Request, env: AppEnv, categor
   await requireParentMutation(request, env);
   const body = await readJson(request);
   const ids = stringArray(body.ids || body.videoIds, "影片順序清單");
-  const activeVideos = await env.DB.prepare(`
-    SELECT v.id FROM category_videos cv
-    JOIN videos v ON v.id = cv.video_id
-    WHERE cv.category_id = ? AND v.is_active = 1 AND v.archived_at IS NULL
-  `).bind(categoryId).all<{ id: string }>();
-  const activeIds = (activeVideos.results || []).map((v) => v.id);
-  const activeSet = new Set(activeIds);
-  if (ids.length !== activeIds.length || new Set(ids).size !== ids.length || ids.some((id) => !activeSet.has(id))) {
+  const scopedVideos = await env.DB.prepare(
+    "SELECT video_id AS id FROM category_videos WHERE category_id = ?",
+  ).bind(categoryId).all<{ id: string }>();
+  const scopedIds = (scopedVideos.results || []).map((video) => video.id);
+  const scopedSet = new Set(scopedIds);
+  if (ids.length !== scopedIds.length || new Set(ids).size !== ids.length || ids.some((id) => !scopedSet.has(id))) {
     throw new HttpError("排序清單不完整。", 409, "INCOMPLETE_SORT_SCOPE");
   }
   await env.DB.batch(ids.map((videoId, index) => env.DB.prepare(
@@ -307,7 +308,7 @@ export async function getParentVideos(request: Request, env: AppEnv) {
   } else if (statusFilter === "hidden") {
     query += " AND v.is_active = 0 AND v.archived_at IS NULL";
   } else if (statusFilter === "archived") {
-    query += " AND v.archived_at IS NULL";
+    query += " AND v.archived_at IS NOT NULL";
   }
 
   if (searchFilter.trim()) {
@@ -316,12 +317,20 @@ export async function getParentVideos(request: Request, env: AppEnv) {
     params.push(wildcard, wildcard);
   }
 
-  query += " ORDER BY v.updated_at DESC";
+  if (categoryFilter) {
+    query += " ORDER BY (SELECT cv.sort_order FROM category_videos cv WHERE cv.video_id = v.id AND cv.category_id = ?), v.id";
+    params.push(categoryFilter);
+  } else {
+    query += " ORDER BY v.updated_at DESC";
+  }
 
   const stmt = env.DB.prepare(query);
   const result = await (params.length ? stmt.bind(...params) : stmt).all();
   const videos = result.results || [];
-  const mappings = await env.DB.prepare("SELECT category_id, video_id, sort_order FROM category_videos").all<any>();
+  const videoIds = videos.map((row: any) => row.id);
+  const mappings = videoIds.length
+    ? await env.DB.prepare(`SELECT category_id, video_id, sort_order FROM category_videos WHERE video_id IN (${videoIds.map(() => "?").join(",")})`).bind(...videoIds).all<any>()
+    : { results: [] as any[] };
   const mappingMap: Record<string, Record<string, number>> = {};
   for (const row of mappings.results || []) {
     if (!mappingMap[row.video_id]) mappingMap[row.video_id] = {};

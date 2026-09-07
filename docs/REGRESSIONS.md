@@ -225,3 +225,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Pure listening accumulates in the pure-listening total and the category's displayed activity time. When the category is a learning series, the same time also counts as learning time. It never consumes leisure/category viewing limits and never earns leisure bonus time.
 - Root cause: The usage classifier treated `listen` as mutually exclusive from `learning`, and category rollups deliberately queried and updated only video-mode Sessions.
 - Regression test: `test/learning-leisure.spec.ts`
+
+## REG-029 — Opening video management loads every video before a category is chosen
+
+- Problem: Entering the parent video-management page immediately loads nearly two thousand video records, thumbnails, and every category mapping even though the parent only intends to edit one series.
+- Reproduction: Open `/parent/videos` and inspect network/D1 activity before selecting any category.
+- Correct behavior: The initial page requests only categories and their counts. It requests videos only after a category is selected, loads thumbnails lazily, and fetches category mappings only for the returned videos. A thumbnail visibly shows whether its playback range is unchanged or configured.
+- Root cause: The page used `category=all` as its initial state, while the Worker unconditionally queried the complete `videos` and `category_videos` tables.
+- Regression test: `e2e/features/parent-video-category-loading.spec.ts`

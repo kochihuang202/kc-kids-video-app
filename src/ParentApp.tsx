@@ -1282,7 +1282,7 @@ function PlaybackRangeEditor({ video, nextVideo, onClose, onSaved }: {
   video: AdminVideo;
   nextVideo: AdminVideo | null;
   onClose: () => void;
-  onSaved: (next: AdminVideo | null) => Promise<void>;
+  onSaved: (next: AdminVideo | null, range: { start: number; end: number | null }) => Promise<void>;
 }) {
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const initial = getPlaybackRange(video);
@@ -1360,7 +1360,7 @@ function PlaybackRangeEditor({ video, nextVideo, onClose, onSaved }: {
     setSaving(true);
     try {
       await parentRepository.updateVideo(video.id, { playbackStartSeconds: start, playbackEndSeconds: end });
-      await onSaved(advance ? nextVideo : null);
+      await onSaved(advance ? nextVideo : null, { start, end });
       if (!advance) onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "播放區間儲存失敗。");
@@ -1521,11 +1521,48 @@ function VideoRow({
   );
 }
 
+function VideoThumbnailCard({ video, selected, isTodayPick, onOpen, onDetails, onSelect, onMoveUp, onMoveDown }: {
+  video: AdminVideo;
+  selected: boolean;
+  isTodayPick: boolean;
+  onOpen: () => void;
+  onDetails: () => void;
+  onSelect: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) {
+  const hasRange = (video.playbackStartSeconds || 0) > 0 || video.playbackEndSeconds != null;
+  const rangeText = hasRange
+    ? `${formatPosition(video.playbackStartSeconds || 0)}－${video.playbackEndSeconds == null ? "原結尾" : formatPosition(video.playbackEndSeconds)}`
+    : "完整影片";
+  return <article className={`video-thumbnail-card ${hasRange ? "has-playback-range" : ""} ${video.archivedAt ? "is-archived" : ""}`}>
+    <button className="video-thumbnail-open" onClick={onOpen} aria-label={`設定 ${video.parentLabel} 的播放區間`}>
+      <div className="video-thumbnail-image">
+        <img src={video.thumbnailUrl} alt="" loading="lazy" decoding="async" />
+        <span className={`playback-range-badge ${hasRange ? "configured" : ""}`}>
+          {hasRange ? "✂ 已設定" : "完整影片"}
+        </span>
+        {isTodayPick && <span className="thumbnail-pick-badge">★ 今日推薦</span>}
+      </div>
+      <strong>{video.parentLabel}</strong>
+      <span className="video-thumbnail-range">{rangeText}</span>
+    </button>
+    <footer>
+      <label><input type="checkbox" checked={selected} onChange={onSelect} /> 選取</label>
+      <div className="video-thumbnail-actions">
+        <button aria-label={`${video.parentLabel} 上移`} onClick={onMoveUp}><ArrowUp /></button>
+        <button aria-label={`${video.parentLabel} 下移`} onClick={onMoveDown}><ArrowDown /></button>
+        <button onClick={onDetails}>其他設定</button>
+      </div>
+    </footer>
+  </article>;
+}
+
 function VideosPage() {
   const [videos, setVideos] = useState<AdminVideo[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [todayPicks, setTodayPicks] = useState<TodayPick[]>([]);
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState("");
   const [status, setStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -1534,17 +1571,16 @@ function VideosPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [rangeVideo, setRangeVideo] = useState<AdminVideo | null>(null);
+  const [detailsVideo, setDetailsVideo] = useState<AdminVideo | null>(null);
 
-  const load = useCallback(async () => {
+  const loadCatalog = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [nextVideos, nextCategories, nextPicks] = await Promise.all([
-        parentRepository.videos({ category_id: category === "all" ? undefined : category, status: status === "all" ? undefined : status, q: searchQuery }),
+      const [nextCategories, nextPicks] = await Promise.all([
         parentRepository.categories(),
         parentRepository.todayPicks().catch(() => []),
       ]);
-      setVideos(nextVideos);
       setCategories(nextCategories);
       setTodayPicks(nextPicks);
     } catch (e) {
@@ -1552,9 +1588,30 @@ function VideosPage() {
     } finally {
       setLoading(false);
     }
-  }, [category, status, searchQuery]);
+  }, []);
 
+  const load = useCallback(async () => {
+    if (!category) { setVideos([]); return; }
+    setLoading(true);
+    setError("");
+    try {
+      setVideos(await parentRepository.videos({ category_id: category }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "影片載入失敗。");
+    } finally { setLoading(false); }
+  }, [category]);
+
+  useEffect(() => { void loadCatalog(); }, [loadCatalog]);
   useEffect(() => { void load(); }, [load]);
+
+  const filteredVideos = useMemo(() => videos.filter((video) => {
+    if (status === "available" && (!video.isActive || video.archivedAt || video.availabilityStatus !== "available")) return false;
+    if (status === "unavailable" && video.availabilityStatus === "available" && video.healthStatus === "healthy") return false;
+    if (status === "hidden" && (video.isActive || video.archivedAt)) return false;
+    if (status === "archived" && !video.archivedAt) return false;
+    const query = searchQuery.trim().toLocaleLowerCase("zh-TW");
+    return !query || video.parentLabel.toLocaleLowerCase("zh-TW").includes(query) || video.youtubeTitle.toLocaleLowerCase("zh-TW").includes(query);
+  }), [searchQuery, status, videos]);
 
   const togglePick = async (videoId: string) => {
     try {
@@ -1570,8 +1627,12 @@ function VideosPage() {
   };
 
   const selectAll = () => {
-    if (selectedIds.length === videos.length) setSelectedIds([]);
-    else setSelectedIds(videos.map((v) => v.id));
+    const visibleIds = filteredVideos.map((video) => video.id);
+    if (visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id))) {
+      setSelectedIds((current) => current.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds((current) => [...new Set([...current, ...visibleIds])]);
+    }
   };
 
   const batchAction = async (action: "hide" | "show" | "archive") => {
@@ -1631,20 +1692,31 @@ function VideosPage() {
 
       {healthReport && <p className="settings-success"><Check />{healthReport}</p>}
 
-      <VideoForm categories={categories} onCreated={() => void load()} />
+      {!category && (
+        <section className="video-category-picker" aria-labelledby="video-category-picker-title">
+          <div><p>先選擇要管理的系列</p><h3 id="video-category-picker-title">影片分類</h3></div>
+          <div className="video-category-picker-grid">
+            {categories.filter((item) => !item.archivedAt).map((item) => (
+              <button key={item.id} onClick={() => { setCategory(item.id); setSelectedIds([]); }}>
+                <span aria-hidden="true">{item.icon}</span>
+                <strong>{item.name}</strong>
+                <small>{item.videoCount || 0} 部影片</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {category && <VideoForm categories={categories} onCreated={() => void load()} />}
 
       {/* Filter Row (Spec #57, #58) */}
-      <div className="filter-toolbar">
+      {category && <div className="filter-toolbar">
         <div className="filter-row">
-          <label>
-            分類
-            <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="all">全部分類</option>
-              {categories.filter((c) => !c.archivedAt).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
+          <div className="selected-video-category">
+            <span>{categories.find((item) => item.id === category)?.icon}</span>
+            <strong>{categories.find((item) => item.id === category)?.name}</strong>
+            <Button variant="quiet" onClick={() => { setCategory(""); setVideos([]); setSelectedIds([]); setSearchQuery(""); }}>更換分類</Button>
+          </div>
           <label>
             狀態
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -1665,10 +1737,10 @@ function VideosPage() {
         </div>
 
         {/* Batch Actions Toolbar (Spec #60) */}
-        {videos.length > 0 && (
+        {filteredVideos.length > 0 && (
           <div className="batch-actions-row">
             <Button variant="quiet" onClick={selectAll}>
-              {selectedIds.length === videos.length ? "取消全選" : "全選"}
+              {selectedIds.length === filteredVideos.length ? "取消全選" : "全選目前結果"}
             </Button>
             {selectedIds.length > 0 && (
               <>
@@ -1680,28 +1752,27 @@ function VideosPage() {
             )}
           </div>
         )}
-      </div>
+      </div>}
 
-      {loading && <ParentState>正在載入影片…</ParentState>}
+      {loading && <ParentState>{category ? "正在載入這個分類的縮圖…" : "正在載入分類…"}</ParentState>}
       {error && <ParentState error={error} retry={() => void load()} />}
 
-      {!loading && (
-        <section className="admin-video-list">
-          {videos.map((video) => (
-            <VideoRow
+      {!loading && category && (
+        <section className="video-thumbnail-grid" aria-label="分類影片縮圖">
+          {filteredVideos.map((video) => (
+            <VideoThumbnailCard
               key={video.id}
               video={video}
-              categories={categories}
-              selectedCategory={category}
-              isSelected={selectedIds.includes(video.id)}
+              selected={selectedIds.includes(video.id)}
               isTodayPick={todayPicks.some((p) => p.videoId === video.id)}
-              onSelectToggle={toggleSelect}
-              onReload={() => void load()}
-              onMove={(item, direction) => void move(item, direction)}
-              onTogglePick={(videoId) => void togglePick(videoId)}
-              onEditRange={setRangeVideo}
+              onSelect={() => toggleSelect(video.id)}
+              onOpen={() => setRangeVideo(video)}
+              onDetails={() => setDetailsVideo(video)}
+              onMoveUp={() => void move(video, -1)}
+              onMoveDown={() => void move(video, 1)}
             />
           ))}
+          {filteredVideos.length === 0 && <p className="empty-state">這個分類沒有符合條件的影片。</p>}
         </section>
       )}
       {rangeVideo && (
@@ -1710,12 +1781,33 @@ function VideosPage() {
           video={rangeVideo}
           nextVideo={videos[videos.findIndex((item) => item.id === rangeVideo.id) + 1] || null}
           onClose={() => setRangeVideo(null)}
-          onSaved={async (next) => {
-            await load();
+          onSaved={async (next, savedRange) => {
+            setVideos((items) => items.map((item) => item.id === rangeVideo.id ? {
+              ...item,
+              playbackStartSeconds: savedRange.start,
+              playbackEndSeconds: savedRange.end,
+            } : item));
             setRangeVideo(next);
           }}
         />
       )}
+      {detailsVideo && <div className="range-editor-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailsVideo(null); }}>
+        <section className="video-details-dialog" role="dialog" aria-modal="true" aria-label={`${detailsVideo.parentLabel} 其他設定`}>
+          <header><h2>其他影片設定</h2><button aria-label="關閉其他設定" onClick={() => setDetailsVideo(null)}>×</button></header>
+          <VideoRow
+            video={detailsVideo}
+            categories={categories}
+            selectedCategory="all"
+            isSelected={selectedIds.includes(detailsVideo.id)}
+            isTodayPick={todayPicks.some((pick) => pick.videoId === detailsVideo.id)}
+            onSelectToggle={toggleSelect}
+            onReload={() => { setDetailsVideo(null); void load(); }}
+            onMove={() => undefined}
+            onTogglePick={(videoId) => void togglePick(videoId)}
+            onEditRange={(video) => { setDetailsVideo(null); setRangeVideo(video); }}
+          />
+        </section>
+      </div>}
     </div>
   );
 }

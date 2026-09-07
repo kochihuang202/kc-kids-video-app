@@ -298,6 +298,7 @@ export interface DeviceStatus {
 }
 
 export interface AdminCategory extends Category {
+  videoCount?: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
