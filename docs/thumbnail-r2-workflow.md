@@ -67,7 +67,7 @@ JSON 只需列出例外；沒有列出的影片會使用 `-TimestampSeconds`。
 
 ## 新增一個 Mac 資料夾
 
-先以私密 Tailscale 網址讀取 `/library`，產生 D1 匯入檔。`LibraryFolder` 只接受 `/media/` 下的一層資料夾；工具只選取該資料夾的直接子檔案，任何子目錄中的 MP4 都會排除。`ExpectedCount` 不符時會直接停止。
+先以私密 Tailscale 網址讀取 `/library`，產生 D1 匯入檔。`LibraryFolder` 接受 `/media/` 下的安全相對路徑（例如 `第一級/第二級`）；工具只選取指定資料夾的直接子檔案，任何更深子目錄中的 MP4 都會排除。`ExpectedCount` 不符時會直接停止。
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
@@ -84,6 +84,8 @@ powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
 
 `LibraryFolder` 支援中文與其他 URL 編碼字元；D1 仍保存媒體服務回傳的安全編碼路徑。
 大量課程會自動以每 25 部一批產生 SQL，避免 D1 的單一 statement 長度限制。
+
+附加到既有分類時，請為新批次使用不同的 `VideoIdPrefix`，避免覆蓋既有影片，並用 `SortOrderOffset` 指定既有分類目前最後一個排序值。例如原有 33 部時使用 `-SortOrderOffset 33`，新一批便會從 34 開始。正式套用前先依 manifest 確認影片數量、ID 與排序。
 
 若要用新資料夾完整替換既有分類，加入 `-ReplaceCategoryVideos`。工具會先把只屬於該分類的舊影片封存，再移除舊分類關聯；觀看 Session 與歷史紀錄不會永久刪除。
 
@@ -109,6 +111,22 @@ powershell -ExecutionPolicy Bypass -File scripts/import-local-media-folder.ps1 `
 - 已有 WebP，只上傳：加上 `-SkipGenerate`。
 - 先產圖與上傳、稍後更新 D1：先不加 `-ApplyRemoteD1`，確認後再執行產物中的 `update-thumbnail-urls.sql`。
 - 少量測試：使用 `-Limit 2`；為避免只更新部分資料，`-Limit` 不能與 `-ApplyRemoteD1` 同時使用。
+- 同一分類只處理某一批 ID：加上 `-VideoIdPrefix "wow-blue"`，只處理 ID 為 `wow-blue-*` 的影片。
+
+## 背景執行，不需 AI 監視
+
+使用啟動器後，縮圖工作會在隱藏的獨立 PowerShell 程序執行，並另外開啟進度視窗。關閉 Codex 或停止對話不會停止工作；Windows 仍須保持開機、不可休眠，Mac 與 Tailscale 也須在線。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/start-video-thumbnail-job.ps1 `
+  -CategoryId "wowenglish" `
+  -VideoIdPrefix "wow-blue" `
+  -TimestampSeconds 6 `
+  -R2Prefix "thumbnails/wowenglish" `
+  -ApplyRemoteD1
+```
+
+進度視窗會顯示完成或失敗；詳細輸出保存在同一工作目錄的 `worker-output.log` 與 `worker-error.log`。
 
 ```powershell
 npx wrangler d1 execute kc-kids-video-app-db --remote `

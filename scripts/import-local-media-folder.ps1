@@ -16,6 +16,7 @@ param(
   [string]$Icon = "",
   [int]$ExpectedCount = 0,
   [int]$ThumbnailAtSeconds = 3,
+  [int]$SortOrderOffset = 0,
   [switch]$ReplaceCategoryVideos,
   [string]$DatabaseName = "kc-kids-video-app-db",
   [string]$OutputDirectory = "",
@@ -34,10 +35,16 @@ function ConvertTo-SqlText([AllowNull()][object]$Value) {
 
 if ($CategoryId -notmatch '^[A-Za-z0-9_-]+$') { throw "CategoryId must contain only letters, numbers, underscore, and dash." }
 if ($VideoIdPrefix -notmatch '^[A-Za-z0-9_-]+$') { throw "VideoIdPrefix must contain only letters, numbers, underscore, and dash." }
-if ([string]::IsNullOrWhiteSpace($LibraryFolder) -or $LibraryFolder.Contains("/") -or $LibraryFolder.Contains("\") -or $LibraryFolder.Contains("..")) {
-  throw "LibraryFolder must be one direct folder name below /media/."
+if ([string]::IsNullOrWhiteSpace($LibraryFolder) -or [IO.Path]::IsPathRooted($LibraryFolder) -or $LibraryFolder.Contains(":")) {
+  throw "LibraryFolder must be a relative folder path below /media/."
+}
+$normalizedLibraryFolder = $LibraryFolder.Replace("\", "/").Trim("/")
+$folderSegments = @($normalizedLibraryFolder.Split("/"))
+if ($folderSegments.Count -eq 0 -or @($folderSegments | Where-Object { -not $_ -or $_ -eq "." -or $_ -eq ".." }).Count -gt 0) {
+  throw "LibraryFolder contains an invalid or unsafe path segment."
 }
 if ($ThumbnailAtSeconds -lt 0) { throw "ThumbnailAtSeconds must be zero or greater." }
+if ($SortOrderOffset -lt 0) { throw "SortOrderOffset must be zero or greater." }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 if (-not $OutputDirectory) {
@@ -53,7 +60,7 @@ $baseUrl = $MediaServerBaseUrl.TrimEnd('/')
 $libraryUrl = "$baseUrl/library"
 Write-Host "Reading private media library..."
 $library = Invoke-RestMethod -Uri $libraryUrl -Method Get
-$prefix = "/media/$LibraryFolder/"
+$prefix = "/media/$normalizedLibraryFolder/"
 
 $directVideos = @($library.items | Where-Object {
   $path = [string]$_.path
@@ -93,7 +100,7 @@ for ($index = 0; $index -lt $directVideos.Count; $index++) {
     mediaPath = [string]$item.path
     thumbnailPath = if ($item.thumbnailPath) { [string]$item.thumbnailPath } else { $null }
     durationSeconds = if ($null -ne $item.durationSeconds) { [int][Math]::Round([double]$item.durationSeconds) } else { $null }
-    sortOrder = $index + 1
+    sortOrder = $SortOrderOffset + $index + 1
     sizeBytes = [long]$item.sizeBytes
   }
 }
@@ -204,13 +211,14 @@ $manifestPath = Join-Path $resolvedOutput "manifest.json"
 
 [pscustomobject]@{
   generatedAt = (Get-Date).ToUniversalTime().ToString("o")
-  libraryFolder = $LibraryFolder
+  libraryFolder = $normalizedLibraryFolder
   categoryId = $CategoryId
   categoryName = $CategoryName
   seriesType = $SeriesType
   directVideoCount = $rows.Count
   excludedNestedVideoCount = $nestedCount
   thumbnailAtSeconds = $ThumbnailAtSeconds
+  sortOrderOffset = $SortOrderOffset
   replacedCategoryVideos = [bool]$ReplaceCategoryVideos
   videos = $rows
 } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8

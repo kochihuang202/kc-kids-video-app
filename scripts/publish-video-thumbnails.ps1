@@ -6,6 +6,7 @@
   [string]$AppOrigin = "https://kc-kids-video-app.ji3cp31p4.workers.dev",
   [string]$BucketName = "kc-kids-video-app-assets",
   [string]$R2Prefix = "thumbnails/quanling",
+  [string]$VideoIdPrefix = "",
   [string]$DatabaseName = "kc-kids-video-app-db",
   [string]$OutputDirectory = "",
   [string]$BackupDirectory = "",
@@ -27,6 +28,9 @@ if ($ProgressEvery -lt 1) { throw "ProgressEvery must be one or greater." }
 if ($ApplyRemoteD1 -and $Limit -gt 0) { throw "ApplyRemoteD1 cannot be used with Limit." }
 if ($R2Prefix -notmatch '^[A-Za-z0-9/_-]+$' -or $R2Prefix.Contains("..")) {
   throw "R2Prefix may contain only letters, numbers, slash, underscore, and dash."
+}
+if ($VideoIdPrefix -and $VideoIdPrefix -notmatch '^[A-Za-z0-9_-]+$') {
+  throw "VideoIdPrefix may contain only letters, numbers, underscore, and dash."
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -98,6 +102,10 @@ $contentUrl = "$($AppOrigin.TrimEnd('/'))/api/content/categories/$encodedCategor
 Write-Host "Reading category: $CategoryId"
 $videos = @(Invoke-RestMethod -Uri $contentUrl -Method Get) | Where-Object {
   $_.source -eq "self_hosted" -and $_.mediaUrl
+}
+if ($VideoIdPrefix) {
+  $expectedIdPrefix = "$VideoIdPrefix-"
+  $videos = @($videos | Where-Object { ([string]$_.id).StartsWith($expectedIdPrefix, [StringComparison]::Ordinal) })
 }
 if ($videos.Count -eq 0) { throw "No self-hosted videos were returned for this category." }
 if ($Limit -gt 0) { $videos = @($videos | Select-Object -First $Limit) }
@@ -209,6 +217,7 @@ $sqlLines | Set-Content -LiteralPath $sqlPath -Encoding utf8
   defaultTimestampSeconds = $TimestampSeconds
   bucketName = $BucketName
   r2Prefix = $R2Prefix
+  videoIdPrefix = $VideoIdPrefix
   videos = $results
 } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
