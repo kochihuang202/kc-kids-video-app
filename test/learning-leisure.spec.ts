@@ -101,7 +101,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM allowed_windows"),
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),
-    env.DB.prepare("DELETE FROM categories WHERE id IN ('leisure-test', 'learning-overlap-test')"),
+    env.DB.prepare("DELETE FROM categories WHERE id IN ('leisure-test', 'learning-overlap-test', 'learning-favorites')"),
     env.DB.prepare("UPDATE categories SET series_type = CASE WHEN id = 'science' THEN 'learning' ELSE 'leisure' END, daily_limit_seconds = NULL, is_active = 1, archived_at = NULL"),
     env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', playback_start_seconds = 0, playback_end_seconds = NULL"),
     env.DB.prepare("UPDATE usage_rules SET daily_limit_seconds = 2400, is_active = 1"),
@@ -198,6 +198,32 @@ describe("learning and leisure rules", () => {
     const directVideo = await call("/api/content/videos/why-sky-blue", { headers: { cookie: device.cookie } });
     expect(directVideo.status).toBe(200);
     expect(await directVideo.json()).toMatchObject({ id: "why-sky-blue", isSelectable: true });
+  });
+
+  it("does not apply the first-five lock to the favorites learning category", async () => {
+    const device = await pairDevice("unlimited-favorites");
+    await addScienceVideos(6);
+    const now = new Date().toISOString();
+    await env.DB.prepare(`
+      INSERT INTO categories (id, name, icon, tone, sort_order, is_active, series_type, created_at, updated_at)
+      VALUES ('learning-favorites', '我最喜歡', '❤️', 'sage', 97, 1, 'learning', ?, ?)
+    `).bind(now, now).run();
+    const favoriteIds = [
+      "why-sky-blue", "big-story-dinosaurs", "science-extra-3", "science-extra-4",
+      "science-extra-5", "science-extra-7", "science-extra-6",
+    ];
+    await env.DB.batch(favoriteIds.map((id, index) => env.DB.prepare(`
+      INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
+      VALUES ('learning-favorites', ?, ?, ?)
+    `).bind(id, index + 1, now)));
+
+    const favorites = await (await call("/api/content/categories/learning-favorites/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(favorites).toHaveLength(7);
+    expect(favorites.every((video) => video.isSelectable)).toBe(true);
+
+    const otherwiseSixth = await call("/api/content/videos/science-extra-6", { headers: { cookie: device.cookie } });
+    expect(otherwiseSixth.status).toBe(200);
+    expect(await otherwiseSixth.json()).toMatchObject({ id: "science-extra-6", isSelectable: true });
   });
 
   it("rejects assigning one video to both learning and leisure categories", async () => {

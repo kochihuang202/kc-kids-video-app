@@ -265,3 +265,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: A video is playable when it is currently within the first five unlearned items of at least one of its active learning categories. It is locked only when none of its learning categories currently exposes it.
 - Root cause: The detail API treated every category membership as a veto, so a later rank in「我最喜歡」overrode the valid first-five rank in WowEnglish. The category list and video-detail endpoint therefore disagreed.
 - Regression test: `test/learning-leisure.spec.ts` (`opens a video that is in the first five of one learning category even when another category ranks it later`)
+
+## REG-034 — Favorites incorrectly inherits the five-lesson learning lock
+
+- Problem:「我最喜歡」is intended as an unrestricted shortcut, but items after its first five are shown as locked and can also cause an otherwise available course lesson to be rejected.
+- Reproduction: Add more than five unlearned videos to「我最喜歡」and open an item after the fifth position.
+- Correct behavior: Every active item in「我最喜歡」is selectable. Original learning-course categories still expose only their first five unlearned lessons.
+- Root cause: The shared learning-category selection code applied the course progression limit to every category whose `series_type` was `learning`, without recognizing the system favorites category as an unlimited collection.
+- Regression test: `test/learning-leisure.spec.ts` (`does not apply the first-five lock to the favorites learning category`)

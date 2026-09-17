@@ -5,6 +5,8 @@ import { consumeRateLimit, getChildDevice, getOrCreateChildDevice, rateKey, rand
 import type { AppEnv } from "./types";
 import { playbackCompletionRatio } from "../shared/playbackRange";
 
+const UNLIMITED_LEARNING_CATEGORY_IDS = new Set(["learning-favorites"]);
+
 interface CategoryRow {
   id: string;
   name: string;
@@ -116,6 +118,10 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
     // those categories currently exposes it in that category's first five.
     isSelectable = false;
     for (const category of rows) {
+      if (UNLIMITED_LEARNING_CATEGORY_IDS.has(category.id)) {
+        isSelectable = true;
+        break;
+      }
       const rank = await env.DB.prepare(`
         SELECT COUNT(*) AS count
         FROM category_videos before
@@ -192,7 +198,10 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
   let unlearnedIndex = 0;
   return json((result.results || []).map((row) => {
     const isLearned = !!device && row.is_learned === 1;
-    const isSelectable = category.series_type !== "learning" || isLearned || unlearnedIndex++ < 5;
+    const isSelectable = category.series_type !== "learning"
+      || UNLIMITED_LEARNING_CATEGORY_IDS.has(category.id)
+      || isLearned
+      || unlearnedIndex++ < 5;
     return videoDto(env, row, [categoryId], threshold, {
       isLearned,
       learnedAt: isLearned ? row.learned_at : null,
