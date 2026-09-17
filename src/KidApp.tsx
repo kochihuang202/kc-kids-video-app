@@ -651,6 +651,7 @@ export function WatchPage() {
   const [device, setDevice] = useState<DeviceStatus | null>(null);
   const [startPosition, setStartPosition] = useState(rawInitialPos);
   const [loadError, setLoadError] = useState("");
+  const [loadErrorCode, setLoadErrorCode] = useState("");
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const capabilityRef = useRef<Capability | null>(null);
   const sessionPromiseRef = useRef<Promise<Capability | null> | null>(null);
@@ -704,7 +705,8 @@ export function WatchPage() {
     if (!categoryVideos.length || !video) return null;
     const currentIndex = categoryVideos.findIndex((v) => v.id === video.id);
     if (currentIndex >= 0 && currentIndex < categoryVideos.length - 1) {
-      return categoryVideos[currentIndex + 1];
+      const candidate = categoryVideos[currentIndex + 1];
+      return candidate.isSelectable === false ? null : candidate;
     }
     return null;
   }, [categoryVideos, video]);
@@ -752,6 +754,7 @@ export function WatchPage() {
 
   const load = useCallback(async () => {
     setLoadError("");
+    setLoadErrorCode("");
     try {
       const nextDevice = await deviceRepository.status(preferOffline).catch(() => ({ authorized: false, device: null }));
       setDevice(nextDevice);
@@ -764,7 +767,9 @@ export function WatchPage() {
         contentRepository.getAccessState(preferOffline).catch(() => null),
       ]);
       if (nextVideo.source === "self_hosted") {
-        if (nextVideo.isSelectable === false) throw new Error("請先從前五部影片選擇。");
+        if (nextVideo.isSelectable === false) {
+          throw new ApiError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
+        }
         const file = await localMedia(nextVideo.id);
         if (file) {
           nextVideo.mediaUrl = URL.createObjectURL(file);
@@ -806,6 +811,7 @@ export function WatchPage() {
       }
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
+      setLoadErrorCode(error instanceof ApiError ? error.code || "" : "");
     }
   }, [forceFreshStart, hasExplicitResumePosition, isAutoplay, preferOffline, rawInitialPos, requestedMode, videoId]);
 
@@ -1344,6 +1350,19 @@ export function WatchPage() {
   if (!video && !loadError) return <main className="watch-page watch-loading"><LoadingCard label="正在準備播放器…" /></main>;
   if (loadError === "DEVICE_AUTH_REQUIRED") return (
     <main className="kid-shell"><div className="limit-card"><span className="ended-badge">🔐</span><h1>請家長先授權這台裝置</h1><p>授權一次後，孩子不需要登入，觀看紀錄與時間會自動同步。</p><Link className={buttonVariants({ size: "large" })} to="/parent/settings">前往家長設定</Link></div></main>
+  );
+  if (loadErrorCode === "LEARNING_VIDEO_LOCKED") return (
+    <main className="kid-shell">
+      <div className="limit-card" role="alert">
+        <span className="ended-badge" aria-hidden="true">🔒</span>
+        <h1>這一部還沒開放</h1>
+        <p>{loadError}</p>
+        <div className="limit-actions">
+          <Button size="large" variant="secondary" onClick={() => navigate(-1)}><ArrowLeft />回上一頁</Button>
+          <Link className={buttonVariants({ size: "large" })} to="/">孩子首頁</Link>
+        </div>
+      </div>
+    </main>
   );
   if (loadError) return <main className="kid-shell"><Link to="/parent/downloads">家長離線下載</Link>　<Link to="/">孩子首頁</Link><KidError message={loadError} retry={() => void load()} /></main>;
   if (!video) return <Navigate to="/" replace />;

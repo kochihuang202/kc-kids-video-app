@@ -28,7 +28,7 @@ export function savePlaybackQueue(queue: PlaybackQueue) {
 }
 
 export function syncPlaybackQueue(categoryId: string, mode: PlaybackMode, videos: VideoFixture[], currentVideoId: string) {
-  const videoIds = videos.map((video) => video.id);
+  const videoIds = videos.filter((video) => video.isSelectable !== false).map((video) => video.id);
   if (!videoIds.includes(currentVideoId)) return null;
   const queue = { categoryId, mode, videoIds, currentVideoId } satisfies PlaybackQueue;
   savePlaybackQueue(queue);

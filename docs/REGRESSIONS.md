@@ -249,3 +249,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Video management does not expose the misleading global bulk action. A parent can still refresh Metadata for an individual YouTube video from that video's controls.
 - Root cause: The category-scoped management UI retained a legacy account-wide health-check button, and temporary YouTube API failures were also counted as abnormal videos.
 - Regression test: `e2e/features/parent-video-category-loading.spec.ts`
+
+## REG-032 — Fifth learning lesson links into the locked sixth lesson
+
+- Problem: Pressing「下一集」from the fifth currently selectable learning video opens the locked sixth video, then shows「請先從前五部學習影片中選擇」with a retry button that can never succeed.
+- Reproduction: Open the fifth unlearned item in a learning category that has at least six unlearned videos, then press「下一集」.
+- Correct behavior: A locked adjacent lesson is not offered as the next item and is excluded from the playback queue. Opening a locked URL directly shows a clear locked explanation with navigation away, not a retry loop. Once learning progress makes the sixth lesson selectable, the fifth lesson may offer it normally.
+- Root cause: `WatchPage` and the session playback queue used raw category order without checking each video's server-provided `isSelectable` flag; the generic load-error component also treated an authorization rule as a transient network failure.
+- Regression test: `e2e/regressions/learning-next-track-lock.spec.ts`
