@@ -257,3 +257,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: A locked adjacent lesson is not offered as the next item and is excluded from the playback queue. Opening a locked URL directly shows a clear locked explanation with navigation away, not a retry loop. Once learning progress makes the sixth lesson selectable, the fifth lesson may offer it normally.
 - Root cause: `WatchPage` and the session playback queue used raw category order without checking each video's server-provided `isSelectable` flag; the generic load-error component also treated an authorization rule as a transient network failure.
 - Regression test: `e2e/regressions/learning-next-track-lock.spec.ts`
+
+## REG-033 — A lesson shown in today's first five is blocked when it also belongs to another category
+
+- Problem: WowEnglish lessons 005 and 006 appear in「今天的學習開始囉」but opening either lesson shows「這一步還沒開放」.
+- Reproduction: Put an unlearned video inside the first five available items of its course, and also add the same video later than fifth place in another learning category such as「我最喜歡」; open it from the course.
+- Correct behavior: A video is playable when it is currently within the first five unlearned items of at least one of its active learning categories. It is locked only when none of its learning categories currently exposes it.
+- Root cause: The detail API treated every category membership as a veto, so a later rank in「我最喜歡」overrode the valid first-five rank in WowEnglish. The category list and video-detail endpoint therefore disagreed.
+- Regression test: `test/learning-leisure.spec.ts` (`opens a video that is in the first five of one learning category even when another category ranks it later`)

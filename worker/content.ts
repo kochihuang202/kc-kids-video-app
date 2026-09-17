@@ -111,6 +111,10 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
   const isLearned = rows[0].is_learned === 1;
   let isSelectable = true;
   if (rows[0].series_type === "learning" && !isLearned) {
+    // A video can belong to more than one learning category (for example,
+    // its course and 「我最喜歡」). It is available when at least one of
+    // those categories currently exposes it in that category's first five.
+    isSelectable = false;
     for (const category of rows) {
       const rank = await env.DB.prepare(`
         SELECT COUNT(*) AS count
@@ -122,8 +126,8 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
           AND preceding_video.availability_status = 'available'
           AND COALESCE(ls.is_learned, 0) = 0
       `).bind(category.id, category.sort_order).first<{ count: number }>();
-      if ((rank?.count || 0) >= 5) {
-        isSelectable = false;
+      if ((rank?.count || 0) < 5) {
+        isSelectable = true;
         break;
       }
     }

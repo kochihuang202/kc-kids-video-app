@@ -101,7 +101,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM allowed_windows"),
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),
-    env.DB.prepare("DELETE FROM categories WHERE id = 'leisure-test'"),
+    env.DB.prepare("DELETE FROM categories WHERE id IN ('leisure-test', 'learning-overlap-test')"),
     env.DB.prepare("UPDATE categories SET series_type = CASE WHEN id = 'science' THEN 'learning' ELSE 'leisure' END, daily_limit_seconds = NULL, is_active = 1, archived_at = NULL"),
     env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', playback_start_seconds = 0, playback_end_seconds = NULL"),
     env.DB.prepare("UPDATE usage_rules SET daily_limit_seconds = 2400, is_active = 1"),
@@ -171,6 +171,33 @@ describe("learning and leisure rules", () => {
     expect(restored.map((video) => video.id)).toEqual(list.map((video) => video.id));
     expect(restored.find((video) => video.id === "why-sky-blue")?.learnedAt).toBeNull();
     expect(restored.at(-1)?.isSelectable).toBe(false);
+  });
+
+  it("opens a video that is in the first five of one learning category even when another category ranks it later", async () => {
+    const device = await pairDevice("multi-category-first-five");
+    await addScienceVideos(6);
+    const now = new Date().toISOString();
+    await env.DB.prepare(`
+      INSERT INTO categories (id, name, icon, tone, sort_order, is_active, series_type, created_at, updated_at)
+      VALUES ('learning-overlap-test', '重疊學習分類', '📚', 'sage', 98, 1, 'learning', ?, ?)
+    `).bind(now, now).run();
+    await env.DB.batch([
+      ...Array.from({ length: 6 }, (_, index) => env.DB.prepare(`
+        INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
+        VALUES ('learning-overlap-test', ?, ?, ?)
+      `).bind(`science-extra-${index + 3}`, index + 1, now)),
+      env.DB.prepare(`
+        INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
+        VALUES ('learning-overlap-test', 'why-sky-blue', 7, ?)
+      `).bind(now),
+    ]);
+
+    const scienceList = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(scienceList.find((video) => video.id === "why-sky-blue")).toMatchObject({ isSelectable: true });
+
+    const directVideo = await call("/api/content/videos/why-sky-blue", { headers: { cookie: device.cookie } });
+    expect(directVideo.status).toBe(200);
+    expect(await directVideo.json()).toMatchObject({ id: "why-sky-blue", isSelectable: true });
   });
 
   it("rejects assigning one video to both learning and leisure categories", async () => {
