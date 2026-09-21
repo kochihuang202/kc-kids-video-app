@@ -10,6 +10,7 @@ import {
   heartbeatViewSession,
   startViewSession,
   syncOfflineVideoViews,
+  updateFavoriteState,
   updateLearnedState,
 } from "./content";
 import { exportSessions } from "./export";
@@ -105,6 +106,8 @@ async function route(request: Request, env: AppEnv) {
   if (method === "GET" && id) return getPublicVideo(request, env, id);
   id = routeId(path, /^\/api\/child\/videos\/([^/]+)\/learned$/);
   if (method === "PUT" && id) return updateLearnedState(request, env, id);
+  id = routeId(path, /^\/api\/child\/videos\/([^/]+)\/favorite$/);
+  if (method === "PUT" && id) return updateFavoriteState(request, env, id);
   if (method === "GET" && path === "/api/device/status") return getDeviceStatus(request, env);
   if (method === "POST" && path === "/api/view-sessions") return startViewSession(request, env);
   if (method === "POST" && path === "/api/offline-video-views/sync") return syncOfflineVideoViews(request, env);

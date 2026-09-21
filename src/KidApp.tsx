@@ -392,9 +392,9 @@ export function CategoryPage() {
   const [videos, setVideos] = useState<VideoFixture[] | null>(null);
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [device, setDevice] = useState<DeviceStatus | null>(null);
-  const [hasFavoritesCategory, setHasFavoritesCategory] = useState(false);
   const [error, setError] = useState("");
   const [savingLearnedId, setSavingLearnedId] = useState("");
+  const [savingFavoriteId, setSavingFavoriteId] = useState("");
   const [confirmVideo, setConfirmVideo] = useState<VideoFixture | null>(null);
 
   const resumeVideo = useMemo(() => {
@@ -424,7 +424,6 @@ export function CategoryPage() {
       const nextCategory = categories.find((item) => item.id === categoryId);
       if (!nextCategory) throw new ApiError("找不到這個分類。", 404);
       setCategory(nextCategory);
-      setHasFavoritesCategory(categories.some((item) => item.id === "learning-favorites"));
       setVideos(nextVideos);
       setAccessState(nextAccess);
       setDevice(nextDevice);
@@ -456,8 +455,33 @@ export function CategoryPage() {
     }
   };
 
+  const toggleFavorite = async (video: VideoFixture) => {
+    setSavingFavoriteId(video.id);
+    try {
+      await contentRepository.setFavorite(video.id, !video.isFavorite);
+      await load();
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : "收藏狀態暫時無法更新。");
+    } finally {
+      setSavingFavoriteId("");
+    }
+  };
+
   const renderVideoCard = (video: VideoFixture) => (
     <article className={cn("video-card", !video.isSelectable && "is-locked", video.isLearned && "is-learned")} key={video.id}>
+      {category?.seriesType === "learning" && (
+        <button
+          type="button"
+          className={cn("favorite-toggle", video.isFavorite && "active")}
+          disabled={!device?.authorized || savingFavoriteId === video.id}
+          onClick={() => void toggleFavorite(video)}
+          aria-pressed={!!video.isFavorite}
+          aria-label={`${video.isFavorite ? "移出" : "加入"}我最喜歡：${video.parentLabel}`}
+          title={video.isFavorite ? "移出我最喜歡" : "加入我最喜歡"}
+        >
+          <Heart aria-hidden="true" />
+        </button>
+      )}
       {video.isSelectable ? (
         <Link className="video-card-main" to={`/watch/${video.id}?mode=${categoryMode}`}>
           <div className="video-thumb-container">
@@ -515,11 +539,6 @@ export function CategoryPage() {
               }}
               label={`${category.name}播放模式`}
             />
-            {hasFavoritesCategory && category.id !== "learning-favorites" && (
-              <Link className="favorite-category-link" to={`/category/learning-favorites?mode=${categoryMode}`}>
-                <Heart aria-hidden="true" />我最喜歡
-              </Link>
-            )}
           </header>
 
           {!device?.authorized && (

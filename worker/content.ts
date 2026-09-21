@@ -6,6 +6,7 @@ import type { AppEnv } from "./types";
 import { playbackCompletionRatio } from "../shared/playbackRange";
 
 const UNLIMITED_LEARNING_CATEGORY_IDS = new Set(["learning-favorites"]);
+const FAVORITES_CATEGORY_ID = "learning-favorites";
 
 interface CategoryRow {
   id: string;
@@ -37,6 +38,7 @@ interface VideoRow {
   playback_mode?: "video" | "listen" | null;
   is_learned?: number | null;
   learned_at?: string | null;
+  is_favorite?: number | null;
 }
 
 const categoryDto = (row: CategoryRow) => ({
@@ -55,7 +57,7 @@ const videoDto = (
   row: VideoRow,
   categoryIds: string[] = [],
   threshold = 0.9,
-  options: { isLearned?: boolean; learnedAt?: string | null; isSelectable?: boolean; seriesType?: "learning" | "leisure" } = {},
+  options: { isLearned?: boolean; learnedAt?: string | null; isSelectable?: boolean; isFavorite?: boolean; seriesType?: "learning" | "leisure" } = {},
 ) => {
   const position = env.RECORDING_ENABLED === "false" ? 0 : row.last_position_seconds || 0;
   const isWatched = playbackCompletionRatio({
@@ -80,6 +82,7 @@ const videoDto = (
     isLearned: options.isLearned ?? false,
     learnedAt: options.learnedAt ?? null,
     isSelectable: options.isSelectable ?? true,
+    isFavorite: options.isFavorite ?? false,
     seriesType: options.seriesType,
   };
 };
@@ -144,6 +147,7 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
     isLearned,
     learnedAt: isLearned ? rows[0].learned_at : null,
     isSelectable,
+    isFavorite: rows.some((row) => row.id === FAVORITES_CATEGORY_ID),
   };
 }
 
@@ -186,6 +190,10 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
       v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds, cv.sort_order,
       ${learnedColumn} AS is_learned,
       ${learnedAtColumn} AS learned_at,
+      EXISTS (
+        SELECT 1 FROM category_videos favorite_cv
+        WHERE favorite_cv.video_id = v.id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'
+      ) AS is_favorite,
       ${progressColumn} AS last_position_seconds,
       ${lastPlayedAtColumn} AS last_played_at
     FROM category_videos cv
@@ -206,6 +214,7 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
       isLearned,
       learnedAt: isLearned ? row.learned_at : null,
       isSelectable,
+      isFavorite: row.is_favorite === 1,
       seriesType: category.series_type,
     });
   }));
@@ -221,6 +230,10 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
       v.playback_start_seconds, v.playback_end_seconds,
       COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0) AS is_learned,
       (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id) AS learned_at,
+      EXISTS (
+        SELECT 1 FROM category_videos favorite_cv
+        WHERE favorite_cv.video_id = v.id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'
+      ) AS is_favorite,
       (
         SELECT vs.last_position_seconds
         FROM view_sessions vs
@@ -240,6 +253,7 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
     isLearned: series.isLearned,
     learnedAt: series.learnedAt,
     isSelectable: series.isSelectable,
+    isFavorite: series.isFavorite,
     seriesType: series.seriesType,
   }));
 }
@@ -453,6 +467,35 @@ export async function updateLearnedState(request: Request, env: AppEnv, videoId:
     await env.DB.prepare("DELETE FROM video_learned_state WHERE video_id = ?").bind(videoId).run();
   }
   return json({ ok: true, videoId, isLearned: learned, learnedAt: learned ? now : null });
+}
+
+export async function updateFavoriteState(request: Request, env: AppEnv, videoId: string) {
+  const device = await getChildDevice(request, env, true);
+  const body = await readJson(request);
+  const favorite = boolean(body.favorite, "收藏狀態");
+  const video = await requireActiveVideo(env, videoId);
+  if (video.seriesType !== "learning") {
+    throw new HttpError("目前只有學習系列可以加入我最喜歡。", 409, "FAVORITE_SERIES_CONFLICT");
+  }
+  await consumeRateLimit(env, await rateKey(env, "favorite", device!.id), 30, 60);
+
+  if (favorite) {
+    const category = await env.DB.prepare(`
+      SELECT id FROM categories
+      WHERE id = ? AND is_active = 1 AND archived_at IS NULL AND series_type = 'learning'
+    `).bind(FAVORITES_CATEGORY_ID).first<{ id: string }>();
+    if (!category) throw new HttpError("找不到我最喜歡分類。", 409, "FAVORITES_CATEGORY_MISSING");
+    await env.DB.prepare(`
+      INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
+      VALUES (?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM category_videos WHERE category_id = ?), ?)
+      ON CONFLICT(category_id, video_id) DO NOTHING
+    `).bind(FAVORITES_CATEGORY_ID, videoId, FAVORITES_CATEGORY_ID, new Date().toISOString()).run();
+  } else {
+    await env.DB.prepare(
+      "DELETE FROM category_videos WHERE category_id = ? AND video_id = ?",
+    ).bind(FAVORITES_CATEGORY_ID, videoId).run();
+  }
+  return json({ ok: true, videoId, isFavorite: favorite });
 }
 
 async function requireActiveVideo(env: AppEnv, videoId: string) {

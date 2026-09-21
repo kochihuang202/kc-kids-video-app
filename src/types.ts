@@ -40,6 +40,7 @@ export interface VideoFixture extends MediaDescriptor {
   isLearned?: boolean;
   learnedAt?: string | null;
   isSelectable?: boolean;
+  isFavorite?: boolean;
   seriesType?: SeriesType;
   lastPlayedAt?: string | null;
 }

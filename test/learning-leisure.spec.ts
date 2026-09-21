@@ -226,6 +226,39 @@ describe("learning and leisure rules", () => {
     expect(await otherwiseSixth.json()).toMatchObject({ id: "science-extra-6", isSelectable: true });
   });
 
+  it("adds and removes a learning video from favorites through the child API", async () => {
+    const device = await pairDevice("favorite-heart");
+    const now = new Date().toISOString();
+    await env.DB.prepare(`
+      INSERT INTO categories (id, name, icon, tone, sort_order, is_active, series_type, created_at, updated_at)
+      VALUES ('learning-favorites', '我最喜歡', '❤️', 'sage', 97, 1, 'learning', ?, ?)
+    `).bind(now, now).run();
+
+    const before = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(before.find((video) => video.id === "why-sky-blue")).toMatchObject({ isFavorite: false });
+
+    const added = await call("/api/child/videos/why-sky-blue/favorite", {
+      method: "PUT", headers: { cookie: device.cookie }, body: jsonBody({ favorite: true }),
+    });
+    expect(added.status).toBe(200);
+    expect(await added.json()).toMatchObject({ videoId: "why-sky-blue", isFavorite: true });
+    expect(await env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM category_videos WHERE category_id = 'learning-favorites' AND video_id = 'why-sky-blue'",
+    ).first<{ count: number }>()).toEqual({ count: 1 });
+
+    const afterAdd = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(afterAdd.find((video) => video.id === "why-sky-blue")).toMatchObject({ isFavorite: true });
+
+    const removed = await call("/api/child/videos/why-sky-blue/favorite", {
+      method: "PUT", headers: { cookie: device.cookie }, body: jsonBody({ favorite: false }),
+    });
+    expect(removed.status).toBe(200);
+    expect(await removed.json()).toMatchObject({ videoId: "why-sky-blue", isFavorite: false });
+    expect(await env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM category_videos WHERE category_id = 'learning-favorites' AND video_id = 'why-sky-blue'",
+    ).first<{ count: number }>()).toEqual({ count: 0 });
+  });
+
   it("rejects assigning one video to both learning and leisure categories", async () => {
     const parentCookie = await addParent();
     const now = new Date().toISOString();

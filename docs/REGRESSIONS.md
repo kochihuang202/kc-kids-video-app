@@ -274,10 +274,10 @@ Only important bugs that have occurred in the real app belong here.
 - Root cause: The shared learning-category selection code applied the course progression limit to every category whose `series_type` was `learning`, without recognizing the system favorites category as an unlimited collection.
 - Regression test: `test/learning-leisure.spec.ts` (`does not apply the first-five lock to the favorites learning category`)
 
-## REG-035 — Favorites shortcut disappears from category pages
+## REG-035 — Per-video favorites hearts disappear from category pages
 
-- Problem: The upper-right「我最喜歡」button is missing from a course page such as WowEnglish even though the favorites category and its videos still exist.
-- Reproduction: Open `/category/wowenglish` on desktop or mobile and inspect the category header.
-- Correct behavior: Every non-favorites category page shows a visible `❤️ 我最喜歡` shortcut in the header. It preserves the current viewing/listening mode and opens the favorites category.
-- Root cause: The category page had no committed JSX for the shortcut, so a later deployment built from Git retained the D1 category but omitted its navigation entry.
-- Regression test: `e2e/regressions/favorites-shortcut.spec.ts`
+- Problem: The heart at the upper-right of every learning-video card disappears, so a child cannot add a video to or remove it from「我最喜歡」.
+- Reproduction: Open a learning category such as WowEnglish and inspect a video card; no favorite control is available. Open「我最喜歡」and there is likewise no way to remove an item.
+- Correct behavior: Every learning-video card has an empty or filled heart reflecting its D1 membership. Tapping it adds or removes that video, persists across devices, and immediately refreshes the current list.
+- Root cause: The current Git version retained the `learning-favorites` category and its D1 memberships but had neither a committed child favorite endpoint nor the per-card heart UI. A page-level shortcut was briefly added after misinterpreting the report, then removed when the intended behavior was clarified.
+- Regression tests: `test/learning-leisure.spec.ts` (`adds and removes a learning video from favorites through the child API`) and `e2e/regressions/favorites-shortcut.spec.ts`

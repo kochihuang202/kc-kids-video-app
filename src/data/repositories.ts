@@ -89,6 +89,9 @@ export const contentRepository = {
   setLearned: (videoId: string, learned: boolean) => write<{ ok: true; videoId: string; isLearned: boolean; learnedAt: string | null }>(
     `/api/child/videos/${encodeURIComponent(videoId)}/learned`, "PUT", { learned },
   ),
+  setFavorite: (videoId: string, favorite: boolean) => write<{ ok: true; videoId: string; isFavorite: boolean }>(
+    `/api/child/videos/${encodeURIComponent(videoId)}/favorite`, "PUT", { favorite },
+  ),
 };
 
 export const deviceRepository = {
