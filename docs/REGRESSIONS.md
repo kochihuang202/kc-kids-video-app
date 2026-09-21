@@ -273,3 +273,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Every active item in「我最喜歡」is selectable. Original learning-course categories still expose only their first five unlearned lessons.
 - Root cause: The shared learning-category selection code applied the course progression limit to every category whose `series_type` was `learning`, without recognizing the system favorites category as an unlimited collection.
 - Regression test: `test/learning-leisure.spec.ts` (`does not apply the first-five lock to the favorites learning category`)
+
+## REG-035 — Favorites shortcut disappears from category pages
+
+- Problem: The upper-right「我最喜歡」button is missing from a course page such as WowEnglish even though the favorites category and its videos still exist.
+- Reproduction: Open `/category/wowenglish` on desktop or mobile and inspect the category header.
+- Correct behavior: Every non-favorites category page shows a visible `❤️ 我最喜歡` shortcut in the header. It preserves the current viewing/listening mode and opens the favorites category.
+- Root cause: The category page had no committed JSX for the shortcut, so a later deployment built from Git retained the D1 category but omitted its navigation entry.
+- Regression test: `e2e/regressions/favorites-shortcut.spec.ts`

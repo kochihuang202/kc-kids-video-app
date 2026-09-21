@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Clock3, Headphones, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
+import { ArrowLeft, Clock, Clock3, Headphones, Heart, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
@@ -392,6 +392,7 @@ export function CategoryPage() {
   const [videos, setVideos] = useState<VideoFixture[] | null>(null);
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [device, setDevice] = useState<DeviceStatus | null>(null);
+  const [hasFavoritesCategory, setHasFavoritesCategory] = useState(false);
   const [error, setError] = useState("");
   const [savingLearnedId, setSavingLearnedId] = useState("");
   const [confirmVideo, setConfirmVideo] = useState<VideoFixture | null>(null);
@@ -423,6 +424,7 @@ export function CategoryPage() {
       const nextCategory = categories.find((item) => item.id === categoryId);
       if (!nextCategory) throw new ApiError("找不到這個分類。", 404);
       setCategory(nextCategory);
+      setHasFavoritesCategory(categories.some((item) => item.id === "learning-favorites"));
       setVideos(nextVideos);
       setAccessState(nextAccess);
       setDevice(nextDevice);
@@ -513,6 +515,11 @@ export function CategoryPage() {
               }}
               label={`${category.name}播放模式`}
             />
+            {hasFavoritesCategory && category.id !== "learning-favorites" && (
+              <Link className="favorite-category-link" to={`/category/learning-favorites?mode=${categoryMode}`}>
+                <Heart aria-hidden="true" />我最喜歡
+              </Link>
+            )}
           </header>
 
           {!device?.authorized && (

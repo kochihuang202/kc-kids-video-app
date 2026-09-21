@@ -161,6 +161,25 @@ svg { flex: 0 0 auto; }
 .section-heading { display: flex; align-items: center; gap: 17px; margin-bottom: 30px; }
 .section-heading span { font-size: 48px; font-weight: 950; }
 .section-heading h1 { margin: 0; font-size: clamp(38px, 5vw, 54px); letter-spacing: -0.04em; }
+.favorite-category-link {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 0 18px;
+  border: 1px solid rgba(154, 91, 99, .24);
+  border-radius: 999px;
+  background: #fff4f2;
+  color: #70474d;
+  box-shadow: 0 7px 18px rgba(96, 65, 68, .08);
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.favorite-category-link svg { width: 20px; height: 20px; fill: #d97983; stroke: #a94f5a; }
+.favorite-category-link:active { transform: scale(.98); }
 .video-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; }
 .video-card {
   overflow: hidden;
