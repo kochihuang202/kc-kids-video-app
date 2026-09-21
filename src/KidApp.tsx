@@ -396,6 +396,7 @@ export function CategoryPage() {
   const [savingLearnedId, setSavingLearnedId] = useState("");
   const [savingFavoriteId, setSavingFavoriteId] = useState("");
   const [confirmVideo, setConfirmVideo] = useState<VideoFixture | null>(null);
+  const isFavoritesPage = categoryId === "learning-favorites";
 
   const resumeVideo = useMemo(() => {
     if (!videos || videos.length === 0) return null;
@@ -468,7 +469,7 @@ export function CategoryPage() {
   };
 
   const renderVideoCard = (video: VideoFixture) => (
-    <article className={cn("video-card", !video.isSelectable && "is-locked", video.isLearned && "is-learned")} key={video.id}>
+    <article className={cn("video-card", !video.isSelectable && "is-locked", !isFavoritesPage && video.isLearned && "is-learned")} key={video.id}>
       {category?.seriesType === "learning" && (
         <button
           type="button"
@@ -486,7 +487,7 @@ export function CategoryPage() {
         <Link className="video-card-main" to={`/watch/${video.id}?mode=${categoryMode}`}>
           <div className="video-thumb-container">
             <CategoryThumbnail src={video.thumbnailUrl} alt={`${video.parentLabel}影片縮圖`} categoryName={category?.name || "本機影片"} />
-            {video.isLearned && <span className="learned-status-badge">✓ 已學會</span>}
+            {!isFavoritesPage && video.isLearned && <span className="learned-status-badge">✓ 已學會</span>}
             {video.isWatched && <span className="watched-badge">✓ 看過</span>}
             {!!video.lastPositionSeconds && !!video.durationSeconds && (
               <div className="mini-progress-track" aria-hidden="true"><div className="mini-progress-fill" style={{ width: `${Math.min(100, video.lastPositionSeconds / video.durationSeconds * 100)}%` }} /></div>
@@ -494,7 +495,7 @@ export function CategoryPage() {
           </div>
           <div>
             <h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p>
-            {video.isLearned && video.learnedAt && <p className="learned-at"><Clock3 />{formatLearnedAt(video.learnedAt)} 學會</p>}
+            {!isFavoritesPage && video.isLearned && video.learnedAt && <p className="learned-at"><Clock3 />{formatLearnedAt(video.learnedAt)} 學會</p>}
           </div>
         </Link>
       ) : (
@@ -503,15 +504,17 @@ export function CategoryPage() {
           <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
         </div>
       )}
-      <button
-        type="button"
-        className={cn("learned-toggle", video.isLearned && "checked")}
-        disabled={!device?.authorized || savingLearnedId === video.id}
-        onClick={() => setConfirmVideo(video)}
-        aria-pressed={!!video.isLearned}
-      >
-        <span aria-hidden="true">{video.isLearned ? "✓" : ""}</span>{video.isLearned ? "取消學會" : "標記學會了"}
-      </button>
+      {!isFavoritesPage && (
+        <button
+          type="button"
+          className={cn("learned-toggle", video.isLearned && "checked")}
+          disabled={!device?.authorized || savingLearnedId === video.id}
+          onClick={() => setConfirmVideo(video)}
+          aria-pressed={!!video.isLearned}
+        >
+          <span aria-hidden="true">{video.isLearned ? "✓" : ""}</span>{video.isLearned ? "取消學會" : "標記學會了"}
+        </button>
+      )}
     </article>
   );
 
@@ -525,7 +528,7 @@ export function CategoryPage() {
           <header className="section-heading">
             <span aria-hidden="true">{category.icon}</span>
             <h1>{category.name}</h1>
-            <span className={`series-type-pill ${category.seriesType}`}>{category.seriesType === "learning" ? "學習系列" : "休閒系列"}</span>
+            {!isFavoritesPage && <span className={`series-type-pill ${category.seriesType}`}>{category.seriesType === "learning" ? "學習系列" : "休閒系列"}</span>}
             {category.seriesType === "leisure" && accessState && (
               <span className="gentle-time-badge">
                 <Clock3 /> 今日休閒剩餘 {Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘
@@ -585,19 +588,29 @@ export function CategoryPage() {
             </section>
           )}
 
-          <section className="learning-status-group" aria-label="今天的學習開始囉，好好動動大腦吧!!">
-            <div className="learning-status-heading"><h2>🌱 今天的學習開始囉，好好動動大腦吧!!</h2><span>{videos.filter((video) => !video.isLearned).length} 部</span></div>
-            <div className="video-grid">{videos.filter((video) => !video.isLearned).map(renderVideoCard)}</div>
-          </section>
-
-          {videos.some((video) => video.isLearned) && (
-            <section className="learning-status-group learned-group" aria-label="已學會">
-              <div className="learning-status-heading"><h2>✅ 已學會</h2><span>{videos.filter((video) => video.isLearned).length} 部</span></div>
-              <div className="video-grid">{videos.filter((video) => video.isLearned).map(renderVideoCard)}</div>
+          {isFavoritesPage ? (
+            <section className="learning-status-group favorites-video-group" aria-label="收藏影片">
+              {videos.length > 0
+                ? <div className="video-grid">{videos.map(renderVideoCard)}</div>
+                : <p className="favorites-empty">還沒有收藏影片，回到學習系列點愛心加入吧！</p>}
             </section>
+          ) : (
+            <>
+              <section className="learning-status-group" aria-label="今天的學習開始囉，好好動動大腦吧!!">
+                <div className="learning-status-heading"><h2>🌱 今天的學習開始囉，好好動動大腦吧!!</h2><span>{videos.filter((video) => !video.isLearned).length} 部</span></div>
+                <div className="video-grid">{videos.filter((video) => !video.isLearned).map(renderVideoCard)}</div>
+              </section>
+
+              {videos.some((video) => video.isLearned) && (
+                <section className="learning-status-group learned-group" aria-label="已學會">
+                  <div className="learning-status-heading"><h2>✅ 已學會</h2><span>{videos.filter((video) => video.isLearned).length} 部</span></div>
+                  <div className="video-grid">{videos.filter((video) => video.isLearned).map(renderVideoCard)}</div>
+                </section>
+              )}
+            </>
           )}
 
-          {confirmVideo && (
+          {!isFavoritesPage && confirmVideo && (
             <div className="dialog-overlay" onClick={() => setConfirmVideo(null)}>
               <div
                 className="dialog-content learned-confirm-dialog"

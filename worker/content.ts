@@ -200,7 +200,7 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
     JOIN videos v ON v.id = cv.video_id
     WHERE cv.category_id = ? AND v.is_active = 1 AND v.archived_at IS NULL
       AND v.availability_status = 'available'
-    ORDER BY is_learned ASC, cv.sort_order, v.id
+    ORDER BY ${category.id === FAVORITES_CATEGORY_ID ? "cv.sort_order, v.id" : "is_learned ASC, cv.sort_order, v.id"}
   `;
   const result = await env.DB.prepare(query).bind(categoryId).all<VideoRow>();
   let unlearnedIndex = 0;

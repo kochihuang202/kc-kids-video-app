@@ -249,6 +249,15 @@ describe("learning and leisure rules", () => {
     const afterAdd = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
     expect(afterAdd.find((video) => video.id === "why-sky-blue")).toMatchObject({ isFavorite: true });
 
+    expect((await call("/api/child/videos/big-story-dinosaurs/favorite", {
+      method: "PUT", headers: { cookie: device.cookie }, body: jsonBody({ favorite: true }),
+    })).status).toBe(200);
+    expect((await call("/api/child/videos/why-sky-blue/learned", {
+      method: "PUT", headers: { cookie: device.cookie }, body: jsonBody({ learned: true }),
+    })).status).toBe(200);
+    const favorites = await (await call("/api/content/categories/learning-favorites/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(favorites.slice(0, 2).map((video) => video.id)).toEqual(["why-sky-blue", "big-story-dinosaurs"]);
+
     const removed = await call("/api/child/videos/why-sky-blue/favorite", {
       method: "PUT", headers: { cookie: device.cookie }, body: jsonBody({ favorite: false }),
     });

@@ -1531,6 +1531,8 @@ svg { flex: 0 0 auto; }
 .series-type-pill.learning, .series-history-chip.learning { background: #dcebd9; color: #315b43; }
 .series-type-pill.leisure, .series-history-chip.leisure { background: #f7dfca; color: #7b5231; }
 .learning-status-group { margin-top: 28px; }
+.favorites-video-group { margin-top: 18px; }
+.favorites-empty { margin: 0; padding: 34px 24px; border: 1px dashed #b9cbbf; border-radius: 22px; background: rgba(255,255,255,.62); color: #587064; text-align: center; font-size: 17px; font-weight: 800; }
 .learning-status-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .learning-status-heading h2 { margin: 0; color: #33483d; font-size: clamp(22px, 3vw, 30px); }
 .learning-status-heading span { padding: 6px 11px; border-radius: 999px; background: #ecefe9; color: #65736b; font-size: 13px; font-weight: 850; }

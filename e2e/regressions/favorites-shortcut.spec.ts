@@ -14,7 +14,7 @@ test("each learning video can be added to and removed from favorites with its he
     mediaUrl: "https://media.test/wow-blue-002.mp4", thumbnailPath: null, youtubeTitle: "Wow Blue 002",
     parentLabel: "002.Wow!Blue - Unit 1 song1", thumbnailUrl: "/local-media-placeholder.svg",
     durationSeconds: 72, sortOrder: 1, lastPositionSeconds: 0, isWatched: false,
-    isLearned: false, learnedAt: null, isSelectable: true, isFavorite: favorite, seriesType: "learning",
+    isLearned: true, learnedAt: "2026-09-20T01:00:00.000Z", isSelectable: true, isFavorite: favorite, seriesType: "learning",
   });
 
   await page.route("**/api/**", async (route) => {
@@ -40,6 +40,10 @@ test("each learning video can be added to and removed from favorites with its he
   await expect(page.getByRole("button", { name: "移出我最喜歡：002.Wow!Blue - Unit 1 song1" })).toBeVisible();
 
   await page.goto("/category/learning-favorites?mode=video");
+  await expect(page.getByRole("region", { name: "今天的學習開始囉，好好動動大腦吧!!" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "已學會" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "取消學會" })).toHaveCount(0);
+  await expect(page.locator(".learned-status-badge")).toHaveCount(0);
   const removeHeart = page.getByRole("button", { name: "移出我最喜歡：002.Wow!Blue - Unit 1 song1" });
   await expect(removeHeart).toBeVisible();
   await removeHeart.click();

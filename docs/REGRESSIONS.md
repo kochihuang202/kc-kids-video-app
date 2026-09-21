@@ -281,3 +281,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Every learning-video card has an empty or filled heart reflecting its D1 membership. Tapping it adds or removes that video, persists across devices, and immediately refreshes the current list.
 - Root cause: The current Git version retained the `learning-favorites` category and its D1 memberships but had neither a committed child favorite endpoint nor the per-card heart UI. A page-level shortcut was briefly added after misinterpreting the report, then removed when the intended behavior was clarified.
 - Regression tests: `test/learning-leisure.spec.ts` (`adds and removes a learning video from favorites through the child API`) and `e2e/regressions/favorites-shortcut.spec.ts`
+
+## REG-036 — Favorites is incorrectly presented as course progress
+
+- Problem:「我最喜歡」splits saved videos into「今天的學習開始囉」and「已學會」and shows learned controls, even though favorites is a collection rather than a course.
+- Reproduction: Favorite a video already marked learned, then open the favorites category.
+- Correct behavior: Favorites shows one collection ordered by favorite order, with no learned grouping, learned badge, learned timestamp, or learned toggle. Removing a favorite does not alter that video's learned state in its original course.
+- Root cause: The generic learning-category page and SQL ordering were reused for the special favorites category without separating collection behavior from course-progression behavior.
+- Regression tests: `e2e/regressions/favorites-shortcut.spec.ts` and `test/learning-leisure.spec.ts` (`adds and removes a learning video from favorites through the child API`)
