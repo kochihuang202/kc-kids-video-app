@@ -289,3 +289,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Favorites shows one collection ordered by favorite order, with no learned grouping, learned badge, learned timestamp, or learned toggle. Removing a favorite does not alter that video's learned state in its original course.
 - Root cause: The generic learning-category page and SQL ordering were reused for the special favorites category without separating collection behavior from course-progression behavior.
 - Regression tests: `e2e/regressions/favorites-shortcut.spec.ts` and `test/learning-leisure.spec.ts` (`adds and removes a learning video from favorites through the child API`)
+
+## REG-037 — Player volume and speed reset after returning to a series
+
+- Problem: A child changes the player volume or speed, presses「回去」and opens another episode, but the controls return to 100% and 1.0x.
+- Reproduction: Open the first video in a series, choose 35% volume and 0.8x speed, return to the series, then open its second video.
+- Correct behavior: Every device remembers one volume and speed pair for each series. Episodes in the same series reuse it after navigation or reopening, while another series keeps its own independent settings.
+- Root cause: `WatchPage` stored both controls only in component state, which was destroyed whenever the route left the player.
+- Regression test: `e2e/regressions/player-series-preferences.spec.ts`

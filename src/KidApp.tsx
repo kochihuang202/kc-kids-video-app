@@ -8,6 +8,7 @@ import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./com
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
 import { advancePlaybackQueue, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
+import { playerPreferenceSeriesId, readSeriesPlayerPreferences, saveSeriesPlayerPreferences } from "./lib/playerPreferences";
 import { PlaybackDiagnostics } from "./lib/playbackDiagnostics";
 import { clampPlaybackPosition, getPlaybackRange, relativePlaybackPosition } from "../shared/playbackRange";
 import { cn, formatPosition } from "./lib/utils";
@@ -818,6 +819,7 @@ export function WatchPage() {
         }
       }
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
+      const playerPreferences = readSeriesPlayerPreferences(playerPreferenceSeriesId(nextVideo));
       let nextCategoryVideos: VideoFixture[] = [];
       if (nextVideo.categoryId) {
         nextCategoryVideos = await contentRepository.getVideos(nextVideo.categoryId, preferOffline).catch(() => []);
@@ -826,6 +828,8 @@ export function WatchPage() {
       // Load the category queue before mounting YouTube. Pure-listening mode
       // can then cue the complete playlist before the child's first play tap.
       setCategoryVideos(nextCategoryVideos);
+      setVolume(playerPreferences.volume);
+      setPlaybackRate(playerPreferences.playbackRate);
       setPlaybackMode(initialMode);
       setPlayerAutoPlay(isAutoplay);
       setVideo(nextVideo);
@@ -1699,7 +1703,11 @@ export function WatchPage() {
                 <select
                   id="playback-speed-select"
                   value={playbackRate}
-                  onChange={(e) => setPlaybackRate(Number(e.target.value))}
+                  onChange={(event) => {
+                    const nextPlaybackRate = Number(event.target.value);
+                    setPlaybackRate(nextPlaybackRate);
+                    saveSeriesPlayerPreferences(playerPreferenceSeriesId(video), { playbackRate: nextPlaybackRate });
+                  }}
                   className="speed-select"
                   aria-label="播放速度"
                 >
@@ -1778,7 +1786,11 @@ export function WatchPage() {
                 value={volume}
                 className="volume-slider"
                 aria-label="音量"
-                onChange={(event) => setVolume(Number(event.target.value))}
+                onChange={(event) => {
+                  const nextVolume = Number(event.target.value);
+                  setVolume(nextVolume);
+                  saveSeriesPlayerPreferences(playerPreferenceSeriesId(video), { volume: nextVolume });
+                }}
               />
               <span>{Math.round(volume * 100)}%</span>
             </div>
