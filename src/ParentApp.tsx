@@ -1954,7 +1954,7 @@ function SortableCategoryRow({
   onChange, onMove, onArchive, onRestore, onDelete,
 }: {
   category: AdminCategory; index: number; count: number;
-  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit">>) => void;
+  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount">>) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onArchive: (id: string) => void;
   onRestore: (id: string) => void;
@@ -1965,15 +1965,23 @@ function SortableCategoryRow({
   const [icon, setIcon] = useState(category.icon);
   const [seriesType, setSeriesType] = useState(category.seriesType);
   const [unlockLimit, setUnlockLimit] = useState<number>(category.unlockLimit ?? 5);
+  const [listenRepeatCount, setListenRepeatCount] = useState<number>(category.listenRepeatCount ?? 5);
   useEffect(() => {
     setName(category.name);
     setIcon(category.icon);
     setSeriesType(category.seriesType);
     setUnlockLimit(category.unlockLimit ?? 5);
+    setListenRepeatCount(category.listenRepeatCount ?? 5);
   }, [category]);
 
   const handleSave = () => {
-    onChange(category.id, { name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null });
+    onChange(category.id, {
+      name,
+      icon,
+      seriesType,
+      unlockLimit: seriesType === "learning" ? unlockLimit : null,
+      listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null,
+    });
   };
 
   return (
@@ -1987,11 +1995,25 @@ function SortableCategoryRow({
           <option value="leisure">🎈 休閒系列</option>
         </select>
         {seriesType === "learning" && (
-          <select aria-label="解鎖規則" value={unlockLimit} onChange={(event) => setUnlockLimit(Number(event.target.value))}>
-            <option value={1}>🔒 一次開放 1 集</option>
-            <option value={5}>🔒 同時開放 5 集</option>
-            <option value={0}>🔓 全部開放（不限）</option>
-          </select>
+          <>
+            <select aria-label="解鎖規則" value={unlockLimit} onChange={(event) => setUnlockLimit(Number(event.target.value))}>
+              <option value={1}>🔒 一次開放 1 集</option>
+              <option value={5}>🔒 同時開放 5 集</option>
+              <option value={0}>🔓 全部開放（不限）</option>
+            </select>
+            <label className="category-repeat-setting">
+              純聽每集
+              <input
+                aria-label="純聽重播次數"
+                type="number"
+                min={1}
+                max={20}
+                value={listenRepeatCount}
+                onChange={(event) => setListenRepeatCount(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
+              />
+              次
+            </label>
+          </>
         )}
       </div>
       <span className={`status-chip ${category.archivedAt ? "archived" : category.isActive ? "active" : "hidden"}`}>
@@ -2028,6 +2050,7 @@ function CategoriesPage() {
   const [icon, setIcon] = useState("✨");
   const [seriesType, setSeriesType] = useState<"learning" | "leisure">("leisure");
   const [unlockLimit, setUnlockLimit] = useState<number>(5);
+  const [listenRepeatCount, setListenRepeatCount] = useState<number>(5);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const load = useCallback(async () => {
     setLoading(true);
@@ -2051,13 +2074,13 @@ function CategoriesPage() {
     const to = active.findIndex((item) => item.id === event.over!.id);
     void persistOrder(arrayMove(active, from, to));
   };
-  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit">>) => {
+  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount">>) => {
     await parentRepository.updateCategory(id, body).then(load).catch((e) => setError(e.message));
   };
   const create = async (event: FormEvent) => {
     event.preventDefault();
-    await parentRepository.createCategory({ name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null })
-      .then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); setUnlockLimit(5); return load(); })
+    await parentRepository.createCategory({ name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null, listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null })
+      .then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); setUnlockLimit(5); setListenRepeatCount(5); return load(); })
       .catch((e) => setError(e.message));
   };
   const removeCategoryPermanently = async (id: string, categoryName: string) => {
@@ -2082,11 +2105,25 @@ function CategoriesPage() {
           <option value="learning">📚 學習系列</option>
         </select>
         {seriesType === "learning" && (
-          <select aria-label="新分類解鎖規則" value={unlockLimit} onChange={(event) => setUnlockLimit(Number(event.target.value))}>
-            <option value={1}>🔒 一次開放 1 集</option>
-            <option value={5}>🔒 同時開放 5 集</option>
-            <option value={0}>🔓 全部開放（不限）</option>
-          </select>
+          <>
+            <select aria-label="新分類解鎖規則" value={unlockLimit} onChange={(event) => setUnlockLimit(Number(event.target.value))}>
+              <option value={1}>🔒 一次開放 1 集</option>
+              <option value={5}>🔒 同時開放 5 集</option>
+              <option value={0}>🔓 全部開放（不限）</option>
+            </select>
+            <label className="category-repeat-setting">
+              純聽每集
+              <input
+                aria-label="新分類純聽重播次數"
+                type="number"
+                min={1}
+                max={20}
+                value={listenRepeatCount}
+                onChange={(event) => setListenRepeatCount(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
+              />
+              次
+            </label>
+          </>
         )}
         <Button type="submit"><Plus /> 建立分類</Button>
       </form>

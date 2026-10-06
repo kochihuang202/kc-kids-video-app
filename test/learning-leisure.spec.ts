@@ -113,6 +113,30 @@ beforeEach(async () => {
 });
 
 describe("learning and leisure rules", () => {
+  it("stores the parent-configured learning listen repeat count", async () => {
+    const parentCookie = await addParent();
+    const updated = await call("/api/parent/categories/science", {
+      method: "PATCH",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ listenRepeatCount: 3 }),
+    });
+    expect(updated.status).toBe(200);
+
+    const categories = await (await call("/api/parent/categories", {
+      headers: { cookie: parentCookie },
+    })).json<any[]>();
+    expect(categories.find((category) => category.id === "science")?.listenRepeatCount).toBe(3);
+
+    const publicCategories = await (await call("/api/content/categories")).json<any[]>();
+    expect(publicCategories.find((category) => category.id === "science")?.listenRepeatCount).toBe(3);
+
+    const device = await pairDevice("repeat-count");
+    const video = await (await call("/api/content/videos/why-sky-blue", {
+      headers: { cookie: device.cookie },
+    })).json<any>();
+    expect(video.listenRepeatCount).toBe(3);
+  });
+
   it("loads a large parent category without exceeding D1 bind limits", async () => {
     const parentCookie = await addParent();
     await addScienceVideos(110);

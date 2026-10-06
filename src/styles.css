@@ -944,6 +944,29 @@ svg { flex: 0 0 auto; }
 .category-selects-group select {
   min-height: 44px;
 }
+.category-repeat-setting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.category-repeat-setting input,
+.inline-create-form .category-repeat-setting input:not(.emoji-input) {
+  flex: 0 0 52px;
+  width: 52px;
+  min-width: 52px;
+  min-height: 32px;
+  padding: 4px 6px;
+  text-align: center;
+}
 .admin-list-row.is-dragging { z-index: 20; box-shadow: 0 18px 45px rgba(48, 65, 56, 0.18); }
 .admin-list-row.is-archived { opacity: 0.7; background: #f0eee7; }
 .drag-handle, .row-actions button:not(.ui-button), .video-admin-actions > button:not(.ui-button) {

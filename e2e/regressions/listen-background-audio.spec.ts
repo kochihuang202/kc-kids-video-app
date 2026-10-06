@@ -35,6 +35,76 @@ test("REG-020 loops learning audio inside the native media session", async ({ pa
   await expect(page.locator(".main-play-btn")).toHaveAttribute("aria-label", "暫停");
 });
 
+test("learning listening repeats the configured count then wraps to the first selectable lesson", async ({ page }) => {
+  await installDeterministicMedia(page, 0, { abortNetwork: false });
+  await mockAuthorizedWatchApi(page, undefined, {
+    mediaType: "video",
+    mediaUrl: "/e2e-media/regression-media.wav?episode=2",
+    parentLabel: "第二集",
+    sortOrder: 2,
+    listenRepeatCount: 2,
+    seriesType: "learning",
+  });
+
+  const firstVideo = {
+    id: "learning-first-media",
+    categoryId: "learning-e2e",
+    categoryIds: ["learning-e2e"],
+    youtubeTitle: "第一集",
+    parentLabel: "第一集",
+    thumbnailUrl: "/local-media-placeholder.svg",
+    sortOrder: 1,
+    durationSeconds: 120,
+    playbackStartSeconds: 0,
+    playbackEndSeconds: null,
+    lastPositionSeconds: 0,
+    isWatched: false,
+    isLearned: false,
+    isSelectable: true,
+    listenRepeatCount: 2,
+    seriesType: "learning",
+    source: "self_hosted",
+    youtubeVideoId: null,
+    mediaType: "video",
+    mediaPath: "regression-media.wav",
+    mediaUrl: "/e2e-media/regression-media.wav?episode=1",
+    thumbnailPath: null,
+  };
+  await page.route("**/api/content/categories/learning-e2e/videos", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify([firstVideo, {
+      ...firstVideo,
+      id: TEST_VIDEO_ID,
+      parentLabel: "第二集",
+      sortOrder: 2,
+      mediaUrl: "/e2e-media/regression-media.wav?episode=2",
+    }]),
+  }));
+  await page.route("**/api/content/videos/learning-first-media", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(firstVideo),
+  }));
+
+  await page.goto(`/watch/${TEST_VIDEO_ID}?mode=listen&fresh=1`);
+  const player = page.locator("audio.native-media-player");
+  await page.locator(".main-play-btn").click();
+  await expect(player).toHaveJSProperty("loop", true);
+
+  await player.evaluate((element) => {
+    const media = element as HTMLMediaElement;
+    media.currentTime = 119.8;
+    media.dispatchEvent(new Event("timeupdate"));
+  });
+  await finishMediaForTest(page);
+  await expect(page).toHaveURL(new RegExp(`/watch/${TEST_VIDEO_ID}`));
+  await expect(player).toHaveJSProperty("loop", false);
+
+  await finishMediaForTest(page);
+  await expect(page).toHaveURL(/\/watch\/learning-first-media\?mode=listen&autoplay=1&fresh=1/);
+});
+
 test("REG-027 re-arms iOS audio output after lock-screen pause and play", async ({ page }) => {
   await installDeterministicMedia(page, 0, { abortNetwork: false });
   await mockAuthorizedWatchApi(page, undefined, {

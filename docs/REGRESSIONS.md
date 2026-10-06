@@ -158,9 +158,9 @@ Only important bugs that have occurred in the real app belong here.
 
 - Problem: DeepEng pure listening continues while an iPad is locked, but after the lesson repeats the progress display appears active with no sound; unlocking shows either 0:00 or the final second.
 - Reproduction: Start a self-hosted learning video in pure-listening mode, lock the iPad, wake the still-locked screen near the end, and let the same lesson repeat. The timing is intermittent and may also occur without waking the display.
-- Correct behavior: The same native audio media session loops from the beginning and its real current time continues advancing with sound while the screen remains locked.
+- Correct behavior: The same native audio media session loops from the beginning and its real current time continues advancing with sound while the screen remains locked. Per the later parent-configurable learning rule, it uses native loop for the configured number of plays, then advances within the currently selectable lessons; after the last selectable lesson it returns to the first.
 - Root cause: The React `ended` handler synchronously called `seekTo(0)` and `play()`. Production diagnostics showed iPadOS emitting a new `playing` event within 0.1–0.2 seconds while the underlying timeline remained fixed at either 0 or 902 seconds. Learning audio now uses the media element's native `loop` behavior, so iPadOS performs the transition inside the already-authorized media session.
-- Regression test: `e2e/regressions/listen-background-audio.spec.ts`
+- Regression test: `e2e/regressions/listen-background-audio.spec.ts` (native loop stability and configured repeat-count wraparound)
 
 ## REG-021 — A play request made before local media is ready becomes a false connection error
 

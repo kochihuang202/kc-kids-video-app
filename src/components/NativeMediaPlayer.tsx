@@ -20,6 +20,7 @@ interface NativeMediaPlayerProps {
   playbackRate?: number;
   autoPlay?: boolean;
   loopPlayback?: boolean;
+  onLoop?: () => void;
   onStateChange?: (state: PlayerState) => void;
   onProgress?: (currentTime: number, duration: number) => void;
   onError?: (error?: MediaError | null) => void;
@@ -27,13 +28,14 @@ interface NativeMediaPlayerProps {
 }
 
 export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlayerProps>(
-  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onStateChange, onProgress, onError, onReady }, ref) => {
+  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onLoop, onStateChange, onProgress, onError, onReady }, ref) => {
     const elementRef = useRef<HTMLMediaElement | null>(null);
     const visualVideoRef = useRef<HTMLVideoElement | null>(null);
     const readySentRef = useRef(false);
     const playRequestedRef = useRef(autoPlay);
     const pendingPlayRef = useRef<Promise<void> | null>(null);
     const remotePauseRef = useRef(false);
+    const lastCurrentTimeRef = useRef(startAt);
     const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType, src);
 
     const syncVisualVideo = (play: boolean) => {
@@ -97,6 +99,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       readySentRef.current = false;
       playRequestedRef.current = autoPlay;
       pendingPlayRef.current = null;
+      lastCurrentTimeRef.current = startAt;
       const element = elementRef.current;
       if (!element) return;
       // StrictMode replays effect cleanup/setup without re-rendering the DOM.
@@ -258,8 +261,19 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       onCanPlay: markReady,
       onDurationChange: reportProgress,
       onTimeUpdate: () => {
-        reportProgress();
         const master = elementRef.current;
+        const currentTime = Math.max(0, master?.currentTime || 0);
+        const duration = master && Number.isFinite(master.duration) ? master.duration : 0;
+        if (
+          loopPlayback
+          && duration > 0
+          && lastCurrentTimeRef.current >= duration - 2
+          && currentTime <= Math.max(2, startAt + 1)
+        ) {
+          onLoop?.();
+        }
+        lastCurrentTimeRef.current = currentTime;
+        reportProgress();
         const visual = visualVideoRef.current;
         if (master && visual && !document.hidden && Math.abs(visual.currentTime - master.currentTime) > 0.5) {
           syncVisualVideo(playRequestedRef.current);

@@ -760,6 +760,8 @@ export function WatchPage() {
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("video");
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [playerAutoPlay, setPlayerAutoPlay] = useState(isAutoplay);
+  const [completedLearningListenPlays, setCompletedLearningListenPlays] = useState(0);
+  const completedLearningListenPlaysRef = useRef(0);
 
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [timeUp, setTimeUp] = useState(false);
@@ -799,6 +801,9 @@ export function WatchPage() {
   usesYouTubeListenPlaylistRef.current = usesYouTubeListenPlaylist;
   const playbackModeRef = useRef<PlaybackMode>(playbackMode);
   playbackModeRef.current = playbackMode;
+  const learningListenRepeatCount = Math.min(20, Math.max(1, video?.listenRepeatCount ?? 5));
+  const learningListenRepeatCountRef = useRef(learningListenRepeatCount);
+  learningListenRepeatCountRef.current = learningListenRepeatCount;
 
   // A route can advance to another episode without unmounting WatchPage. Each
   // episode still needs its own write capability and heartbeat sequence.
@@ -816,7 +821,14 @@ export function WatchPage() {
     setTimeUp(false);
     setPlayerError(false);
     setTotalDuration(0);
+    completedLearningListenPlaysRef.current = 0;
+    setCompletedLearningListenPlays(0);
   }, [videoId]);
+
+  useEffect(() => {
+    completedLearningListenPlaysRef.current = 0;
+    setCompletedLearningListenPlays(0);
+  }, [playbackMode]);
 
   const load = useCallback(async () => {
     setLoadError("");
@@ -1131,6 +1143,34 @@ export function WatchPage() {
     playerRef.current?.play();
   }, []);
 
+  const advanceLearningListenTrack = useCallback(() => {
+    const queue = readPlaybackQueue();
+    const targetId = queue?.mode === "listen"
+      ? advancePlaybackQueue(queue, video?.id || "")
+      : nextListenTrackRef.current?.id || null;
+    if (targetId && targetId !== video?.id) {
+      if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: targetId });
+      diagnosticsRef.current?.event("next_requested", {
+        state: targetId,
+        transition: "learning_repeat_complete",
+        repeatCount: learningListenRepeatCountRef.current,
+      }, undefined, currentPosRef.current);
+      navigate(`/watch/${targetId}?mode=listen&autoplay=1&fresh=1${offlineQuery}`, { replace: true });
+      return;
+    }
+    restartVideo();
+  }, [navigate, offlineQuery, restartVideo, video?.id]);
+
+  const handleNativeLearningLoop = useCallback(() => {
+    if (playbackModeRef.current !== "listen" || video?.seriesType !== "learning") return;
+    const completed = Math.min(
+      learningListenRepeatCountRef.current - 1,
+      completedLearningListenPlaysRef.current + 1,
+    );
+    completedLearningListenPlaysRef.current = completed;
+    setCompletedLearningListenPlays(completed);
+  }, [video?.seriesType]);
+
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
     setIsPlaying(state === "PLAYING");
@@ -1168,11 +1208,27 @@ export function WatchPage() {
       setIsEnded(true);
       setPausePrompts([]);
       setEndPrompts(getRandomThinkingPrompts(5));
-      void flushTracking("ended");
+      const isLearningListen = playbackModeRef.current === "listen" && video?.seriesType === "learning";
+      const completedLearningPlays = isLearningListen
+        ? completedLearningListenPlaysRef.current + 1
+        : 0;
+      const shouldRepeatLearningListen = isLearningListen
+        && completedLearningPlays < learningListenRepeatCountRef.current;
+      void flushTracking(shouldRepeatLearningListen ? "active" : "ended");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
       playingStartPositionRef.current = null;
-      if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
+      if (isLearningListen) {
+        if (shouldRepeatLearningListen) {
+          completedLearningListenPlaysRef.current = completedLearningPlays;
+          setCompletedLearningListenPlays(completedLearningPlays);
+          restartVideo();
+        } else {
+          completedLearningListenPlaysRef.current = 0;
+          setCompletedLearningListenPlays(0);
+          advanceLearningListenTrack();
+        }
+      } else if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
         setTimeUp(true);
       } else if (video?.seriesType === "learning") {
         // 學習系列：重複播放當前的內容
@@ -1203,7 +1259,7 @@ export function WatchPage() {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
+  }, [advanceLearningListenTrack, ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
 
   const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
     if (modeSwitchingRef.current) return;
@@ -1490,7 +1546,11 @@ export function WatchPage() {
               volume={volume}
               playbackRate={playbackRate}
               autoPlay={playerAutoPlay}
-              loopPlayback={video.seriesType === "learning" && playbackRange.startSeconds === 0 && video.playbackEndSeconds == null}
+              loopPlayback={video.seriesType === "learning"
+                && playbackRange.startSeconds === 0
+                && video.playbackEndSeconds == null
+                && (playbackMode !== "listen" || completedLearningListenPlays < learningListenRepeatCount - 1)}
+              onLoop={handleNativeLearningLoop}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
               onError={handleMediaError}
@@ -1505,7 +1565,7 @@ export function WatchPage() {
               <span>{video.parentLabel}</span>
               <small>
                 {video.seriesType === "learning"
-                  ? "學習系列 · 重複播放當前內容 🔁"
+                  ? `學習系列 · 每集播放 ${learningListenRepeatCount} 次後換下一集 🔁`
                   : "休閒系列 · 自動接續下一集 ⏭️"}
               </small>
             </div>

@@ -187,8 +187,8 @@ export const parentRepository = {
     return api<{ ok: true }>(`/api/parent/notes/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
   categories: () => api<AdminCategory[]>("/api/parent/categories"),
-  createCategory: (body: { name: string; icon: string; seriesType?: "learning" | "leisure"; dailyLimitSeconds?: number | null; unlockLimit?: number | null }) => write<{ id: string }>("/api/parent/categories", "POST", body),
-  updateCategory: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "imageUrl" | "isActive" | "dailyLimitSeconds" | "seriesType" | "unlockLimit">>) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, "PATCH", body),
+  createCategory: (body: { name: string; icon: string; seriesType?: "learning" | "leisure"; dailyLimitSeconds?: number | null; unlockLimit?: number | null; listenRepeatCount?: number | null }) => write<{ id: string }>("/api/parent/categories", "POST", body),
+  updateCategory: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "imageUrl" | "isActive" | "dailyLimitSeconds" | "seriesType" | "unlockLimit" | "listenRepeatCount">>) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, "PATCH", body),
   archiveCategory: (id: string) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}/archive`, "POST", {}),
   restoreCategory: (id: string) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}/restore`, "POST", {}),
   deleteCategory: (id: string) => api<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, { method: "DELETE" }),
