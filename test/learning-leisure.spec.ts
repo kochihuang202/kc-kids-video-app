@@ -101,6 +101,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM daily_overrides"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
     env.DB.prepare("DELETE FROM child_daily_usage"),
+    env.DB.prepare("DELETE FROM child_category_daily_usage"),
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM allowed_windows"),
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),

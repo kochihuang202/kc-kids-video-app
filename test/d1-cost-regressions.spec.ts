@@ -34,6 +34,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM child_daily_usage"),
     env.DB.prepare("DELETE FROM child_video_learned"),
     env.DB.prepare("DELETE FROM child_favorites"),
+    env.DB.prepare("DELETE FROM child_category_daily_usage"),
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM daily_overrides"),
     env.DB.prepare("DELETE FROM allowed_windows"),
@@ -69,6 +70,12 @@ describe("REG-004 D1 request cost guardrails", () => {
   it("reads the compact daily rollup instead of rebuilding today's heartbeat history", async () => {
     const { dateStr } = getTaipeiDateParts();
     await env.DB.prepare(`
+      INSERT INTO child_daily_usage (
+        child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds,
+        video_seconds, listen_seconds, updated_at
+      ) VALUES ('child_ayun', ?, 165, 30, 120, 30, 15, ?)
+    `).bind(dateStr, new Date().toISOString()).run();
+    await env.DB.prepare(`
       INSERT INTO daily_usage_totals (
         usage_date, leisure_seconds, learning_seconds, listen_seconds, total_seconds, updated_at
       ) VALUES (?, 30, 120, 15, 165, ?)
@@ -98,8 +105,9 @@ describe("REG-004 D1 request cost guardrails", () => {
     await env.DB.batch([
       env.DB.prepare("UPDATE categories SET daily_limit_seconds = 600 WHERE id = ?").bind(category!.id),
       env.DB.prepare(`
-        INSERT INTO daily_category_usage_totals (usage_date, category_id, video_seconds, updated_at)
-        VALUES (?, ?, 420, ?)
+      INSERT INTO child_category_daily_usage (
+        child_id, usage_date, category_id, video_seconds, updated_at
+      ) VALUES ('child_ayun', ?, ?, 420, ?)
       `).bind(dateStr, category!.id, new Date().toISOString()),
     ]);
 
@@ -114,7 +122,7 @@ describe("REG-004 D1 request cost guardrails", () => {
     });
 
     const lookup = await env.DB.prepare(
-      "SELECT video_seconds FROM daily_category_usage_totals WHERE usage_date = ? AND category_id = ?",
+      "SELECT video_seconds FROM child_category_daily_usage WHERE child_id = 'child_ayun' AND usage_date = ? AND category_id = ?",
     ).bind(dateStr, category!.id).all();
     expect(lookup.meta.rows_read).toBeLessThanOrEqual(1);
   });

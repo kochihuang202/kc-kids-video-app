@@ -1,6 +1,7 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { makePasswordRecord, tokenHash } from "../worker/security";
+import { getDayRangeInTimeZone } from "../worker/rules";
 import type { AppEnv, ChildProfile } from "../worker/types";
 import worker from "../worker";
 
@@ -48,6 +49,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM child_daily_usage"),
     env.DB.prepare("DELETE FROM child_video_learned"),
     env.DB.prepare("DELETE FROM child_favorites"),
+    env.DB.prepare("DELETE FROM child_category_daily_usage"),
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM notes"),
     env.DB.prepare("DELETE FROM view_sessions"),
@@ -57,6 +59,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM rate_limit_buckets"),
     env.DB.prepare("DELETE FROM daily_overrides"),
     env.DB.prepare("DELETE FROM allowed_windows"),
+    env.DB.prepare("UPDATE categories SET daily_limit_seconds = NULL"),
   ]);
 });
 
@@ -290,6 +293,151 @@ describe("Multi-Child Profiles and Independent Quotas Suite", () => {
     const ayunData = await ayunRes.json<any>();
     expect(ayunData.summary.totalPlayedSeconds).toBe(60);
     expect(ayunData.ruleState.activeChild.id).toBe("child_ayun");
+  });
+
+  it("MC 07: Rebuilds a missing child rollup so dashboard totals and quota state agree", async () => {
+    const parentCookie = await addParent();
+    const device = await pairDevice("阿云的 iPad");
+    const sessionRes = await call("/api/view-sessions", {
+      method: "POST",
+      headers: { cookie: `${device.cookie}; kid_profile_id=child_ayun` },
+      body: jsonBody({
+        videoId: "elmo-alphabet",
+        clientSessionId: crypto.randomUUID(),
+        playbackMode: "video",
+      }),
+    });
+    expect(sessionRes.status).toBe(201);
+    const session = await sessionRes.json<{ id: string; writeToken: string }>();
+    const now = new Date();
+    const startAt = new Date(now.getTime() - 60_000);
+    expect((await call(`/api/view-sessions/${session.id}`, {
+      method: "PATCH",
+      headers: { cookie: `${device.cookie}; kid_profile_id=child_ayun` },
+      body: jsonBody({
+        writeToken: session.writeToken,
+        heartbeatSeq: 1,
+        deltaSeconds: 60,
+        positionSeconds: 60,
+        intervalStartedAt: startAt.toISOString(),
+        intervalEndedAt: now.toISOString(),
+      }),
+    })).status).toBe(200);
+
+    // Reproduce the deployed migration gap: detailed history exists, but the
+    // new per-child daily rollup was never backfilled.
+    await env.DB.prepare("DELETE FROM child_daily_usage WHERE child_id = 'child_ayun'").run();
+
+    const { start: rangeStart, end: rangeEnd } = getDayRangeInTimeZone("Asia/Taipei", now);
+    const response = await call(
+      `/api/parent/history?start=${encodeURIComponent(rangeStart)}&end=${encodeURIComponent(rangeEnd)}&child_id=child_ayun`,
+      { headers: { cookie: parentCookie } },
+    );
+    expect(response.status).toBe(200);
+    const dashboard = await response.json<any>();
+    expect(dashboard.summary.leisureSeconds).toBe(60);
+    expect(dashboard.ruleState.leisureUsedSeconds).toBe(60);
+    expect(dashboard.ruleState.remainingSeconds).toBe(dashboard.ruleState.dailyLimitSeconds - 60);
+  });
+
+  it("MC 08: Category viewing limits are independent for each child", async () => {
+    const device = await pairDevice("共用 iPad");
+    await env.DB.prepare("UPDATE categories SET daily_limit_seconds = 60 WHERE id = 'english'").run();
+    const sessionRes = await call("/api/view-sessions", {
+      method: "POST",
+      headers: { cookie: `${device.cookie}; kid_profile_id=child_ayun` },
+      body: jsonBody({
+        videoId: "elmo-alphabet",
+        clientSessionId: crypto.randomUUID(),
+        playbackMode: "video",
+      }),
+    });
+    expect(sessionRes.status).toBe(201);
+    const session = await sessionRes.json<{ id: string; writeToken: string }>();
+    const now = new Date();
+    expect((await call(`/api/view-sessions/${session.id}`, {
+      method: "PATCH",
+      headers: { cookie: `${device.cookie}; kid_profile_id=child_ayun` },
+      body: jsonBody({
+        writeToken: session.writeToken,
+        heartbeatSeq: 1,
+        deltaSeconds: 60,
+        positionSeconds: 60,
+        intervalStartedAt: new Date(now.getTime() - 60_000).toISOString(),
+        intervalEndedAt: now.toISOString(),
+      }),
+    })).status).toBe(200);
+
+    // Migration 0016 discards derived rows and rebuilds them from the preserved
+    // session history on the first access for each child.
+    await env.DB.prepare("DELETE FROM child_daily_usage").run();
+    await env.DB.prepare("DELETE FROM child_category_daily_usage").run();
+
+    const ayun = await (await call("/api/child/access-state", {
+      headers: { cookie: "kid_profile_id=child_ayun" },
+    })).json<any>();
+    const ahan = await (await call("/api/child/access-state", {
+      headers: { cookie: "kid_profile_id=child_ahan" },
+    })).json<any>();
+    const ayunEnglish = ayun.categoryStates.find((item: any) => item.categoryId === "english");
+    const ahanEnglish = ahan.categoryStates.find((item: any) => item.categoryId === "english");
+    expect(ayunEnglish.todayPlayedSeconds).toBe(60);
+    expect(ayunEnglish.isReached).toBe(true);
+    expect(ahanEnglish.todayPlayedSeconds).toBe(0);
+    expect(ahanEnglish.isReached).toBe(false);
+  });
+
+  it("MC 09: Simultaneous playback by different children counts for both quotas", async () => {
+    const parentCookie = await addParent();
+    const device = await pairDevice("家庭共用裝置");
+    const intervalEnd = new Date();
+    const intervalStart = new Date(intervalEnd.getTime() - 60_000);
+
+    const playFor = async (childId: string) => {
+      const started = await call("/api/view-sessions", {
+        method: "POST",
+        headers: { cookie: `${device.cookie}; kid_profile_id=${childId}` },
+        body: jsonBody({
+          videoId: "elmo-alphabet",
+          clientSessionId: crypto.randomUUID(),
+          playbackMode: "video",
+        }),
+      });
+      expect(started.status).toBe(201);
+      const session = await started.json<{ id: string; writeToken: string }>();
+      expect((await call(`/api/view-sessions/${session.id}`, {
+        method: "PATCH",
+        headers: { cookie: `${device.cookie}; kid_profile_id=${childId}` },
+        body: jsonBody({
+          writeToken: session.writeToken,
+          heartbeatSeq: 1,
+          deltaSeconds: 60,
+          positionSeconds: 60,
+          intervalStartedAt: intervalStart.toISOString(),
+          intervalEndedAt: intervalEnd.toISOString(),
+        }),
+      })).status).toBe(200);
+    };
+
+    await playFor("child_ayun");
+    await playFor("child_ahan");
+
+    const ayun = await (await call("/api/child/access-state", {
+      headers: { cookie: "kid_profile_id=child_ayun" },
+    })).json<any>();
+    const ahan = await (await call("/api/child/access-state", {
+      headers: { cookie: "kid_profile_id=child_ahan" },
+    })).json<any>();
+    expect(ayun.leisureUsedSeconds).toBe(60);
+    expect(ahan.leisureUsedSeconds).toBe(60);
+
+    const { start, end } = getDayRangeInTimeZone("Asia/Taipei", intervalEnd);
+    const dashboard = await (await call(
+      `/api/parent/history?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&child_id=all`,
+      { headers: { cookie: parentCookie } },
+    )).json<any>();
+    expect(dashboard.summary.leisureSeconds).toBe(120);
+    expect(dashboard.summary.totalPlayedSeconds).toBe(120);
   });
 });
 

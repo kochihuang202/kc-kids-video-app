@@ -47,6 +47,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM view_heartbeats"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
     env.DB.prepare("DELETE FROM child_daily_usage"),
+    env.DB.prepare("DELETE FROM child_category_daily_usage"),
     env.DB.prepare("DELETE FROM child_video_learned"),
     env.DB.prepare("DELETE FROM child_favorites"),
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
@@ -264,8 +265,9 @@ describe("Phase 3: Family Usage Rules & Time Management Suite", () => {
     const now = new Date().toISOString();
     const { dateStr } = getTaipeiDateParts();
     await env.DB.prepare(`
-      INSERT INTO daily_category_usage_totals (usage_date, category_id, video_seconds, updated_at)
-      VALUES (?, ?, 600, ?)
+      INSERT INTO child_category_daily_usage (
+        child_id, usage_date, category_id, video_seconds, updated_at
+      ) VALUES ('child_ayun', ?, ?, 600, ?)
     `).bind(dateStr, natureCat.id, now).run();
 
     const videoSession = await call("/api/view-sessions", {

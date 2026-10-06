@@ -669,6 +669,38 @@ function heartbeatSeconds(row: HeartbeatRow, start: string, end: string) {
   return row.delta_seconds * Math.min(1, overlap / full);
 }
 
+function calculateUsageAcrossChildren(
+  sessions: DashboardSessionRow[],
+  heartbeats: HeartbeatRow[],
+  range: { start: string; end: string },
+) {
+  const sessionsByChild = new Map<string, DashboardSessionRow[]>();
+  for (const session of sessions) {
+    // Sessions created before multi-child support belong to the original child.
+    const childId = session.child_id || "child_ayun";
+    const childSessions = sessionsByChild.get(childId) || [];
+    childSessions.push(session);
+    sessionsByChild.set(childId, childSessions);
+  }
+
+  const totals = {
+    totalPlayedSeconds: 0,
+    learningSeconds: 0,
+    leisureUsedSeconds: 0,
+    listenSeconds: 0,
+  };
+  for (const childSessions of sessionsByChild.values()) {
+    const sessionIds = new Set(childSessions.map((session) => session.id));
+    const childHeartbeats = heartbeats.filter((heartbeat) => sessionIds.has(heartbeat.view_session_id));
+    const childUsage = calculateSharedUsage(childSessions, childHeartbeats, range);
+    totals.totalPlayedSeconds += childUsage.totalPlayedSeconds;
+    totals.learningSeconds += childUsage.learningSeconds;
+    totals.leisureUsedSeconds += childUsage.leisureUsedSeconds;
+    totals.listenSeconds += childUsage.listenSeconds;
+  }
+  return totals;
+}
+
 export async function getDashboard(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const url = new URL(request.url);
@@ -845,7 +877,9 @@ export async function getDashboard(request: Request, env: AppEnv) {
   }));
   const timeline = [...timedTimeline, ...offlineTimeline].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
 
-  const sharedUsage = calculateSharedUsage(sessions, heartbeats, { start, end });
+  // Overlapping devices for one child count once, while two different children
+  // watching at the same time each keep their own independent usage.
+  const sharedUsage = calculateUsageAcrossChildren(sessions, heartbeats, { start, end });
   const sessionsWithHeartbeats = new Set(heartbeats.map((heartbeat) => heartbeat.view_session_id));
   let fallbackLearningSeconds = 0;
   let fallbackLeisureSeconds = 0;

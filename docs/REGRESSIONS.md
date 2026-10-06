@@ -297,3 +297,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Every device remembers one volume and speed pair for each series. Episodes in the same series reuse it after navigation or reopening, while another series keeps its own independent settings.
 - Root cause: `WatchPage` stored both controls only in component state, which was destroyed whenever the route left the player.
 - Regression test: `e2e/regressions/player-series-preferences.spec.ts`
+
+## REG-038 — Multi-child dashboard totals disagree with quota enforcement
+
+- Problem: The parent dashboard can show a child has used 0 minutes and still has leisure time remaining even though the same page's detailed summary shows about one hour of leisure viewing; playback is already blocked by the quota rule.
+- Reproduction: Preserve existing Sessions and Heartbeats, enable the two-child migration, then view 阿云's daily dashboard when the new `child_daily_usage` rollup is absent or stale. Also compare category limits and simultaneous playback for 阿云 and 阿涵.
+- Correct behavior: Each child independently accumulates quota, category viewing time, learned state, favorites, and history across all authorized devices. Overlapping devices for one child count once; two different children watching simultaneously each count. Dashboard summaries and playback enforcement show the same per-child total.
+- Root cause: The multi-child migration did not rebuild existing per-child daily rollups, category rollups remained account-wide, and new heartbeats reused an account-wide overlap delta when updating the current child's row. The all-children dashboard also deduplicated simultaneous playback across different children.
+- Regression test: `test/multi-child.spec.ts` (`MC 07`, `MC 08`, and `MC 09`)

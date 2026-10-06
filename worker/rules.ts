@@ -92,6 +92,7 @@ interface UsageSession {
   started_at: string;
   playback_mode: "video" | "listen";
   series_type_snapshot: "learning" | "leisure" | null;
+  child_id?: string | null;
 }
 
 interface UsageHeartbeat {
@@ -115,6 +116,17 @@ interface DailyUsageTotalRow {
   learning_seconds: number;
   listen_seconds: number;
   total_seconds: number;
+}
+
+interface ChildDailyUsageRow {
+  child_id: string;
+  usage_date: string;
+  total_played_seconds: number;
+  leisure_seconds: number;
+  learning_seconds: number;
+  video_seconds: number;
+  listen_seconds: number;
+  bonus_seconds: number;
 }
 
 /** Counts at most one second of activity per wall-clock second for the single child. */
@@ -247,6 +259,113 @@ export async function ensureDailyUsageRollup(env: AppEnv, targetDate: Date = new
   return stored ? usageFromRow(stored) : usage;
 }
 
+async function ensureChildDailyUsageRollup(env: AppEnv, childId: string, targetDate: Date = new Date()) {
+  const { dateStr } = getTaipeiDateParts(targetDate);
+  const existing = await env.DB.prepare(`
+    SELECT child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds,
+      video_seconds, listen_seconds, bonus_seconds
+    FROM child_daily_usage WHERE child_id = ? AND usage_date = ?
+  `).bind(childId, dateStr).first<ChildDailyUsageRow>();
+  if (existing) return existing;
+
+  const range = getDayRangeInTimeZone(TIME_ZONE, targetDate);
+  const includeLegacy = childId === "child_ayun" ? 1 : 0;
+  const sessionsResult = await env.DB.prepare(`
+    SELECT id, video_id, played_seconds, started_at,
+      COALESCE(playback_mode, 'video') AS playback_mode, series_type_snapshot
+    FROM view_sessions
+    WHERE started_at < ? AND COALESCE(ended_at, updated_at) >= ?
+      AND (child_id = ? OR (? = 1 AND child_id IS NULL))
+  `).bind(range.end, range.start, childId, includeLegacy).all<UsageSession>();
+  const sessions = sessionsResult.results || [];
+  let usage: SharedUsage = {
+    leisureUsedSeconds: 0,
+    learningSeconds: 0,
+    listenSeconds: 0,
+    totalPlayedSeconds: 0,
+  };
+  let childHeartbeats: UsageHeartbeat[] = [];
+  if (env.RECORDING_ENABLED !== "false" && sessions.length) {
+    const heartbeatsResult = await env.DB.prepare(`
+      SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at
+      FROM view_heartbeats h INDEXED BY idx_view_heartbeats_overlap_end
+      JOIN view_sessions s ON s.id = h.view_session_id
+      WHERE h.interval_started_at IS NOT NULL AND h.interval_ended_at >= ? AND h.interval_started_at < ?
+        AND (s.child_id = ? OR (? = 1 AND s.child_id IS NULL))
+      UNION ALL
+      SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at
+      FROM view_heartbeats h INDEXED BY idx_view_heartbeats_received
+      JOIN view_sessions s ON s.id = h.view_session_id
+      WHERE h.interval_started_at IS NULL AND h.received_at >= ? AND h.received_at < ?
+        AND (s.child_id = ? OR (? = 1 AND s.child_id IS NULL))
+    `).bind(
+      range.start, range.end, childId, includeLegacy,
+      range.start, range.end, childId, includeLegacy,
+    ).all<UsageHeartbeat>();
+    childHeartbeats = heartbeatsResult.results || [];
+    usage = calculateSharedUsage(sessions, childHeartbeats, range);
+  }
+
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO child_daily_usage (
+      child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds,
+      video_seconds, listen_seconds, bonus_seconds, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+  `).bind(
+    childId,
+    dateStr,
+    usage.totalPlayedSeconds,
+    usage.leisureUsedSeconds,
+    usage.learningSeconds,
+    usage.leisureUsedSeconds,
+    usage.listenSeconds,
+    now,
+  ).run();
+
+  const categoryMappingsResult = await env.DB.prepare(`
+    SELECT DISTINCT cv.category_id, s.id AS view_session_id
+    FROM view_sessions s
+    JOIN category_videos cv ON cv.video_id = s.video_id
+    WHERE s.started_at < ? AND COALESCE(s.ended_at, s.updated_at) >= ?
+      AND (s.child_id = ? OR (? = 1 AND s.child_id IS NULL))
+  `).bind(range.end, range.start, childId, includeLegacy).all<{
+    category_id: string;
+    view_session_id: string;
+  }>();
+  const categorySessionIds = new Map<string, Set<string>>();
+  for (const mapping of categoryMappingsResult.results || []) {
+    const ids = categorySessionIds.get(mapping.category_id) || new Set<string>();
+    ids.add(mapping.view_session_id);
+    categorySessionIds.set(mapping.category_id, ids);
+  }
+  const categoryStatements: D1PreparedStatement[] = [];
+  for (const [categoryId, sessionIds] of categorySessionIds) {
+    const categorySessions = sessions.filter((session) => sessionIds.has(session.id));
+    const categoryHeartbeats = childHeartbeats.filter((heartbeat) => sessionIds.has(heartbeat.view_session_id));
+    const videoSessions = categorySessions.filter((session) => session.playback_mode === "video");
+    const listenSessions = categorySessions.filter((session) => session.playback_mode === "listen");
+    const videoUsage = calculateSharedUsage(videoSessions, categoryHeartbeats, range).totalPlayedSeconds;
+    const listenUsage = calculateSharedUsage(listenSessions, categoryHeartbeats, range).totalPlayedSeconds;
+    categoryStatements.push(env.DB.prepare(`
+      INSERT INTO child_category_daily_usage (
+        child_id, usage_date, category_id, video_seconds, listen_seconds, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(child_id, usage_date, category_id) DO UPDATE SET
+        video_seconds = excluded.video_seconds,
+        listen_seconds = excluded.listen_seconds,
+        updated_at = excluded.updated_at
+    `).bind(childId, dateStr, categoryId, videoUsage, listenUsage, now));
+  }
+  if (categoryStatements.length) await env.DB.batch(categoryStatements);
+
+  return await env.DB.prepare(`
+    SELECT child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds,
+      video_seconds, listen_seconds, bonus_seconds
+    FROM child_daily_usage WHERE child_id = ? AND usage_date = ?
+  `).bind(childId, dateStr).first<ChildDailyUsageRow>();
+}
+
 export interface RollupHeartbeatInput {
   viewSessionId: string;
   videoId: string;
@@ -271,6 +390,7 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
   const intervalStart = Math.min(rawStart, rawEnd);
   const intervalEnd = Math.max(rawStart, rawEnd, intervalStart + 1000);
   if (!Number.isFinite(intervalStart) || !Number.isFinite(intervalEnd)) return [] as D1PreparedStatement[];
+  const effectiveChildId = input.childId || "child_ayun";
 
   const dates = new Map<string, Date>();
   for (const instant of [new Date(intervalStart), new Date(intervalEnd - 1)]) {
@@ -288,6 +408,7 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
     started_at: input.intervalStartedAt || input.receivedAt,
     playback_mode: input.playbackMode,
     series_type_snapshot: input.seriesType,
+    child_id: effectiveChildId,
   };
   const newHeartbeat: UsageHeartbeat = {
     view_session_id: input.viewSessionId,
@@ -305,14 +426,14 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
     const rows = await env.DB.prepare(`
       SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at,
         s.video_id, s.played_seconds, s.started_at,
-        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
+        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot, s.child_id
       FROM view_heartbeats h INDEXED BY idx_view_heartbeats_overlap_end
       JOIN view_sessions s ON s.id = h.view_session_id
       WHERE h.interval_started_at IS NOT NULL AND h.interval_ended_at > ? AND h.interval_started_at < ?
       UNION ALL
       SELECT h.view_session_id, h.delta_seconds, h.interval_started_at, h.interval_ended_at, h.received_at,
         s.video_id, s.played_seconds, s.started_at,
-        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
+        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot, s.child_id
       FROM view_heartbeats h INDEXED BY idx_view_heartbeats_received
       JOIN view_sessions s ON s.id = h.view_session_id
       WHERE h.interval_started_at IS NULL AND h.received_at >= ? AND h.received_at < ?
@@ -331,6 +452,7 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
       started_at: row.started_at,
       playback_mode: row.playback_mode,
       series_type_snapshot: row.series_type_snapshot,
+      child_id: row.child_id,
     }])).values()];
     const before = calculateSharedUsage(existingSessions, existingHeartbeats, dayRange);
     const after = calculateSharedUsage(
@@ -342,6 +464,22 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
     const learningDelta = after.learningSeconds - before.learningSeconds;
     const listenDelta = after.listenSeconds - before.listenSeconds;
     const totalDelta = after.totalPlayedSeconds - before.totalPlayedSeconds;
+    const childSessions = existingSessions.filter((session) => (
+      session.child_id === effectiveChildId
+      || (effectiveChildId === "child_ayun" && !session.child_id)
+    ));
+    const childSessionIds = new Set(childSessions.map((session) => session.id));
+    const childHeartbeats = existingHeartbeats.filter((heartbeat) => childSessionIds.has(heartbeat.view_session_id));
+    const childBefore = calculateSharedUsage(childSessions, childHeartbeats, dayRange);
+    const childAfter = calculateSharedUsage(
+      [...childSessions.filter((session) => session.id !== input.viewSessionId), newSession],
+      [...childHeartbeats, newHeartbeat],
+      dayRange,
+    );
+    const childLeisureDelta = childAfter.leisureUsedSeconds - childBefore.leisureUsedSeconds;
+    const childLearningDelta = childAfter.learningSeconds - childBefore.learningSeconds;
+    const childListenDelta = childAfter.listenSeconds - childBefore.listenSeconds;
+    const childTotalDelta = childAfter.totalPlayedSeconds - childBefore.totalPlayedSeconds;
     statements.push(env.DB.prepare(`
       UPDATE daily_usage_totals SET
         leisure_seconds = MAX(0, leisure_seconds + ?),
@@ -367,8 +505,23 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
         input.playbackMode === "listen" ? Math.max(0, totalDelta) : 0,
         input.receivedAt,
       ));
+      statements.push(env.DB.prepare(`
+        INSERT INTO child_category_daily_usage (
+          child_id, usage_date, category_id, video_seconds, listen_seconds, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(child_id, usage_date, category_id) DO UPDATE SET
+          video_seconds = MAX(0, video_seconds + excluded.video_seconds),
+          listen_seconds = MAX(0, listen_seconds + excluded.listen_seconds),
+          updated_at = excluded.updated_at
+      `).bind(
+        effectiveChildId,
+        dateStr,
+        categoryId,
+        input.playbackMode === "video" ? Math.max(0, childTotalDelta) : 0,
+        input.playbackMode === "listen" ? Math.max(0, childTotalDelta) : 0,
+        input.receivedAt,
+      ));
     }
-    const effectiveChildId = input.childId || "child_ayun";
     statements.push(env.DB.prepare(`
       INSERT INTO child_daily_usage (
         child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds, video_seconds, listen_seconds, updated_at
@@ -383,17 +536,17 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
     `).bind(
       effectiveChildId,
       dateStr,
-      Math.max(0, totalDelta),
-      Math.max(0, leisureDelta),
-      Math.max(0, learningDelta),
-      Math.max(0, leisureDelta),
-      Math.max(0, listenDelta),
+      Math.max(0, childTotalDelta),
+      Math.max(0, childLeisureDelta),
+      Math.max(0, childLearningDelta),
+      Math.max(0, childLeisureDelta),
+      Math.max(0, childListenDelta),
       input.receivedAt,
-      totalDelta,
-      leisureDelta,
-      learningDelta,
-      leisureDelta,
-      listenDelta,
+      childTotalDelta,
+      childLeisureDelta,
+      childLearningDelta,
+      childLeisureDelta,
+      childListenDelta,
     ));
   }
   return statements;
@@ -482,41 +635,11 @@ export async function evaluateChildAccessState(
   const sharedUsage = await ensureDailyUsageRollup(env, actualDate);
 
   if (activeChildProfile) {
-    const childUsage = await env.DB.prepare(
-      "SELECT total_played_seconds, leisure_seconds, learning_seconds, video_seconds, listen_seconds, bonus_seconds FROM child_daily_usage WHERE child_id = ? AND usage_date = ?",
-    ).bind(activeChildProfile.id, dateStr).first<{
-      total_played_seconds: number; leisure_seconds: number; learning_seconds: number; video_seconds: number; listen_seconds: number; bonus_seconds: number;
-    }>();
-
-    let unassignedLeisure = 0;
-    let unassignedLearning = 0;
-    let unassignedListen = 0;
-    let unassignedTotal = 0;
-    if (activeChildProfile.id === "child_ayun") {
-      const range = getDayRangeInTimeZone(TIME_ZONE, actualDate);
-      const unassigned = await env.DB.prepare(`
-        SELECT 
-          COALESCE(SUM(CASE WHEN series_type_snapshot = 'leisure' AND playback_mode != 'listen' THEN played_seconds ELSE 0 END), 0) AS leisure_seconds,
-          COALESCE(SUM(CASE WHEN series_type_snapshot = 'learning' AND playback_mode != 'listen' THEN played_seconds ELSE 0 END), 0) AS learning_seconds,
-          COALESCE(SUM(CASE WHEN playback_mode = 'listen' THEN played_seconds ELSE 0 END), 0) AS listen_seconds,
-          COALESCE(SUM(played_seconds), 0) AS total_seconds
-        FROM view_sessions
-        WHERE child_id IS NULL AND started_at >= ? AND started_at < ?
-      `).bind(range.start, range.end).first<{
-        leisure_seconds: number; learning_seconds: number; listen_seconds: number; total_seconds: number;
-      }>();
-      if (unassigned) {
-        unassignedLeisure = unassigned.leisure_seconds || 0;
-        unassignedLearning = unassigned.learning_seconds || 0;
-        unassignedListen = unassigned.listen_seconds || 0;
-        unassignedTotal = unassigned.total_seconds || 0;
-      }
-    }
-
-    todayPlayedSeconds = (childUsage ? childUsage.total_played_seconds : 0) + unassignedTotal;
-    leisureUsedSeconds = (childUsage ? (childUsage.leisure_seconds ?? childUsage.video_seconds ?? 0) : 0) + unassignedLeisure;
-    learningSeconds = (childUsage ? (childUsage.learning_seconds ?? 0) : 0) + unassignedLearning;
-    listenSeconds = (childUsage ? childUsage.listen_seconds : 0) + unassignedListen;
+    const childUsage = await ensureChildDailyUsageRollup(env, activeChildProfile.id, actualDate);
+    todayPlayedSeconds = childUsage?.total_played_seconds || 0;
+    leisureUsedSeconds = childUsage?.leisure_seconds ?? childUsage?.video_seconds ?? 0;
+    learningSeconds = childUsage?.learning_seconds || 0;
+    listenSeconds = childUsage?.listen_seconds || 0;
     const childQuota = dayType === "weekend" ? activeChildProfile.weekendLimitSeconds : activeChildProfile.weekdayLimitSeconds;
     baseLimitSeconds = override?.limit_override_seconds ?? childQuota;
     bonusSeconds = (override?.bonus_seconds ?? 0) + (childUsage?.bonus_seconds ?? 0);
@@ -530,16 +653,20 @@ export async function evaluateChildAccessState(
   }
 
   // Calculate Category-specific played seconds and limits
+  const categoryUsageTable = activeChildProfile ? "child_category_daily_usage" : "daily_category_usage_totals";
+  const categoryJoin = activeChildProfile
+    ? "ON t.category_id = c.id AND t.usage_date = ? AND t.child_id = ?"
+    : "ON t.category_id = c.id AND t.usage_date = ?";
+  const categoryBinds = activeChildProfile ? [dateStr, activeChildProfile.id] : [dateStr];
   const categoriesResult = await env.DB.prepare(`
     SELECT c.id, c.name, c.icon, c.tone, c.daily_limit_seconds,
       COALESCE(t.video_seconds, 0) AS today_video_seconds,
       COALESCE(t.listen_seconds, 0) AS today_listen_seconds
     FROM categories c
-    LEFT JOIN daily_category_usage_totals t
-      ON t.category_id = c.id AND t.usage_date = ?
+    LEFT JOIN ${categoryUsageTable} t ${categoryJoin}
     WHERE c.is_active = 1 AND c.archived_at IS NULL
     ORDER BY c.sort_order, c.id
-  `).bind(dateStr).all<{
+  `).bind(...categoryBinds).all<{
     id: string; name: string; icon: string; tone: "sage" | "sky" | "apricot";
     daily_limit_seconds: number | null; today_video_seconds: number; today_listen_seconds: number;
   }>();
