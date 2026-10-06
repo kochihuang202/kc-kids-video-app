@@ -1,7 +1,7 @@
 import { boolean, HttpError, integer, json, readJson, text } from "./http";
 import { mediaDto } from "./media";
 import { evaluateChildAccessState, getTodayPicks, prepareDailyUsageRollupUpdates } from "./rules";
-import { consumeRateLimit, getChildDevice, getOrCreateChildDevice, rateKey, randomToken, tokenHash } from "./security";
+import { consumeRateLimit, getActiveChildProfile, getChildDevice, getOrCreateChildDevice, rateKey, randomToken, tokenHash } from "./security";
 import type { AppEnv } from "./types";
 import { playbackCompletionRatio } from "../shared/playbackRange";
 
@@ -17,6 +17,7 @@ interface CategoryRow {
   sort_order: number;
   daily_limit_seconds?: number | null;
   series_type: "learning" | "leisure";
+  unlock_limit?: number | null;
 }
 
 interface VideoRow {
@@ -50,6 +51,7 @@ const categoryDto = (row: CategoryRow) => ({
   sortOrder: row.sort_order,
   dailyLimitSeconds: row.daily_limit_seconds ?? null,
   seriesType: row.series_type,
+  unlockLimit: row.unlock_limit !== undefined && row.unlock_limit !== null ? row.unlock_limit : (row.series_type === "learning" ? 5 : null),
 });
 
 const videoDto = (
@@ -98,16 +100,26 @@ async function getCompletionThreshold(env: AppEnv): Promise<number> {
   return 0.9;
 }
 
-async function getVideoSeriesState(env: AppEnv, videoId: string) {
+async function getVideoSeriesState(env: AppEnv, videoId: string, childId?: string | null) {
   const categories = await env.DB.prepare(`
-    SELECT c.id, c.series_type, cv.sort_order,
-      COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = cv.video_id), 0) AS is_learned,
-      (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = cv.video_id) AS learned_at
+    SELECT c.id, c.series_type, cv.sort_order, c.unlock_limit,
+      COALESCE(
+        (SELECT is_learned FROM child_video_learned cls WHERE cls.video_id = cv.video_id AND cls.child_id = ?),
+        CASE WHEN ? IS NULL THEN (SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = cv.video_id) ELSE 0 END
+      ) AS is_learned,
+      COALESCE(
+        (SELECT learned_at FROM child_video_learned cls WHERE cls.video_id = cv.video_id AND cls.child_id = ?),
+        CASE WHEN ? IS NULL THEN (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = cv.video_id) ELSE NULL END
+      ) AS learned_at,
+      (
+        (? IS NOT NULL AND EXISTS (SELECT 1 FROM child_favorites cf WHERE cf.video_id = cv.video_id AND cf.child_id = ?))
+        OR (? IS NULL AND EXISTS (SELECT 1 FROM category_videos favorite_cv WHERE favorite_cv.video_id = cv.video_id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'))
+      ) AS is_favorite
     FROM category_videos cv
     JOIN categories c ON c.id = cv.category_id
     WHERE cv.video_id = ? AND c.is_active = 1 AND c.archived_at IS NULL
     ORDER BY c.sort_order, c.id
-  `).bind(videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; is_learned: number; learned_at: string | null }>();
+  `).bind(childId || null, childId || null, childId || null, childId || null, childId || null, childId || null, childId || null, videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; unlock_limit?: number | null; is_learned: number; learned_at: string | null; is_favorite: number }>();
   const rows = categories.results || [];
   if (!rows.length) throw new HttpError("這部影片目前沒有可用分類。", 404, "VIDEO_NOT_FOUND");
   const types = new Set(rows.map((row) => row.series_type));
@@ -118,10 +130,11 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
   if (rows[0].series_type === "learning" && !isLearned) {
     // A video can belong to more than one learning category (for example,
     // its course and 「我最喜歡」). It is available when at least one of
-    // those categories currently exposes it in that category's first five.
+    // those categories currently exposes it in that category's allowed quota.
     isSelectable = false;
     for (const category of rows) {
-      if (UNLIMITED_LEARNING_CATEGORY_IDS.has(category.id)) {
+      const limit = (category.unlock_limit !== null && category.unlock_limit !== undefined) ? category.unlock_limit : 5;
+      if (UNLIMITED_LEARNING_CATEGORY_IDS.has(category.id) || limit === 0) {
         isSelectable = true;
         break;
       }
@@ -129,13 +142,14 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
         SELECT COUNT(*) AS count
         FROM category_videos before
         JOIN videos preceding_video ON preceding_video.id = before.video_id
+        LEFT JOIN child_video_learned cls ON cls.video_id = before.video_id AND cls.child_id = ?
         LEFT JOIN video_learned_state ls ON ls.video_id = before.video_id
         WHERE before.category_id = ? AND before.sort_order < ?
           AND preceding_video.is_active = 1 AND preceding_video.archived_at IS NULL
           AND preceding_video.availability_status = 'available'
-          AND COALESCE(ls.is_learned, 0) = 0
-      `).bind(category.id, category.sort_order).first<{ count: number }>();
-      if ((rank?.count || 0) < 5) {
+          AND COALESCE(cls.is_learned, CASE WHEN ? IS NULL THEN ls.is_learned ELSE 0 END, 0) = 0
+      `).bind(childId || null, category.id, category.sort_order, childId || null).first<{ count: number }>();
+      if ((rank?.count || 0) < limit) {
         isSelectable = true;
         break;
       }
@@ -147,13 +161,13 @@ async function getVideoSeriesState(env: AppEnv, videoId: string) {
     isLearned,
     learnedAt: isLearned ? rows[0].learned_at : null,
     isSelectable,
-    isFavorite: rows.some((row) => row.id === FAVORITES_CATEGORY_ID),
+    isFavorite: rows.some((row) => row.is_favorite === 1 || row.id === FAVORITES_CATEGORY_ID),
   };
 }
 
 export async function getPublicCategories(env: AppEnv) {
   const result = await env.DB.prepare(`
-    SELECT id, name, icon, image_url, tone, sort_order, daily_limit_seconds, series_type
+    SELECT id, name, icon, image_url, tone, sort_order, daily_limit_seconds, series_type, unlock_limit
     FROM categories
     WHERE is_active = 1 AND archived_at IS NULL
     ORDER BY sort_order, id
@@ -163,53 +177,106 @@ export async function getPublicCategories(env: AppEnv) {
 
 export async function getPublicCategoryVideos(request: Request, env: AppEnv, categoryId: string) {
   const category = await env.DB.prepare(
-    "SELECT id, series_type FROM categories WHERE id = ? AND is_active = 1 AND archived_at IS NULL",
-  ).bind(categoryId).first<{ id: string; series_type: "learning" | "leisure" }>();
+    "SELECT id, series_type, unlock_limit FROM categories WHERE id = ? AND is_active = 1 AND archived_at IS NULL",
+  ).bind(categoryId).first<{ id: string; series_type: "learning" | "leisure"; unlock_limit?: number | null }>();
   if (!category) throw new HttpError("找不到這個分類。", 404, "CATEGORY_NOT_FOUND");
 
   const device = await getChildDevice(request, env, false);
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const threshold = await getCompletionThreshold(env);
 
   const learnedColumn = device
-    ? "COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0)"
+    ? `COALESCE(
+        (SELECT is_learned FROM child_video_learned cls WHERE cls.video_id = v.id AND cls.child_id = ?),
+        CASE WHEN ? IS NULL THEN (SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id) ELSE 0 END
+      )`
     : "0";
   const learnedAtColumn = device
-    ? "(SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id)"
+    ? `COALESCE(
+        (SELECT learned_at FROM child_video_learned cls WHERE cls.video_id = v.id AND cls.child_id = ?),
+        CASE WHEN ? IS NULL THEN (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id) ELSE NULL END
+      )`
     : "NULL";
   const progressColumn = device
     ? `(SELECT vs.last_position_seconds FROM view_sessions vs
-        WHERE vs.video_id = v.id ORDER BY vs.updated_at DESC LIMIT 1)`
+        WHERE vs.video_id = v.id AND (vs.child_id IS NULL OR ? IS NULL OR vs.child_id = ?) ORDER BY vs.updated_at DESC LIMIT 1)`
     : "NULL";
   const lastPlayedAtColumn = device
     ? `(SELECT vs.updated_at FROM view_sessions vs
-        WHERE vs.video_id = v.id ORDER BY vs.updated_at DESC LIMIT 1)`
+        WHERE vs.video_id = v.id AND (vs.child_id IS NULL OR ? IS NULL OR vs.child_id = ?) ORDER BY vs.updated_at DESC LIMIT 1)`
     : "NULL";
-  const query = `
-    SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
-      v.media_type, v.media_path, v.thumbnail_path,
-      v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds, cv.sort_order,
-      ${learnedColumn} AS is_learned,
-      ${learnedAtColumn} AS learned_at,
-      EXISTS (
-        SELECT 1 FROM category_videos favorite_cv
-        WHERE favorite_cv.video_id = v.id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'
-      ) AS is_favorite,
-      ${progressColumn} AS last_position_seconds,
-      ${lastPlayedAtColumn} AS last_played_at
-    FROM category_videos cv
-    JOIN videos v ON v.id = cv.video_id
-    WHERE cv.category_id = ? AND v.is_active = 1 AND v.archived_at IS NULL
-      AND v.availability_status = 'available'
-    ORDER BY ${category.id === FAVORITES_CATEGORY_ID ? "cv.sort_order, v.id" : "is_learned ASC, cv.sort_order, v.id"}
-  `;
-  const result = await env.DB.prepare(query).bind(categoryId).all<VideoRow>();
+
+  let result: { results?: VideoRow[] };
+  if (category.id === FAVORITES_CATEGORY_ID) {
+    const favQuery = `
+      SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
+        v.media_type, v.media_path, v.thumbnail_path,
+        v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds,
+        COALESCE(cf.sort_order, cv.sort_order, 0) AS sort_order,
+        ${learnedColumn} AS is_learned,
+        ${learnedAtColumn} AS learned_at,
+        1 AS is_favorite,
+        ${progressColumn} AS last_position_seconds,
+        ${lastPlayedAtColumn} AS last_played_at
+      FROM videos v
+      LEFT JOIN child_favorites cf ON cf.video_id = v.id AND cf.child_id = ?
+      LEFT JOIN category_videos cv ON cv.video_id = v.id AND cv.category_id = '${FAVORITES_CATEGORY_ID}'
+      WHERE (cf.video_id IS NOT NULL OR cv.video_id IS NOT NULL)
+        AND v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
+      ORDER BY sort_order, v.id
+    `;
+    const favBinds: unknown[] = [];
+    if (device) {
+      favBinds.push(childId, childId, childId, childId);
+    }
+    favBinds.push(childId);
+    if (device) {
+      favBinds.push(childId, childId, childId, childId);
+    }
+    result = await env.DB.prepare(favQuery).bind(...favBinds).all<VideoRow>();
+  } else {
+    const query = `
+      SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
+        v.media_type, v.media_path, v.thumbnail_path,
+        v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds, cv.sort_order,
+        ${learnedColumn} AS is_learned,
+        ${learnedAtColumn} AS learned_at,
+        (
+          (? IS NOT NULL AND EXISTS (SELECT 1 FROM child_favorites cf WHERE cf.video_id = v.id AND cf.child_id = ?))
+          OR (? IS NULL AND EXISTS (SELECT 1 FROM category_videos favorite_cv WHERE favorite_cv.video_id = v.id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'))
+        ) AS is_favorite,
+        ${progressColumn} AS last_position_seconds,
+        ${lastPlayedAtColumn} AS last_played_at
+      FROM category_videos cv
+      JOIN videos v ON v.id = cv.video_id
+      WHERE cv.category_id = ? AND v.is_active = 1 AND v.archived_at IS NULL
+        AND v.availability_status = 'available'
+      ORDER BY is_learned ASC, cv.sort_order, v.id
+    `;
+    const binds: unknown[] = [];
+    if (device) {
+      binds.push(childId, childId, childId, childId);
+    }
+    binds.push(childId, childId, childId);
+    if (device) {
+      binds.push(childId, childId, childId, childId);
+    }
+    binds.push(categoryId);
+    result = await env.DB.prepare(query).bind(...binds).all<VideoRow>();
+  }
+
+  const unlockLimit = category.unlock_limit !== null && category.unlock_limit !== undefined
+    ? category.unlock_limit
+    : 5;
   let unlearnedIndex = 0;
   return json((result.results || []).map((row) => {
     const isLearned = !!device && row.is_learned === 1;
     const isSelectable = category.series_type !== "learning"
       || UNLIMITED_LEARNING_CATEGORY_IDS.has(category.id)
+      || unlockLimit === 0
       || isLearned
-      || unlearnedIndex++ < 5;
+      || unlearnedIndex++ < unlockLimit;
     return videoDto(env, row, [categoryId], threshold, {
       isLearned,
       learnedAt: isLearned ? row.learned_at : null,
@@ -222,33 +289,41 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
 
 export async function getPublicVideo(request: Request, env: AppEnv, videoId: string) {
   await getChildDevice(request, env, true);
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const threshold = await getCompletionThreshold(env);
 
   const query = `
     SELECT v.id, v.source, v.youtube_video_id, v.youtube_title, v.parent_label, v.thumbnail_url,
       v.media_type, v.media_path, v.thumbnail_path, v.duration_seconds,
       v.playback_start_seconds, v.playback_end_seconds,
-      COALESCE((SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id), 0) AS is_learned,
-      (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id) AS learned_at,
-      EXISTS (
-        SELECT 1 FROM category_videos favorite_cv
-        WHERE favorite_cv.video_id = v.id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'
+      COALESCE(
+        (SELECT is_learned FROM child_video_learned cls WHERE cls.video_id = v.id AND cls.child_id = ?),
+        CASE WHEN ? IS NULL THEN (SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = v.id) ELSE 0 END
+      ) AS is_learned,
+      COALESCE(
+        (SELECT learned_at FROM child_video_learned cls WHERE cls.video_id = v.id AND cls.child_id = ?),
+        CASE WHEN ? IS NULL THEN (SELECT learned_at FROM video_learned_state ls WHERE ls.video_id = v.id) ELSE NULL END
+      ) AS learned_at,
+      (
+        (? IS NOT NULL AND EXISTS (SELECT 1 FROM child_favorites cf WHERE cf.video_id = v.id AND cf.child_id = ?))
+        OR (? IS NULL AND EXISTS (SELECT 1 FROM category_videos favorite_cv WHERE favorite_cv.video_id = v.id AND favorite_cv.category_id = '${FAVORITES_CATEGORY_ID}'))
       ) AS is_favorite,
       (
         SELECT vs.last_position_seconds
         FROM view_sessions vs
-        WHERE vs.video_id = v.id
+        WHERE vs.video_id = v.id AND (vs.child_id IS NULL OR ? IS NULL OR vs.child_id = ?)
         ORDER BY vs.updated_at DESC LIMIT 1
       ) AS last_position_seconds
     FROM videos v
     WHERE v.id = ? AND v.is_active = 1 AND v.archived_at IS NULL
       AND v.availability_status = 'available'
   `;
-  const video = await env.DB.prepare(query).bind(videoId).first<VideoRow>();
+  const video = await env.DB.prepare(query).bind(childId, childId, childId, childId, childId, childId, childId, childId, childId, videoId).first<VideoRow>();
   if (!video) throw new HttpError("找不到這部影片。", 404, "VIDEO_NOT_FOUND");
 
-  const series = await getVideoSeriesState(env, videoId);
-  if (!series.isSelectable) throw new HttpError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
+  const series = await getVideoSeriesState(env, videoId, childId);
+  if (!series.isSelectable) throw new HttpError("這部學習影片尚未解鎖，請先觀看前面的集數。", 403, "LEARNING_VIDEO_LOCKED");
   return json(videoDto(env, video, series.categoryIds, threshold, {
     isLearned: series.isLearned,
     learnedAt: series.learnedAt,
@@ -261,6 +336,8 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
 export async function getPublicResume(request: Request, env: AppEnv) {
   const device = await getChildDevice(request, env, false);
   if (!device) return json({ resume: null });
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const threshold = await getCompletionThreshold(env);
 
   const query = `
@@ -272,6 +349,7 @@ export async function getPublicResume(request: Request, env: AppEnv) {
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
     WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
+      AND (vs.child_id IS NULL OR ? IS NULL OR vs.child_id = ?)
       AND vs.last_position_seconds > COALESCE(v.playback_start_seconds, 0)
       AND (COALESCE(v.playback_end_seconds, v.duration_seconds) IS NULL
         OR COALESCE(v.playback_end_seconds, v.duration_seconds) = 0
@@ -282,7 +360,7 @@ export async function getPublicResume(request: Request, env: AppEnv) {
     LIMIT 1
   `;
 
-  const row = await env.DB.prepare(query).bind(threshold).first<VideoRow & {
+  const row = await env.DB.prepare(query).bind(childId, childId, threshold).first<VideoRow & {
     last_position_seconds: number;
     last_played_at: string;
     playback_mode: "video" | "listen";
@@ -309,6 +387,8 @@ export async function getPublicResume(request: Request, env: AppEnv) {
 export async function getPublicRecents(request: Request, env: AppEnv) {
   const device = await getChildDevice(request, env, false);
   if (!device) return json([]);
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const threshold = await getCompletionThreshold(env);
 
   const query = `
@@ -317,24 +397,25 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
       v.duration_seconds, v.playback_start_seconds, v.playback_end_seconds, MAX(vs.updated_at) AS last_played_at,
       (
         SELECT last_position_seconds FROM view_sessions
-        WHERE video_id = v.id AND played_seconds > 0
+        WHERE video_id = v.id AND played_seconds > 0 AND (child_id IS NULL OR ? IS NULL OR child_id = ?)
         ORDER BY updated_at DESC LIMIT 1
       ) AS last_position_seconds,
       (
         SELECT COALESCE(playback_mode, 'video') FROM view_sessions
-        WHERE video_id = v.id AND played_seconds > 0
+        WHERE video_id = v.id AND played_seconds > 0 AND (child_id IS NULL OR ? IS NULL OR child_id = ?)
         ORDER BY updated_at DESC LIMIT 1
       ) AS playback_mode
     FROM view_sessions vs
     JOIN videos v ON v.id = vs.video_id
     WHERE v.is_active = 1 AND v.archived_at IS NULL AND v.availability_status = 'available'
       AND vs.played_seconds > 0
+      AND (vs.child_id IS NULL OR ? IS NULL OR vs.child_id = ?)
     GROUP BY v.id
     ORDER BY last_played_at DESC
     LIMIT 10
   `;
 
-  const rows = await env.DB.prepare(query).all<VideoRow & {
+  const rows = await env.DB.prepare(query).bind(childId, childId, childId, childId, childId, childId).all<VideoRow & {
     last_played_at: string;
     last_position_seconds: number | null;
     playback_mode: "video" | "listen";
@@ -398,7 +479,8 @@ export async function getPublicRecents(request: Request, env: AppEnv) {
 }
 
 export async function getChildAccessState(request: Request, env: AppEnv) {
-  const accessState = await evaluateChildAccessState(env);
+  const child = await getActiveChildProfile(request, env, false);
+  const accessState = await evaluateChildAccessState(env, child);
   return json(accessState);
 }
 
@@ -408,7 +490,51 @@ export async function getChildTodayPicks(request: Request, env: AppEnv) {
 
 export async function getDeviceStatus(request: Request, env: AppEnv) {
   const device = await getChildDevice(request, env, false);
-  return json({ authorized: !!device, device });
+  const activeChild = await getActiveChildProfile(request, env, false);
+  const childrenRows = await env.DB.prepare(
+    "SELECT id, name, avatar, tone, weekday_limit_seconds, weekend_limit_seconds, sort_order, is_active, created_at, updated_at FROM child_profiles WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
+  ).all<{
+    id: string; name: string; avatar: string; tone: "sage" | "sky" | "apricot";
+    weekday_limit_seconds: number; weekend_limit_seconds: number; sort_order: number;
+    is_active: number; created_at: string; updated_at: string;
+  }>();
+  const availableChildren = (childrenRows.results || []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar,
+    tone: row.tone,
+    weekdayLimitSeconds: row.weekday_limit_seconds,
+    weekendLimitSeconds: row.weekend_limit_seconds,
+    sortOrder: row.sort_order,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+  return json({ authorized: !!device, device, activeChild, availableChildren });
+}
+
+export async function getChildProfiles(request: Request, env: AppEnv) {
+  const activeChild = await getActiveChildProfile(request, env, false);
+  const childrenRows = await env.DB.prepare(
+    "SELECT id, name, avatar, tone, weekday_limit_seconds, weekend_limit_seconds, sort_order, is_active, created_at, updated_at FROM child_profiles WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
+  ).all<{
+    id: string; name: string; avatar: string; tone: "sage" | "sky" | "apricot";
+    weekday_limit_seconds: number; weekend_limit_seconds: number; sort_order: number;
+    is_active: number; created_at: string; updated_at: string;
+  }>();
+  const children = (childrenRows.results || []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar,
+    tone: row.tone,
+    weekdayLimitSeconds: row.weekday_limit_seconds,
+    weekendLimitSeconds: row.weekend_limit_seconds,
+    sortOrder: row.sort_order,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+  return json({ activeChild, children });
 }
 
 export async function syncOfflineVideoViews(request: Request, env: AppEnv) {
@@ -452,45 +578,74 @@ export async function syncOfflineVideoViews(request: Request, env: AppEnv) {
 
 export async function updateLearnedState(request: Request, env: AppEnv, videoId: string) {
   const device = await getChildDevice(request, env, true);
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const body = await readJson(request);
   const learned = boolean(body.learned, "學會狀態");
-  await requireActiveVideo(env, videoId);
-  await consumeRateLimit(env, await rateKey(env, "learned", device!.id), 30, 60);
+  await requireActiveVideo(env, videoId, childId);
+  await consumeRateLimit(env, await rateKey(env, "learned", `${device!.id}:${childId || "def"}`), 30, 60);
   const now = new Date().toISOString();
-  if (learned) {
-    await env.DB.prepare(`
-      INSERT INTO video_learned_state (video_id, is_learned, learned_at, updated_at)
-      VALUES (?, 1, ?, ?)
-      ON CONFLICT(video_id) DO UPDATE SET is_learned = 1, learned_at = excluded.learned_at, updated_at = excluded.updated_at
-    `).bind(videoId, now, now).run();
+  if (childId) {
+    if (learned) {
+      await env.DB.prepare(`
+        INSERT INTO child_video_learned (child_id, video_id, is_learned, learned_at, updated_at)
+        VALUES (?, ?, 1, ?, ?)
+        ON CONFLICT(child_id, video_id) DO UPDATE SET is_learned = 1, learned_at = excluded.learned_at, updated_at = excluded.updated_at
+      `).bind(childId, videoId, now, now).run();
+    } else {
+      await env.DB.prepare("DELETE FROM child_video_learned WHERE child_id = ? AND video_id = ?").bind(childId, videoId).run();
+    }
   } else {
-    await env.DB.prepare("DELETE FROM video_learned_state WHERE video_id = ?").bind(videoId).run();
+    if (learned) {
+      await env.DB.prepare(`
+        INSERT INTO video_learned_state (video_id, is_learned, learned_at, updated_at)
+        VALUES (?, 1, ?, ?)
+        ON CONFLICT(video_id) DO UPDATE SET is_learned = 1, learned_at = excluded.learned_at, updated_at = excluded.updated_at
+      `).bind(videoId, now, now).run();
+    } else {
+      await env.DB.prepare("DELETE FROM video_learned_state WHERE video_id = ?").bind(videoId).run();
+    }
   }
   return json({ ok: true, videoId, isLearned: learned, learnedAt: learned ? now : null });
 }
 
 export async function updateFavoriteState(request: Request, env: AppEnv, videoId: string) {
   const device = await getChildDevice(request, env, true);
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const body = await readJson(request);
   const favorite = boolean(body.favorite, "收藏狀態");
-  const video = await requireActiveVideo(env, videoId);
+  const video = await requireActiveVideo(env, videoId, childId);
   if (video.seriesType !== "learning") {
     throw new HttpError("目前只有學習系列可以加入我最喜歡。", 409, "FAVORITE_SERIES_CONFLICT");
   }
-  await consumeRateLimit(env, await rateKey(env, "favorite", device!.id), 30, 60);
+  await consumeRateLimit(env, await rateKey(env, "favorite", `${device!.id}:${childId || "def"}`), 30, 60);
 
   if (favorite) {
+    if (childId) {
+      await env.DB.prepare(`
+        INSERT INTO child_favorites (child_id, video_id, sort_order, created_at)
+        VALUES (?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM child_favorites WHERE child_id = ?), ?)
+        ON CONFLICT(child_id, video_id) DO NOTHING
+      `).bind(childId, videoId, childId, new Date().toISOString()).run();
+    }
     const category = await env.DB.prepare(`
       SELECT id FROM categories
       WHERE id = ? AND is_active = 1 AND archived_at IS NULL AND series_type = 'learning'
     `).bind(FAVORITES_CATEGORY_ID).first<{ id: string }>();
-    if (!category) throw new HttpError("找不到我最喜歡分類。", 409, "FAVORITES_CATEGORY_MISSING");
-    await env.DB.prepare(`
-      INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
-      VALUES (?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM category_videos WHERE category_id = ?), ?)
-      ON CONFLICT(category_id, video_id) DO NOTHING
-    `).bind(FAVORITES_CATEGORY_ID, videoId, FAVORITES_CATEGORY_ID, new Date().toISOString()).run();
+    if (category) {
+      await env.DB.prepare(`
+        INSERT INTO category_videos (category_id, video_id, sort_order, created_at)
+        VALUES (?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM category_videos WHERE category_id = ?), ?)
+        ON CONFLICT(category_id, video_id) DO NOTHING
+      `).bind(FAVORITES_CATEGORY_ID, videoId, FAVORITES_CATEGORY_ID, new Date().toISOString()).run();
+    }
   } else {
+    if (childId) {
+      await env.DB.prepare(
+        "DELETE FROM child_favorites WHERE child_id = ? AND video_id = ?",
+      ).bind(childId, videoId).run();
+    }
     await env.DB.prepare(
       "DELETE FROM category_videos WHERE category_id = ? AND video_id = ?",
     ).bind(FAVORITES_CATEGORY_ID, videoId).run();
@@ -498,7 +653,7 @@ export async function updateFavoriteState(request: Request, env: AppEnv, videoId
   return json({ ok: true, videoId, isFavorite: favorite });
 }
 
-async function requireActiveVideo(env: AppEnv, videoId: string) {
+async function requireActiveVideo(env: AppEnv, videoId: string, childId?: string | null) {
   const video = await env.DB.prepare(`
     SELECT id, source, media_type FROM videos WHERE id = ? AND is_active = 1 AND archived_at IS NULL
       AND availability_status = 'available'
@@ -508,33 +663,35 @@ async function requireActiveVideo(env: AppEnv, videoId: string) {
       )
   `).bind(videoId).first<{ id: string; source: "youtube" | "self_hosted"; media_type: "video" | "audio" | null }>();
   if (!video) throw new HttpError("這部影片目前不可記錄。", 404, "VIDEO_NOT_FOUND");
-  const series = await getVideoSeriesState(env, videoId);
+  const series = await getVideoSeriesState(env, videoId, childId);
   return { ...video, ...series };
 }
 
 export async function startViewSession(request: Request, env: AppEnv) {
   const device = await getChildDevice(request, env, true);
+  const child = await getActiveChildProfile(request, env, false);
+  const childId = child?.id || null;
   const body = await readJson(request);
   const videoId = text(body.videoId, "影片", 1, 120);
   const playbackMode = body.playbackMode === "listen" ? "listen" : "video";
-  const activeVideo = await requireActiveVideo(env, videoId);
+  const activeVideo = await requireActiveVideo(env, videoId, childId);
   if (!activeVideo.isSelectable) {
-    throw new HttpError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
+    throw new HttpError("這部學習影片尚未解鎖，請先觀看前面的集數。", 403, "LEARNING_VIDEO_LOCKED");
   }
-  const accessState = await evaluateChildAccessState(env);
+  const accessState = await evaluateChildAccessState(env, child);
 
   if (accessState.state === "PAUSED_BY_PARENT") {
     throw new HttpError("今天先休息一下 🌱 等等再來看看。", 403, "PAUSED_BY_PARENT");
   }
-  if (accessState.state === "OUTSIDE_WINDOW") {
+  if (!accessState.isRestrictionsPaused && accessState.state === "OUTSIDE_WINDOW") {
     throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
   }
-  if (playbackMode === "video" && accessState.categoryStates?.some(
+  if (!accessState.isRestrictionsPaused && playbackMode === "video" && accessState.categoryStates?.some(
     (category) => activeVideo.categoryIds.includes(category.categoryId) && category.isReached,
   )) {
     throw new HttpError("這個系列今天的觀看時間到了，仍可使用純聽。", 403, "CATEGORY_DAILY_LIMIT_REACHED");
   }
-  if (activeVideo.seriesType === "leisure" && playbackMode === "video" && accessState.remainingSeconds <= 0) {
+  if (!accessState.isRestrictionsPaused && activeVideo.seriesType === "leisure" && playbackMode === "video" && accessState.remainingSeconds <= 0) {
     throw new HttpError("今天的影片時間到了 🌙 明天再來看看吧。", 403, "DAILY_LIMIT_REACHED");
   }
 
@@ -552,9 +709,9 @@ export async function startViewSession(request: Request, env: AppEnv) {
     INSERT INTO view_sessions (
       id, client_session_id, video_id, child_device_id, write_token_hash,
       played_seconds, last_position_seconds, started_at, updated_at, status, last_heartbeat_seq,
-      playback_mode, series_type_snapshot
-    ) VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?, 'active', 0, ?, ?)
-  `).bind(id, clientSessionId, videoId, device!.id, capabilityHash, now, now, playbackMode, activeVideo.seriesType).run();
+      playback_mode, series_type_snapshot, child_id
+    ) VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?, 'active', 0, ?, ?, ?)
+  `).bind(id, clientSessionId, videoId, device!.id, capabilityHash, now, now, playbackMode, activeVideo.seriesType, childId).run();
   return json({ id, writeToken: capability, startedAt: now }, { status: 201 });
 }
 
@@ -566,11 +723,12 @@ async function verifyCapability(
 ) {
   const hash = await tokenHash(writeToken, env);
   const row = await env.DB.prepare(`
-    SELECT id, video_id, status, playback_mode, series_type_snapshot FROM view_sessions
+    SELECT id, video_id, status, playback_mode, series_type_snapshot, child_id FROM view_sessions
     WHERE id = ? AND child_device_id = ? AND write_token_hash = ?
   `).bind(sessionId, deviceId, hash).first<{
     id: string; video_id: string; status: string;
     playback_mode: "video" | "listen"; series_type_snapshot: "learning" | "leisure" | null;
+    child_id: string | null;
   }>();
   if (!row) throw new HttpError("播放紀錄授權不正確。", 403, "INVALID_WRITE_TOKEN");
   return row;
@@ -597,11 +755,11 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
     ).bind(sessionId).first();
     return json({ ok: true, aggregate, duplicate: true });
   }
-  const accessState = await evaluateChildAccessState(env);
+  const accessState = await evaluateChildAccessState(env, session.child_id);
   const closingWithoutPlayback = status === "ended" && deltaSeconds === 0;
   if (accessState.state === "PAUSED_BY_PARENT" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "PAUSED_BY_PARENT");
-  if (accessState.state === "OUTSIDE_WINDOW" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
-  if (session.playback_mode === "video") {
+  if (!accessState.isRestrictionsPaused && accessState.state === "OUTSIDE_WINDOW" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
+  if (!accessState.isRestrictionsPaused && session.playback_mode === "video") {
     const sessionCategories = await env.DB.prepare(
       "SELECT category_id FROM category_videos WHERE video_id = ?",
     ).bind(session.video_id).all<{ category_id: string }>();
@@ -616,7 +774,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
       deltaSeconds = Math.min(deltaSeconds, ...limitedStates.map((category) => category.remainingSeconds || 0));
     }
   }
-  if (session.playback_mode === "video" && session.series_type_snapshot === "leisure") {
+  if (!accessState.isRestrictionsPaused && session.playback_mode === "video" && session.series_type_snapshot === "leisure") {
     if (accessState.remainingSeconds <= 0 && !closingWithoutPlayback) throw new HttpError("今天的休閒時間到了。", 403, "DAILY_LIMIT_REACHED");
     deltaSeconds = Math.min(deltaSeconds, accessState.remainingSeconds);
   }
@@ -632,6 +790,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
     receivedAt: now,
     playbackMode: session.playback_mode,
     seriesType: session.series_type_snapshot,
+    childId: session.child_id,
   });
   await env.DB.batch([
     env.DB.prepare(`
@@ -658,7 +817,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
   const aggregate = await env.DB.prepare(
     "SELECT played_seconds, last_position_seconds, last_heartbeat_seq, status FROM view_sessions WHERE id = ?",
   ).bind(sessionId).first();
-  return json({ ok: true, aggregate, accessState: await evaluateChildAccessState(env) });
+  return json({ ok: true, aggregate, accessState: await evaluateChildAccessState(env, session.child_id) });
 }
 
 export async function saveNote(request: Request, env: AppEnv) {

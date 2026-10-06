@@ -1,5 +1,6 @@
 import {
   getChildAccessState,
+  getChildProfiles,
   getChildTodayPicks,
   getDeviceStatus,
   getPublicCategories,
@@ -23,16 +24,19 @@ import { serveMediaAsset } from "./media";
 import {
   addParentTodayBonus,
   archiveCategory,
+  deleteCategory,
   archiveVideo,
   authorizeDevice,
   batchUpdateVideos,
   changePassword,
   createCategory,
+  createParentChild,
   createVideo,
   getCalendarHistory,
   getDashboard,
   getDevices,
   getParentCategories,
+  getParentChildren,
   getParentRules,
   getParentTodayPicks,
   getParentVideos,
@@ -48,9 +52,12 @@ import {
   refreshVideoMetadata,
   revokeDevice,
   setParentTodayPause,
+  setParentTodayRestrictionsPause,
+  switchParentActiveChild,
   toggleParentTodayPick,
   updateCategory,
   updateDevice,
+  updateParentChild,
   updateParentRules,
   updateParentTodayPicks,
   updateSettings,
@@ -100,6 +107,7 @@ async function route(request: Request, env: AppEnv) {
   if (method === "GET" && path === "/api/content/recents") return getPublicRecents(request, env);
   if (method === "GET" && path === "/api/child/access-state") return getChildAccessState(request, env);
   if (method === "GET" && path === "/api/child/today-picks") return getChildTodayPicks(request, env);
+  if (method === "GET" && path === "/api/child/profiles") return getChildProfiles(request, env);
   let id = routeId(path, /^\/api\/content\/categories\/([^/]+)\/videos$/);
   if (method === "GET" && id) return getPublicCategoryVideos(request, env, id);
   id = routeId(path, /^\/api\/content\/videos\/([^/]+)$/);
@@ -142,6 +150,8 @@ async function route(request: Request, env: AppEnv) {
   if (method === "POST" && path === "/api/parent/today/bonus") return addParentTodayBonus(request, env);
   if (method === "POST" && path === "/api/parent/today/pause") return setParentTodayPause(request, env, true);
   if (method === "POST" && path === "/api/parent/today/resume") return setParentTodayPause(request, env, false);
+  if (method === "POST" && path === "/api/parent/today/pause-restrictions") return setParentTodayRestrictionsPause(request, env, true);
+  if (method === "POST" && path === "/api/parent/today/resume-restrictions") return setParentTodayRestrictionsPause(request, env, false);
 
   if (path === "/api/parent/today/picks") {
     if (method === "GET") return getParentTodayPicks(request, env);
@@ -157,6 +167,7 @@ async function route(request: Request, env: AppEnv) {
   if (method === "PUT" && path === "/api/parent/categories/order") return orderCategories(request, env);
   id = routeId(path, /^\/api\/parent\/categories\/([^/]+)$/);
   if ((method === "PATCH" || method === "PUT") && id) return updateCategory(request, env, id);
+  if (method === "DELETE" && id) return deleteCategory(request, env, id);
   id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/archive$/);
   if (method === "POST" && id) return archiveCategory(request, env, id);
   id = routeId(path, /^\/api\/parent\/categories\/([^/]+)\/restore$/);
@@ -196,6 +207,15 @@ async function route(request: Request, env: AppEnv) {
   id = routeId(path, /^\/api\/parent\/devices\/([^/]+)$/);
   if (method === "PATCH" && id) return updateDevice(request, env, id);
   if (method === "DELETE" && id) return revokeDevice(request, env, id);
+
+  if (path === "/api/parent/children") {
+    if (method === "GET") return getParentChildren(request, env);
+    if (method === "POST") return createParentChild(request, env);
+  }
+  id = routeId(path, /^\/api\/parent\/children\/([^/]+)\/switch$/);
+  if (method === "POST" && id) return switchParentActiveChild(request, env, id);
+  id = routeId(path, /^\/api\/parent\/children\/([^/]+)$/);
+  if ((method === "PATCH" || method === "PUT") && id) return updateParentChild(request, env, id);
 
   throw new HttpError("找不到這個功能。", 404, "NOT_FOUND");
 }

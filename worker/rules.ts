@@ -1,6 +1,6 @@
 import { HttpError, integer, json, readJson, text } from "./http";
 import { mediaDto, type MediaColumns } from "./media";
-import type { AppEnv } from "./types";
+import type { AppEnv, ChildProfile } from "./types";
 
 const TIME_ZONE = "Asia/Taipei";
 
@@ -35,6 +35,7 @@ export interface DailyOverrideRow {
   bonus_seconds: number;
   limit_override_seconds: number | null;
   is_paused: number;
+  restrictions_paused?: number;
 }
 
 export function getTaipeiDateParts(date: Date = new Date()) {
@@ -255,6 +256,7 @@ export interface RollupHeartbeatInput {
   receivedAt: string;
   playbackMode: "video" | "listen";
   seriesType: "learning" | "leisure" | null;
+  childId?: string | null;
 }
 
 /** Builds atomic rollup updates for one new, non-duplicate heartbeat. */
@@ -366,12 +368,81 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
         input.receivedAt,
       ));
     }
+    const effectiveChildId = input.childId || "child_ayun";
+    statements.push(env.DB.prepare(`
+      INSERT INTO child_daily_usage (
+        child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds, video_seconds, listen_seconds, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(child_id, usage_date) DO UPDATE SET
+        total_played_seconds = MAX(0, total_played_seconds + ?),
+        leisure_seconds = MAX(0, leisure_seconds + ?),
+        learning_seconds = MAX(0, learning_seconds + ?),
+        video_seconds = MAX(0, video_seconds + ?),
+        listen_seconds = MAX(0, listen_seconds + ?),
+        updated_at = excluded.updated_at
+    `).bind(
+      effectiveChildId,
+      dateStr,
+      Math.max(0, totalDelta),
+      Math.max(0, leisureDelta),
+      Math.max(0, learningDelta),
+      Math.max(0, leisureDelta),
+      Math.max(0, listenDelta),
+      input.receivedAt,
+      totalDelta,
+      leisureDelta,
+      learningDelta,
+      leisureDelta,
+      listenDelta,
+    ));
   }
   return statements;
 }
 
-export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = new Date()) {
-  const { dateStr, dayType, currentHHmm } = getTaipeiDateParts(targetDate);
+export async function evaluateChildAccessState(
+  env: AppEnv,
+  childOrId?: ChildProfile | string | Date | null,
+  targetDate: Date = new Date(),
+) {
+  let actualChild: ChildProfile | string | null = null;
+  let actualDate: Date = targetDate;
+  if (childOrId instanceof Date) {
+    actualDate = childOrId;
+    actualChild = null;
+  } else if (childOrId) {
+    actualChild = childOrId;
+  }
+
+  const { dateStr, dayType, currentHHmm } = getTaipeiDateParts(actualDate);
+
+  let activeChildProfile: ChildProfile | null = null;
+  if (actualChild) {
+    if (typeof actualChild === "object") {
+      activeChildProfile = actualChild;
+    } else {
+      const row = await env.DB.prepare(
+        "SELECT * FROM child_profiles WHERE id = ? AND is_active = 1",
+      ).bind(actualChild).first<{
+        id: string; name: string; avatar: string; tone: "sage" | "sky" | "apricot";
+        weekday_limit_seconds: number; weekend_limit_seconds: number;
+        sort_order: number; is_active: number; created_at: string; updated_at: string;
+      }>();
+      if (row) {
+        activeChildProfile = {
+          id: row.id,
+          name: row.name,
+          avatar: row.avatar,
+          tone: row.tone,
+          weekdayLimitSeconds: row.weekday_limit_seconds,
+          weekendLimitSeconds: row.weekend_limit_seconds,
+          sortOrder: row.sort_order,
+          isActive: row.is_active === 1,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        };
+      }
+    }
+  }
 
   // 1. Load active rule & windows for current dayType
   let rule = await env.DB.prepare(
@@ -396,11 +467,67 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
 
   // 2. Load daily override
   const override = await env.DB.prepare(
-    "SELECT id, date, bonus_seconds, limit_override_seconds, is_paused FROM daily_overrides WHERE date = ?",
+    "SELECT id, date, bonus_seconds, limit_override_seconds, is_paused, restrictions_paused FROM daily_overrides WHERE date = ?",
   ).bind(dateStr).first<DailyOverrideRow>();
 
-  const sharedUsage = await ensureDailyUsageRollup(env, targetDate);
-  const todayPlayedSeconds = sharedUsage.totalPlayedSeconds;
+  const isRestrictionsPaused = override?.restrictions_paused === 1;
+
+  let todayPlayedSeconds: number;
+  let leisureUsedSeconds: number;
+  let learningSeconds: number;
+  let listenSeconds: number;
+  let baseLimitSeconds: number;
+  let bonusSeconds: number;
+
+  const sharedUsage = await ensureDailyUsageRollup(env, actualDate);
+
+  if (activeChildProfile) {
+    const childUsage = await env.DB.prepare(
+      "SELECT total_played_seconds, leisure_seconds, learning_seconds, video_seconds, listen_seconds, bonus_seconds FROM child_daily_usage WHERE child_id = ? AND usage_date = ?",
+    ).bind(activeChildProfile.id, dateStr).first<{
+      total_played_seconds: number; leisure_seconds: number; learning_seconds: number; video_seconds: number; listen_seconds: number; bonus_seconds: number;
+    }>();
+
+    let unassignedLeisure = 0;
+    let unassignedLearning = 0;
+    let unassignedListen = 0;
+    let unassignedTotal = 0;
+    if (activeChildProfile.id === "child_ayun") {
+      const range = getDayRangeInTimeZone(TIME_ZONE, actualDate);
+      const unassigned = await env.DB.prepare(`
+        SELECT 
+          COALESCE(SUM(CASE WHEN series_type_snapshot = 'leisure' AND playback_mode != 'listen' THEN played_seconds ELSE 0 END), 0) AS leisure_seconds,
+          COALESCE(SUM(CASE WHEN series_type_snapshot = 'learning' AND playback_mode != 'listen' THEN played_seconds ELSE 0 END), 0) AS learning_seconds,
+          COALESCE(SUM(CASE WHEN playback_mode = 'listen' THEN played_seconds ELSE 0 END), 0) AS listen_seconds,
+          COALESCE(SUM(played_seconds), 0) AS total_seconds
+        FROM view_sessions
+        WHERE child_id IS NULL AND started_at >= ? AND started_at < ?
+      `).bind(range.start, range.end).first<{
+        leisure_seconds: number; learning_seconds: number; listen_seconds: number; total_seconds: number;
+      }>();
+      if (unassigned) {
+        unassignedLeisure = unassigned.leisure_seconds || 0;
+        unassignedLearning = unassigned.learning_seconds || 0;
+        unassignedListen = unassigned.listen_seconds || 0;
+        unassignedTotal = unassigned.total_seconds || 0;
+      }
+    }
+
+    todayPlayedSeconds = (childUsage ? childUsage.total_played_seconds : 0) + unassignedTotal;
+    leisureUsedSeconds = (childUsage ? (childUsage.leisure_seconds ?? childUsage.video_seconds ?? 0) : 0) + unassignedLeisure;
+    learningSeconds = (childUsage ? (childUsage.learning_seconds ?? 0) : 0) + unassignedLearning;
+    listenSeconds = (childUsage ? childUsage.listen_seconds : 0) + unassignedListen;
+    const childQuota = dayType === "weekend" ? activeChildProfile.weekendLimitSeconds : activeChildProfile.weekdayLimitSeconds;
+    baseLimitSeconds = override?.limit_override_seconds ?? childQuota;
+    bonusSeconds = (override?.bonus_seconds ?? 0) + (childUsage?.bonus_seconds ?? 0);
+  } else {
+    todayPlayedSeconds = sharedUsage.totalPlayedSeconds;
+    leisureUsedSeconds = sharedUsage.leisureUsedSeconds;
+    learningSeconds = sharedUsage.learningSeconds;
+    listenSeconds = sharedUsage.listenSeconds;
+    baseLimitSeconds = override?.limit_override_seconds ?? rule.daily_limit_seconds;
+    bonusSeconds = override?.bonus_seconds ?? 0;
+  }
 
   // Calculate Category-specific played seconds and limits
   const categoriesResult = await env.DB.prepare(`
@@ -423,7 +550,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
     const played = watched + (c.today_listen_seconds || 0);
     const limit = c.daily_limit_seconds;
     const remaining = (limit !== null && limit !== undefined && limit > 0) ? Math.max(0, limit - watched) : null;
-    const isReached = limit !== null && limit !== undefined && limit > 0 ? remaining === 0 : false;
+    const isReached = !isRestrictionsPaused && (limit !== null && limit !== undefined && limit > 0 ? remaining === 0 : false);
     return {
       categoryId: c.id,
       name: c.name,
@@ -436,20 +563,23 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
     };
   });
 
-  const bonusSeconds = override?.bonus_seconds ?? 0;
-  const baseLimitSeconds = override?.limit_override_seconds ?? rule.daily_limit_seconds;
-  // Learning time remains part of family statistics, but no longer converts
-  // into leisure allowance. Parent-added bonus time is intentionally separate.
   const earnedBonusSeconds = 0;
   const effectiveLimitSeconds = baseLimitSeconds + bonusSeconds;
-  const remainingSeconds = Math.max(0, effectiveLimitSeconds - sharedUsage.leisureUsedSeconds);
+  const remainingSeconds = Math.max(0, effectiveLimitSeconds - leisureUsedSeconds);
 
   const sharedFields = {
     baseLimitSeconds,
     earnedBonusSeconds,
-    learningSeconds: sharedUsage.learningSeconds,
-    leisureUsedSeconds: sharedUsage.leisureUsedSeconds,
-    listenSeconds: sharedUsage.listenSeconds,
+    learningSeconds,
+    leisureUsedSeconds,
+    listenSeconds,
+    isRestrictionsPaused,
+    activeChild: activeChildProfile ? {
+      id: activeChildProfile.id,
+      name: activeChildProfile.name,
+      avatar: activeChildProfile.avatar,
+      tone: activeChildProfile.tone,
+    } : null,
   };
 
   // Check 1: Parent Paused
@@ -472,7 +602,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
   }
 
   // Check 2: Outside Allowed Windows
-  if (windows.length > 0) {
+  if (!isRestrictionsPaused && windows.length > 0) {
     const isInsideWindow = windows.some((w) => currentHHmm >= w.start_time && currentHHmm < w.end_time);
     if (!isInsideWindow) {
       const futureWindowsToday = windows.filter((w) => w.start_time > currentHHmm);
@@ -499,7 +629,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
   }
 
   // Check 3: Daily Limit Reached
-  if (effectiveLimitSeconds > 0 && remainingSeconds <= 0) {
+  if (!isRestrictionsPaused && effectiveLimitSeconds > 0 && remainingSeconds <= 0) {
     return {
       state: "DAILY_LIMIT_REACHED" as const,
       remainingSeconds: 0,
@@ -518,9 +648,10 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
   }
 
   // State: AVAILABLE
+  const effectiveRemainingSeconds = isRestrictionsPaused ? Math.max(86400, remainingSeconds) : remainingSeconds;
   return {
     state: "AVAILABLE" as const,
-    remainingSeconds,
+    remainingSeconds: effectiveRemainingSeconds,
     todayPlayedSeconds,
     dailyLimitSeconds: effectiveLimitSeconds,
     bonusSeconds,
@@ -529,7 +660,7 @@ export async function evaluateChildAccessState(env: AppEnv, targetDate: Date = n
     isPaused: false,
     serverTimeTaipei: currentHHmm,
     todayDate: dateStr,
-    message: formatGentleRemaining(remainingSeconds),
+    message: isRestrictionsPaused ? "今日不限時放鬆中 🌱" : formatGentleRemaining(remainingSeconds),
     categoryStates,
     ...sharedFields,
   };
@@ -566,7 +697,7 @@ export async function getRules(request: Request, env: AppEnv) {
   }));
 
   const override = await env.DB.prepare(
-    "SELECT id, date, bonus_seconds, limit_override_seconds, is_paused FROM daily_overrides WHERE date = ?",
+    "SELECT id, date, bonus_seconds, limit_override_seconds, is_paused, restrictions_paused FROM daily_overrides WHERE date = ?",
   ).bind(dateStr).first<DailyOverrideRow>();
 
   return json({
@@ -577,6 +708,7 @@ export async function getRules(request: Request, env: AppEnv) {
       bonusSeconds: override.bonus_seconds,
       limitOverrideSeconds: override.limit_override_seconds,
       isPaused: override.is_paused === 1,
+      restrictionsPaused: override.restrictions_paused === 1,
     } : null,
   });
 }
@@ -657,6 +789,23 @@ export async function setTodayPause(request: Request, env: AppEnv, isPaused: boo
       is_paused = excluded.is_paused,
       updated_at = excluded.updated_at
   `).bind(id, dateStr, isPaused ? 1 : 0, now, now).run();
+
+  const accessState = await evaluateChildAccessState(env);
+  return json({ ok: true, accessState });
+}
+
+export async function setTodayRestrictionsPause(request: Request, env: AppEnv, isRestrictionsPaused: boolean) {
+  const { dateStr } = getTaipeiDateParts();
+  const now = new Date().toISOString();
+  const id = crypto.randomUUID();
+
+  await env.DB.prepare(`
+    INSERT INTO daily_overrides (id, date, bonus_seconds, limit_override_seconds, is_paused, restrictions_paused, created_at, updated_at)
+    VALUES (?, ?, 0, NULL, 0, ?, ?, ?)
+    ON CONFLICT(date) DO UPDATE SET
+      restrictions_paused = excluded.restrictions_paused,
+      updated_at = excluded.updated_at
+  `).bind(id, dateStr, isRestrictionsPaused ? 1 : 0, now, now).run();
 
   const accessState = await evaluateChildAccessState(env);
   return json({ ok: true, accessState });

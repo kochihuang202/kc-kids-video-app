@@ -10,6 +10,7 @@ export interface Category {
   imageUrl?: string | null;
   dailyLimitSeconds?: number | null;
   seriesType: SeriesType;
+  unlockLimit?: number | null;
 }
 
 export type MediaSource = "youtube" | "self_hosted";
@@ -97,6 +98,9 @@ export interface ViewSession {
   playbackMode?: PlaybackMode;
   seriesType?: SeriesType | null;
   offlineViewed?: boolean;
+  childId?: string | null;
+  childName?: string | null;
+  childAvatar?: string | null;
 }
 
 export interface TodaySummary {
@@ -158,10 +162,30 @@ export interface ChildAccessState {
   gracePeriodSeconds: number;
   nextAllowedAt: string | null;
   isPaused: boolean;
+  isRestrictionsPaused?: boolean;
   serverTimeTaipei: string;
   todayDate: string;
   message: string;
   categoryStates?: CategoryAccessState[];
+  activeChild?: {
+    id: string;
+    name: string;
+    avatar: string;
+    tone: "sage" | "sky" | "apricot";
+  } | null;
+}
+
+export interface ChildProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  tone: "sage" | "sky" | "apricot";
+  weekdayLimitSeconds: number;
+  weekendLimitSeconds: number;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AllowedWindow {
@@ -188,6 +212,7 @@ export interface DailyOverride {
   bonusSeconds: number;
   limitOverrideSeconds: number | null;
   isPaused: boolean;
+  restrictionsPaused?: boolean;
 }
 
 export interface TodayPick extends MediaDescriptor {
@@ -295,7 +320,9 @@ export interface UpdateViewSessionInput {
 
 export interface DeviceStatus {
   authorized: boolean;
-  device: { id: string; name: string } | null;
+  device: { id: string; name: string; defaultChildId?: string | null } | null;
+  activeChild?: ChildProfile | null;
+  availableChildren?: ChildProfile[];
 }
 
 export interface AdminCategory extends Category {
@@ -323,6 +350,7 @@ export interface AdminVideo extends Omit<VideoFixture, "categoryId" | "sortOrder
 export interface ChildDevice {
   id: string;
   name: string;
+  defaultChildId?: string | null;
   createdAt: string;
   lastUsedAt: string;
   revokedAt: string | null;

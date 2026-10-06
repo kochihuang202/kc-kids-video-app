@@ -22,4 +22,18 @@ export interface ParentSession {
 export interface ChildDevice {
   id: string;
   name: string;
+  defaultChildId?: string | null;
+}
+
+export interface ChildProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  tone: "sage" | "sky" | "apricot";
+  weekdayLimitSeconds: number;
+  weekendLimitSeconds: number;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

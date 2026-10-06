@@ -17,15 +17,18 @@ import {
   getRules,
   getTodayPicks,
   setTodayPause,
+  setTodayRestrictionsPause,
   toggleTodayPick,
   updateRules,
   updateTodayPicks,
 } from "./rules";
 import {
+  childCookie,
   clearDeviceCookie,
   clearParentCookie,
   consumeRateLimit,
   deviceCookie,
+  getActiveChildProfile,
   getChildDevice,
   makePasswordRecord,
   parentCookie,
@@ -158,7 +161,7 @@ export async function getParentCategories(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const result = await env.DB.prepare(`
     SELECT c.id, c.name, c.icon, c.image_url, c.tone, c.sort_order, c.is_active,
-      c.daily_limit_seconds, c.series_type, c.created_at, c.updated_at, c.archived_at,
+      c.daily_limit_seconds, c.series_type, c.unlock_limit, c.created_at, c.updated_at, c.archived_at,
       (SELECT COUNT(*) FROM category_videos cv JOIN videos v ON v.id = cv.video_id WHERE cv.category_id = c.id) AS video_count
     FROM categories c
     ORDER BY sort_order, id
@@ -168,6 +171,7 @@ export async function getParentCategories(request: Request, env: AppEnv) {
     tone: row.tone, sortOrder: row.sort_order, isActive: row.is_active === 1,
     dailyLimitSeconds: row.daily_limit_seconds ?? null,
     seriesType: row.series_type,
+    unlockLimit: row.unlock_limit !== undefined && row.unlock_limit !== null ? row.unlock_limit : (row.series_type === "learning" ? 5 : null),
     videoCount: row.video_count || 0,
     createdAt: row.created_at, updatedAt: row.updated_at, archivedAt: row.archived_at,
   })));
@@ -184,14 +188,15 @@ export async function createCategory(request: Request, env: AppEnv) {
   const dailyLimitSeconds = body.dailyLimitSeconds ? integer(body.dailyLimitSeconds, "每日播放上限", 0, 86400) : null;
   const seriesType = text(body.seriesType || "leisure", "系列類型", 7, 8) as typeof seriesTypes[number];
   if (!seriesTypes.includes(seriesType)) throw new HttpError("系列類型設定不正確。");
+  const unlockLimit = body.unlockLimit !== undefined ? (body.unlockLimit === null ? null : integer(body.unlockLimit, "解鎖限制", 0, 100)) : (seriesType === "learning" ? 5 : null);
   const id = text(body.id || name.toLowerCase().replace(/\s+/g, "-"), "分類識別碼", 1, 40);
   const nextOrder = (await env.DB.prepare("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM categories").first<{ next_order: number }>())?.next_order || 1;
   const now = new Date().toISOString();
   await env.DB.prepare(`
-    INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
-  `).bind(id, name, icon, imageUrl, tone, nextOrder, dailyLimitSeconds, seriesType, now, now).run();
-  return json({ id, name, icon, imageUrl, tone, sortOrder: nextOrder, isActive: true, dailyLimitSeconds, seriesType, createdAt: now, updatedAt: now, archivedAt: null }, { status: 201 });
+    INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, unlock_limit, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+  `).bind(id, name, icon, imageUrl, tone, nextOrder, dailyLimitSeconds, seriesType, unlockLimit, now, now).run();
+  return json({ id, name, icon, imageUrl, tone, sortOrder: nextOrder, isActive: true, dailyLimitSeconds, seriesType, unlockLimit, createdAt: now, updatedAt: now, archivedAt: null }, { status: 201 });
 }
 
 export async function updateCategory(request: Request, env: AppEnv, id: string) {
@@ -210,6 +215,9 @@ export async function updateCategory(request: Request, env: AppEnv, id: string) 
     : current.daily_limit_seconds;
   const seriesType = body.seriesType !== undefined ? text(body.seriesType, "系列類型", 7, 8) : current.series_type;
   if (!seriesTypes.includes(seriesType as typeof seriesTypes[number])) throw new HttpError("系列類型設定不正確。");
+  const unlockLimit = body.unlockLimit !== undefined
+    ? (body.unlockLimit === null ? null : integer(body.unlockLimit, "解鎖限制", 0, 100))
+    : current.unlock_limit;
   if (seriesType !== current.series_type) {
     const conflicting = await env.DB.prepare(`
       SELECT 1 AS found
@@ -223,9 +231,9 @@ export async function updateCategory(request: Request, env: AppEnv, id: string) 
   }
   const now = new Date().toISOString();
   await env.DB.prepare(`
-    UPDATE categories SET name = ?, icon = ?, image_url = ?, tone = ?, is_active = ?, daily_limit_seconds = ?, series_type = ?, updated_at = ?
+    UPDATE categories SET name = ?, icon = ?, image_url = ?, tone = ?, is_active = ?, daily_limit_seconds = ?, series_type = ?, unlock_limit = ?, updated_at = ?
     WHERE id = ?
-  `).bind(name, icon, imageUrl, tone, isActive, dailyLimitSeconds, seriesType, now, id).run();
+  `).bind(name, icon, imageUrl, tone, isActive, dailyLimitSeconds, seriesType, unlockLimit, now, id).run();
   return json({ ok: true });
 }
 
@@ -237,6 +245,19 @@ export async function archiveCategory(request: Request, env: AppEnv, id: string,
     WHERE id = ?
   `).bind(restore ? null : now, restore ? 1 : 0, now, id).run();
   if (!result.meta.changes) throw new HttpError("找不到這個分類。", 404);
+  return json({ ok: true });
+}
+
+export async function deleteCategory(request: Request, env: AppEnv, id: string) {
+  await requireParentMutation(request, env);
+  const existing = await env.DB.prepare("SELECT id FROM categories WHERE id = ?").bind(id).first<{ id: string }>();
+  if (!existing) throw new HttpError("找不到這個分類。", 404);
+
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM category_videos WHERE category_id = ?").bind(id),
+    env.DB.prepare("DELETE FROM daily_category_usage_totals WHERE category_id = ?").bind(id),
+    env.DB.prepare("DELETE FROM categories WHERE id = ?").bind(id),
+  ]);
   return json({ ok: true });
 }
 
@@ -560,12 +581,12 @@ export async function getDevices(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const current = await getChildDevice(request, env, false);
   const result = await env.DB.prepare(`
-    SELECT id, name, created_at, last_used_at, revoked_at FROM child_devices
+    SELECT id, name, created_at, last_used_at, revoked_at, default_child_id FROM child_devices
     ORDER BY revoked_at IS NOT NULL, last_used_at DESC
-  `).all<{ id: string; name: string; created_at: string; last_used_at: string; revoked_at: string | null }>();
+  `).all<{ id: string; name: string; created_at: string; last_used_at: string; revoked_at: string | null; default_child_id: string | null }>();
   return json((result.results || []).map((row) => ({
     id: row.id, name: row.name, createdAt: row.created_at, lastUsedAt: row.last_used_at,
-    revokedAt: row.revoked_at, isCurrent: row.id === current?.id,
+    revokedAt: row.revoked_at, defaultChildId: row.default_child_id || null, isCurrent: row.id === current?.id,
   })));
 }
 
@@ -587,8 +608,14 @@ export async function updateDevice(request: Request, env: AppEnv, id: string) {
   await requireParentMutation(request, env);
   const body = await readJson(request);
   const name = text(body.name, "裝置名稱", 1, 80);
-  const result = await env.DB.prepare("UPDATE child_devices SET name = ? WHERE id = ? AND revoked_at IS NULL").bind(name, id).run();
-  if (!result.meta.changes) throw new HttpError("找不到這台裝置。", 404);
+  const defaultChildId = typeof body.defaultChildId === "string" ? body.defaultChildId : (body.defaultChildId === null ? null : undefined);
+  let result;
+  if (defaultChildId !== undefined) {
+    result = await env.DB.prepare("UPDATE child_devices SET name = ?, default_child_id = ? WHERE id = ? AND revoked_at IS NULL").bind(name, defaultChildId, id).run();
+  } else {
+    result = await env.DB.prepare("UPDATE child_devices SET name = ? WHERE id = ? AND revoked_at IS NULL").bind(name, id).run();
+  }
+  if (!result.meta.changes) throw new HttpError("找不到這個裝置。", 404);
   return json({ ok: true });
 }
 
@@ -610,6 +637,7 @@ interface DashboardSessionRow {
   last_position_seconds: number; started_at: string; updated_at: string; ended_at: string | null;
   child_device_id: string | null; device_name: string | null;
   playback_mode: "video" | "listen"; series_type_snapshot: "learning" | "leisure" | null;
+  child_id: string | null; child_name: string | null; child_avatar: string | null;
 }
 interface HeartbeatRow {
   view_session_id: string; delta_seconds: number; interval_started_at: string | null;
@@ -645,6 +673,28 @@ export async function getDashboard(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const url = new URL(request.url);
   const { start, end } = validRange(url.searchParams.get("start"), url.searchParams.get("end"));
+  const childIdParam = url.searchParams.get("child_id") || request.headers.get("x-kc-child-id") || null;
+  const isAllChildren = !childIdParam || childIdParam === "all";
+
+  let activeChild = await getActiveChildProfile(request, env, false);
+  if (childIdParam && childIdParam !== "all") {
+    const row = await env.DB.prepare("SELECT * FROM child_profiles WHERE id = ? AND is_active = 1").bind(childIdParam).first<any>();
+    if (row) {
+      activeChild = {
+        id: row.id,
+        name: row.name,
+        avatar: row.avatar,
+        tone: row.tone,
+        weekdayLimitSeconds: row.weekday_limit_seconds,
+        weekendLimitSeconds: row.weekend_limit_seconds,
+        sortOrder: row.sort_order,
+        isActive: row.is_active === 1,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    }
+  }
+
   const errors: Record<string, string> = {};
   let notes: DashboardNoteRow[] = [];
   let sessions: DashboardSessionRow[] = [];
@@ -660,17 +710,30 @@ export async function getDashboard(request: Request, env: AppEnv) {
     notes = result.results || [];
   } catch { errors.notes = "筆記暫時無法載入。"; }
   try {
-    const result = await env.DB.prepare(`
+    const childCondition = isAllChildren
+      ? ""
+      : (childIdParam === "child_ayun"
+          ? "AND (s.child_id = 'child_ayun' OR s.child_id IS NULL)"
+          : "AND s.child_id = ?");
+    const query = `
       SELECT s.id, s.video_id, v.parent_label AS video_label, s.played_seconds,
         s.last_position_seconds, s.started_at, s.updated_at, s.ended_at,
         s.child_device_id, COALESCE(cd.name, '家庭裝置') AS device_name,
-        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot
+        COALESCE(s.playback_mode, 'video') AS playback_mode, s.series_type_snapshot,
+        s.child_id, cp.name AS child_name, cp.avatar AS child_avatar
       FROM view_sessions s
       LEFT JOIN videos v ON v.id = s.video_id
       LEFT JOIN child_devices cd ON cd.id = s.child_device_id
+      LEFT JOIN child_profiles cp ON cp.id = s.child_id
       WHERE s.started_at < ? AND COALESCE(s.ended_at, s.updated_at) >= ?
+        ${childCondition}
       ORDER BY s.started_at DESC
-    `).bind(end, start).all<DashboardSessionRow>();
+    `;
+    const binds: unknown[] = [end, start];
+    if (!isAllChildren && childIdParam !== "child_ayun") {
+      binds.push(childIdParam);
+    }
+    const result = await env.DB.prepare(query).bind(...binds).all<DashboardSessionRow>();
     sessions = result.results || [];
   } catch { errors.timeline = "觀看足跡暫時無法載入。"; errors.summary = "播放摘要暫時無法載入。"; }
   if (sessions.length) {
@@ -712,19 +775,33 @@ export async function getDashboard(request: Request, env: AppEnv) {
   let offlineViews: Array<{
     child_device_id: string; video_id: string; video_label: string | null; device_name: string;
     last_seen_at: string; playback_mode: "video" | "listen"; series_type: "learning" | "leisure" | null;
+    child_id: string | null; child_name: string | null; child_avatar: string | null;
   }> = [];
   try {
-    const result = await env.DB.prepare(`
+    const offlineChildCondition = isAllChildren
+      ? ""
+      : (childIdParam === "child_ayun"
+          ? "AND (cd.default_child_id = 'child_ayun' OR cd.default_child_id IS NULL)"
+          : "AND cd.default_child_id = ?");
+    const offlineQuery = `
       SELECT ov.child_device_id, ov.video_id, v.parent_label AS video_label,
         COALESCE(cd.name, '家庭裝置') AS device_name, ov.last_seen_at, ov.playback_mode,
         (SELECT c.series_type FROM category_videos cv JOIN categories c ON c.id = cv.category_id
-          WHERE cv.video_id = ov.video_id ORDER BY c.sort_order LIMIT 1) AS series_type
+          WHERE cv.video_id = ov.video_id ORDER BY c.sort_order LIMIT 1) AS series_type,
+        cd.default_child_id AS child_id, cp.name AS child_name, cp.avatar AS child_avatar
       FROM offline_video_views ov
       JOIN videos v ON v.id = ov.video_id
       LEFT JOIN child_devices cd ON cd.id = ov.child_device_id
+      LEFT JOIN child_profiles cp ON cp.id = cd.default_child_id
       WHERE ov.last_seen_at >= ? AND ov.last_seen_at < ?
+        ${offlineChildCondition}
       ORDER BY ov.last_seen_at DESC
-    `).bind(start, end).all<typeof offlineViews[number]>();
+    `;
+    const offlineBinds: unknown[] = [start, end];
+    if (!isAllChildren && childIdParam !== "child_ayun") {
+      offlineBinds.push(childIdParam);
+    }
+    const result = await env.DB.prepare(offlineQuery).bind(...offlineBinds).all<typeof offlineViews[number]>();
     offlineViews = result.results || [];
   } catch { errors.timeline = "離線觀看紀錄暫時無法載入。"; }
 
@@ -742,6 +819,9 @@ export async function getDashboard(request: Request, env: AppEnv) {
       noteCount: notes.filter((note) => note.view_session_id === session.id).length,
       playbackMode: session.playback_mode,
       seriesType: session.series_type_snapshot,
+      childId: session.child_id || null,
+      childName: session.child_name || null,
+      childAvatar: session.child_avatar || null,
     };
   }).filter((session) => session.playedSeconds > 0 || notes.some((note) => note.view_session_id === session.id));
 
@@ -759,6 +839,9 @@ export async function getDashboard(request: Request, env: AppEnv) {
     playbackMode: view.playback_mode,
     seriesType: view.series_type,
     offlineViewed: true,
+    childId: view.child_id || null,
+    childName: view.child_name || null,
+    childAvatar: view.child_avatar || null,
   }));
   const timeline = [...timedTimeline, ...offlineTimeline].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
 
@@ -848,7 +931,7 @@ export async function getDashboard(request: Request, env: AppEnv) {
     percentage: totalPlayedSeconds > 0 ? Math.round((stat.playedSeconds / totalPlayedSeconds) * 100) : 0,
   })).sort((a, b) => b.playedSeconds - a.playedSeconds);
 
-  const ruleState = await evaluateChildAccessState(env, new Date(start));
+  const ruleState = await evaluateChildAccessState(env, activeChild, new Date(start));
 
   return json({
     notes: notes.map((note) => ({
@@ -1229,6 +1312,11 @@ export async function setParentTodayPause(request: Request, env: AppEnv, isPause
   return setTodayPause(request, env, isPaused);
 }
 
+export async function setParentTodayRestrictionsPause(request: Request, env: AppEnv, isRestrictionsPaused: boolean) {
+  await requireParentMutation(request, env);
+  return setTodayRestrictionsPause(request, env, isRestrictionsPaused);
+}
+
 export async function getParentTodayPicks(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   return getTodayPicks(request, env);
@@ -1243,3 +1331,129 @@ export async function toggleParentTodayPick(request: Request, env: AppEnv, video
   await requireParentMutation(request, env);
   return toggleTodayPick(request, env, videoId);
 }
+
+export async function getParentChildren(request: Request, env: AppEnv) {
+  await verifyParent(request, env);
+  const rows = await env.DB.prepare(
+    "SELECT * FROM child_profiles ORDER BY sort_order ASC, id ASC",
+  ).all<{
+    id: string; name: string; avatar: string; tone: "sage" | "sky" | "apricot";
+    weekday_limit_seconds: number; weekend_limit_seconds: number;
+    sort_order: number; is_active: number; created_at: string; updated_at: string;
+  }>();
+  return json((rows.results || []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar,
+    tone: row.tone,
+    weekdayLimitSeconds: row.weekday_limit_seconds,
+    weekendLimitSeconds: row.weekend_limit_seconds,
+    sortOrder: row.sort_order,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  })));
+}
+
+export async function createParentChild(request: Request, env: AppEnv) {
+  await requireParentMutation(request, env);
+  const body = await readJson(request);
+  const name = text(body.name, "孩子姓名", 1, 80);
+  const avatar = typeof body.avatar === "string" && body.avatar.trim() ? body.avatar.trim() : "🦁";
+  const tone = typeof body.tone === "string" && ["sky", "apricot", "sage"].includes(body.tone) ? body.tone : "sky";
+  const weekdayLimitSeconds = typeof body.weekdayLimitSeconds === "number" && body.weekdayLimitSeconds >= 0 ? body.weekdayLimitSeconds : 2400;
+  const weekendLimitSeconds = typeof body.weekendLimitSeconds === "number" && body.weekendLimitSeconds >= 0 ? body.weekendLimitSeconds : 3600;
+
+  const id = `child_${crypto.randomUUID().slice(0, 8)}`;
+  const now = new Date().toISOString();
+  const maxOrder = await env.DB.prepare("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM child_profiles").first<{ next_order: number }>();
+  const sortOrder = maxOrder?.next_order || 1;
+
+  await env.DB.prepare(`
+    INSERT INTO child_profiles (
+      id, name, avatar, tone, weekday_limit_seconds, weekend_limit_seconds, sort_order, is_active, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+  `).bind(id, name, avatar, tone, weekdayLimitSeconds, weekendLimitSeconds, sortOrder, now, now).run();
+
+  return json({
+    id,
+    name,
+    avatar,
+    tone,
+    weekdayLimitSeconds,
+    weekendLimitSeconds,
+    sortOrder,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+  }, { status: 201 });
+}
+
+export async function updateParentChild(request: Request, env: AppEnv, childId: string) {
+  await requireParentMutation(request, env);
+  const body = await readJson(request);
+
+  const existing = await env.DB.prepare("SELECT * FROM child_profiles WHERE id = ?").bind(childId).first<{
+    id: string; name: string; avatar: string; tone: "sage" | "sky" | "apricot";
+    weekday_limit_seconds: number; weekend_limit_seconds: number; sort_order: number; is_active: number;
+    created_at: string; updated_at: string;
+  }>();
+  if (!existing) throw new HttpError("找不到這位孩子角色。", 404, "CHILD_NOT_FOUND");
+
+  const name = typeof body.name === "string" && body.name.trim() ? text(body.name, "孩子姓名", 1, 80) : existing.name;
+  const avatar = typeof body.avatar === "string" && body.avatar.trim() ? body.avatar.trim() : existing.avatar;
+  const tone = typeof body.tone === "string" && ["sky", "apricot", "sage"].includes(body.tone) ? body.tone : existing.tone;
+  const weekdayLimitSeconds = typeof body.weekdayLimitSeconds === "number" && body.weekdayLimitSeconds >= 0 ? body.weekdayLimitSeconds : existing.weekday_limit_seconds;
+  const weekendLimitSeconds = typeof body.weekendLimitSeconds === "number" && body.weekendLimitSeconds >= 0 ? body.weekendLimitSeconds : existing.weekend_limit_seconds;
+  const sortOrder = typeof body.sortOrder === "number" ? body.sortOrder : existing.sort_order;
+  const isActive = typeof body.isActive === "boolean" ? (body.isActive ? 1 : 0) : existing.is_active;
+
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    UPDATE child_profiles SET
+      name = ?, avatar = ?, tone = ?, weekday_limit_seconds = ?, weekend_limit_seconds = ?,
+      sort_order = ?, is_active = ?, updated_at = ?
+    WHERE id = ?
+  `).bind(name, avatar, tone, weekdayLimitSeconds, weekendLimitSeconds, sortOrder, isActive, now, childId).run();
+
+  return json({
+    id: childId,
+    name,
+    avatar,
+    tone,
+    weekdayLimitSeconds,
+    weekendLimitSeconds,
+    sortOrder,
+    isActive: isActive === 1,
+    createdAt: existing.created_at,
+    updatedAt: now,
+  });
+}
+
+export async function switchParentActiveChild(request: Request, env: AppEnv, childId: string) {
+  await requireParentMutation(request, env);
+  const child = await env.DB.prepare("SELECT * FROM child_profiles WHERE id = ? AND is_active = 1").bind(childId).first<{
+    id: string; name: string; avatar: string; tone: "sage" | "sky" | "apricot";
+    weekday_limit_seconds: number; weekend_limit_seconds: number; sort_order: number; is_active: number;
+    created_at: string; updated_at: string;
+  }>();
+  if (!child) throw new HttpError("找不到此孩子角色或已停用。", 404, "CHILD_NOT_FOUND");
+
+  const childDto = {
+    id: child.id,
+    name: child.name,
+    avatar: child.avatar,
+    tone: child.tone,
+    weekdayLimitSeconds: child.weekday_limit_seconds,
+    weekendLimitSeconds: child.weekend_limit_seconds,
+    sortOrder: child.sort_order,
+    isActive: child.is_active === 1,
+    createdAt: child.created_at,
+    updatedAt: child.updated_at,
+  };
+
+  const response = json({ ok: true, activeChild: childDto });
+  response.headers.append("Set-Cookie", childCookie(child.id));
+  return response;
+}
+

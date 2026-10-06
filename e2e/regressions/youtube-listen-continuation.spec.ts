@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-test("REG-014 keeps YouTube pure listening playing when advancing", async ({ page }) => {
+async function setupYouTubeMocks(page: Page, sessionModes: string[] = []) {
   await page.addInitScript(() => {
     type PlayerOptions = {
       videoId: string;
@@ -13,6 +13,7 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
     const state = {
       constructorCount: 0,
       loadedVideos: [] as Array<{ videoId: string; startSeconds: number }>,
+      cuedVideos: [] as Array<{ videoId: string; startSeconds: number }>,
       queuedPlaylists: [] as Array<{ videoIds: string[]; index: number; startSeconds: number }>,
       playlistIndex: 0,
       activeVideoId: "youtube-one",
@@ -21,8 +22,13 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
       options: null as PlayerOptions | null,
       instance: null as Record<string, unknown> | null,
     };
-    (window as typeof window & { __youtubeTest: typeof state & { end(): void } }).__youtubeTest = {
+    (window as typeof window & { __youtubeTest: typeof state & { end(): void; simulateStartupReset(id: string): void } }).__youtubeTest = {
       ...state,
+      simulateStartupReset(mismatchedVideoId: string) {
+        const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
+        current.activeVideoId = mismatchedVideoId;
+        current.options?.events.onStateChange({ target: current.instance, data: 1 });
+      },
       end() {
         const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
         current.options?.events.onStateChange({ target: current.instance, data: 0 });
@@ -67,7 +73,10 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
         current.loadedVideos.push({ videoId, startSeconds });
         current.options?.events.onStateChange({ target: this, data: 1 });
       }
-      cueVideoById() {}
+      cueVideoById(videoId: string, startSeconds = 0) {
+        const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
+        current.cuedVideos.push({ videoId, startSeconds });
+      }
       cuePlaylist(videoIds: string[], index = 0, startSeconds = 0) {
         const current = (window as typeof window & { __youtubeTest: typeof state }).__youtubeTest;
         current.queuedPlaylists.push({ videoIds: [...videoIds], index, startSeconds });
@@ -105,7 +114,6 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
     mediaUrl: null,
     thumbnailPath: null,
   }));
-  const sessionModes: string[] = [];
 
   await page.route("**/api/**", async (route) => {
     const request = route.request();
@@ -130,6 +138,11 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
     if (path.startsWith("/api/view-sessions/") && request.method() === "PATCH") return json({ ok: true });
     return json({ error: `Unexpected ${request.method()} ${path}` }, 404);
   });
+}
+
+test("REG-014 keeps YouTube pure listening playing when advancing", async ({ page }) => {
+  const sessionModes: string[] = [];
+  await setupYouTubeMocks(page, sessionModes);
 
   await page.goto("/watch/qiaohu-1?mode=listen");
   await expect.poll(() => page.evaluate(() => (window as typeof window & {
@@ -152,4 +165,28 @@ test("REG-014 keeps YouTube pure listening playing when advancing", async ({ pag
   await expect(page.locator(".main-play-btn")).toHaveAttribute("aria-label", "暫停");
   await expect(page.getByLabel("純聽模式")).toBeVisible();
   await expect.poll(() => sessionModes).toEqual(["listen", "listen"]);
+});
+
+test("prevents unintended YouTube playlist reset to episode 1 on startup", async ({ page }) => {
+  await setupYouTubeMocks(page);
+
+  await page.goto("/watch/qiaohu-2?mode=listen");
+
+  // Wait for player to be ready
+  await expect(page.getByLabel("純聽模式")).toBeVisible();
+
+  // Simulate YouTube buggy startup where it resets/skips to episode 1 immediately upon playing
+  await page.evaluate(() => {
+    (window as typeof window & {
+      __youtubeTest: { simulateStartupReset(id: string): void };
+    }).__youtubeTest.simulateStartupReset("youtube-one");
+  });
+
+  // Must NOT navigate away to qiaohu-1!
+  await expect(page).toHaveURL(/\/watch\/qiaohu-2\?mode=listen/);
+
+  // Must have called cueVideoById to force-correct YouTube back to youtube-two
+  await expect.poll(() => page.evaluate(() => (window as typeof window & {
+    __youtubeTest: { cuedVideos: Array<{ videoId: string; startSeconds: number }> };
+  }).__youtubeTest.cuedVideos)).toEqual([{ videoId: "youtube-two", startSeconds: 0 }]);
 });

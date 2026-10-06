@@ -92,17 +92,20 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM view_sessions"),
     env.DB.prepare("DELETE FROM offline_video_views"),
     env.DB.prepare("DELETE FROM video_learned_state"),
+    env.DB.prepare("DELETE FROM child_video_learned"),
+    env.DB.prepare("DELETE FROM child_favorites"),
     env.DB.prepare("DELETE FROM admin_sessions"),
     env.DB.prepare("DELETE FROM admin_credentials"),
     env.DB.prepare("DELETE FROM child_devices"),
     env.DB.prepare("DELETE FROM rate_limit_buckets"),
     env.DB.prepare("DELETE FROM daily_overrides"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
+    env.DB.prepare("DELETE FROM child_daily_usage"),
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM allowed_windows"),
     env.DB.prepare("DELETE FROM videos WHERE id LIKE 'science-extra-%' OR id = 'listen-local'"),
     env.DB.prepare("DELETE FROM categories WHERE id IN ('leisure-test', 'learning-overlap-test', 'learning-favorites')"),
-    env.DB.prepare("UPDATE categories SET series_type = CASE WHEN id = 'science' THEN 'learning' ELSE 'leisure' END, daily_limit_seconds = NULL, is_active = 1, archived_at = NULL"),
+    env.DB.prepare("UPDATE categories SET series_type = CASE WHEN id = 'science' THEN 'learning' ELSE 'leisure' END, daily_limit_seconds = NULL, is_active = 1, archived_at = NULL, unlock_limit = CASE WHEN id = 'science' THEN 5 ELSE unlock_limit END"),
     env.DB.prepare("UPDATE videos SET is_active = 1, archived_at = NULL, availability_status = 'available', playback_start_seconds = 0, playback_end_seconds = NULL"),
     env.DB.prepare("UPDATE usage_rules SET daily_limit_seconds = 2400, is_active = 1"),
   ]);
@@ -471,5 +474,64 @@ describe("learning and leisure rules", () => {
     const response = await call("/api/content/videos/why-sky-blue", { headers: { cookie: second.cookie } });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ lastPositionSeconds: 123 });
+  });
+
+  it("enforces unlock_limit = 1 by only unlocking 1 video at a time", async () => {
+    const parentCookie = await addParent();
+    const device = await pairDevice("unlock-1-device");
+    await addScienceVideos(4);
+
+    // Set science unlock_limit to 1
+    const updateRes = await call("/api/parent/categories/science", {
+      method: "PATCH",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ unlockLimit: 1 }),
+    });
+    expect(updateRes.status).toBe(200);
+
+    // Check video list
+    const list = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    // First video is selectable, all subsequent are locked
+    expect(list[0].isSelectable).toBe(true);
+    expect(list.slice(1).every((v) => v.isSelectable === false)).toBe(true);
+
+    // Video 2 is locked
+    const lockedRes = await call(`/api/content/videos/${list[1].id}`, { headers: { cookie: device.cookie } });
+    expect(lockedRes.status).toBe(403);
+    expect(await lockedRes.json()).toMatchObject({ code: "LEARNING_VIDEO_LOCKED" });
+
+    // Mark video 1 as learned
+    await call(`/api/child/videos/${list[0].id}/learned`, {
+      method: "PUT",
+      headers: { cookie: device.cookie },
+      body: jsonBody({ learned: true }),
+    });
+
+    // Now video 2 is the 1st unlearned, so it should be unlocked!
+    const afterList = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(afterList.find((v) => v.id === list[1].id)?.isSelectable).toBe(true);
+    expect((await call(`/api/content/videos/${list[1].id}`, { headers: { cookie: device.cookie } })).status).toBe(200);
+  });
+
+  it("unlocks all videos without restriction when unlock_limit = 0", async () => {
+    const parentCookie = await addParent();
+    const device = await pairDevice("unlock-0-device");
+    await addScienceVideos(8);
+
+    // Set science unlock_limit to 0 (unlimited)
+    await call("/api/parent/categories/science", {
+      method: "PATCH",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ unlockLimit: 0 }),
+    });
+
+    const list = await (await call("/api/content/categories/science/videos", { headers: { cookie: device.cookie } })).json<any[]>();
+    expect(list.length).toBe(10);
+    expect(list.every((v) => v.isSelectable === true)).toBe(true);
+
+    // Any video can be accessed
+    const lastVideo = list[list.length - 1];
+    const res = await call(`/api/content/videos/${lastVideo.id}`, { headers: { cookie: device.cookie } });
+    expect(res.status).toBe(200);
   });
 });

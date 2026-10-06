@@ -1,9 +1,10 @@
 import { HttpError } from "./http";
-import type { AppEnv, ChildDevice, ParentSession } from "./types";
+import type { AppEnv, ChildDevice, ChildProfile, ParentSession } from "./types";
 
 const encoder = new TextEncoder();
 const PARENT_COOKIE = "parent_session";
 const DEVICE_COOKIE = "kid_device";
+const CHILD_COOKIE = "kid_profile_id";
 const SESSION_SECONDS = 365 * 24 * 60 * 60;
 const DEVICE_SECONDS = 365 * 24 * 60 * 60;
 const DEVICE_TOUCH_INTERVAL_MS = 15 * 60 * 1000;
@@ -42,8 +43,10 @@ function cookie(name: string, value: string, maxAge: number) {
 
 export const parentCookie = (token: string) => cookie(PARENT_COOKIE, token, SESSION_SECONDS);
 export const deviceCookie = (token: string) => cookie(DEVICE_COOKIE, token, DEVICE_SECONDS);
+export const childCookie = (id: string) => `${CHILD_COOKIE}=${encodeURIComponent(id)}; Path=/; Secure; SameSite=Lax; Max-Age=${DEVICE_SECONDS}`;
 export const clearParentCookie = () => cookie(PARENT_COOKIE, "", 0);
 export const clearDeviceCookie = () => cookie(DEVICE_COOKIE, "", 0);
+export const clearChildCookie = () => `${CHILD_COOKIE}=; Path=/; Secure; SameSite=Lax; Max-Age=0`;
 
 async function hmacKey(secret: string) {
   return crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -109,6 +112,72 @@ export async function getOrCreateChildDevice(request: Request, env: AppEnv): Pro
   return {
     device: { id, name: "家庭裝置" },
     cookieHeader: deviceCookie(token),
+  };
+}
+
+export async function getActiveChildProfile(
+  request: Request,
+  env: AppEnv,
+  required = false,
+): Promise<ChildProfile | null> {
+  const cookies = parseCookies(request);
+  const requestedId = request.headers.get("x-kc-child-id")?.trim() || cookies[CHILD_COOKIE]?.trim();
+
+  let row: {
+    id: string;
+    name: string;
+    avatar: string;
+    tone: "sage" | "sky" | "apricot";
+    weekday_limit_seconds: number;
+    weekend_limit_seconds: number;
+    sort_order: number;
+    is_active: number;
+    created_at: string;
+    updated_at: string;
+  } | null = null;
+
+  if (requestedId) {
+    row = await env.DB.prepare(
+      "SELECT * FROM child_profiles WHERE id = ? AND is_active = 1",
+    ).bind(requestedId).first();
+  }
+
+  if (!row) {
+    const deviceToken = cookies[DEVICE_COOKIE];
+    if (deviceToken) {
+      try {
+        const hash = await tokenHash(deviceToken, env);
+        row = await env.DB.prepare(`
+          SELECT cp.* FROM child_devices cd
+          JOIN child_profiles cp ON cp.id = cd.default_child_id
+          WHERE cd.token_hash = ? AND cd.revoked_at IS NULL AND cp.is_active = 1
+        `).bind(hash).first();
+      } catch {}
+    }
+  }
+
+  if (!row) {
+    row = await env.DB.prepare(
+      "SELECT * FROM child_profiles WHERE is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT 1",
+    ).first();
+  }
+
+  if (!row) {
+    if (required) throw new HttpError("尚未建立孩子角色。", 404, "CHILD_PROFILE_NOT_FOUND");
+    return null;
+  }
+
+  return {
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar,
+    tone: row.tone,
+    weekdayLimitSeconds: row.weekday_limit_seconds,
+    weekendLimitSeconds: row.weekend_limit_seconds,
+    sortOrder: row.sort_order,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 

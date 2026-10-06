@@ -46,6 +46,9 @@ beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare("DELETE FROM view_heartbeats"),
     env.DB.prepare("DELETE FROM daily_usage_totals"),
+    env.DB.prepare("DELETE FROM child_daily_usage"),
+    env.DB.prepare("DELETE FROM child_video_learned"),
+    env.DB.prepare("DELETE FROM child_favorites"),
     env.DB.prepare("DELETE FROM daily_category_usage_totals"),
     env.DB.prepare("DELETE FROM notes"),
     env.DB.prepare("DELETE FROM view_sessions"),
@@ -280,4 +283,107 @@ describe("Phase 3: Family Usage Rules & Time Management Suite", () => {
     });
     expect(listenSession.status).toBe(201);
   });
+
+  // Test 09: Pause daily restrictions bypasses window limits and category limits for today
+  it("E2E 09: Pause daily restrictions bypasses window and category limits for today", async () => {
+    const parentCookie = await addParent();
+    const device = await pairDevice();
+
+    // Configure window that is definitely not now (e.g. 03:00 to 03:05)
+    await env.DB.prepare(`
+      INSERT INTO allowed_windows (id, usage_rule_id, start_time, end_time, sort_order, is_active)
+      VALUES ('win-test', 'weekday', '03:00', '03:05', 1, 1),
+             ('win-test-2', 'weekend', '03:00', '03:05', 1, 1)
+    `).run();
+
+    // Verify child is initially OUTSIDE_WINDOW
+    const initialAccess = await (await call("/api/child/access-state")).json<any>();
+    expect(initialAccess.state).toBe("OUTSIDE_WINDOW");
+
+    const blockedSession = await call("/api/view-sessions", {
+      method: "POST",
+      headers: { cookie: device.cookie },
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID(), playbackMode: "video" }),
+    });
+    expect(blockedSession.status).toBe(403);
+    expect(await blockedSession.json()).toMatchObject({ code: "OUTSIDE_WINDOW" });
+
+    // Parent pauses restrictions for today
+    const pauseRes = await call("/api/parent/today/pause-restrictions", {
+      method: "POST",
+      headers: { cookie: parentCookie },
+    });
+    expect(pauseRes.status).toBe(200);
+
+    // Verify rules endpoint reports restrictionsPaused: true
+    const rulesRes = await call("/api/parent/rules", { headers: { cookie: parentCookie } });
+    const rulesData = await rulesRes.json<any>();
+    expect(rulesData.todayOverride?.restrictionsPaused).toBe(true);
+
+    // Verify child access state is now AVAILABLE and isRestrictionsPaused: true
+    const pausedAccess = await (await call("/api/child/access-state")).json<any>();
+    expect(pausedAccess.state).toBe("AVAILABLE");
+    expect(pausedAccess.isRestrictionsPaused).toBe(true);
+
+    // Child can now play video freely
+    const allowedSession = await call("/api/view-sessions", {
+      method: "POST",
+      headers: { cookie: device.cookie },
+      body: jsonBody({ videoId: "why-sky-blue", clientSessionId: crypto.randomUUID(), playbackMode: "video" }),
+    });
+    expect(allowedSession.status).toBe(201);
+
+    // Parent resumes restrictions
+    const resumeRes = await call("/api/parent/today/resume-restrictions", {
+      method: "POST",
+      headers: { cookie: parentCookie },
+    });
+    expect(resumeRes.status).toBe(200);
+
+    // Child is back to OUTSIDE_WINDOW
+    const resumedAccess = await (await call("/api/child/access-state")).json<any>();
+    expect(resumedAccess.state).toBe("OUTSIDE_WINDOW");
+    expect(resumedAccess.isRestrictionsPaused).toBe(false);
+  });
+
+  it("E2E 10: Permanently deletes an archived category and its associations", async () => {
+    const parentCookie = await addParent();
+
+    // Create a temporary category
+    const createRes = await call("/api/parent/categories", {
+      method: "POST",
+      headers: { cookie: parentCookie },
+      body: jsonBody({ name: "即將被刪除的分類", icon: "🗑️", seriesType: "leisure" }),
+    });
+    expect(createRes.status).toBe(201);
+    const { id: catId } = await createRes.json<{ id: string }>();
+
+    // Archive it
+    const archiveRes = await call(`/api/parent/categories/${catId}/archive`, {
+      method: "POST",
+      headers: { cookie: parentCookie },
+      body: jsonBody({}),
+    });
+    expect(archiveRes.status).toBe(200);
+
+    // Permanently delete it
+    const deleteRes = await call(`/api/parent/categories/${catId}`, {
+      method: "DELETE",
+      headers: { cookie: parentCookie },
+    });
+    expect(deleteRes.status).toBe(200);
+
+    // Verify it is completely gone from parent categories list
+    const listRes = await call("/api/parent/categories", { headers: { cookie: parentCookie } });
+    const allCategories = await listRes.json<any[]>();
+    expect(allCategories.some((c) => c.id === catId)).toBe(false);
+
+    // Verify deleting again returns 404
+    const deleteAgain = await call(`/api/parent/categories/${catId}`, {
+      method: "DELETE",
+      headers: { cookie: parentCookie },
+    });
+    expect(deleteAgain.status).toBe(404);
+  });
 });
+

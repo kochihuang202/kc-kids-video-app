@@ -9,7 +9,7 @@ import {
   Activity, AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Calendar, Check,
   ChevronLeft, ChevronRight, Clock3, Download, Eye, EyeOff, Film, GripVertical, History,
   Home, LogOut, MessageCircle, Pause, Play, Plus, RefreshCw, RotateCcw, Save, Search, Settings,
-  Smartphone, Sparkles, Star, Trash2,
+  Smartphone, Sparkles, Star, Trash2, ShieldCheck, Unlock,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -18,10 +18,11 @@ import { ParentDownloadsPage } from "./components/Downloads";
 import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { parentRepository, type VideoPreview } from "./data/repositories";
+import { getStoredActiveChildId, setStoredActiveChildId } from "./lib/activeChild";
 import { formatClock, formatPosition, getDayRangeInTimeZone } from "./lib/utils";
 import { getPlaybackRange } from "../shared/playbackRange";
 import type {
-  AdminCategory, AdminVideo, AllowedWindow, ChildDevice, DailyBar, DailyOverride, NoteSearchResult, SummaryAnalytics,
+  AdminCategory, AdminVideo, AllowedWindow, ChildDevice, ChildProfile, DailyBar, DailyOverride, NoteSearchResult, SummaryAnalytics,
   TodayDashboard, TodayPick, UsageRule, VideoHistoryResponse, DiagnosticSessionSummary, DiagnosticSummary,
 } from "./types";
 
@@ -157,6 +158,9 @@ function HistoryPage() {
   const [calendarDates, setCalendarDates] = useState<string[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [timezone, setTimezone] = useState("Asia/Taipei");
+  const [childrenList, setChildrenList] = useState<ChildProfile[]>([]);
+  const [activeChildId, setActiveChildId] = useState<string>(() => getStoredActiveChildId() || "");
+  const [childFilter, setChildFilter] = useState<string>(() => getStoredActiveChildId() || "all");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -167,7 +171,7 @@ function HistoryPage() {
   const activeDateStr = dateParam || todayStr;
   const isToday = activeDateStr === todayStr;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (filterOverride?: string) => {
     setLoading(true);
     setError("");
     try {
@@ -177,20 +181,49 @@ function HistoryPage() {
 
       const target = new Date(`${activeDateStr}T12:00:00+08:00`);
       const { start, end } = getDayRangeInTimeZone(tz, target);
+      const effectiveFilter = filterOverride !== undefined ? filterOverride : childFilter;
 
-      const [dashData, calData] = await Promise.all([
-        parentRepository.dashboard(start, end),
+      const [dashData, calData, kidsData] = await Promise.all([
+        parentRepository.dashboard(start, end, effectiveFilter),
         parentRepository.calendarHistory().catch(() => ({ month: "all", dates: [] })),
+        parentRepository.children().catch(() => []),
       ]);
 
       setDashboard(dashData);
       setCalendarDates(calData.dates || []);
+      setChildrenList(kidsData);
+      const currentActiveId = dashData?.ruleState?.activeChild?.id || getStoredActiveChildId() || (kidsData[0]?.id ?? "");
+      setActiveChildId(currentActiveId);
+      if (currentActiveId) setStoredActiveChildId(currentActiveId);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "資料載入失敗。");
     } finally {
       setLoading(false);
     }
-  }, [activeDateStr]);
+  }, [activeDateStr, childFilter]);
+
+  const handleSwitchChild = async (targetId: string) => {
+    try {
+      await parentRepository.switchActiveChild(targetId);
+      setActiveChildId(targetId);
+      setStoredActiveChildId(targetId);
+      setChildFilter(targetId);
+      await load(targetId);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "切換孩子失敗");
+    }
+  };
+
+  const handleFilterChange = (targetFilter: string) => {
+    setChildFilter(targetFilter);
+    void load(targetFilter);
+  };
+
+  const filteredTimeline = useMemo(() => {
+    if (!dashboard?.timeline) return [];
+    if (childFilter === "all") return dashboard.timeline;
+    return dashboard.timeline.filter((s) => s.childId === childFilter || (!s.childId && childFilter === "child_ayun"));
+  }, [dashboard?.timeline, childFilter]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -237,6 +270,30 @@ function HistoryPage() {
 
   return (
     <div className="parent-content">
+      {/* 孩子切換 (Active Child Selector) */}
+      {childrenList.length > 0 && (
+        <section className="active-child-manager-card">
+          <div className="active-child-manager-info">
+            <span className="active-child-manager-label">📱 本機目前孩子</span>
+            <p className="active-child-manager-desc">切換後，孩子首頁將以該孩子的獨立額度與紀錄觀看。</p>
+          </div>
+          <div className="active-child-selector-buttons">
+            {childrenList.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`child-select-btn ${c.id === activeChildId ? "is-active" : ""}`}
+                onClick={() => void handleSwitchChild(c.id)}
+              >
+                <span className="child-avatar">{c.avatar || "🌱"}</span>
+                <span className="child-name">{c.name}</span>
+                {c.id === activeChildId && <span className="child-status-badge">使用中</span>}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Date Navigation & Calendar (Spec #19, #20) */}
       <div className="date-nav-bar">
         <Button variant="secondary" onClick={() => changeDateDelta(-1)}>
@@ -278,8 +335,9 @@ function HistoryPage() {
               {dashboard.ruleState.isPaused ? "⏸️ 孩子端目前已暫停" : "🌱 孩子端運行中"}
             </span>
             <strong className="control-progress">
-              今日休閒已用 {Math.round((dashboard.ruleState.leisureUsedSeconds || 0) / 60)} 分鐘，
-              剩餘約 {Math.round(dashboard.ruleState.remainingSeconds / 60)} 分鐘
+              {dashboard.ruleState.activeChild ? `【${dashboard.ruleState.activeChild.avatar || "🌱"} ${dashboard.ruleState.activeChild.name}】` : ""}
+              今日休閒已用 {formatPlayedDuration(dashboard.ruleState.leisureUsedSeconds || 0)}，
+              剩餘約 {formatPlayedDuration(dashboard.ruleState.remainingSeconds || 0)}
             </strong>
           </div>
           <div className="quick-control-actions">
@@ -321,6 +379,30 @@ function HistoryPage() {
 
       {!loading && dashboard && (
         <>
+          {/* 紀錄檢視對象 (Child Filter Bar) */}
+          {childrenList.length > 1 && (
+            <div className="dashboard-child-filter-bar">
+              <span className="dashboard-filter-label">📊 檢視孩子數據：</span>
+              <button
+                type="button"
+                className={`filter-chip ${childFilter === "all" ? "is-active" : ""}`}
+                onClick={() => handleFilterChange("all")}
+              >
+                👨‍👩‍👧‍👦 全部孩子
+              </button>
+              {childrenList.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`filter-chip ${childFilter === c.id ? "is-active" : ""}`}
+                  onClick={() => handleFilterChange(c.id)}
+                >
+                  {c.avatar} {c.name} {c.id === activeChildId ? "(本機使用中)" : ""}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Summary Cards */}
           <section className="summary-section" aria-label="當日摘要">
             {dashboard.errors.summary ? (
@@ -423,15 +505,42 @@ function HistoryPage() {
               <span className="section-sub-tip">（已自動扣除暫停時間，跳離重進視為獨立紀錄）</span>
             </div>
 
+            {childrenList.length > 1 && (
+              <div className="timeline-child-filter" role="group" aria-label="依孩子篩選">
+                <button
+                  type="button"
+                  className={`filter-chip ${childFilter === "all" ? "is-active" : ""}`}
+                  onClick={() => handleFilterChange("all")}
+                >
+                  全部紀錄
+                </button>
+                {childrenList.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`filter-chip ${childFilter === c.id ? "is-active" : ""}`}
+                    onClick={() => handleFilterChange(c.id)}
+                  >
+                    {c.avatar} {c.name} {c.id === activeChildId ? "(本機)" : ""}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {dashboard.errors.timeline ? (
               <ParentState error={dashboard.errors.timeline} retry={() => void load()} />
-            ) : dashboard.timeline.length ? (
+            ) : filteredTimeline.length ? (
               <div className="play-history-card-list">
-                {dashboard.timeline.map((session) => (
+                {filteredTimeline.map((session) => (
                   <article className="play-history-card" key={session.id}>
                     <div className="play-history-top">
                       <div className="play-history-title-block">
                         <div className="play-history-badges">
+                          {session.childName && (
+                            <span className="child-history-chip">
+                              {session.childAvatar || "🌱"} {session.childName}
+                            </span>
+                          )}
                           {session.categoryNames && session.categoryNames.length > 0 ? (
                             session.categoryNames.map((cat, idx) => (
                               <span className="category-chip" key={idx}>{cat}</span>
@@ -1106,6 +1215,21 @@ function RulesPage() {
     }
   };
 
+  const toggleRestrictionsPause = async () => {
+    try {
+      if (todayOverride?.restrictionsPaused) {
+        await parentRepository.resumeRestrictionsToday();
+        setMessage("已恢復今日時段與時間限制！");
+      } else {
+        await parentRepository.pauseRestrictionsToday();
+        setMessage("已暫停今日所有限制（自由觀看中，明日 0:00 自動恢復）！");
+      }
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "操作失敗。");
+    }
+  };
+
   return (
     <div className="parent-content">
       <header className="parent-page-title">
@@ -1114,6 +1238,36 @@ function RulesPage() {
 
       {error && <ParentState error={error} retry={() => void load()} />}
       {message && <p className="settings-success"><Check /> {message}</p>}
+
+      <section className={`settings-card rule-card ${todayOverride?.restrictionsPaused ? "restrictions-paused-active" : ""}`} style={{
+        borderLeft: todayOverride?.restrictionsPaused ? "4px solid #10b981" : "4px solid #6366f1",
+        background: todayOverride?.restrictionsPaused ? "rgba(16, 185, 129, 0.06)" : undefined,
+      }}>
+        <div className="rule-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              {todayOverride?.restrictionsPaused ? <Unlock style={{ color: "#10b981" }} /> : <ShieldCheck style={{ color: "#6366f1" }} />}
+              暫停此頁限制（今日放鬆模式）
+            </h3>
+            <p style={{ margin: "6px 0 0", color: "var(--text-muted, #64748b)" }}>
+              {todayOverride?.restrictionsPaused
+                ? "🟢 今日限制已暫停：孩子端不受本頁設定的時段限制、分類每日上限與休閒總額度約束，明天凌晨 0:00 自動恢復正常限制。"
+                : "🛡️ 本頁限制生效中：依照下方各項每日分類上限、平日/週末休閒額度與可觀看時段進行管控。"}
+            </p>
+          </div>
+          <div>
+            {todayOverride?.restrictionsPaused ? (
+              <Button onClick={() => void toggleRestrictionsPause()} style={{ background: "#059669", color: "#fff" }}>
+                <ShieldCheck /> 恢復限制
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={() => void toggleRestrictionsPause()}>
+                <Unlock /> 暫停此頁限制
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="settings-card rule-card category-limit-settings">
         <div className="rule-card-header">
@@ -1796,26 +1950,30 @@ function VideosPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SortableCategoryRow({
-  category, index, count, onChange, onMove, onArchive, onRestore,
+  category, index, count,
+  onChange, onMove, onArchive, onRestore, onDelete,
 }: {
   category: AdminCategory; index: number; count: number;
-  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType">>) => void;
+  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit">>) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onArchive: (id: string) => void;
   onRestore: (id: string) => void;
+  onDelete?: (id: string, name: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id, disabled: !!category.archivedAt });
   const [name, setName] = useState(category.name);
   const [icon, setIcon] = useState(category.icon);
   const [seriesType, setSeriesType] = useState(category.seriesType);
+  const [unlockLimit, setUnlockLimit] = useState<number>(category.unlockLimit ?? 5);
   useEffect(() => {
     setName(category.name);
     setIcon(category.icon);
     setSeriesType(category.seriesType);
+    setUnlockLimit(category.unlockLimit ?? 5);
   }, [category]);
 
   const handleSave = () => {
-    onChange(category.id, { name, icon, seriesType });
+    onChange(category.id, { name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null });
   };
 
   return (
@@ -1823,10 +1981,19 @@ function SortableCategoryRow({
       <button className="drag-handle" aria-label={`拖曳 ${category.name}`} {...attributes} {...listeners}><GripVertical /></button>
       <input className="emoji-input" aria-label="圖示" value={icon} maxLength={12} onChange={(event) => setIcon(event.target.value)} />
       <input aria-label="分類名稱" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />
-      <select aria-label="系列類型" value={seriesType} onChange={(event) => setSeriesType(event.target.value as "learning" | "leisure")}>
-        <option value="learning">📚 學習系列</option>
-        <option value="leisure">🎈 休閒系列</option>
-      </select>
+      <div className="category-selects-group">
+        <select aria-label="系列類型" value={seriesType} onChange={(event) => setSeriesType(event.target.value as "learning" | "leisure")}>
+          <option value="learning">📚 學習系列</option>
+          <option value="leisure">🎈 休閒系列</option>
+        </select>
+        {seriesType === "learning" && (
+          <select aria-label="解鎖規則" value={unlockLimit} onChange={(event) => setUnlockLimit(Number(event.target.value))}>
+            <option value={1}>🔒 一次開放 1 集</option>
+            <option value={5}>🔒 同時開放 5 集</option>
+            <option value={0}>🔓 全部開放（不限）</option>
+          </select>
+        )}
+      </div>
       <span className={`status-chip ${category.archivedAt ? "archived" : category.isActive ? "active" : "hidden"}`}>
         {category.archivedAt ? "Archived" : category.isActive ? "Active" : "Hidden"}
       </span>
@@ -1841,7 +2008,12 @@ function SortableCategoryRow({
           </>
         )}
         {category.archivedAt && (
-          <Button variant="secondary" onClick={() => onRestore(category.id)}><RotateCcw /> 復原</Button>
+          <>
+            <Button variant="secondary" onClick={() => onRestore(category.id)}><RotateCcw /> 復原</Button>
+            {onDelete && (
+              <Button variant="danger" onClick={() => onDelete(category.id, category.name)}><Trash2 /> 永久刪除</Button>
+            )}
+          </>
         )}
       </div>
     </article>
@@ -1855,6 +2027,7 @@ function CategoriesPage() {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("✨");
   const [seriesType, setSeriesType] = useState<"learning" | "leisure">("leisure");
+  const [unlockLimit, setUnlockLimit] = useState<number>(5);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const load = useCallback(async () => {
     setLoading(true);
@@ -1878,12 +2051,25 @@ function CategoriesPage() {
     const to = active.findIndex((item) => item.id === event.over!.id);
     void persistOrder(arrayMove(active, from, to));
   };
-  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType">>) => {
+  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit">>) => {
     await parentRepository.updateCategory(id, body).then(load).catch((e) => setError(e.message));
   };
   const create = async (event: FormEvent) => {
     event.preventDefault();
-    await parentRepository.createCategory({ name, icon, seriesType }).then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); return load(); }).catch((e) => setError(e.message));
+    await parentRepository.createCategory({ name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null })
+      .then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); setUnlockLimit(5); return load(); })
+      .catch((e) => setError(e.message));
+  };
+  const removeCategoryPermanently = async (id: string, categoryName: string) => {
+    if (!window.confirm(`確定要永久刪除「${categoryName}」分類嗎？\n此動作無法復原。（分類內的影片不會被刪除）`)) {
+      return;
+    }
+    try {
+      await parentRepository.deleteCategory(id);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "分類刪除失敗。");
+    }
   };
   return (
     <div className="parent-content">
@@ -1895,6 +2081,13 @@ function CategoriesPage() {
           <option value="leisure">🎈 休閒系列</option>
           <option value="learning">📚 學習系列</option>
         </select>
+        {seriesType === "learning" && (
+          <select aria-label="新分類解鎖規則" value={unlockLimit} onChange={(event) => setUnlockLimit(Number(event.target.value))}>
+            <option value={1}>🔒 一次開放 1 集</option>
+            <option value={5}>🔒 同時開放 5 集</option>
+            <option value={0}>🔓 全部開放（不限）</option>
+          </select>
+        )}
         <Button type="submit"><Plus /> 建立分類</Button>
       </form>
       {loading && <ParentState>正在載入分類…</ParentState>}
@@ -1932,6 +2125,7 @@ function CategoriesPage() {
               onMove={() => undefined}
               onArchive={() => undefined}
               onRestore={(id) => void parentRepository.restoreCategory(id).then(load)}
+              onDelete={(id, catName) => void removeCategoryPermanently(id, catName)}
             />
           ))}
         </section>
@@ -2039,18 +2233,143 @@ function DiagnosticsPage() {
   );
 }
 
-function DeviceSettingsRow({ device, run }: { device: ChildDevice; run: (job: Promise<unknown>, success: string) => Promise<void> }) {
+function ChildSettingsCard({ child, run }: { child: ChildProfile; run: (job: Promise<unknown>, success: string) => Promise<void> }) {
+  const [name, setName] = useState(child.name);
+  const [avatar, setAvatar] = useState(child.avatar || "🦁");
+  const [tone, setTone] = useState<"sky" | "apricot" | "sage">(child.tone || "sky");
+  const [weekdayLimitMinutes, setWeekdayLimitMinutes] = useState(Math.round((child.weekdayLimitSeconds ?? 2400) / 60));
+  const [weekendLimitMinutes, setWeekendLimitMinutes] = useState(Math.round((child.weekendLimitSeconds ?? 3600) / 60));
+  const [isActive, setIsActive] = useState(child.isActive);
+
+  useEffect(() => {
+    setName(child.name);
+    setAvatar(child.avatar || "🦁");
+    setTone(child.tone || "sky");
+    setWeekdayLimitMinutes(Math.round((child.weekdayLimitSeconds ?? 2400) / 60));
+    setWeekendLimitMinutes(Math.round((child.weekendLimitSeconds ?? 3600) / 60));
+    setIsActive(child.isActive);
+  }, [child]);
+
+  const isChanged =
+    name !== child.name ||
+    avatar !== child.avatar ||
+    tone !== child.tone ||
+    weekdayLimitMinutes !== Math.round((child.weekdayLimitSeconds ?? 2400) / 60) ||
+    weekendLimitMinutes !== Math.round((child.weekendLimitSeconds ?? 3600) / 60) ||
+    isActive !== child.isActive;
+
+  const save = () => {
+    return run(
+      parentRepository.updateChild(child.id, {
+        name: name.trim(),
+        avatar: avatar.trim(),
+        tone,
+        weekdayLimitSeconds: weekdayLimitMinutes * 60,
+        weekendLimitSeconds: weekendLimitMinutes * 60,
+        isActive,
+      }),
+      `「${name}」設定已更新。`
+    );
+  };
+
+  return (
+    <article className="child-settings-card">
+      <div className="child-settings-header">
+        <div className="child-badge-preview">
+          <span className="preview-avatar">{avatar}</span>
+          <strong>{name || "未命名"}</strong>
+          {!isActive && <span className="child-inactive-badge">已停用</span>}
+        </div>
+        <Button variant="secondary" disabled={!isChanged || !name.trim()} onClick={() => void save()}>
+          儲存變更
+        </Button>
+      </div>
+
+      <div className="child-settings-grid">
+        <label>
+          孩子姓名
+          <input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label>
+          代表圖標 (Emoji)
+          <input value={avatar} maxLength={4} onChange={(e) => setAvatar(e.target.value)} />
+        </label>
+        <label>
+          代表色系
+          <select value={tone} onChange={(e) => setTone(e.target.value as "sky" | "apricot" | "sage")}>
+            <option value="sky">天藍 (sky)</option>
+            <option value="apricot">杏色 (apricot)</option>
+            <option value="sage">鼠尾草綠 (sage)</option>
+          </select>
+        </label>
+        <label>
+          狀態
+          <select value={isActive ? "active" : "inactive"} onChange={(e) => setIsActive(e.target.value === "active")}>
+            <option value="active">啟用中</option>
+            <option value="inactive">停用</option>
+          </select>
+        </label>
+        <label>
+          平日休閒觀看額度（分鐘）
+          <input
+            type="number"
+            min={0}
+            max={360}
+            value={weekdayLimitMinutes}
+            onChange={(e) => setWeekdayLimitMinutes(Number(e.target.value) || 0)}
+          />
+        </label>
+        <label>
+          假日休閒觀看額度（分鐘）
+          <input
+            type="number"
+            min={0}
+            max={360}
+            value={weekendLimitMinutes}
+            onChange={(e) => setWeekendLimitMinutes(Number(e.target.value) || 0)}
+          />
+        </label>
+      </div>
+    </article>
+  );
+}
+
+function DeviceSettingsRow({ device, childrenList, run }: { device: ChildDevice; childrenList?: ChildProfile[]; run: (job: Promise<unknown>, success: string) => Promise<void> }) {
   const [name, setName] = useState(device.name);
-  useEffect(() => setName(device.name), [device.name]);
+  const [defaultChildId, setDefaultChildId] = useState(device.defaultChildId || "");
+  useEffect(() => {
+    setName(device.name);
+    setDefaultChildId(device.defaultChildId || "");
+  }, [device.name, device.defaultChildId]);
+
   return (
     <article className={device.revokedAt ? "is-revoked" : ""}>
       <div className="device-name-block">
         {device.revokedAt ? <strong>{device.name}</strong> : <input aria-label="裝置名稱" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />}
         <span>{device.isCurrent && "目前裝置 · "}最後使用：{new Date(device.lastUsedAt).toLocaleString("zh-TW")}</span>
+        {childrenList && childrenList.length > 0 && !device.revokedAt && (
+          <div className="device-child-binding">
+            <label>專屬孩子：
+              <select
+                value={defaultChildId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDefaultChildId(val);
+                  void run(parentRepository.updateDevice(device.id, name, val || null), "裝置綁定孩子已更新。");
+                }}
+              >
+                <option value="">由瀏覽器自由選擇</option>
+                {childrenList.map((c) => (
+                  <option key={c.id} value={c.id}>{c.avatar} {c.name}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
       </div>
       {!device.revokedAt && (
         <div className="device-row-actions">
-          <Button variant="secondary" disabled={!name.trim() || name === device.name} onClick={() => void run(parentRepository.updateDevice(device.id, name), "裝置名稱已更新。")}>儲存名稱</Button>
+          <Button variant="secondary" disabled={!name.trim() || name === device.name} onClick={() => void run(parentRepository.updateDevice(device.id, name, defaultChildId || null), "裝置名稱已更新。")}>儲存名稱</Button>
           <Button variant="danger" onClick={() => void run(parentRepository.revokeDevice(device.id), "裝置授權已撤銷。")}>撤銷</Button>
         </div>
       )}
@@ -2062,6 +2381,13 @@ function SettingsPage() {
   const [timezone, setTimezone] = useState("Asia/Taipei");
   const [devices, setDevices] = useState<ChildDevice[]>([]);
   const [deviceName, setDeviceName] = useState("家庭 iPad");
+  const [childrenList, setChildrenList] = useState<ChildProfile[]>([]);
+  const [showAddChild, setShowAddChild] = useState(false);
+  const [newChildName, setNewChildName] = useState("");
+  const [newChildAvatar, setNewChildAvatar] = useState("🦁");
+  const [newChildTone, setNewChildTone] = useState<"sky" | "apricot" | "sage">("sky");
+  const [newWeekdayMins, setNewWeekdayMins] = useState(40);
+  const [newWeekendMins, setNewWeekendMins] = useState(60);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -2070,12 +2396,14 @@ function SettingsPage() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const [settings, nextDevices] = await Promise.all([
+      const [settings, nextDevices, kids] = await Promise.all([
         parentRepository.settings(),
         parentRepository.devices(),
+        parentRepository.children().catch(() => []),
       ]);
       if (typeof settings.timezone === "string") setTimezone(settings.timezone);
       setDevices(nextDevices);
+      setChildrenList(kids);
     } catch (e) {
       setError(e instanceof Error ? e.message : "設定載入失敗。");
     }
@@ -2095,6 +2423,24 @@ function SettingsPage() {
     }
   };
 
+  const handleAddChild = async () => {
+    if (!newChildName.trim()) return;
+    await run(
+      parentRepository.createChild({
+        name: newChildName.trim(),
+        avatar: newChildAvatar.trim() || "🦁",
+        tone: newChildTone,
+        weekdayLimitSeconds: newWeekdayMins * 60,
+        weekendLimitSeconds: newWeekendMins * 60,
+      }),
+      `孩子「${newChildName.trim()}」已成功新增！`
+    );
+    setNewChildName("");
+    setNewChildAvatar("🐰");
+    setNewChildTone("apricot");
+    setShowAddChild(false);
+  };
+
   return (
     <div className="parent-content">
       <header className="parent-page-title">
@@ -2103,6 +2449,60 @@ function SettingsPage() {
 
       {error && <ParentState error={error} retry={() => void load()} />}
       {message && <p className="settings-success"><Check />{message}</p>}
+
+      {/* 孩子角色與額度管理 */}
+      <section className="settings-card" aria-labelledby="child-profiles-heading">
+        <div className="section-head-with-action">
+          <div>
+            <h3 id="child-profiles-heading"><Sparkles /> 孩子角色與各自額度</h3>
+            <p>每位孩子擁有完全獨立的每日休閒額度、學會狀態與喜愛清單。時數互不影響。</p>
+          </div>
+          <Button variant="secondary" onClick={() => setShowAddChild(!showAddChild)}>
+            <Plus /> {showAddChild ? "取消新增" : "新增孩子"}
+          </Button>
+        </div>
+
+        {showAddChild && (
+          <form className="add-child-form" onSubmit={(e) => { e.preventDefault(); void handleAddChild(); }}>
+            <h4>新增孩子角色</h4>
+            <div className="child-settings-grid">
+              <label>
+                孩子姓名 *
+                <input required placeholder="例如：阿涵、阿云" value={newChildName} onChange={(e) => setNewChildName(e.target.value)} />
+              </label>
+              <label>
+                代表圖標 (Emoji)
+                <input placeholder="例如：🦁、🐰" value={newChildAvatar} onChange={(e) => setNewChildAvatar(e.target.value)} />
+              </label>
+              <label>
+                色系
+                <select value={newChildTone} onChange={(e) => setNewChildTone(e.target.value as "sky" | "apricot" | "sage")}>
+                  <option value="sky">天藍 (sky)</option>
+                  <option value="apricot">杏色 (apricot)</option>
+                  <option value="sage">鼠尾草綠 (sage)</option>
+                </select>
+              </label>
+              <label>
+                平日休閒額度（分鐘）
+                <input type="number" min={0} max={360} value={newWeekdayMins} onChange={(e) => setNewWeekdayMins(Number(e.target.value) || 0)} />
+              </label>
+              <label>
+                假日休閒額度（分鐘）
+                <input type="number" min={0} max={360} value={newWeekendMins} onChange={(e) => setNewWeekendMins(Number(e.target.value) || 0)} />
+              </label>
+            </div>
+            <div className="form-submit-row">
+              <Button type="submit" disabled={!newChildName.trim()}>建立孩子角色</Button>
+            </div>
+          </form>
+        )}
+
+        <div className="child-cards-list">
+          {childrenList.map((child) => (
+            <ChildSettingsCard key={child.id} child={child} run={run} />
+          ))}
+        </div>
+      </section>
 
       {/* Timezone */}
       <section className="settings-card">
@@ -2129,7 +2529,7 @@ function SettingsPage() {
           </div>
         )}
         <div className="device-list">
-          {devices.map((device) => <DeviceSettingsRow key={device.id} device={device} run={run} />)}
+          {devices.map((device) => <DeviceSettingsRow key={device.id} device={device} childrenList={childrenList} run={run} />)}
         </div>
       </section>
 

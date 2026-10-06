@@ -17,9 +17,11 @@ import type {
   VideoHistoryResponse,
   DiagnosticSessionSummary,
   DiagnosticSummary,
+  ChildProfile,
 } from "../types";
 
 import { offlineSnapshot, rememberOffline } from "../lib/downloads";
+import { getStoredActiveChildId } from "../lib/activeChild";
 
 export class ApiError extends Error {
   constructor(message: string, public status: number, public code?: string) {
@@ -36,6 +38,10 @@ async function readJson<T>(response: Response): Promise<T> {
 async function api<T>(path: string, init?: RequestInit, preferSnapshot = false) {
   const headers = new Headers(init?.headers);
   if (init?.body && !headers.has("content-type")) headers.set("content-type", "application/json");
+  const activeChildId = getStoredActiveChildId();
+  if (activeChildId && !headers.has("x-kc-child-id")) {
+    headers.set("x-kc-child-id", activeChildId);
+  }
   const snapshotAllowed = (!init?.method || init.method === "GET") &&
     (path.startsWith("/api/content/") || path === "/api/device/status" || path === "/api/child/access-state");
   const saved = snapshotAllowed ? offlineSnapshot<T>(path) : undefined;
@@ -92,6 +98,7 @@ export const contentRepository = {
   setFavorite: (videoId: string, favorite: boolean) => write<{ ok: true; videoId: string; isFavorite: boolean }>(
     `/api/child/videos/${encodeURIComponent(videoId)}/favorite`, "PUT", { favorite },
   ),
+  getChildren: () => api<{ activeChild: ChildProfile | null; children: ChildProfile[] }>("/api/child/profiles"),
 };
 
 export const deviceRepository = {
@@ -159,8 +166,12 @@ export const parentRepository = {
   session: () => api<{ authenticated: boolean; expiresAt?: string }>("/api/parent/session"),
   login: (password: string) => write<{ authenticated: true; expiresAt: string }>("/api/parent/session", "POST", { password }),
   logout: () => write<{ ok: true }>("/api/parent/session", "DELETE", {}),
-  dashboard(start: string, end: string) {
-    return api<TodayDashboard>(`/api/parent/history?${new URLSearchParams({ start, end })}`);
+  dashboard(start: string, end: string, childId?: string) {
+    const params: Record<string, string> = { start, end };
+    if (childId && childId !== "all") {
+      params.child_id = childId;
+    }
+    return api<TodayDashboard>(`/api/parent/history?${new URLSearchParams(params)}`);
   },
   calendarHistory(month?: string) {
     const q = month ? `?month=${encodeURIComponent(month)}` : "";
@@ -176,10 +187,11 @@ export const parentRepository = {
     return api<{ ok: true }>(`/api/parent/notes/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
   categories: () => api<AdminCategory[]>("/api/parent/categories"),
-  createCategory: (body: { name: string; icon: string; seriesType?: "learning" | "leisure"; dailyLimitSeconds?: number | null }) => write<{ id: string }>("/api/parent/categories", "POST", body),
-  updateCategory: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "imageUrl" | "isActive" | "dailyLimitSeconds" | "seriesType">>) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, "PATCH", body),
+  createCategory: (body: { name: string; icon: string; seriesType?: "learning" | "leisure"; dailyLimitSeconds?: number | null; unlockLimit?: number | null }) => write<{ id: string }>("/api/parent/categories", "POST", body),
+  updateCategory: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "imageUrl" | "isActive" | "dailyLimitSeconds" | "seriesType" | "unlockLimit">>) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, "PATCH", body),
   archiveCategory: (id: string) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}/archive`, "POST", {}),
   restoreCategory: (id: string) => write<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}/restore`, "POST", {}),
+  deleteCategory: (id: string) => api<{ ok: true }>(`/api/parent/categories/${encodeURIComponent(id)}`, { method: "DELETE" }),
   orderCategories: (ids: string[]) => write<{ ok: true }>("/api/parent/categories/order", "PUT", { ids }),
   videos: (params?: { category_id?: string; status?: string; q?: string }) => {
     const q = new URLSearchParams();
@@ -214,14 +226,23 @@ export const parentRepository = {
     `/api/parent/diagnostics/sessions/${encodeURIComponent(id)}`,
   ),
   authorizeDevice: (name: string) => write<{ id: string; name: string }>("/api/parent/devices", "POST", { name }),
-  updateDevice: (id: string, name: string) => write<{ ok: true }>(`/api/parent/devices/${encodeURIComponent(id)}`, "PATCH", { name }),
+  updateDevice: (id: string, name: string, defaultChildId?: string | null) => write<{ ok: true }>(`/api/parent/devices/${encodeURIComponent(id)}`, "PATCH", { name, defaultChildId }),
   revokeDevice: (id: string) => write<{ ok: true }>(`/api/parent/devices/${encodeURIComponent(id)}`, "DELETE", {}),
   rules: () => api<{ rules: UsageRule[]; todayOverride: DailyOverride | null }>("/api/parent/rules"),
   updateRules: (rules: Array<Partial<UsageRule> & { id: string }>) => write<{ ok: true }>("/api/parent/rules", "PUT", { rules }),
   addBonusMinutes: (minutes: number) => write<{ ok: true; accessState: ChildAccessState }>("/api/parent/today/bonus", "POST", { minutes }),
   pauseToday: () => write<{ ok: true; accessState: ChildAccessState }>("/api/parent/today/pause", "POST", {}),
   resumeToday: () => write<{ ok: true; accessState: ChildAccessState }>("/api/parent/today/resume", "POST", {}),
+  pauseRestrictionsToday: () => write<{ ok: true; accessState: ChildAccessState }>("/api/parent/today/pause-restrictions", "POST", {}),
+  resumeRestrictionsToday: () => write<{ ok: true; accessState: ChildAccessState }>("/api/parent/today/resume-restrictions", "POST", {}),
   todayPicks: () => api<TodayPick[]>("/api/parent/today/picks"),
   updateTodayPicks: (videoIds: string[]) => write<TodayPick[]>("/api/parent/today/picks", "PUT", { videoIds }),
   toggleTodayPick: (videoId: string) => write<TodayPick[]>(`/api/parent/today/picks/${encodeURIComponent(videoId)}/toggle`, "POST", {}),
+  children: () => api<ChildProfile[]>("/api/parent/children"),
+  createChild: (body: { name: string; avatar?: string; tone?: string; weekdayLimitSeconds?: number; weekendLimitSeconds?: number }) =>
+    write<ChildProfile>("/api/parent/children", "POST", body),
+  updateChild: (id: string, body: Partial<Pick<ChildProfile, "name" | "avatar" | "tone" | "weekdayLimitSeconds" | "weekendLimitSeconds" | "sortOrder" | "isActive">>) =>
+    write<ChildProfile>(`/api/parent/children/${encodeURIComponent(id)}`, "PATCH", body),
+  switchActiveChild: (id: string) =>
+    write<{ ok: true; activeChild: ChildProfile }>(`/api/parent/children/${encodeURIComponent(id)}/switch`, "POST", {}),
 };

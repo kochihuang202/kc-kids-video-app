@@ -7,10 +7,11 @@ import { rememberOfflineView, syncOfflineViews } from "./lib/offlineViews";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
-import { advancePlaybackQueue, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
+import { advancePlaybackQueue, buildYouTubeListenPlaylist, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
 import { playerPreferenceSeriesId, readSeriesPlayerPreferences, saveSeriesPlayerPreferences } from "./lib/playerPreferences";
 import { PlaybackDiagnostics } from "./lib/playbackDiagnostics";
 import { clampPlaybackPosition, getPlaybackRange, relativePlaybackPosition } from "../shared/playbackRange";
+import { setStoredActiveChildId } from "./lib/activeChild";
 import { cn, formatPosition } from "./lib/utils";
 import type {
   Category, ChildAccessState, DeviceStatus, PlaybackMode, RecentVideo, ResumeInfo, TodayPick,
@@ -240,6 +241,14 @@ export function HomePage() {
     return () => window.clearInterval(interval);
   }, [load]);
 
+  const activeChild = accessState?.activeChild ?? device?.activeChild;
+
+  useEffect(() => {
+    if (activeChild?.id) {
+      setStoredActiveChildId(activeChild.id);
+    }
+  }, [activeChild?.id]);
+
   const dismissNotice = () => {
     localStorage.setItem("device_setup_notice_seen", "1");
     setNotice(false);
@@ -249,8 +258,16 @@ export function HomePage() {
     return (
       <main className="kid-shell home-page">
         <header className="home-header">
-          <ParentGate />
-          <h1>今天先休息一下 🌱</h1>
+          <div className="home-header-bar">
+            <ParentGate />
+            {activeChild && (
+              <div className="active-child-pill" aria-label={`目前觀看者：${activeChild.name}`}>
+                <span className="child-avatar">{activeChild.avatar || "🌱"}</span>
+                <span className="child-name">{activeChild.name}</span>
+              </div>
+            )}
+          </div>
+          <h1>{activeChild?.name ? `${activeChild.name}，今天先休息一下 🌱` : "今天先休息一下 🌱"}</h1>
         </header>
         <div className="limit-card">
           <p>等等再來看看。</p>
@@ -262,13 +279,21 @@ export function HomePage() {
   const isOutsideWindow = accessState?.state === "OUTSIDE_WINDOW";
   const learningCategories = categories?.filter((category) => category.seriesType === "learning") || [];
   const leisureCategories = categories?.filter((category) => category.seriesType === "leisure") || [];
-  const leisureReached = !!accessState && accessState.remainingSeconds <= 0;
+  const leisureReached = !accessState?.isRestrictionsPaused && !!accessState && accessState.remainingSeconds <= 0;
 
   return (
     <main className="kid-shell home-page">
       <header className="home-header">
-        <ParentGate />
-        <h1>今天想看什麼？</h1>
+        <div className="home-header-bar">
+          <ParentGate />
+          {activeChild && (
+            <div className="active-child-pill" aria-label={`目前觀看者：${activeChild.name}`}>
+              <span className="child-avatar">{activeChild.avatar || "🌱"}</span>
+              <span className="child-name">{activeChild.name}</span>
+            </div>
+          )}
+        </div>
+        <h1>{activeChild?.name ? `${activeChild.name}，今天想看什麼？🌱` : "今天想看什麼？"}</h1>
         {accessState && !isOutsideWindow && accessState.message && (
           <div className="gentle-time-badge" aria-label={accessState.message}>
             <Clock /> {accessState.message}
@@ -501,7 +526,7 @@ export function CategoryPage() {
         </Link>
       ) : (
         <div className="video-card-main" aria-disabled="true">
-          <div className="video-thumb-container"><CategoryThumbnail src={video.thumbnailUrl} alt="" categoryName={category?.name || "本機影片"} /><span className="locked-badge">🔒 先從前五部選擇</span></div>
+          <div className="video-thumb-container"><CategoryThumbnail src={video.thumbnailUrl} alt="" categoryName={category?.name || "本機影片"} /><span className="locked-badge">🔒 尚未解鎖</span></div>
           <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
         </div>
       )}
@@ -532,7 +557,7 @@ export function CategoryPage() {
             {!isFavoritesPage && <span className={`series-type-pill ${category.seriesType}`}>{category.seriesType === "learning" ? "學習系列" : "休閒系列"}</span>}
             {category.seriesType === "leisure" && accessState && (
               <span className="gentle-time-badge">
-                <Clock3 /> 今日休閒剩餘 {Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘
+                <Clock3 /> {accessState.isRestrictionsPaused ? "今日不限時放鬆中 🌱" : `今日休閒剩餘 ${Math.max(0, Math.ceil(accessState.remainingSeconds / 60))} 分鐘`}
               </span>
             )}
             <PlaybackModeSelector
@@ -659,6 +684,9 @@ export function CategoryPage() {
 }
 
 function reminderRemainingForVideo(access: ChildAccessState, video: VideoFixture) {
+  if (access.isRestrictionsPaused) {
+    return { remaining: Number.MAX_SAFE_INTEGER, categoryReached: false };
+  }
   let remaining = access.dailyLimitSeconds > 0 ? access.remainingSeconds : Number.MAX_SAFE_INTEGER;
   let categoryReached = false;
   const categoryIds = video.categoryIds || (video.categoryId ? [video.categoryId] : []);
@@ -762,11 +790,9 @@ export function WatchPage() {
   const nextListenTrackRef = useRef<VideoFixture | null>(null);
   nextListenTrackRef.current = nextListenTrack;
   const youtubeListenPlaylist = useMemo(() => {
-    if (playbackMode !== "listen" || video?.source !== "youtube" || video.seriesType !== "leisure") return [];
-    return categoryVideos
-      .filter((item) => item.source === "youtube" && !!item.youtubeVideoId)
-      .map((item) => item.youtubeVideoId!);
-  }, [categoryVideos, playbackMode, video?.seriesType, video?.source]);
+    if (playbackMode !== "listen" || video?.source !== "youtube" || video.seriesType !== "leisure" || !video.youtubeVideoId) return [];
+    return buildYouTubeListenPlaylist(categoryVideos, video.youtubeVideoId);
+  }, [categoryVideos, playbackMode, video?.seriesType, video?.source, video?.youtubeVideoId]);
   const usesYouTubeListenPlaylist = youtubeListenPlaylist.length > 1 && !!video?.youtubeVideoId
     && youtubeListenPlaylist.includes(video.youtubeVideoId);
   const usesYouTubeListenPlaylistRef = useRef(false);
@@ -808,7 +834,7 @@ export function WatchPage() {
       ]);
       if (nextVideo.source === "self_hosted") {
         if (nextVideo.isSelectable === false) {
-          throw new ApiError("請先從前五部學習影片中選擇。", 403, "LEARNING_VIDEO_LOCKED");
+          throw new ApiError("這部學習影片尚未解鎖，請先觀看前面的集數。", 403, "LEARNING_VIDEO_LOCKED");
         }
         const file = await localMedia(nextVideo.id);
         if (file) {
@@ -1180,7 +1206,26 @@ export function WatchPage() {
   }, [ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
 
   const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
+    if (modeSwitchingRef.current) return;
     if (!usesYouTubeListenPlaylistRef.current || youtubeVideoId === video?.youtubeVideoId) return;
+
+    // Guard: Only allow playlist-driven video transition if the current video has actually played through.
+    // If YouTube reports a mismatched video on initial startup/buffering, it is an unintended playlist reset/skip.
+    const hasNaturallyEnded = completionHandledRef.current
+      || (totalDuration > 0 && currentPosRef.current >= totalDuration - 2)
+      || accumulatedPlayMsRef.current >= 5000;
+
+    if (!hasNaturallyEnded) {
+      diagnosticsRef.current?.event("youtube_playlist_reset_prevented", {
+        reportedVideoId: youtubeVideoId,
+        expectedVideoId: video?.youtubeVideoId,
+      }, undefined, currentPosRef.current);
+      if (video?.youtubeVideoId) {
+        playerRef.current?.switchToVideo?.(video.youtubeVideoId, rangeStartRef.current || 0, isPlaying);
+      }
+      return;
+    }
+
     const target = categoryVideos.find((item) => item.youtubeVideoId === youtubeVideoId);
     if (!target) return;
     const targetRange = getPlaybackRange(target);
@@ -1191,7 +1236,7 @@ export function WatchPage() {
     if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: target.id });
     diagnosticsRef.current?.event("next_requested", { state: target.id, transition: "youtube_playlist" }, undefined, currentPosRef.current);
     navigate(`/watch/${target.id}?mode=listen&autoplay=1&fresh=1${offlineQuery}`, { replace: true });
-  }, [categoryVideos, navigate, offlineQuery, video?.youtubeVideoId]);
+  }, [categoryVideos, isPlaying, navigate, offlineQuery, totalDuration, video?.youtubeVideoId]);
 
   const handleNativeProgress = useCallback((time: number, duration: number) => {
     if (!isDragging) setCurrentPos(time);
@@ -1335,20 +1380,15 @@ export function WatchPage() {
       window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
 
       if (video.source === "youtube" && video.youtubeVideoId) {
-        const playlist = categoryVideos
-          .filter((item) => item.source === "youtube" && !!item.youtubeVideoId)
-          .map((item) => item.youtubeVideoId!);
-        if (nextMode === "listen" && video.seriesType === "leisure" && playlist.length > 1) {
-          playerRef.current?.switchToPlaylist?.(playlist, video.youtubeVideoId, position, shouldResume);
-        } else if (previousMode === "listen" && video.seriesType === "leisure") {
-          playerRef.current?.switchToVideo?.(video.youtubeVideoId, position, shouldResume);
-        } else if (shouldResume) {
+        if (shouldResume) {
           playerRef.current?.play();
         }
       }
     } finally {
-      modeSwitchingRef.current = false;
-      setIsSwitchingMode(false);
+      setTimeout(() => {
+        modeSwitchingRef.current = false;
+        setIsSwitchingMode(false);
+      }, 500);
     }
   }, [accessState, applyAccessState, categoryVideos, flushTracking, isSwitchingMode, preferOffline, video]);
 
