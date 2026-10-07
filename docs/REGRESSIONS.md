@@ -305,3 +305,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Each child independently accumulates quota, category viewing time, learned state, favorites, and history across all authorized devices. Overlapping devices for one child count once; two different children watching simultaneously each count. Dashboard summaries and playback enforcement show the same per-child total.
 - Root cause: The multi-child migration did not rebuild existing per-child daily rollups, category rollups remained account-wide, and new heartbeats reused an account-wide overlap delta when updating the current child's row. The all-children dashboard also deduplicated simultaneous playback across different children.
 - Regression test: `test/multi-child.spec.ts` (`MC 07`, `MC 08`, and `MC 09`)
+
+## REG-039 — Learned markers disappear after enabling multiple children
+
+- Problem: Videos marked learned shortly before the multi-child release, including 43 lessons in `斑馬英語 S1 (第01-12周)`, no longer appear learned after the release.
+- Reproduction: Apply the multi-child schema migration while the old Worker is still live, mark more videos learned through that Worker, then deploy the multi-child Worker and open the same category as 阿云.
+- Correct behavior: Every completion created before the multi-child Worker deployment remains assigned to 阿云 with its original completion timestamp. 阿涵 remains independent, and a repair must not overwrite newer per-child state.
+- Root cause: Migration `0015` copied `video_learned_state` to `child_video_learned` once on 2026-09-27, but the old Worker continued writing only to the legacy table until the multi-child Worker was deployed on 2026-10-06. The new Worker correctly reads the per-child table, leaving records created in that deployment window invisible.
+- Regression test: `test/multi-child.spec.ts` (`MC 10`)

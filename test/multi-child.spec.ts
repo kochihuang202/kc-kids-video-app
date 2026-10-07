@@ -439,5 +439,39 @@ describe("Multi-Child Profiles and Independent Quotas Suite", () => {
     expect(dashboard.summary.leisureSeconds).toBe(120);
     expect(dashboard.summary.totalPlayedSeconds).toBe(120);
   });
+
+  it("MC 10: Backfills legacy learned rows created after the multi-child migration", async () => {
+    const legacyLearnedAt = "2026-10-06T01:34:47.771Z";
+    const currentLearnedAt = "2026-10-07T00:15:00.000Z";
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM child_video_learned WHERE child_id = 'child_ayun' AND video_id IN ('why-sky-blue', 'elmo-alphabet')"),
+      env.DB.prepare("DELETE FROM video_learned_state WHERE video_id IN ('why-sky-blue', 'elmo-alphabet')"),
+      env.DB.prepare(`
+        INSERT INTO video_learned_state (video_id, is_learned, learned_at, updated_at)
+        VALUES ('why-sky-blue', 1, ?, ?), ('elmo-alphabet', 1, ?, ?)
+      `).bind(legacyLearnedAt, legacyLearnedAt, legacyLearnedAt, legacyLearnedAt),
+      env.DB.prepare(`
+        INSERT INTO child_video_learned (child_id, video_id, is_learned, learned_at, updated_at)
+        VALUES ('child_ayun', 'elmo-alphabet', 1, ?, ?)
+      `).bind(currentLearnedAt, currentLearnedAt),
+    ]);
+
+    const repairMigration = env.TEST_MIGRATIONS.find(
+      (migration) => migration.name === "0018_backfill_legacy_learned_states.sql",
+    );
+    expect(repairMigration).toBeDefined();
+    await env.DB.batch(repairMigration!.queries.map((query) => env.DB.prepare(query)));
+
+    const repaired = await env.DB.prepare(`
+      SELECT child_id, video_id, learned_at
+      FROM child_video_learned
+      WHERE video_id IN ('why-sky-blue', 'elmo-alphabet')
+      ORDER BY child_id, video_id
+    `).all<{ child_id: string; video_id: string; learned_at: string | null }>();
+    expect(repaired.results).toEqual([
+      { child_id: "child_ayun", video_id: "elmo-alphabet", learned_at: currentLearnedAt },
+      { child_id: "child_ayun", video_id: "why-sky-blue", learned_at: legacyLearnedAt },
+    ]);
+  });
 });
 
