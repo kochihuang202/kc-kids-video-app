@@ -992,9 +992,73 @@ svg { flex: 0 0 auto; }
 .status-chip { display: inline-flex; padding: 6px 9px; border-radius: 999px; font-size: 12px; font-weight: 900; }
 .status-chip.active { background: #d9ebd8; color: #366047; }
 .status-chip.hidden { background: #ece9df; color: #66645e; }
-.status-chip.archived { background: #f1d9d3; color: #8d493e; }
 .archived-section { margin-top: 32px; }
 .archived-section h3 { color: var(--muted); font-size: 16px; }
+
+/* Category Group Sections (Learning vs Leisure) */
+.category-sections-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.category-group-section {
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(85, 118, 101, 0.16);
+  background: rgba(255, 255, 255, 0.65);
+}
+.category-group-section.learning-group-section {
+  border-left: 6px solid #5d8b70;
+  background: linear-gradient(180deg, rgba(235, 245, 233, 0.45) 0%, rgba(255, 255, 255, 0.65) 100%);
+}
+.category-group-section.leisure-group-section {
+  border-left: 6px solid #e28c46;
+  background: linear-gradient(180deg, rgba(254, 243, 230, 0.45) 0%, rgba(255, 255, 255, 0.65) 100%);
+}
+.category-group-header {
+  margin-bottom: 16px;
+}
+.category-group-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.category-group-title h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #2b3a31;
+}
+.category-group-count {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  background: #ecefe9;
+  color: #55665c;
+}
+.learning-group-section .category-group-count {
+  background: #dcebd9;
+  color: #315b43;
+}
+.leisure-group-section .category-group-count {
+  background: #f7dfca;
+  color: #7b5231;
+}
+.category-group-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.category-group-empty {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  border: 1px dashed rgba(85, 118, 101, 0.2);
+  border-radius: 12px;
+}
 
 .video-add-panel, .settings-card {
   margin-bottom: 24px;

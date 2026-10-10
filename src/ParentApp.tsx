@@ -2060,20 +2060,50 @@ function CategoriesPage() {
   useEffect(() => { void load(); }, [load]);
   const active = items.filter((item) => !item.archivedAt);
   const archived = items.filter((item) => item.archivedAt);
-  const persistOrder = async (next: AdminCategory[]) => {
-    setItems([...next, ...archived]);
-    try { await parentRepository.orderCategories(next.map((item) => item.id)); } catch (e) { setError(e instanceof Error ? e.message : "排序未儲存。"); void load(); }
+
+  const learningActive = active.filter((item) => item.seriesType === "learning");
+  const leisureActive = active.filter((item) => item.seriesType === "leisure");
+
+  const persistOrder = async (nextOrderedList: AdminCategory[], otherList: AdminCategory[]) => {
+    // Keep internal order of the modified list and combine with the other list & archived
+    const combined = [...nextOrderedList, ...otherList];
+    setItems([...combined, ...archived]);
+    try {
+      await parentRepository.orderCategories(combined.map((item) => item.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "排序未儲存。");
+      void load();
+    }
   };
-  const move = (index: number, direction: -1 | 1) => {
+
+  const moveLearning = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction;
-    if (nextIndex >= 0 && nextIndex < active.length) void persistOrder(arrayMove(active, index, nextIndex));
+    if (nextIndex >= 0 && nextIndex < learningActive.length) {
+      void persistOrder(arrayMove(learningActive, index, nextIndex), leisureActive);
+    }
   };
-  const dragEnd = (event: DragEndEvent) => {
+
+  const moveLeisure = (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+    if (nextIndex >= 0 && nextIndex < leisureActive.length) {
+      void persistOrder(arrayMove(leisureActive, index, nextIndex), learningActive);
+    }
+  };
+
+  const dragEndLearning = (event: DragEndEvent) => {
     if (!event.over || event.active.id === event.over.id) return;
-    const from = active.findIndex((item) => item.id === event.active.id);
-    const to = active.findIndex((item) => item.id === event.over!.id);
-    void persistOrder(arrayMove(active, from, to));
+    const from = learningActive.findIndex((item) => item.id === event.active.id);
+    const to = learningActive.findIndex((item) => item.id === event.over!.id);
+    void persistOrder(arrayMove(learningActive, from, to), leisureActive);
   };
+
+  const dragEndLeisure = (event: DragEndEvent) => {
+    if (!event.over || event.active.id === event.over.id) return;
+    const from = leisureActive.findIndex((item) => item.id === event.active.id);
+    const to = leisureActive.findIndex((item) => item.id === event.over!.id);
+    void persistOrder(arrayMove(leisureActive, from, to), learningActive);
+  };
+
   const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount">>) => {
     await parentRepository.updateCategory(id, body).then(load).catch((e) => setError(e.message));
   };
@@ -2130,28 +2160,77 @@ function CategoriesPage() {
       {loading && <ParentState>正在載入分類…</ParentState>}
       {error && <ParentState error={error} retry={() => void load()} />}
       {!loading && (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={dragEnd}>
-          <SortableContext items={active.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-            <section className="admin-list">
-              {active.map((category, index) => (
-                <SortableCategoryRow
-                  key={category.id}
-                  category={category}
-                  index={index}
-                  count={active.length}
-                  onChange={(id, body) => void change(id, body)}
-                  onMove={move}
-                  onArchive={(id) => void parentRepository.archiveCategory(id).then(load)}
-                  onRestore={(id) => void parentRepository.restoreCategory(id).then(load)}
-                />
-              ))}
-            </section>
-          </SortableContext>
-        </DndContext>
+        <div className="category-sections-wrapper">
+          {/* Section 1: 學習系列 */}
+          <section className="category-group-section learning-group-section">
+            <div className="category-group-header">
+              <div className="category-group-title">
+                <h3>📚 學習系列</h3>
+                <span className="category-group-count">{learningActive.length} 個分類</span>
+              </div>
+              <p className="category-group-desc">計入每日學習時數，可設定解鎖集數規則與純聽重播次數。</p>
+            </div>
+            {learningActive.length === 0 ? (
+              <p className="category-group-empty">目前沒有學習系列分類。</p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={dragEndLearning}>
+                <SortableContext items={learningActive.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                  <div className="admin-list">
+                    {learningActive.map((category, index) => (
+                      <SortableCategoryRow
+                        key={category.id}
+                        category={category}
+                        index={index}
+                        count={learningActive.length}
+                        onChange={(id, body) => void change(id, body)}
+                        onMove={moveLearning}
+                        onArchive={(id) => void parentRepository.archiveCategory(id).then(load)}
+                        onRestore={(id) => void parentRepository.restoreCategory(id).then(load)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </section>
+
+          {/* Section 2: 休閒系列 */}
+          <section className="category-group-section leisure-group-section">
+            <div className="category-group-header">
+              <div className="category-group-title">
+                <h3>🎈 休閒系列</h3>
+                <span className="category-group-count">{leisureActive.length} 個分類</span>
+              </div>
+              <p className="category-group-desc">計入每日休閒觀看限額，亦可在個別分類設定每日專屬時間上限。</p>
+            </div>
+            {leisureActive.length === 0 ? (
+              <p className="category-group-empty">目前沒有休閒系列分類。</p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={dragEndLeisure}>
+                <SortableContext items={leisureActive.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                  <div className="admin-list">
+                    {leisureActive.map((category, index) => (
+                      <SortableCategoryRow
+                        key={category.id}
+                        category={category}
+                        index={index}
+                        count={leisureActive.length}
+                        onChange={(id, body) => void change(id, body)}
+                        onMove={moveLeisure}
+                        onArchive={(id) => void parentRepository.archiveCategory(id).then(load)}
+                        onRestore={(id) => void parentRepository.restoreCategory(id).then(load)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </section>
+        </div>
       )}
       {!!archived.length && (
         <section className="archived-section">
-          <h3>已封存</h3>
+          <h3>已封存 ({archived.length})</h3>
           {archived.map((category) => (
             <SortableCategoryRow
               key={category.id}
