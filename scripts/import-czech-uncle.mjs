@@ -75,9 +75,9 @@ function sqlStr(val) {
   return `'${String(val).replace(/'/g, "''")}'`;
 }
 
-// Category: leisure, unlimited daily limit (NULL), icon 🎶, tone sky, sort_order 22
+// Category: learning, unlimited daily limit (NULL), unlock_limit 0 (all unlocked), icon 🎶, tone sky, sort_order 22
 const catSql = `INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, created_at, updated_at, archived_at, daily_limit_seconds, series_type, unlock_limit)
-VALUES ('czech-uncle-songs', '捷克大叔兒歌', '🎶', NULL, 'sky', 22, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, 'leisure', NULL)
+VALUES ('czech-uncle-songs', '捷克大叔兒歌', '🎶', NULL, 'sky', 22, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, 'learning', 0)
 ON CONFLICT(id) DO UPDATE SET
   name = excluded.name,
   icon = excluded.icon,
@@ -86,8 +86,8 @@ ON CONFLICT(id) DO UPDATE SET
   updated_at = CURRENT_TIMESTAMP,
   archived_at = NULL,
   daily_limit_seconds = NULL,
-  series_type = 'leisure',
-  unlock_limit = NULL;`;
+  series_type = 'learning',
+  unlock_limit = 0;`;
 
 const videoValueLines = rows.map((r) => {
   return `  (${sqlStr(r.id)}, 'self_hosted', NULL, ${sqlStr(r.title)}, ${sqlStr(r.parentLabel)}, '', 'available', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'healthy', 'audio', ${r.durationSeconds ?? "NULL"}, 0, NULL, ${sqlStr(r.mediaPath)}, NULL)`;
