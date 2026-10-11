@@ -1,0 +1,948 @@
+{
+  "version": 1,
+  "bookId": "017-follow-me",
+  "title": "Follow Me",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/017-follow-me/001-35a0c25a372f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Follow Me",
+              "zh": "跟著我。",
+              "id": "017-follow-me:1:58bc04c4f3ef"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "follow 是跟著，也可指模仿動作，這本是母女一起玩跟做遊戲。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在前、媽媽在後，兩人張手在花園小路活動。",
+          "phrases": [
+            {
+              "en": "They are in the garden.",
+              "zh": "她們在花園。",
+              "id": "017-follow-me:1:919af3a5efe3"
+            },
+            {
+              "en": "Their arms are open.",
+              "zh": "她們張開雙手。",
+              "id": "017-follow-me:1:ebd86c076d64"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s move together.",
+              "zh": "我們一起動。",
+              "id": "017-follow-me:1:e54874cec0b9"
+            },
+            {
+              "en": "You can lead too.",
+              "zh": "妳也可以帶頭。",
+              "id": "017-follow-me:1:ea55b35530f8"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Who can you see?",
+              "zh": "妳看到誰？",
+              "id": "017-follow-me:1:5708eb1b2447",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom and the girl.",
+              "zh": "媽媽與女孩。",
+              "id": "017-follow-me:1:7dc99b992ea5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They are playing together.",
+              "zh": "她們一起玩。",
+              "id": "017-follow-me:1:cd8ce82d9234",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can copy each other.",
+              "zh": "我們可以互相模仿。",
+              "id": "017-follow-me:1:b1322c3658f0"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Choose a leader for a little game.",
+              "zh": "選一個帶頭玩小遊戲的人。",
+              "id": "017-follow-me:1:eb53ebbc8e41"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/017-follow-me/002-0378c48645f5.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Follow me, just like this",
+              "zh": "跟著我，像這樣，",
+              "id": "017-follow-me:2:3b89ca32fc55"
+            },
+            {
+              "en": "Wave your arms in the air",
+              "zh": "在空中揮揮手臂。",
+              "id": "017-follow-me:2:1124cf96b669"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "just like this 是像這樣，媽媽可以示範不用解釋文法。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女雙手舉高，手掌張開，在花園路旁。",
+          "phrases": [
+            {
+              "en": "Their hands are up.",
+              "zh": "她們的手舉高。",
+              "id": "017-follow-me:2:e0f71a5f1af4"
+            },
+            {
+              "en": "I see open fingers.",
+              "zh": "我看到張開的手指。",
+              "id": "017-follow-me:2:8d95adf35f40"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Arms up!",
+              "zh": "手舉高！",
+              "id": "017-follow-me:2:ecfe6c84d2cf"
+            },
+            {
+              "en": "Wave, wave, wave.",
+              "zh": "揮呀、揮呀、揮呀。",
+              "id": "017-follow-me:2:deda80ab764b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Can you wave your arms?",
+              "zh": "妳可以揮手臂嗎？",
+              "id": "017-follow-me:2:6de35ca2ec6f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Like this.",
+              "zh": "像這樣。",
+              "id": "017-follow-me:2:544addc08935",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, nice and gentle.",
+              "zh": "對，輕輕地。",
+              "id": "017-follow-me:2:dc74586cbb2c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can wave to say hello.",
+              "zh": "我們可以揮手打招呼。",
+              "id": "017-follow-me:2:9cb11c43bcc6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Wave high, then wave low.",
+              "zh": "高高揮，再低低揮。",
+              "id": "017-follow-me:2:5c5c840f38a4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/017-follow-me/003-b083c68dec3f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Follow me, just like this",
+              "zh": "跟著我，像這樣，",
+              "id": "017-follow-me:3:3b89ca32fc55"
+            },
+            {
+              "en": "Shake your body everywhere",
+              "zh": "全身搖一搖。",
+              "id": "017-follow-me:3:be96ff68f474"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "shake your body 是輕輕搖身體，everywhere 讓歌詞活潑，不是要亂跑到各處。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女彎手臂、身體側移，站在花園石路上。",
+          "phrases": [
+            {
+              "en": "Their arms are bent.",
+              "zh": "她們的手臂彎著。",
+              "id": "017-follow-me:3:2f12f6163740"
+            },
+            {
+              "en": "They stand on the path.",
+              "zh": "她們站小路上。",
+              "id": "017-follow-me:3:f1b6c8c90948"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A little shake.",
+              "zh": "輕輕搖一下。",
+              "id": "017-follow-me:3:c46afc391c76"
+            },
+            {
+              "en": "Shake your shoulders.",
+              "zh": "搖搖肩膀。",
+              "id": "017-follow-me:3:81fd501a9599"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Can you move your shoulders?",
+              "zh": "妳可以動肩膀嗎？",
+              "id": "017-follow-me:3:cd6fd6c50eaf",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "可以。",
+              "id": "017-follow-me:3:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A tiny shoulder dance.",
+              "zh": "小小肩膀舞。",
+              "id": "017-follow-me:3:712deef380cb",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can dance in our room.",
+              "zh": "我們可以在房裡跳舞。",
+              "id": "017-follow-me:3:e9ee69022da1"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Do a seated shoulder dance.",
+              "zh": "坐著跳肩膀舞。",
+              "id": "017-follow-me:3:e7c7d22e98f5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/017-follow-me/004-80ba205b7949.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Follow me, just like this",
+              "zh": "跟著我，像這樣，",
+              "id": "017-follow-me:4:3b89ca32fc55"
+            },
+            {
+              "en": "Spin around but take care",
+              "zh": "轉一圈，但要小心。",
+              "id": "017-follow-me:4:25e8ad6fbc34"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "take care 是小心，spin around 是轉圈。試一下就好，可用手指轉圈替代。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女張開手轉身，身邊線條畫出旋轉動作。",
+          "phrases": [
+            {
+              "en": "Their arms are wide.",
+              "zh": "她們手張得寬。",
+              "id": "017-follow-me:4:5d2a38b8dbf2"
+            },
+            {
+              "en": "I see lines around them.",
+              "zh": "我看到她們旁的線條。",
+              "id": "017-follow-me:4:95f3ff92f7d3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Turn slowly.",
+              "zh": "慢慢轉。",
+              "id": "017-follow-me:4:f3c3837d825e"
+            },
+            {
+              "en": "Then stop.",
+              "zh": "再停下。",
+              "id": "017-follow-me:4:069b884df215"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Can you make a small circle?",
+              "zh": "妳可以比小圓圈嗎？",
+              "id": "017-follow-me:4:52109bbf24be",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Like this.",
+              "zh": "像這樣。",
+              "id": "017-follow-me:4:544addc08935",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Round and round.",
+              "zh": "圓圓轉。",
+              "id": "017-follow-me:4:84ceab13ba12",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Make room before you move.",
+              "zh": "動之前空出地方。",
+              "id": "017-follow-me:4:56e8d961c8ed"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw a circle in the air with one finger.",
+              "zh": "用手指在空中畫圈。",
+              "id": "017-follow-me:4:61a72aa9a754"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/017-follow-me/005-3a6bb72aae16.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Follow me, just like this",
+              "zh": "跟著我，像這樣，",
+              "id": "017-follow-me:5:3b89ca32fc55"
+            },
+            {
+              "en": "Jump on one foot if you dare!",
+              "zh": "如果妳想挑戰，單腳跳！",
+              "id": "017-follow-me:5:3a1e7e6ee782"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "if you dare 是活潑邀請，不是逼孩子挑戰；可改雙腳站穩或抬腳。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女各抬一條腿、張手平衡，另一腳在地面。",
+          "phrases": [
+            {
+              "en": "One foot is up.",
+              "zh": "一隻腳抬起。",
+              "id": "017-follow-me:5:12d5ad64ffc4"
+            },
+            {
+              "en": "Their arms help them balance.",
+              "zh": "手臂幫她們平衡。",
+              "id": "017-follow-me:5:9ae31e30f488"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "One foot up.",
+              "zh": "抬一隻腳。",
+              "id": "017-follow-me:5:531f49822dbb"
+            },
+            {
+              "en": "You can hold my hand.",
+              "zh": "妳可以牽我的手。",
+              "id": "017-follow-me:5:78c5e1dc9a32"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "How many feet are up?",
+              "zh": "幾隻腳抬起？",
+              "id": "017-follow-me:5:e1946f5a1c91",
+              "label": "媽媽問"
+            },
+            {
+              "en": "One.",
+              "zh": "一隻。",
+              "id": "017-follow-me:5:519e0952cc7f",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "We can try slowly.",
+              "zh": "我們可以慢慢試。",
+              "id": "017-follow-me:5:8554d8ad6887",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can choose an easier move.",
+              "zh": "妳可以選容易的動作。",
+              "id": "017-follow-me:5:76bbb9cb52e8"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Lift one foot while holding Mom’s hand.",
+              "zh": "牽媽媽手時抬一隻腳。",
+              "id": "017-follow-me:5:ccd34149ad02"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/017-follow-me/006-b2dc6cfb037e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, I followed you just like that!",
+              "zh": "噢，我就那樣跟著妳！",
+              "id": "017-follow-me:6:3633ca8110ac"
+            },
+            {
+              "en": "I followed you all around",
+              "zh": "我跟著妳到處走。",
+              "id": "017-follow-me:6:8bb2ac9e50f6"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "followed 表示剛才跟了，just like that 回顧前面動作。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽走在前，女孩跟在後，兩人在花園小路。",
+          "phrases": [
+            {
+              "en": "Mom walks ahead.",
+              "zh": "媽媽走前面。",
+              "id": "017-follow-me:6:04e9cdcf3206"
+            },
+            {
+              "en": "The girl follows her.",
+              "zh": "女孩跟著她。",
+              "id": "017-follow-me:6:a7725ba5abd6"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I’m right behind you.",
+              "zh": "我就在妳後面。",
+              "id": "017-follow-me:6:7ba86dcd11fe"
+            },
+            {
+              "en": "Let’s take small steps.",
+              "zh": "我們走小小步。",
+              "id": "017-follow-me:6:66fc66b410d3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Who is ahead now?",
+              "zh": "誰現在在前面？",
+              "id": "017-follow-me:6:e7e97371530d",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "017-follow-me:6:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "The girl follows Mom.",
+              "zh": "女孩跟著媽媽。",
+              "id": "017-follow-me:6:61217a2a0398",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can take turns leading.",
+              "zh": "我們可以輪流帶頭。",
+              "id": "017-follow-me:6:8f11cb0073b4"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Walk three little steps together.",
+              "zh": "一起走三小步。",
+              "id": "017-follow-me:6:fc54686bcf65"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/017-follow-me/007-5884c066ce87.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, I followed you just like that!",
+              "zh": "對，我就那樣跟著妳！",
+              "id": "017-follow-me:7:a41f49d2ac01"
+            },
+            {
+              "en": "I followed you to the ground!",
+              "zh": "我跟著妳一起到地面上！",
+              "id": "017-follow-me:7:fd2c96108933"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "to the ground 對照圖是一起蹲低，不是在說跌倒。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女雙手碰草地、膝蓋彎著，一起蹲低。",
+          "phrases": [
+            {
+              "en": "Their hands touch the grass.",
+              "zh": "她們的手碰草地。",
+              "id": "017-follow-me:7:d7f394da8a54"
+            },
+            {
+              "en": "They are down low.",
+              "zh": "她們低低的。",
+              "id": "017-follow-me:7:83d70fe30017"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Down we go.",
+              "zh": "我們蹲下。",
+              "id": "017-follow-me:7:c178eb157888"
+            },
+            {
+              "en": "And up again.",
+              "zh": "再站起來。",
+              "id": "017-follow-me:7:cb4fa4a1f389"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Are they high or low?",
+              "zh": "她們高高還是低低？",
+              "id": "017-follow-me:7:0ac17c4a9746",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Low.",
+              "zh": "低低。",
+              "id": "017-follow-me:7:9b5fb1d952d5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Close to the grass.",
+              "zh": "靠近草地。",
+              "id": "017-follow-me:7:9e4164db066f",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can move high and low.",
+              "zh": "我們可以動得高高低低。",
+              "id": "017-follow-me:7:0688543ef0be"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Raise your hands, then lower them.",
+              "zh": "手舉高再放低。",
+              "id": "017-follow-me:7:5b6fef77307e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/017-follow-me/008-eae95f1f4b74.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, I followed you just like that!",
+              "zh": "噢，我就那樣跟著妳！",
+              "id": "017-follow-me:8:3633ca8110ac"
+            },
+            {
+              "en": "I followed you wherever you roamed",
+              "zh": "妳走到哪，我就跟到哪。",
+              "id": "017-follow-me:8:02c72102a69b"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "roamed 是到處走走，圖是花園木橋，沒說離家冒險或走失。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽與女孩走過有扶手的小木橋，旁有水與花。",
+          "phrases": [
+            {
+              "en": "They walk on a bridge.",
+              "zh": "她們走在橋上。",
+              "id": "017-follow-me:8:b92c52d08f02"
+            },
+            {
+              "en": "I see water beside it.",
+              "zh": "我看到旁邊的水。",
+              "id": "017-follow-me:8:3a7ae3132514"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Across the little bridge.",
+              "zh": "走過小橋。",
+              "id": "017-follow-me:8:0ca1968b2102"
+            },
+            {
+              "en": "Stay close to me.",
+              "zh": "靠近我。",
+              "id": "017-follow-me:8:58e7d7c8daae"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "What are they walking on?",
+              "zh": "她們走在什麼上？",
+              "id": "017-follow-me:8:b37c00686b8a",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A bridge.",
+              "zh": "橋。",
+              "id": "017-follow-me:8:acd55611f1ff",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A little wooden bridge.",
+              "zh": "小木橋。",
+              "id": "017-follow-me:8:f78bc6733f2d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can walk together outside.",
+              "zh": "我們可以一起出門走。",
+              "id": "017-follow-me:8:e98dbfbab0c5"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a pretend bridge with a line on the floor.",
+              "zh": "用地上的線當假小橋。",
+              "id": "017-follow-me:8:f0f3867e71cb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/017-follow-me/009-d7afcc0ba2d3.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, I followed you just like that!",
+              "zh": "對，我就那樣跟著妳！",
+              "id": "017-follow-me:9:a41f49d2ac01"
+            },
+            {
+              "en": "I followed you all the way home!",
+              "zh": "我一路跟著妳回家！",
+              "id": "017-follow-me:9:1e22996162f3"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "all the way home 是整段路直到回家；收尾母女牽手到家門。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女牽手走向打開的屋門，媽媽拿籃子，旁有白色花園門。",
+          "phrases": [
+            {
+              "en": "They hold hands.",
+              "zh": "她們牽手。",
+              "id": "017-follow-me:9:c5aa51716ca8"
+            },
+            {
+              "en": "The house door is open.",
+              "zh": "家門打開了。",
+              "id": "017-follow-me:9:440dfb000142"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We are home.",
+              "zh": "我們回家了。",
+              "id": "017-follow-me:9:d550de34e696"
+            },
+            {
+              "en": "That was fun.",
+              "zh": "剛才很好玩。",
+              "id": "017-follow-me:9:d40b632dcb6b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說「跟媽媽做這個動作」，孩子動一動或指图就算回答。依空間與能力選動作，坐著做也可以，不必單腳跳。",
+          "phrases": [
+            {
+              "en": "Where are they going now?",
+              "zh": "她們現在去哪？",
+              "id": "017-follow-me:9:ec2b4074c143",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Home.",
+              "zh": "回家。",
+              "id": "017-follow-me:9:592c64f86ab3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Home together.",
+              "zh": "一起回家。",
+              "id": "017-follow-me:9:68bc7ea5ae4e",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What move did you like best?",
+              "zh": "妳最喜歡哪個動作？",
+              "id": "017-follow-me:9:0a31246b03d3"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let your child lead one last gentle move.",
+              "zh": "讓孩子帶最後一個輕輕的動作。",
+              "id": "017-follow-me:9:f92e91adbf2e"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

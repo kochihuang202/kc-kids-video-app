@@ -1,0 +1,1468 @@
+{
+  "version": 1,
+  "bookId": "012-where-are-my-clothes",
+  "title": "Where Are My Clothes",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/012-where-are-my-clothes/001-070ab66f4281.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where Are My Clothes?",
+              "zh": "我的衣服在哪裡？",
+              "id": "012-where-are-my-clothes:1:c4e7fc12f019"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "clothes 是衣服的總稱。女孩還穿睡衣，打開衣櫃卻沒看到要穿的衣服。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩穿花睡衣看空衣櫃，媽媽在後面，熊與兔布偶坐在旁。",
+          "phrases": [
+            {
+              "en": "The cupboard is open.",
+              "zh": "櫃子打開了。",
+              "id": "012-where-are-my-clothes:1:72a507b1f818"
+            },
+            {
+              "en": "She wears pajamas.",
+              "zh": "她穿睡衣。",
+              "id": "012-where-are-my-clothes:1:09f2b1fc0992"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Where are my clothes?",
+              "zh": "我的衣服在哪？",
+              "id": "012-where-are-my-clothes:1:efd6af6425d2"
+            },
+            {
+              "en": "Let’s look together.",
+              "zh": "一起找找。",
+              "id": "012-where-are-my-clothes:1:17e281f350e4"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Is the cupboard full?",
+              "zh": "櫃子滿滿的嗎？",
+              "id": "012-where-are-my-clothes:1:5c7cca256f93",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "不是。",
+              "id": "012-where-are-my-clothes:1:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It looks empty.",
+              "zh": "看起來空空的。",
+              "id": "012-where-are-my-clothes:1:f4e842c9ea0d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Where do we keep your clothes?",
+              "zh": "我們把妳的衣服放哪裡？",
+              "id": "012-where-are-my-clothes:1:a5ecf7078784"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to open a cupboard.",
+              "zh": "假裝打開衣櫃。",
+              "id": "012-where-are-my-clothes:1:70b7fe8d31e5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/012-where-are-my-clothes/002-722054c91baf.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Need to get dressed,",
+              "zh": "需要穿好衣服，",
+              "id": "012-where-are-my-clothes:2:c214ef056c75"
+            },
+            {
+              "en": "need to find my clothes",
+              "zh": "需要找到我的衣服。",
+              "id": "012-where-are-my-clothes:2:bf7cdf1c5e14"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "get dressed 是穿好出門的衣服，不是女孩身上一件衣服都沒有。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩站在空衣櫃前，手碰櫃門，還穿著睡衣。",
+          "phrases": [
+            {
+              "en": "She looks in the cupboard.",
+              "zh": "她看衣櫃裡。",
+              "id": "012-where-are-my-clothes:2:4f12efb0f39f"
+            },
+            {
+              "en": "Mom stands behind her.",
+              "zh": "媽媽站她後面。",
+              "id": "012-where-are-my-clothes:2:4c9178578812"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Time to get dressed.",
+              "zh": "該換衣服了。",
+              "id": "012-where-are-my-clothes:2:d2f27ddeab81"
+            },
+            {
+              "en": "Can you help me look?",
+              "zh": "可以幫我找嗎？",
+              "id": "012-where-are-my-clothes:2:bee07cbcd43e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "What is she wearing?",
+              "zh": "她穿什麼？",
+              "id": "012-where-are-my-clothes:2:43b1994d6ce6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Pajamas.",
+              "zh": "睡衣。",
+              "id": "012-where-are-my-clothes:2:44cc56097e5a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Flower pajamas.",
+              "zh": "花睡衣。",
+              "id": "012-where-are-my-clothes:2:af21f827e083",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s choose clothes for today.",
+              "zh": "我們選今天穿的衣服。",
+              "id": "012-where-are-my-clothes:2:a5ac2270875d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to your top and your pants.",
+              "zh": "指上衣和褲子。",
+              "id": "012-where-are-my-clothes:2:beb338870ca0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/012-where-are-my-clothes/003-8c818f2777e1.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Are they in the bedroom?",
+              "zh": "它們在臥室嗎？",
+              "id": "012-where-are-my-clothes:3:7002056010e5"
+            },
+            {
+              "en": "Oh, who knows?",
+              "zh": "噢，誰知道呢？",
+              "id": "012-where-are-my-clothes:3:10a7c85bad3e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "they 指衣服，who knows 表示不知道在哪，不是有人一定知道答案。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩掀起床單看床下，床上有兩個布偶。",
+          "phrases": [
+            {
+              "en": "She looks under the bed.",
+              "zh": "她看床下。",
+              "id": "012-where-are-my-clothes:3:46b0a088e22c"
+            },
+            {
+              "en": "The toys sit on the bed.",
+              "zh": "玩具坐床上。",
+              "id": "012-where-are-my-clothes:3:edef32ba8b9e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s check here.",
+              "zh": "我們看看這裡。",
+              "id": "012-where-are-my-clothes:3:07adba062856"
+            },
+            {
+              "en": "Not here yet.",
+              "zh": "這裡還沒找到。",
+              "id": "012-where-are-my-clothes:3:4de14d43cb08"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Where is she looking?",
+              "zh": "她看哪裡？",
+              "id": "012-where-are-my-clothes:3:77d0fe2cd34f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Under the bed.",
+              "zh": "床下。",
+              "id": "012-where-are-my-clothes:3:e9bd94ed86af",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, down low.",
+              "zh": "對，低低的地方。",
+              "id": "012-where-are-my-clothes:3:2b8caa43e226",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Where is your bedroom?",
+              "zh": "妳的臥室在哪？",
+              "id": "012-where-are-my-clothes:3:dc4207cae9a9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Hide a toy under a cloth and find it.",
+              "zh": "布下藏玩具再找出來。",
+              "id": "012-where-are-my-clothes:3:7695995a80c1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/012-where-are-my-clothes/004-fae2ab7f2974.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where is my hat? Is it in my bedroom?",
+              "zh": "我的帽子在哪？在我的臥室嗎？",
+              "id": "012-where-are-my-clothes:4:8b005feac1ea"
+            },
+            {
+              "en": "Nope, I don't see it there",
+              "zh": "沒有，我沒在那裡看到。",
+              "id": "012-where-are-my-clothes:4:1601fa23d5b0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "hat 是帽子，nope 是口語的 no；衣櫃有衣服，但沒有畫出要找的帽子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩指打開的衣櫃，櫃裡掛著衣服，帽子未出現。",
+          "phrases": [
+            {
+              "en": "There are clothes in the cupboard.",
+              "zh": "櫃裡有衣服。",
+              "id": "012-where-are-my-clothes:4:445f435155cd"
+            },
+            {
+              "en": "She points to the cupboard.",
+              "zh": "她指櫃子。",
+              "id": "012-where-are-my-clothes:4:580754f989af"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I don’t see a hat.",
+              "zh": "我沒看到帽子。",
+              "id": "012-where-are-my-clothes:4:9ddb1d9f57e8"
+            },
+            {
+              "en": "Let’s look somewhere else.",
+              "zh": "我們找別的地方。",
+              "id": "012-where-are-my-clothes:4:424f4c9006f9"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Do you see a hat?",
+              "zh": "妳看到帽子嗎？",
+              "id": "012-where-are-my-clothes:4:918fbbfa9f1f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "沒有。",
+              "id": "012-where-are-my-clothes:4:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Me neither.",
+              "zh": "我也沒有。",
+              "id": "012-where-are-my-clothes:4:fdbe6cb5c7b7",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "A hat goes on your head.",
+              "zh": "帽子戴頭上。",
+              "id": "012-where-are-my-clothes:4:be19f8aa1813"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put on a hat.",
+              "zh": "假裝戴帽子。",
+              "id": "012-where-are-my-clothes:4:1685f8f0ac4d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/012-where-are-my-clothes/005-20169dc716c1.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where are my socks? Are they in the living room?",
+              "zh": "我的襪子在哪？在客廳嗎？",
+              "id": "012-where-are-my-clothes:5:c4bbcb707f90"
+            },
+            {
+              "en": "Nope, I don't see them anywhere",
+              "zh": "沒有，我到處都没看到它們。",
+              "id": "012-where-are-my-clothes:5:4b90bd9d5eb1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "socks 常用複數，通常兩隻一雙。圖沒畫出襪子，不必叫孩子硬找。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在沙發旁蹲下看，媽媽站旁，沙發上有靠墊。",
+          "phrases": [
+            {
+              "en": "She looks by the sofa.",
+              "zh": "她看沙發旁。",
+              "id": "012-where-are-my-clothes:5:d5c1b4027130"
+            },
+            {
+              "en": "I see cushions.",
+              "zh": "我看到靠墊。",
+              "id": "012-where-are-my-clothes:5:6bb7f5143bc9"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "No socks here.",
+              "zh": "這裡沒有襪子。",
+              "id": "012-where-are-my-clothes:5:ee510a33a7e0"
+            },
+            {
+              "en": "Where else can we look?",
+              "zh": "還能找哪裡？",
+              "id": "012-where-are-my-clothes:5:e9645bfbdfd8"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Is this the living room?",
+              "zh": "這是客廳嗎？",
+              "id": "012-where-are-my-clothes:5:a7a9ea7dfd0f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "是。",
+              "id": "012-where-are-my-clothes:5:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "There is a sofa.",
+              "zh": "這裡有沙發。",
+              "id": "012-where-are-my-clothes:5:b70f2dc14c56",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Keep your socks in pairs.",
+              "zh": "襪子成雙放好。",
+              "id": "012-where-are-my-clothes:5:c729596b21ef"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Match two clean socks.",
+              "zh": "把兩隻乾淨襪子配對。",
+              "id": "012-where-are-my-clothes:5:42cabeec9058"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/012-where-are-my-clothes/006-4b2d730bd4f5.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where is my shirt, is it in the bathroom?",
+              "zh": "我的襯衫在哪？在浴室嗎？",
+              "id": "012-where-are-my-clothes:6:ee8c2575f415"
+            },
+            {
+              "en": "Nope, I don't see it there",
+              "zh": "沒有，我沒在那裡看到。",
+              "id": "012-where-are-my-clothes:6:1601fa23d5b0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "shirt 是襯衫或上衣。這裡找浴室櫃，沒有找到。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩看洗手台下打開的櫃子，布偶坐小凳，媽媽在門邊。",
+          "phrases": [
+            {
+              "en": "This is a bathroom.",
+              "zh": "這是浴室。",
+              "id": "012-where-are-my-clothes:6:320e8380ca20"
+            },
+            {
+              "en": "The cupboard door is open.",
+              "zh": "櫃門打開了。",
+              "id": "012-where-are-my-clothes:6:9d5f6136f733"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I see a sink.",
+              "zh": "我看到洗手台。",
+              "id": "012-where-are-my-clothes:6:00ed1c31c35a"
+            },
+            {
+              "en": "But no shirt.",
+              "zh": "可是沒有上衣。",
+              "id": "012-where-are-my-clothes:6:de55fa6f3a7d"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Can you find the sink?",
+              "zh": "妳找得到洗手台嗎？",
+              "id": "012-where-are-my-clothes:6:ed2f1b5b9369",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "這裡。",
+              "id": "012-where-are-my-clothes:6:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "We wash our hands there.",
+              "zh": "我們在那洗手。",
+              "id": "012-where-are-my-clothes:6:38108d62a912",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Where is your clean shirt?",
+              "zh": "妳乾淨的上衣在哪？",
+              "id": "012-where-are-my-clothes:6:34bfa1c8f782"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to wash your hands.",
+              "zh": "假裝洗手。",
+              "id": "012-where-are-my-clothes:6:d8bcc27972a2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/012-where-are-my-clothes/007-9d8e73b334f6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where are my pants? Are they in the kitchen?",
+              "zh": "我的褲子在哪？在廚房嗎？",
+              "id": "012-where-are-my-clothes:7:f7c90a3f370e"
+            },
+            {
+              "en": "Nope, I don't see them anywhere",
+              "zh": "沒有，我到處都沒看到它們。",
+              "id": "012-where-are-my-clothes:7:4b90bd9d5eb1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "pants 美式英文是褲子，文法用複數，所以接 they。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩打開廚房櫃子，裡面有鍋子與杯子，台上有蘋果。",
+          "phrases": [
+            {
+              "en": "I see pots in the cupboard.",
+              "zh": "我看到櫃裡的鍋子。",
+              "id": "012-where-are-my-clothes:7:5936eb503490"
+            },
+            {
+              "en": "Apples are on the counter.",
+              "zh": "蘋果在台上。",
+              "id": "012-where-are-my-clothes:7:ff012c536d16"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "These are pots, not pants.",
+              "zh": "這是鍋子，不是褲子。",
+              "id": "012-where-are-my-clothes:7:2ecbf31fcba1"
+            },
+            {
+              "en": "No pants here.",
+              "zh": "這裡沒有褲子。",
+              "id": "012-where-are-my-clothes:7:768f5892e74e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "What is in the cupboard?",
+              "zh": "櫃裡有什麼？",
+              "id": "012-where-are-my-clothes:7:c74cd0da4496",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Pots.",
+              "zh": "鍋子。",
+              "id": "012-where-are-my-clothes:7:cce943ff6165",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, kitchen pots.",
+              "zh": "對，廚房的鍋子。",
+              "id": "012-where-are-my-clothes:7:9d18402db404",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Pants go on your legs.",
+              "zh": "褲子穿在腿上。",
+              "id": "012-where-are-my-clothes:7:fceb085314eb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to your legs, then your pants.",
+              "zh": "指腿再指褲子。",
+              "id": "012-where-are-my-clothes:7:d7fd2973524d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/012-where-are-my-clothes/008-9fc335abec55.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where is my coat? Is it in the bathroom?",
+              "zh": "我的外套在哪？在浴室嗎？",
+              "id": "012-where-are-my-clothes:8:f8d9977e1973"
+            },
+            {
+              "en": "Nope, I don't see it there",
+              "zh": "沒有，我沒在那裡看到。",
+              "id": "012-where-are-my-clothes:8:1601fa23d5b0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "coat 是外套。浴室櫃裡有用品與毛巾，不是找到了外套。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩往浴室櫃內看，裡面有瓶子和摺好的毛巾。",
+          "phrases": [
+            {
+              "en": "I see folded towels.",
+              "zh": "我看到摺好的毛巾。",
+              "id": "012-where-are-my-clothes:8:93780f64da8c"
+            },
+            {
+              "en": "There are bottles too.",
+              "zh": "也有瓶子。",
+              "id": "012-where-are-my-clothes:8:1f53cb7637e7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "No coat in here.",
+              "zh": "裡面沒有外套。",
+              "id": "012-where-are-my-clothes:8:23467be03cdf"
+            },
+            {
+              "en": "Let’s keep looking.",
+              "zh": "我們繼續找。",
+              "id": "012-where-are-my-clothes:8:d7a42b423743"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Are those towels?",
+              "zh": "那些是毛巾嗎？",
+              "id": "012-where-are-my-clothes:8:9b1e058396f3",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "是。",
+              "id": "012-where-are-my-clothes:8:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Soft towels.",
+              "zh": "軟軟的毛巾。",
+              "id": "012-where-are-my-clothes:8:c49908dc2b8e",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We wear a coat when it is cold.",
+              "zh": "天冷時穿外套。",
+              "id": "012-where-are-my-clothes:8:164a124270b4"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to zip up a coat.",
+              "zh": "假裝拉外套拉鍊。",
+              "id": "012-where-are-my-clothes:8:7bb6047f3114"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/012-where-are-my-clothes/009-6aa678512ae0.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where are my shoes? Are they in the study?",
+              "zh": "我的鞋子在哪？在書房嗎？",
+              "id": "012-where-are-my-clothes:9:a950b1294dbf"
+            },
+            {
+              "en": "Nope, I don't see them anywhere",
+              "zh": "沒有，我到處都沒看到它們。",
+              "id": "012-where-are-my-clothes:9:4b90bd9d5eb1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "study 這裡是書房，不是動詞讀書。鞋子通常一雙，所以 shoes 是複數。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在書桌下看，書架很多書，布偶坐椅子旁。",
+          "phrases": [
+            {
+              "en": "I see a desk and a chair.",
+              "zh": "我看到桌子與椅子。",
+              "id": "012-where-are-my-clothes:9:a7208fdd62e2"
+            },
+            {
+              "en": "Books are on the shelves.",
+              "zh": "書在架上。",
+              "id": "012-where-are-my-clothes:9:96fb99220c52"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "No shoes under the desk.",
+              "zh": "書桌下沒有鞋子。",
+              "id": "012-where-are-my-clothes:9:1203dbc75203"
+            },
+            {
+              "en": "Let’s check another room.",
+              "zh": "我們看看另一個房間。",
+              "id": "012-where-are-my-clothes:9:7cbfdea36c88"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Can you find the chair?",
+              "zh": "妳找得到椅子嗎？",
+              "id": "012-where-are-my-clothes:9:0745c6c78a8b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There.",
+              "zh": "那裡。",
+              "id": "012-where-are-my-clothes:9:7df685e63e9c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Beside the desk.",
+              "zh": "桌子旁。",
+              "id": "012-where-are-my-clothes:9:dff805205a15",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Where do you put your shoes?",
+              "zh": "妳把鞋放哪裡？",
+              "id": "012-where-are-my-clothes:9:7559f007e9ae"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Put a pair of shoes together.",
+              "zh": "把一雙鞋放一起。",
+              "id": "012-where-are-my-clothes:9:fadf2211eeea"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/012-where-are-my-clothes/010-8200df2cdf2c.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where is my belt, is it in the yard?",
+              "zh": "我的皮帶在哪？在院子嗎？",
+              "id": "012-where-are-my-clothes:10:e7819e1b2c97"
+            },
+            {
+              "en": "Nope, I don't see it there",
+              "zh": "沒有，我沒在那裡看到。",
+              "id": "012-where-are-my-clothes:10:1601fa23d5b0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "yard 是屋外院子。女孩仍穿睡衣，畫面未出現皮帶。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩彎腰看花盆，旁邊有澆水壺，媽媽在台階上。",
+          "phrases": [
+            {
+              "en": "There are flowers in pots.",
+              "zh": "盆裡有花。",
+              "id": "012-where-are-my-clothes:10:e45fa706928a"
+            },
+            {
+              "en": "I see a watering can.",
+              "zh": "我看到澆水壺。",
+              "id": "012-where-are-my-clothes:10:4964b7083ac2"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "No belt by the flowers.",
+              "zh": "花旁沒有皮帶。",
+              "id": "012-where-are-my-clothes:10:81615737b0d2"
+            },
+            {
+              "en": "This is the yard.",
+              "zh": "這是院子。",
+              "id": "012-where-are-my-clothes:10:58f9561a9776"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "What grows in the pots?",
+              "zh": "盆裡長什麼？",
+              "id": "012-where-are-my-clothes:10:57b7b22c6013",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Flowers.",
+              "zh": "花。",
+              "id": "012-where-are-my-clothes:10:6181e37e14f6",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Pretty flowers.",
+              "zh": "漂亮的花。",
+              "id": "012-where-are-my-clothes:10:99c3a06da4e5",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "A belt goes around your waist.",
+              "zh": "皮帶繫腰間。",
+              "id": "012-where-are-my-clothes:10:3e777ff84f25"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw a belt in the air around your waist.",
+              "zh": "在腰旁比畫一條皮帶。",
+              "id": "012-where-are-my-clothes:10:55cb62ad9b7e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/012-where-are-my-clothes/011-90685dbc1dd8.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where are my glasses? Are they in the kitchen?",
+              "zh": "我的眼鏡在哪？它們在廚房嗎？",
+              "id": "012-where-are-my-clothes:11:52b89a8a6662"
+            },
+            {
+              "en": "Nope, I don't see them anywhere",
+              "zh": "沒有，我到處都沒看到它們。",
+              "id": "012-where-are-my-clothes:11:4b90bd9d5eb1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "glasses 是眼鏡；圖有杯子與水果，但沒有眼鏡。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩往廚房台上看，台上有蘋果碗和裝木匙的容器。",
+          "phrases": [
+            {
+              "en": "I see apples.",
+              "zh": "我看到蘋果。",
+              "id": "012-where-are-my-clothes:11:a37cac0aa890"
+            },
+            {
+              "en": "Wooden spoons are on the counter.",
+              "zh": "木匙在台上。",
+              "id": "012-where-are-my-clothes:11:572a1f7e842e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "No glasses here.",
+              "zh": "這裡沒有眼鏡。",
+              "id": "012-where-are-my-clothes:11:7a3e33d7027e"
+            },
+            {
+              "en": "We can ask for help.",
+              "zh": "我們可以請人幫忙。",
+              "id": "012-where-are-my-clothes:11:fcb43f542bf9"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Do you see glasses?",
+              "zh": "妳看到眼鏡嗎？",
+              "id": "012-where-are-my-clothes:11:6c9932726bb2",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "沒有。",
+              "id": "012-where-are-my-clothes:11:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Let’s ask Mom.",
+              "zh": "我們問媽媽。",
+              "id": "012-where-are-my-clothes:11:ad228925adba",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Handle glasses gently.",
+              "zh": "輕輕拿眼鏡。",
+              "id": "012-where-are-my-clothes:11:d1fac9766783"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make pretend glasses with your hands.",
+              "zh": "用手比假眼鏡。",
+              "id": "012-where-are-my-clothes:11:6010d7edf908"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/012-where-are-my-clothes/012-ad9e3f4561fe.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I need to get dressed,",
+              "zh": "我需要穿好衣服，",
+              "id": "012-where-are-my-clothes:12:81e781a67952"
+            },
+            {
+              "en": "need to go go go",
+              "zh": "我需要出發、出發、出發。",
+              "id": "012-where-are-my-clothes:12:1a0f611f4d81"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "go go go 表達急著出門，仍可以慢慢找，不必催孩子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在走廊往前走，牆上有時鐘，媽媽跟在後面。",
+          "phrases": [
+            {
+              "en": "I see a clock.",
+              "zh": "我看到時鐘。",
+              "id": "012-where-are-my-clothes:12:c1cdc1262088"
+            },
+            {
+              "en": "She walks down the hall.",
+              "zh": "她走在走廊。",
+              "id": "012-where-are-my-clothes:12:434a918e7166"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We are getting ready.",
+              "zh": "我們在準備。",
+              "id": "012-where-are-my-clothes:12:e0e94fe7df24"
+            },
+            {
+              "en": "One thing at a time.",
+              "zh": "一次做一件事。",
+              "id": "012-where-are-my-clothes:12:d732714b3a00"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Can you find the clock?",
+              "zh": "妳找得到時鐘嗎？",
+              "id": "012-where-are-my-clothes:12:50c11f5c4146",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There.",
+              "zh": "那裡。",
+              "id": "012-where-are-my-clothes:12:7df685e63e9c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Up on the wall.",
+              "zh": "牆上面。",
+              "id": "012-where-are-my-clothes:12:d89558a9c2e3",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can get ready together.",
+              "zh": "我們可以一起準備。",
+              "id": "012-where-are-my-clothes:12:74295add5baa"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Name one thing you need before going out.",
+              "zh": "說一樣出門需要的東西。",
+              "id": "012-where-are-my-clothes:12:2de441e7f3e1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/012-where-are-my-clothes/013-4b00831c21a6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, where are my clothes?",
+              "zh": "噢，我的衣服在哪裡？",
+              "id": "012-where-are-my-clothes:13:c93e486fdeec"
+            },
+            {
+              "en": "Who knows?",
+              "zh": "誰知道呢？",
+              "id": "012-where-are-my-clothes:13:83e15799c2a0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "故事還沒給答案。籃子也空，不要把衣物位置編成畫面事實。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著空籃子站在空衣櫃前，媽媽在後面。",
+          "phrases": [
+            {
+              "en": "The basket is empty.",
+              "zh": "籃子空空的。",
+              "id": "012-where-are-my-clothes:13:8be0b636977a"
+            },
+            {
+              "en": "She holds the basket.",
+              "zh": "她拿著籃子。",
+              "id": "012-where-are-my-clothes:13:2168267f3202"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Still looking.",
+              "zh": "還在找。",
+              "id": "012-where-are-my-clothes:13:42933aea5f2d"
+            },
+            {
+              "en": "Maybe we can ask for help.",
+              "zh": "也許可以請人幫忙。",
+              "id": "012-where-are-my-clothes:13:b39b820376cf"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Is anything in the basket?",
+              "zh": "籃裡有東西嗎？",
+              "id": "012-where-are-my-clothes:13:b95b59b6c579",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "沒有。",
+              "id": "012-where-are-my-clothes:13:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It is empty.",
+              "zh": "它空空的。",
+              "id": "012-where-are-my-clothes:13:98f4328a962b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Mom, can you help me?",
+              "zh": "媽媽，可以幫我嗎？",
+              "id": "012-where-are-my-clothes:13:fd655691e5ef"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Imagine one place to look next.",
+              "zh": "想像下一個可以找的地方。",
+              "id": "012-where-are-my-clothes:13:e8b2869adca2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "image": "/media/books/012-where-are-my-clothes/014-3f547a54b5b6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Who knows where are my clothes!",
+              "zh": "誰知道我的衣服在哪裡！",
+              "id": "012-where-are-my-clothes:14:0b601ae8a386"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "原文 Who knows where are my clothes! 語序不自然；保留原文，日常可說 Who knows where my clothes are? 結尾仍沒有找到衣服。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩與媽媽站在空衣櫃前想，布偶坐旁邊。",
+          "phrases": [
+            {
+              "en": "Both are thinking.",
+              "zh": "兩個人都在想。",
+              "id": "012-where-are-my-clothes:14:2222fc406f5a"
+            },
+            {
+              "en": "The cupboard is still empty.",
+              "zh": "衣櫃還空空的。",
+              "id": "012-where-are-my-clothes:14:a2ca10645a64"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Where can we look next?",
+              "zh": "接下來找哪裡？",
+              "id": "012-where-are-my-clothes:14:66aea49e9d2c"
+            },
+            {
+              "en": "Let’s make a plan.",
+              "zh": "我們想個辦法。",
+              "id": "012-where-are-my-clothes:14:90c5d819cf83"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在哪個房間？在找什麼？」孩子可指圖回答。圖裡沒找到的衣物不假裝藏在某處。",
+          "phrases": [
+            {
+              "en": "Did she find her clothes?",
+              "zh": "她找到衣服了嗎？",
+              "id": "012-where-are-my-clothes:14:798f46857d68",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "還沒。",
+              "id": "012-where-are-my-clothes:14:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "We can imagine the next page.",
+              "zh": "我們可以想像下一頁。",
+              "id": "012-where-are-my-clothes:14:e26185b7732d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put clothes in the same place.",
+              "zh": "把衣服放固定的地方。",
+              "id": "012-where-are-my-clothes:14:8e51a36ff1f8"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Invent a next page with one short sentence.",
+              "zh": "用一句短句想像下一頁。",
+              "id": "012-where-are-my-clothes:14:d8402590fdc4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,938 @@
+{
+  "version": 1,
+  "bookId": "009-say-cheese",
+  "title": "Say Cheese",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/009-say-cheese/001-ccb5f5e02303.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Say Cheese!",
+              "zh": "說 Cheese，笑一個！",
+              "id": "009-say-cheese:1:99998d8bb2f8"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "cheese 原意是起司，但這裡是拍照時請人笑一笑的口令，不是在要食物。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽拿棕色相機替女孩拍照，女孩手比耶，站在花園中。",
+          "phrases": [
+            {
+              "en": "Mom has a camera.",
+              "zh": "媽媽拿相機。",
+              "id": "009-say-cheese:1:99fc01029208"
+            },
+            {
+              "en": "The girl is smiling.",
+              "zh": "女孩在笑。",
+              "id": "009-say-cheese:1:7e4ff004e8f7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s take a photo.",
+              "zh": "我們拍張照。",
+              "id": "009-say-cheese:1:a95eb36d71f1"
+            },
+            {
+              "en": "Say cheese!",
+              "zh": "笑一個！",
+              "id": "009-say-cheese:1:905f25fd40d5"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Who has the camera?",
+              "zh": "誰拿著相機？",
+              "id": "009-say-cheese:1:bce069b080ec",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "009-say-cheese:1:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She is taking a photo.",
+              "zh": "她在拍照。",
+              "id": "009-say-cheese:1:ef6539595ade",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Would you like a photo together?",
+              "zh": "妳想一起拍張照嗎？",
+              "id": "009-say-cheese:1:765b4eec5a32"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a pretend camera with your hands.",
+              "zh": "用手做一個假相機。",
+              "id": "009-say-cheese:1:f97423f79019"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/009-say-cheese/002-406cb216d287.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Smile, say \"cheese\"!",
+              "zh": "微笑，說 Cheese！",
+              "id": "009-say-cheese:2:f96eae388d5a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "smile 是微笑。可以做自己的自然笑容，不必跟圖裡完全一樣。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩雙手托著臉微笑，媽媽把相機舉在眼前。",
+          "phrases": [
+            {
+              "en": "Her hands are by her cheeks.",
+              "zh": "她的手在臉頰旁。",
+              "id": "009-say-cheese:2:9ef60e079f60"
+            },
+            {
+              "en": "Mom looks through the camera.",
+              "zh": "媽媽看著相機。",
+              "id": "009-say-cheese:2:72055ad1dd56"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Show me your smile.",
+              "zh": "讓我看看妳的笑容。",
+              "id": "009-say-cheese:2:6b254c812a88"
+            },
+            {
+              "en": "That’s lovely.",
+              "zh": "好可愛。",
+              "id": "009-say-cheese:2:6c29fcc7c744"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Can you smile?",
+              "zh": "妳可以笑一笑嗎？",
+              "id": "009-say-cheese:2:41f28a32aeec",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "可以！",
+              "id": "009-say-cheese:2:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "I love your smile.",
+              "zh": "我喜歡妳的笑容。",
+              "id": "009-say-cheese:2:cbaeb158d97d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Smile when you feel happy.",
+              "zh": "開心時笑一笑。",
+              "id": "009-say-cheese:2:85104be3368c"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Try a little smile and a big smile.",
+              "zh": "試試小小笑和大大笑。",
+              "id": "009-say-cheese:2:c9e088b24d2b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/009-say-cheese/003-d9af7a40b4e6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Look this way please!",
+              "zh": "請看這邊！",
+              "id": "009-say-cheese:3:141460b787f7"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "this way 指媽媽相機的方向。please 讓邀請更有禮貌。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩往媽媽的相機看，手放在身前，旁邊有花盆。",
+          "phrases": [
+            {
+              "en": "She looks at Mom.",
+              "zh": "她看著媽媽。",
+              "id": "009-say-cheese:3:f472716a587e"
+            },
+            {
+              "en": "I see flower pots.",
+              "zh": "我看到花盆。",
+              "id": "009-say-cheese:3:1e09de89a807"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look at me, please.",
+              "zh": "請看我。",
+              "id": "009-say-cheese:3:5aab949a834d"
+            },
+            {
+              "en": "Here I am.",
+              "zh": "我在這裡。",
+              "id": "009-say-cheese:3:491f1f82fedb"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Which way is she looking?",
+              "zh": "她看向哪邊？",
+              "id": "009-say-cheese:3:f81958315571",
+              "label": "媽媽問"
+            },
+            {
+              "en": "At Mom.",
+              "zh": "看媽媽。",
+              "id": "009-say-cheese:3:e1ad0c15c2d9",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, at the camera.",
+              "zh": "對，看相機。",
+              "id": "009-say-cheese:3:2b9dedf76bba",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Use please when you ask.",
+              "zh": "請人幫忙時說請。",
+              "id": "009-say-cheese:3:743ce49def4b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Take turns saying look this way.",
+              "zh": "輪流說「看這邊」。",
+              "id": "009-say-cheese:3:7bcac8598b7f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/009-say-cheese/004-a65e092ec3a6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Don’t move!",
+              "zh": "先別動！",
+              "id": "009-say-cheese:4:662ca99b52a6"
+            },
+            {
+              "en": "Hey, freeze!",
+              "zh": "嘿，停住！",
+              "id": "009-say-cheese:4:c16e8b209016"
+            },
+            {
+              "en": "Look this way please!",
+              "zh": "請看這邊！",
+              "id": "009-say-cheese:4:9900bc9c8cfb"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "freeze 這裡是暫時不動，像玩木頭人，不是冰凍。不要讓孩子覺得拍照必須一直乖乖站好。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩托臉、一隻腳向旁伸，媽媽拍照，右邊矮牆上有睡著的貓。",
+          "phrases": [
+            {
+              "en": "She is holding a pose.",
+              "zh": "她保持一個姿勢。",
+              "id": "009-say-cheese:4:652b7de2187e"
+            },
+            {
+              "en": "The cat is resting.",
+              "zh": "貓在休息。",
+              "id": "009-say-cheese:4:830a092b51cc"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Stay still for a moment.",
+              "zh": "停一下就好。",
+              "id": "009-say-cheese:4:782a6baedaad"
+            },
+            {
+              "en": "Now you can move.",
+              "zh": "現在可以動了。",
+              "id": "009-say-cheese:4:3d1e9d21de90"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Can you find the cat?",
+              "zh": "妳找得到貓嗎？",
+              "id": "009-say-cheese:4:4200f04761a6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the wall.",
+              "zh": "牆上。",
+              "id": "009-say-cheese:4:3893162139a5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It is resting quietly.",
+              "zh": "牠安靜地休息。",
+              "id": "009-say-cheese:4:34e07fa5e948",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s take a quick photo.",
+              "zh": "我們快快拍一張。",
+              "id": "009-say-cheese:4:a384a6327b0a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Play freeze for two seconds.",
+              "zh": "玩兩秒木頭人。",
+              "id": "009-say-cheese:4:c07dafaea27d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/009-say-cheese/005-fba5ed1e367d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Big smile, big smile",
+              "zh": "大大笑容、大大笑容。",
+              "id": "009-say-cheese:5:7ba9a8b92d3b"
+            },
+            {
+              "en": "From ear to ear",
+              "zh": "笑得嘴角都快到耳朵邊了。",
+              "id": "009-say-cheese:5:d38ed71ecdae"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "from ear to ear 是形容笑得很開心，不是嘴巴真的碰到耳朵。這頁是女孩臉的近景。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩雙手托臉，眼睛笑得瞇起來，露出大大的笑容。",
+          "phrases": [
+            {
+              "en": "She has a big smile.",
+              "zh": "她笑得很開心。",
+              "id": "009-say-cheese:5:efc2e316a184"
+            },
+            {
+              "en": "Her eyes look happy.",
+              "zh": "她的眼睛看起來很開心。",
+              "id": "009-say-cheese:5:56f92bcb070b"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "What a happy face!",
+              "zh": "好開心的表情！",
+              "id": "009-say-cheese:5:c3a1cf4bca18"
+            },
+            {
+              "en": "You make me smile.",
+              "zh": "妳讓我笑。",
+              "id": "009-say-cheese:5:55183e4e6dba"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Where are her ears?",
+              "zh": "她的耳朵在哪裡？",
+              "id": "009-say-cheese:5:d65429258475",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "009-say-cheese:5:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "On each side of her head.",
+              "zh": "在頭的兩邊。",
+              "id": "009-say-cheese:5:0410e1674929",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What makes you smile?",
+              "zh": "什麼讓妳微笑？",
+              "id": "009-say-cheese:5:495e4c2431e9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to your cheeks and ears.",
+              "zh": "指指臉頰和耳朵。",
+              "id": "009-say-cheese:5:f6bbf9716632"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/009-say-cheese/006-0f93a483cc61.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Big smile, big smile",
+              "zh": "大大笑容、大大笑容。",
+              "id": "009-say-cheese:6:7ba9a8b92d3b"
+            },
+            {
+              "en": "Thank you, dear!",
+              "zh": "謝謝妳，親愛的！",
+              "id": "009-say-cheese:6:364d60af23a3"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "dear 是親愛的稱呼。媽媽放下相機與女孩相視而笑，可以學習溫暖地說謝謝。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽把相機放低，女孩雙手合在胸前，两人笑著看對方。",
+          "phrases": [
+            {
+              "en": "Mom has lowered the camera.",
+              "zh": "媽媽把相機放低。",
+              "id": "009-say-cheese:6:82e8a245c126"
+            },
+            {
+              "en": "They smile at each other.",
+              "zh": "她們對彼此微笑。",
+              "id": "009-say-cheese:6:56df1a56a5b8"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Thank you, sweetheart.",
+              "zh": "謝謝妳，寶貝。",
+              "id": "009-say-cheese:6:90d355dd4aaa"
+            },
+            {
+              "en": "That was fun.",
+              "zh": "剛才好好玩。",
+              "id": "009-say-cheese:6:d40b632dcb6b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Is Mom smiling too?",
+              "zh": "媽媽也在笑嗎？",
+              "id": "009-say-cheese:6:58e6923a06ef",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "009-say-cheese:6:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They look happy together.",
+              "zh": "她們一起很開心。",
+              "id": "009-say-cheese:6:00beb14933b9",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Thank someone who helps you.",
+              "zh": "謝謝幫妳的人。",
+              "id": "009-say-cheese:6:02e03b7e5f11"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Give Mom a little thank-you wave.",
+              "zh": "向媽媽揮手說謝謝。",
+              "id": "009-say-cheese:6:fdcae1135213"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/009-say-cheese/007-e3fd22af662b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Big smile, big smile",
+              "zh": "大大笑容、大大笑容。",
+              "id": "009-say-cheese:7:7ba9a8b92d3b"
+            },
+            {
+              "en": "That’s the way!",
+              "zh": "對，就是這樣！",
+              "id": "009-say-cheese:7:559647c93622"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "That’s the way 是鼓勵說做得好，不是指道路。搭配媽媽的讚手勢就很好懂。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽一手拿相機、一手比讚，女孩比耶微笑。",
+          "phrases": [
+            {
+              "en": "Mom gives a thumbs-up.",
+              "zh": "媽媽比讚。",
+              "id": "009-say-cheese:7:31fb2993c207"
+            },
+            {
+              "en": "The girl makes a V with her fingers.",
+              "zh": "女孩用手指比耶。",
+              "id": "009-say-cheese:7:6ebb6ee597c4"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Well done!",
+              "zh": "做得好！",
+              "id": "009-say-cheese:7:5aff84b0e6ff"
+            },
+            {
+              "en": "That’s a fun pose.",
+              "zh": "這個姿勢很好玩。",
+              "id": "009-say-cheese:7:0d700b996090"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "What is Mom doing with her hand?",
+              "zh": "媽媽用手做什麼？",
+              "id": "009-say-cheese:7:fcc0b3cfa85a",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A thumbs-up.",
+              "zh": "比讚。",
+              "id": "009-say-cheese:7:3dffe58881dd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She likes the smile.",
+              "zh": "她喜歡這個笑容。",
+              "id": "009-say-cheese:7:d55b6477456b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Encourage someone with a kind word.",
+              "zh": "用一句好話鼓勵別人。",
+              "id": "009-say-cheese:7:49214c0f02b7"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a thumbs-up.",
+              "zh": "比一個讚。",
+              "id": "009-say-cheese:7:345e59afd999"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/009-say-cheese/008-6e05f3986a3d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Big smile, big smile",
+              "zh": "大大笑容、大大笑容。",
+              "id": "009-say-cheese:8:7ba9a8b92d3b"
+            },
+            {
+              "en": "Now, give me a \"Yay\"!",
+              "zh": "現在，跟我說一聲耶！",
+              "id": "009-say-cheese:8:8c291494b438"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "yay 是開心慶祝的聲音。可以小聲說或只做開心手勢，不需要喊很大聲。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩張開雙手舉高，開心笑，一隻腳抬起，媽媽繼續拍照。",
+          "phrases": [
+            {
+              "en": "Her arms are up.",
+              "zh": "她的手臂舉高。",
+              "id": "009-say-cheese:8:568c1b2b428a"
+            },
+            {
+              "en": "One foot is off the ground.",
+              "zh": "一隻腳離開地面。",
+              "id": "009-say-cheese:8:dbefdc00e6d6"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Yay, we did it!",
+              "zh": "耶，我們做到了！",
+              "id": "009-say-cheese:8:3a72f67dbaf9"
+            },
+            {
+              "en": "What a happy moment!",
+              "zh": "好開心的一刻！",
+              "id": "009-say-cheese:8:acbccfba3e96"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Are her arms up or down?",
+              "zh": "她的手臂在上面還是下面？",
+              "id": "009-say-cheese:8:37ce4a4e5518",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Up.",
+              "zh": "上面。",
+              "id": "009-say-cheese:8:a0ad60082deb",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, up high.",
+              "zh": "對，舉得高高的。",
+              "id": "009-say-cheese:8:efb8cf03ab17",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Celebrate a little thing today.",
+              "zh": "慶祝今天一件小事。",
+              "id": "009-say-cheese:8:0108c6bb78ac"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Lift your arms and whisper yay.",
+              "zh": "舉高手，小聲說耶。",
+              "id": "009-say-cheese:8:a9d2aac263e8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/009-say-cheese/009-0a7912f7ca62.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Say \"cheese\"",
+              "zh": "說 Cheese，笑一個。",
+              "id": "009-say-cheese:9:ed04fedc092d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "拍完照，她們一起看照片。這不是女孩突然縮小；小小的女孩是在照片裡。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女坐在桌旁看紙本照片，照片上是女孩，桌上有杯子與花。",
+          "phrases": [
+            {
+              "en": "They look at a photo.",
+              "zh": "她們看照片。",
+              "id": "009-say-cheese:9:cd628658c188"
+            },
+            {
+              "en": "The girl is in the photo.",
+              "zh": "照片裡有女孩。",
+              "id": "009-say-cheese:9:5fe7a81184a0"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look at our picture.",
+              "zh": "看看我們的照片。",
+              "id": "009-say-cheese:9:2621ed8720a4"
+            },
+            {
+              "en": "What do you remember?",
+              "zh": "妳記得什麼呢？",
+              "id": "009-say-cheese:9:57b6189e4661"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著表情或相機，用中文問一次。孩子笑一笑或指一下就可以，媽媽再說短短的英文。",
+          "phrases": [
+            {
+              "en": "Who is in the photo?",
+              "zh": "照片裡是誰？",
+              "id": "009-say-cheese:9:4b93e2d90910",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The girl.",
+              "zh": "女孩。",
+              "id": "009-say-cheese:9:9a5f412d0812",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, with her lovely smile.",
+              "zh": "對，帶著可愛的笑容。",
+              "id": "009-say-cheese:9:59d719eed71b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Look at a family photo together.",
+              "zh": "一起看看家人照片。",
+              "id": "009-say-cheese:9:af5247479d89"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Tell Mom one thing you see in a photo.",
+              "zh": "說一個照片裡妳看到的東西。",
+              "id": "009-say-cheese:9:77fb9e831c1f"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

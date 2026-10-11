@@ -1,0 +1,1023 @@
+{
+  "version": 1,
+  "bookId": "018-i-needed-to-go",
+  "title": "I Needed To Go",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/018-i-needed-to-go/001-12fa2bfb8f94.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I Needed To Go!",
+              "zh": "我需要上廁所！",
+              "id": "018-i-needed-to-go:1:2c790b434a2d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "need to go 在這本是需要上廁所，不是一般出發。needed 回想剛才的需要。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩背小袋指向公廁門，媽媽跟在後面，門旁有廁所標誌。",
+          "phrases": [
+            {
+              "en": "She points to the bathroom.",
+              "zh": "她指廁所。",
+              "id": "018-i-needed-to-go:1:2a81c5391622"
+            },
+            {
+              "en": "Mom walks behind her.",
+              "zh": "媽媽走她後面。",
+              "id": "018-i-needed-to-go:1:ece859351457"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I need the bathroom.",
+              "zh": "我需要上廁所。",
+              "id": "018-i-needed-to-go:1:372b61d225fa"
+            },
+            {
+              "en": "Let’s find it.",
+              "zh": "我們找找。",
+              "id": "018-i-needed-to-go:1:91b2ec33d766"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "Can you find the bathroom sign?",
+              "zh": "妳找得到廁所標誌嗎？",
+              "id": "018-i-needed-to-go:1:e7a7fcf65d83",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There.",
+              "zh": "那裡。",
+              "id": "018-i-needed-to-go:1:7df685e63e9c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It shows us where to go.",
+              "zh": "它告訴我們去哪。",
+              "id": "018-i-needed-to-go:1:42ca37265af1",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me when you need to go.",
+              "zh": "想上廁所就告訴我。",
+              "id": "018-i-needed-to-go:1:92d27cb834b9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find a bathroom sign in the picture.",
+              "zh": "找圖中的廁所標誌。",
+              "id": "018-i-needed-to-go:1:19becf4866d9"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/018-i-needed-to-go/002-95c8942369da.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Do you need to go?",
+              "zh": "妳需要上廁所嗎？",
+              "id": "018-i-needed-to-go:2:338675d52632"
+            },
+            {
+              "en": "Can you wait till we get home?",
+              "zh": "妳可以等到我們回家嗎？",
+              "id": "018-i-needed-to-go:2:0e5a4982c39e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽詢問能否等，不是命令一定憋住。若孩子說急，就幫她找附近廁所。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女在公廁旁聊天，女孩兩手在身前，媽媽彎身聽。",
+          "phrases": [
+            {
+              "en": "Mom bends down to listen.",
+              "zh": "媽媽彎下來聽。",
+              "id": "018-i-needed-to-go:2:396361d01695"
+            },
+            {
+              "en": "A bathroom is nearby.",
+              "zh": "旁邊有廁所。",
+              "id": "018-i-needed-to-go:2:cfd1b4a03ff1"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Can you wait, or is it urgent?",
+              "zh": "妳能等，還是很急？",
+              "id": "018-i-needed-to-go:2:3122c2f64392"
+            },
+            {
+              "en": "We can go now.",
+              "zh": "我們現在可以去。",
+              "id": "018-i-needed-to-go:2:de99da8058d8"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "Does she need help?",
+              "zh": "她需要幫忙嗎？",
+              "id": "018-i-needed-to-go:2:558ac3ead82c",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "需要。",
+              "id": "018-i-needed-to-go:2:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Mom can help her find a toilet.",
+              "zh": "媽媽可以幫她找廁所。",
+              "id": "018-i-needed-to-go:2:b2222cc3824f",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can say, I need to go now.",
+              "zh": "妳可以說：我現在要上廁所。",
+              "id": "018-i-needed-to-go:2:d1c4d34d777b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy ask Mom for help.",
+              "zh": "讓玩具請媽媽幫忙。",
+              "id": "018-i-needed-to-go:2:df80bc51212b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/018-i-needed-to-go/003-ad75204e33cc.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Do you need to go 1 or 2?",
+              "zh": "妳要上一號還是二號？",
+              "id": "018-i-needed-to-go:3:4b5ffe9a60b4"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "美式口語 number one 指尿尿，number two 指便便，不是挑廁所門號。可直接說 pee / poo 更清楚。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽蹲在坐石邊的女孩旁，後面有公廁門。",
+          "phrases": [
+            {
+              "en": "Mom is beside the girl.",
+              "zh": "媽媽在女孩旁。",
+              "id": "018-i-needed-to-go:3:320b454080d6"
+            },
+            {
+              "en": "The girl sits on a stone.",
+              "zh": "女孩坐石頭上。",
+              "id": "018-i-needed-to-go:3:abcfea00790d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Pee or poo?",
+              "zh": "尿尿還是便便？",
+              "id": "018-i-needed-to-go:3:929f850b540e"
+            },
+            {
+              "en": "You can tell me.",
+              "zh": "妳可以告訴我。",
+              "id": "018-i-needed-to-go:3:b8710ac11781"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "What does number one mean here?",
+              "zh": "這裡一號是什麼意思？",
+              "id": "018-i-needed-to-go:3:bc73602d9faa",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Pee.",
+              "zh": "尿尿。",
+              "id": "018-i-needed-to-go:3:74d9033fc8d3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, number one means pee.",
+              "zh": "對，一號是尿尿。",
+              "id": "018-i-needed-to-go:3:195926f389ec",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can use clear words.",
+              "zh": "我們可以說清楚。",
+              "id": "018-i-needed-to-go:3:9cb12751743b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy say, I need to pee.",
+              "zh": "讓玩具說：我要尿尿。",
+              "id": "018-i-needed-to-go:3:097b56fbb818"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/018-i-needed-to-go/004-a1b29bdc268e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Do you need to go pee or poo?",
+              "zh": "妳要尿尿還是便便？",
+              "id": "018-i-needed-to-go:4:126b8a1ebe4b"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "pee / poo 是孩子也能用的簡單詞。女孩穿著衣服，圖沒有畫實際如廁過程。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩指打開的浴室門，裡面看得到馬桶，媽媽蹲旁。",
+          "phrases": [
+            {
+              "en": "I see a toilet.",
+              "zh": "我看到馬桶。",
+              "id": "018-i-needed-to-go:4:a3fbab5403e7"
+            },
+            {
+              "en": "She points to the doorway.",
+              "zh": "她指門口。",
+              "id": "018-i-needed-to-go:4:2afbb843df63"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The toilet is there.",
+              "zh": "馬桶在那。",
+              "id": "018-i-needed-to-go:4:10b68b7a99ec"
+            },
+            {
+              "en": "I’ll help you.",
+              "zh": "我會幫妳。",
+              "id": "018-i-needed-to-go:4:18c3e3aeae4a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "Can you see the toilet?",
+              "zh": "妳看到馬桶嗎？",
+              "id": "018-i-needed-to-go:4:c38b02a6c0cc",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "有。",
+              "id": "018-i-needed-to-go:4:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Inside the bathroom.",
+              "zh": "在浴室裡。",
+              "id": "018-i-needed-to-go:4:06e6ac65af8f",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Ask for help when you need it.",
+              "zh": "需要時請人幫忙。",
+              "id": "018-i-needed-to-go:4:235124ae54cb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to the toilet and the sink.",
+              "zh": "指馬桶和洗手台。",
+              "id": "018-i-needed-to-go:4:916bce11d66c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/018-i-needed-to-go/005-521805bf902f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Do you need to go to the bathroom?",
+              "zh": "妳需要去廁所嗎？",
+              "id": "018-i-needed-to-go:5:0c9acb144a9c"
+            },
+            {
+              "en": "Do you need to use the toilet?",
+              "zh": "妳需要用馬桶嗎？",
+              "id": "018-i-needed-to-go:5:dd8ad1b7d715"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "bathroom 可指廁所或浴室，toilet 是馬桶；兩句問同一個需求。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女牽手走向屋內打開的浴室，女孩指裡面。",
+          "phrases": [
+            {
+              "en": "They hold hands.",
+              "zh": "她們牽手。",
+              "id": "018-i-needed-to-go:5:c5aa51716ca8"
+            },
+            {
+              "en": "The bathroom door is open.",
+              "zh": "浴室門開了。",
+              "id": "018-i-needed-to-go:5:e342fc67b934"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s go together.",
+              "zh": "我們一起去。",
+              "id": "018-i-needed-to-go:5:4caae6e06ae9"
+            },
+            {
+              "en": "The bathroom is this way.",
+              "zh": "廁所在這邊。",
+              "id": "018-i-needed-to-go:5:09bc455a9cfc"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "Where is the bathroom?",
+              "zh": "廁所在哪？",
+              "id": "018-i-needed-to-go:5:489cb3157d5e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "This way.",
+              "zh": "這邊。",
+              "id": "018-i-needed-to-go:5:edfdca0c4d28",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Through the open door.",
+              "zh": "穿過打開的門。",
+              "id": "018-i-needed-to-go:5:12498d09b559",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Where is our bathroom?",
+              "zh": "我們家浴室在哪？",
+              "id": "018-i-needed-to-go:5:dfb0e87f066e"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to show a toy the way.",
+              "zh": "假裝帶玩具認路。",
+              "id": "018-i-needed-to-go:5:063d205f2ee7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/018-i-needed-to-go/006-352bde574015.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I needed to go number one",
+              "zh": "我需要尿尿。",
+              "id": "018-i-needed-to-go:6:f99d77e1650c"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "number one 再次指尿尿，needed 是剛才需要。圖是去廁所，不是已在使用。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩向公廁快步走，媽媽伸手指方向。",
+          "phrases": [
+            {
+              "en": "She walks toward the bathroom.",
+              "zh": "她走向廁所。",
+              "id": "018-i-needed-to-go:6:5f67bd1bef92"
+            },
+            {
+              "en": "Mom shows the way.",
+              "zh": "媽媽指路。",
+              "id": "018-i-needed-to-go:6:511f098356ce"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I need to pee.",
+              "zh": "我想尿尿。",
+              "id": "018-i-needed-to-go:6:3ff5d042d523"
+            },
+            {
+              "en": "Thank you for telling me.",
+              "zh": "謝謝妳告訴我。",
+              "id": "018-i-needed-to-go:6:aa3f8b178458"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "What does she need to do?",
+              "zh": "她需要做什麼？",
+              "id": "018-i-needed-to-go:6:c95d45c495b6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Pee.",
+              "zh": "尿尿。",
+              "id": "018-i-needed-to-go:6:74d9033fc8d3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Let’s find a toilet.",
+              "zh": "我們找馬桶。",
+              "id": "018-i-needed-to-go:6:0083911a5692",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Listen to your body.",
+              "zh": "聽聽身體的感覺。",
+              "id": "018-i-needed-to-go:6:b44c71f989ff"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Practice saying one clear bathroom sentence.",
+              "zh": "練說一句清楚的如廁需求。",
+              "id": "018-i-needed-to-go:6:eecf5a9775fe"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/018-i-needed-to-go/007-410459fb643e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I needed to go number two",
+              "zh": "我需要便便。",
+              "id": "018-i-needed-to-go:7:75206f260ccb"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "number two 是便便，這是普通身體需求，用平常語氣說即可。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩站浴室門外和蹲著的媽媽說話，馬桶在門內。",
+          "phrases": [
+            {
+              "en": "Mom looks at the girl.",
+              "zh": "媽媽看女孩。",
+              "id": "018-i-needed-to-go:7:45a461782cb1"
+            },
+            {
+              "en": "The toilet is inside.",
+              "zh": "馬桶在裡面。",
+              "id": "018-i-needed-to-go:7:0d4192712a32"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I need to poo.",
+              "zh": "我想便便。",
+              "id": "018-i-needed-to-go:7:b46b78b328e5"
+            },
+            {
+              "en": "It’s okay to tell me.",
+              "zh": "可以告訴我。",
+              "id": "018-i-needed-to-go:7:3ef6196bf70a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "What does number two mean?",
+              "zh": "二號什麼意思？",
+              "id": "018-i-needed-to-go:7:dd20170ff00b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Poo.",
+              "zh": "便便。",
+              "id": "018-i-needed-to-go:7:15f71a08fec3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, you can say poo.",
+              "zh": "對，妳可以直接說便便。",
+              "id": "018-i-needed-to-go:7:729fd3caa445",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can ask me for help.",
+              "zh": "妳可以請我幫忙。",
+              "id": "018-i-needed-to-go:7:4cf082b63871"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy ask, Can you help me?",
+              "zh": "讓玩具問：可以幫我嗎？",
+              "id": "018-i-needed-to-go:7:008d0cd830d0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/018-i-needed-to-go/008-9d17c90fce56.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I needed to go",
+              "zh": "我需要上廁所，",
+              "id": "018-i-needed-to-go:8:a9d1a78ec2c6"
+            },
+            {
+              "en": "I needed to go bad",
+              "zh": "我很急地需要上廁所。",
+              "id": "018-i-needed-to-go:8:e39ef43d8b27"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "go bad 是口語的很急、很需要，不是她做了壞事。自然說法也可用 I really need to go。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在走廊快步向浴室走，媽媽在後跟著。",
+          "phrases": [
+            {
+              "en": "She moves quickly.",
+              "zh": "她動得很快。",
+              "id": "018-i-needed-to-go:8:c6e63d16a65b"
+            },
+            {
+              "en": "Mom follows her.",
+              "zh": "媽媽跟著她。",
+              "id": "018-i-needed-to-go:8:b85af97c7674"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I really need to go.",
+              "zh": "我真的很想上廁所。",
+              "id": "018-i-needed-to-go:8:a0a49ece895f"
+            },
+            {
+              "en": "We’ll find it now.",
+              "zh": "我們現在找。",
+              "id": "018-i-needed-to-go:8:64e17fd7d9e3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "Is she in a hurry?",
+              "zh": "她很急嗎？",
+              "id": "018-i-needed-to-go:8:edb4700059d5",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "018-i-needed-to-go:8:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She needs the bathroom now.",
+              "zh": "她現在需要廁所。",
+              "id": "018-i-needed-to-go:8:0ee9b4786d06",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me early if you can.",
+              "zh": "可以的話早一點告訴我。",
+              "id": "018-i-needed-to-go:8:30edf01eb960"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Say urgent and calm voices without running.",
+              "zh": "不跑步，用急與平靜語氣演一句。",
+              "id": "018-i-needed-to-go:8:8422444b2109"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/018-i-needed-to-go/009-90d66505d3b7.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I made it just in time!",
+              "zh": "我剛好及時趕上了！",
+              "id": "018-i-needed-to-go:9:c713c4c87749"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "made it just in time 是及時趕上，不是製造東西。畫面已在洗手，表示故事往後進展。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在洗手台洗手，水流與泡泡可見，媽媽站門邊。",
+          "phrases": [
+            {
+              "en": "She washes her hands.",
+              "zh": "她洗手。",
+              "id": "018-i-needed-to-go:9:31e6c6a93d6e"
+            },
+            {
+              "en": "I see running water.",
+              "zh": "我看到流水。",
+              "id": "018-i-needed-to-go:9:f199d2afe30e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You made it.",
+              "zh": "妳趕上了。",
+              "id": "018-i-needed-to-go:9:a55a2b3940f9"
+            },
+            {
+              "en": "Now let’s wash our hands.",
+              "zh": "現在我們洗手。",
+              "id": "018-i-needed-to-go:9:fb791d74214d"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "What is she doing now?",
+              "zh": "她現在做什麼？",
+              "id": "018-i-needed-to-go:9:1c35958fab29",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Washing her hands.",
+              "zh": "洗手。",
+              "id": "018-i-needed-to-go:9:c97dac3be73a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "After using the bathroom.",
+              "zh": "上完廁所後。",
+              "id": "018-i-needed-to-go:9:74618280eba4",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Wash your hands after the toilet.",
+              "zh": "上完廁所後洗手。",
+              "id": "018-i-needed-to-go:9:41d1f19b5266"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to wash fingers and palms.",
+              "zh": "假裝洗手指和手掌。",
+              "id": "018-i-needed-to-go:9:ca0cf40e8362"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/018-i-needed-to-go/010-b6c8f2206d5e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Whew! I'm glad!",
+              "zh": "呼！我好高興！",
+              "id": "018-i-needed-to-go:10:1654941e9f8f"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Whew 是鬆口氣的呼，glad 是高興、放心。不要拿及時與否評斷孩子好壞。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿花毛巾擦手，媽媽在旁微笑。",
+          "phrases": [
+            {
+              "en": "She dries her hands.",
+              "zh": "她擦乾手。",
+              "id": "018-i-needed-to-go:10:4bcd2d0fe9ad"
+            },
+            {
+              "en": "Mom is smiling.",
+              "zh": "媽媽在笑。",
+              "id": "018-i-needed-to-go:10:168c1a6dd5b1"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "All done.",
+              "zh": "完成了。",
+              "id": "018-i-needed-to-go:10:42114ddac26c"
+            },
+            {
+              "en": "That feels better.",
+              "zh": "現在舒服多了。",
+              "id": "018-i-needed-to-go:10:d19a66c32ac9"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她想上廁所嗎？媽媽怎麼幫她？」可以指圖回答。用平常、尊重的語氣談尿尿便便，不要求孩子憋住，也不拿這件事取笑。",
+          "phrases": [
+            {
+              "en": "What does she use to dry her hands?",
+              "zh": "她用什麼擦手？",
+              "id": "018-i-needed-to-go:10:541a02bccfc7",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A towel.",
+              "zh": "毛巾。",
+              "id": "018-i-needed-to-go:10:b6351a555ce4",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A towel with flowers.",
+              "zh": "有花的毛巾。",
+              "id": "018-i-needed-to-go:10:b0be4008485f",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Thank you for telling me what you needed.",
+              "zh": "謝謝妳告訴我妳需要什麼。",
+              "id": "018-i-needed-to-go:10:c2a85418f38f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy say Whew with a little sigh.",
+              "zh": "讓玩具輕輕鬆口氣說呼。",
+              "id": "018-i-needed-to-go:10:ef8542550825"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

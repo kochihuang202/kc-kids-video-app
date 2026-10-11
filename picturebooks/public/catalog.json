@@ -156,6 +156,238 @@
         "/media/books/007-its-mine/007-7de334433207.webp",
         "/media/books/007-its-mine/008-d20aed03cbb8.webp"
       ]
+    },
+    {
+      "id": "008-go-go-go",
+      "number": "08",
+      "title": "Go Go Go",
+      "cover": "/media/books/008-go-go-go/cover-d3555d2782d0.webp",
+      "pages": [
+        "/media/books/008-go-go-go/001-d3555d2782d0.webp",
+        "/media/books/008-go-go-go/002-2b2b328a59f1.webp",
+        "/media/books/008-go-go-go/003-2fec507e453d.webp",
+        "/media/books/008-go-go-go/004-ab5072b162e2.webp",
+        "/media/books/008-go-go-go/005-a094ff4df65d.webp",
+        "/media/books/008-go-go-go/006-0d4af75467f8.webp",
+        "/media/books/008-go-go-go/007-f398ae25a369.webp",
+        "/media/books/008-go-go-go/008-57a645c6c4d9.webp",
+        "/media/books/008-go-go-go/009-da6281e72599.webp",
+        "/media/books/008-go-go-go/010-7d27a2d6a575.webp",
+        "/media/books/008-go-go-go/011-ba6df8472ec9.webp",
+        "/media/books/008-go-go-go/012-cc471a03c33c.webp"
+      ]
+    },
+    {
+      "id": "009-say-cheese",
+      "number": "09",
+      "title": "Say Cheese",
+      "cover": "/media/books/009-say-cheese/cover-ccb5f5e02303.webp",
+      "pages": [
+        "/media/books/009-say-cheese/001-ccb5f5e02303.webp",
+        "/media/books/009-say-cheese/002-406cb216d287.webp",
+        "/media/books/009-say-cheese/003-d9af7a40b4e6.webp",
+        "/media/books/009-say-cheese/004-a65e092ec3a6.webp",
+        "/media/books/009-say-cheese/005-fba5ed1e367d.webp",
+        "/media/books/009-say-cheese/006-0f93a483cc61.webp",
+        "/media/books/009-say-cheese/007-e3fd22af662b.webp",
+        "/media/books/009-say-cheese/008-6e05f3986a3d.webp",
+        "/media/books/009-say-cheese/009-0a7912f7ca62.webp"
+      ]
+    },
+    {
+      "id": "010-wiggle-wiggle-worms",
+      "number": "10",
+      "title": "Wiggle Wiggle Worms",
+      "cover": "/media/books/010-wiggle-wiggle-worms/cover-72486d71bc5a.webp",
+      "pages": [
+        "/media/books/010-wiggle-wiggle-worms/001-72486d71bc5a.webp",
+        "/media/books/010-wiggle-wiggle-worms/002-c1fee07b99a7.webp",
+        "/media/books/010-wiggle-wiggle-worms/003-0a13ce8d9cc3.webp",
+        "/media/books/010-wiggle-wiggle-worms/004-b6816a66ad31.webp",
+        "/media/books/010-wiggle-wiggle-worms/005-81df057be065.webp",
+        "/media/books/010-wiggle-wiggle-worms/006-ab178de85871.webp",
+        "/media/books/010-wiggle-wiggle-worms/007-0aec3133418e.webp",
+        "/media/books/010-wiggle-wiggle-worms/008-87115e98da1a.webp",
+        "/media/books/010-wiggle-wiggle-worms/009-b8ba6faf7f9f.webp",
+        "/media/books/010-wiggle-wiggle-worms/010-96979e7807dc.webp",
+        "/media/books/010-wiggle-wiggle-worms/011-862c51894b20.webp",
+        "/media/books/010-wiggle-wiggle-worms/012-1dcbd470bddc.webp"
+      ]
+    },
+    {
+      "id": "011-big-bear-smile",
+      "number": "11",
+      "title": "Big Bear Smile",
+      "cover": "/media/books/011-big-bear-smile/cover-9c740aa9e7a1.webp",
+      "pages": [
+        "/media/books/011-big-bear-smile/001-9c740aa9e7a1.webp",
+        "/media/books/011-big-bear-smile/002-49dd9c5f5192.webp",
+        "/media/books/011-big-bear-smile/003-173b560b966b.webp",
+        "/media/books/011-big-bear-smile/004-076807eb2eec.webp",
+        "/media/books/011-big-bear-smile/005-350f63b9a93b.webp",
+        "/media/books/011-big-bear-smile/006-b2f29e625d52.webp",
+        "/media/books/011-big-bear-smile/007-e1c38333abaf.webp",
+        "/media/books/011-big-bear-smile/008-fa77e804560b.webp",
+        "/media/books/011-big-bear-smile/009-49483d1349a6.webp",
+        "/media/books/011-big-bear-smile/010-51b8864e9f54.webp",
+        "/media/books/011-big-bear-smile/011-5c0a1a659808.webp",
+        "/media/books/011-big-bear-smile/012-0e8230379441.webp",
+        "/media/books/011-big-bear-smile/013-0717889201ce.webp",
+        "/media/books/011-big-bear-smile/014-4830dc26b551.webp"
+      ]
+    },
+    {
+      "id": "012-where-are-my-clothes",
+      "number": "12",
+      "title": "Where Are My Clothes",
+      "cover": "/media/books/012-where-are-my-clothes/cover-070ab66f4281.webp",
+      "pages": [
+        "/media/books/012-where-are-my-clothes/001-070ab66f4281.webp",
+        "/media/books/012-where-are-my-clothes/002-722054c91baf.webp",
+        "/media/books/012-where-are-my-clothes/003-8c818f2777e1.webp",
+        "/media/books/012-where-are-my-clothes/004-fae2ab7f2974.webp",
+        "/media/books/012-where-are-my-clothes/005-20169dc716c1.webp",
+        "/media/books/012-where-are-my-clothes/006-4b2d730bd4f5.webp",
+        "/media/books/012-where-are-my-clothes/007-9d8e73b334f6.webp",
+        "/media/books/012-where-are-my-clothes/008-9fc335abec55.webp",
+        "/media/books/012-where-are-my-clothes/009-6aa678512ae0.webp",
+        "/media/books/012-where-are-my-clothes/010-8200df2cdf2c.webp",
+        "/media/books/012-where-are-my-clothes/011-90685dbc1dd8.webp",
+        "/media/books/012-where-are-my-clothes/012-ad9e3f4561fe.webp",
+        "/media/books/012-where-are-my-clothes/013-4b00831c21a6.webp",
+        "/media/books/012-where-are-my-clothes/014-3f547a54b5b6.webp"
+      ]
+    },
+    {
+      "id": "013-dont-leave-them-on-the-floor",
+      "number": "13",
+      "title": "Dont Leave Them On The Floor",
+      "cover": "/media/books/013-dont-leave-them-on-the-floor/cover-f81a68dc0a3a.webp",
+      "pages": [
+        "/media/books/013-dont-leave-them-on-the-floor/001-f81a68dc0a3a.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/002-674534746c45.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/003-0dff3920e948.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/004-c2c4626aea7e.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/005-5a09a65eec71.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/006-5ef915a1e242.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/007-caa6a08c68ba.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/008-a9a45c702342.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/009-b531cfd70fb4.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/010-31b602fb528d.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/011-4339b45d172d.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/012-0fb242d2de09.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/013-cc980c0aff08.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/014-7ae274f8c3b9.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/015-afad8d41eb97.webp",
+        "/media/books/013-dont-leave-them-on-the-floor/016-b817d699d249.webp"
+      ]
+    },
+    {
+      "id": "014-time-to-rock-and-roll",
+      "number": "14",
+      "title": "Time To Rock And Roll",
+      "cover": "/media/books/014-time-to-rock-and-roll/cover-6ff3b09262df.webp",
+      "pages": [
+        "/media/books/014-time-to-rock-and-roll/001-6ff3b09262df.webp",
+        "/media/books/014-time-to-rock-and-roll/002-54ce798e7b06.webp",
+        "/media/books/014-time-to-rock-and-roll/003-5b614d7daf40.webp",
+        "/media/books/014-time-to-rock-and-roll/004-69008163ddad.webp",
+        "/media/books/014-time-to-rock-and-roll/005-0aef96756b79.webp",
+        "/media/books/014-time-to-rock-and-roll/006-957501f942e3.webp",
+        "/media/books/014-time-to-rock-and-roll/007-442229a972f6.webp",
+        "/media/books/014-time-to-rock-and-roll/008-e48ce81e604c.webp",
+        "/media/books/014-time-to-rock-and-roll/009-4b72c7212ce6.webp",
+        "/media/books/014-time-to-rock-and-roll/010-f85da2918914.webp",
+        "/media/books/014-time-to-rock-and-roll/011-128ed8cb217d.webp",
+        "/media/books/014-time-to-rock-and-roll/012-0c839fa1b30b.webp",
+        "/media/books/014-time-to-rock-and-roll/013-2757aa805800.webp",
+        "/media/books/014-time-to-rock-and-roll/014-db933eab7af1.webp",
+        "/media/books/014-time-to-rock-and-roll/015-fc861b6601e0.webp",
+        "/media/books/014-time-to-rock-and-roll/016-c27fd927cc6d.webp",
+        "/media/books/014-time-to-rock-and-roll/017-8f30eb687bea.webp",
+        "/media/books/014-time-to-rock-and-roll/018-65b016469568.webp",
+        "/media/books/014-time-to-rock-and-roll/019-edbc8b281e76.webp",
+        "/media/books/014-time-to-rock-and-roll/020-1e6185568d28.webp"
+      ]
+    },
+    {
+      "id": "015-can-i",
+      "number": "15",
+      "title": "Can I",
+      "cover": "/media/books/015-can-i/cover-8b031c9765ed.webp",
+      "pages": [
+        "/media/books/015-can-i/001-8b031c9765ed.webp",
+        "/media/books/015-can-i/002-f9987a95322d.webp",
+        "/media/books/015-can-i/003-1dce9ccd08d1.webp",
+        "/media/books/015-can-i/004-02c8a2079e9a.webp",
+        "/media/books/015-can-i/005-42307c809628.webp",
+        "/media/books/015-can-i/006-fb989882cd59.webp",
+        "/media/books/015-can-i/007-4761460f0874.webp",
+        "/media/books/015-can-i/008-d99aa102a430.webp",
+        "/media/books/015-can-i/009-fe39f119a67f.webp",
+        "/media/books/015-can-i/010-328329b4852e.webp",
+        "/media/books/015-can-i/011-88a6dfeb1cab.webp",
+        "/media/books/015-can-i/012-26914f7f7ffa.webp",
+        "/media/books/015-can-i/013-377ff02ec61c.webp",
+        "/media/books/015-can-i/014-bc3a94e1f13d.webp",
+        "/media/books/015-can-i/015-0c181c29aff9.webp"
+      ]
+    },
+    {
+      "id": "016-youre-such-a-big-helper",
+      "number": "16",
+      "title": "Youre Such A Big Helper",
+      "cover": "/media/books/016-youre-such-a-big-helper/cover-f485c155bc0d.webp",
+      "pages": [
+        "/media/books/016-youre-such-a-big-helper/001-f485c155bc0d.webp",
+        "/media/books/016-youre-such-a-big-helper/002-48601f615d0a.webp",
+        "/media/books/016-youre-such-a-big-helper/003-d803cbb9c252.webp",
+        "/media/books/016-youre-such-a-big-helper/004-312ca166e479.webp",
+        "/media/books/016-youre-such-a-big-helper/005-b1e112b09661.webp",
+        "/media/books/016-youre-such-a-big-helper/006-9132de5774c9.webp",
+        "/media/books/016-youre-such-a-big-helper/007-66de499eafdd.webp",
+        "/media/books/016-youre-such-a-big-helper/008-4597d6ead2c9.webp",
+        "/media/books/016-youre-such-a-big-helper/009-6d6c532aae00.webp",
+        "/media/books/016-youre-such-a-big-helper/010-85cec7d532af.webp",
+        "/media/books/016-youre-such-a-big-helper/011-9e9ad2e46b90.webp",
+        "/media/books/016-youre-such-a-big-helper/012-5ddac63f1a7b.webp",
+        "/media/books/016-youre-such-a-big-helper/013-791a360e722b.webp"
+      ]
+    },
+    {
+      "id": "017-follow-me",
+      "number": "17",
+      "title": "Follow Me",
+      "cover": "/media/books/017-follow-me/cover-35a0c25a372f.webp",
+      "pages": [
+        "/media/books/017-follow-me/001-35a0c25a372f.webp",
+        "/media/books/017-follow-me/002-0378c48645f5.webp",
+        "/media/books/017-follow-me/003-b083c68dec3f.webp",
+        "/media/books/017-follow-me/004-80ba205b7949.webp",
+        "/media/books/017-follow-me/005-3a6bb72aae16.webp",
+        "/media/books/017-follow-me/006-b2dc6cfb037e.webp",
+        "/media/books/017-follow-me/007-5884c066ce87.webp",
+        "/media/books/017-follow-me/008-eae95f1f4b74.webp",
+        "/media/books/017-follow-me/009-d7afcc0ba2d3.webp"
+      ]
+    },
+    {
+      "id": "018-i-needed-to-go",
+      "number": "18",
+      "title": "I Needed To Go",
+      "cover": "/media/books/018-i-needed-to-go/cover-12fa2bfb8f94.webp",
+      "pages": [
+        "/media/books/018-i-needed-to-go/001-12fa2bfb8f94.webp",
+        "/media/books/018-i-needed-to-go/002-95c8942369da.webp",
+        "/media/books/018-i-needed-to-go/003-ad75204e33cc.webp",
+        "/media/books/018-i-needed-to-go/004-a1b29bdc268e.webp",
+        "/media/books/018-i-needed-to-go/005-521805bf902f.webp",
+        "/media/books/018-i-needed-to-go/006-352bde574015.webp",
+        "/media/books/018-i-needed-to-go/007-410459fb643e.webp",
+        "/media/books/018-i-needed-to-go/008-9d17c90fce56.webp",
+        "/media/books/018-i-needed-to-go/009-90d66505d3b7.webp",
+        "/media/books/018-i-needed-to-go/010-b6c8f2206d5e.webp"
+      ]
     }
   ]
 }

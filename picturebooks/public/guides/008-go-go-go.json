@@ -1,0 +1,1258 @@
+{
+  "version": 1,
+  "bookId": "008-go-go-go",
+  "title": "Go Go Go",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/008-go-go-go/001-d3555d2782d0.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Go! Go! Go!",
+              "zh": "走！走！走！",
+              "id": "008-go-go-go:1:199691206577"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "go 是出發、動起來。今天會做很多不同活動，先看看女孩的包包，猜她會用到什麼。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿花朵布包向前走，妈妈在後面，湖裡有鴨子，遠處有小橋。",
+          "phrases": [
+            {
+              "en": "She has a little bag.",
+              "zh": "她拿著小包包。",
+              "id": "008-go-go-go:1:421ef6a298fa"
+            },
+            {
+              "en": "I see ducks.",
+              "zh": "我看到鴨子。",
+              "id": "008-go-go-go:1:218584945e5f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s go outside.",
+              "zh": "我們到外面去。",
+              "id": "008-go-go-go:1:9bb1f6881543"
+            },
+            {
+              "en": "What can we do?",
+              "zh": "我們可以做什麼呢？",
+              "id": "008-go-go-go:1:4e4df602b3ff"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Can you find the bridge?",
+              "zh": "妳找得到橋嗎？",
+              "id": "008-go-go-go:1:cbaedec9b0de",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There.",
+              "zh": "在那裡。",
+              "id": "008-go-go-go:1:7df685e63e9c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, over the water.",
+              "zh": "對，在水上。",
+              "id": "008-go-go-go:1:7fc0974760c7",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Take a little bag with you.",
+              "zh": "帶一個小包包。",
+              "id": "008-go-go-go:1:37a5c7d1da8e"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Walk two fingers across your lap.",
+              "zh": "讓兩根手指在腿上走。",
+              "id": "008-go-go-go:1:4cf637e2502c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/008-go-go-go/002-2b2b328a59f1.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can walk",
+              "zh": "我會走路。",
+              "id": "008-go-go-go:2:d7b39210bc0c"
+            },
+            {
+              "en": "Walk walk walk",
+              "zh": "走、走、走。",
+              "id": "008-go-go-go:2:ec4147bcbd91"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "I can 是「我會、我能」。walk 是走路，可以配合輕輕踏步，不用快。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在湖邊步道上走路，媽媽跟著，前方有木欄杆。",
+          "phrases": [
+            {
+              "en": "She walks on the path.",
+              "zh": "她在步道上走。",
+              "id": "008-go-go-go:2:64bac3b5a878"
+            },
+            {
+              "en": "Mom walks behind her.",
+              "zh": "媽媽在她後面走。",
+              "id": "008-go-go-go:2:ece859351457"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "One step, two steps.",
+              "zh": "一步、兩步。",
+              "id": "008-go-go-go:2:7c6f9ee875cc"
+            },
+            {
+              "en": "Walk with me.",
+              "zh": "跟我一起走。",
+              "id": "008-go-go-go:2:b0d3af090edf"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Is she walking?",
+              "zh": "她在走路嗎？",
+              "id": "008-go-go-go:2:d8b15ebc88ff",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "008-go-go-go:2:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She can walk.",
+              "zh": "她會走路。",
+              "id": "008-go-go-go:2:7b691297653e",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s walk together.",
+              "zh": "我們一起走。",
+              "id": "008-go-go-go:2:d8eadd18adbb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Take two little steps.",
+              "zh": "走兩小步。",
+              "id": "008-go-go-go:2:30860845dddc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/008-go-go-go/003-2fec507e453d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can run",
+              "zh": "我會跑。",
+              "id": "008-go-go-go:3:98cb31b5b4fd"
+            },
+            {
+              "en": "Run run run",
+              "zh": "跑、跑、跑。",
+              "id": "008-go-go-go:3:e41ac3de1086"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "run 比 walk 快，可以比較前後頁的腳和手。陪讀時用手指跑也很好玩。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩與媽媽在草地上跑，衣服和頭髮隨動作飄起。",
+          "phrases": [
+            {
+              "en": "They are running.",
+              "zh": "她們在跑。",
+              "id": "008-go-go-go:3:98f81854af3f"
+            },
+            {
+              "en": "I see green grass.",
+              "zh": "我看到綠色草地。",
+              "id": "008-go-go-go:3:676c6249d96a"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Run, little feet.",
+              "zh": "小腳跑呀。",
+              "id": "008-go-go-go:3:9ceaf364b8bb"
+            },
+            {
+              "en": "You can move fast.",
+              "zh": "妳可以動得快。",
+              "id": "008-go-go-go:3:864eb097cac6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Who is running with her?",
+              "zh": "誰跟她一起跑？",
+              "id": "008-go-go-go:3:110d421e90d5",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "008-go-go-go:3:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They run together.",
+              "zh": "她們一起跑。",
+              "id": "008-go-go-go:3:cd82d65af73a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s play on the grass.",
+              "zh": "我們在草地上玩。",
+              "id": "008-go-go-go:3:5a89b75b5203"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make your fingers run.",
+              "zh": "讓手指跑起來。",
+              "id": "008-go-go-go:3:ee0232875ab3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/008-go-go-go/004-ab5072b162e2.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can jump",
+              "zh": "我會跳。",
+              "id": "008-go-go-go:4:806b5d580bb2"
+            },
+            {
+              "en": "Jump jump jump",
+              "zh": "跳、跳、跳。",
+              "id": "008-go-go-go:4:d3b4e9df0eec"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "jump 是跳起來，圖中女孩雙腳離地。可以自己選擇跳一下或只做手勢。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在石板路上跳，妈妈蹲著看，右邊矮牆上有貓。",
+          "phrases": [
+            {
+              "en": "Her feet are off the ground.",
+              "zh": "她的腳離開地面。",
+              "id": "008-go-go-go:4:ff9c42d28aed"
+            },
+            {
+              "en": "The cat is on the wall.",
+              "zh": "貓在牆上。",
+              "id": "008-go-go-go:4:c8216c5a18c3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Up we go!",
+              "zh": "我們跳起來！",
+              "id": "008-go-go-go:4:aba3f9787dbc"
+            },
+            {
+              "en": "Land softly.",
+              "zh": "輕輕落地。",
+              "id": "008-go-go-go:4:c1c1796c4582"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Can you find the cat?",
+              "zh": "妳找得到貓嗎？",
+              "id": "008-go-go-go:4:4200f04761a6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the wall.",
+              "zh": "在牆上。",
+              "id": "008-go-go-go:4:3893162139a5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, watching her.",
+              "zh": "對，看著她。",
+              "id": "008-go-go-go:4:a1eb520cf8d0",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Give yourself some space.",
+              "zh": "替自己留一點空間。",
+              "id": "008-go-go-go:4:e65e23682801"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a toy jump once.",
+              "zh": "讓玩具跳一下。",
+              "id": "008-go-go-go:4:eb7968f45eb0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/008-go-go-go/005-a094ff4df65d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "It’s so much fun",
+              "zh": "好好玩。",
+              "id": "008-go-go-go:5:bbae9c75fe94"
+            },
+            {
+              "en": "Fun fun fun",
+              "zh": "好玩、好玩、好玩。",
+              "id": "008-go-go-go:5:9c74626e4583"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "fun 是好玩。女孩開心的表情是聊天重點，不必把每個動作都做完。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩舉高手開心跑，旁邊有狗，媽媽坐在草地邊，湖裡有鴨子。",
+          "phrases": [
+            {
+              "en": "She looks happy.",
+              "zh": "她看起來很開心。",
+              "id": "008-go-go-go:5:a85afe73d514"
+            },
+            {
+              "en": "The dog runs too.",
+              "zh": "狗也在跑。",
+              "id": "008-go-go-go:5:c335ad467e46"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "What a fun day!",
+              "zh": "好好玩的一天！",
+              "id": "008-go-go-go:5:d5507d5f73f7"
+            },
+            {
+              "en": "I like playing with you.",
+              "zh": "我喜歡跟妳一起玩。",
+              "id": "008-go-go-go:5:13234563cdce"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Is she happy?",
+              "zh": "她開心嗎？",
+              "id": "008-go-go-go:5:caa3f8ce2a82",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "開心！",
+              "id": "008-go-go-go:5:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Look at her big smile.",
+              "zh": "看看她大大的笑容。",
+              "id": "008-go-go-go:5:793b62784ecb",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What do you like to play?",
+              "zh": "妳喜歡玩什麼？",
+              "id": "008-go-go-go:5:0ac4e3409bc6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make your happiest face.",
+              "zh": "做一個最開心的表情。",
+              "id": "008-go-go-go:5:53ce9de3e42c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/008-go-go-go/006-0d4af75467f8.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can climb",
+              "zh": "我會爬。",
+              "id": "008-go-go-go:6:9e5ca1f1c4cf"
+            },
+            {
+              "en": "Climb climb climb",
+              "zh": "爬、爬、爬。",
+              "id": "008-go-go-go:6:44a2c1598395"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "climb 是攀爬。女孩在遊戲場木梯上，媽媽在旁陪著；不是爬樹或欄杆。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抓著木梯，抬起一隻腳，媽媽在下面伸手陪著。",
+          "phrases": [
+            {
+              "en": "She climbs the ladder.",
+              "zh": "她爬梯子。",
+              "id": "008-go-go-go:6:3bbab8fc3f1f"
+            },
+            {
+              "en": "Mom is close by.",
+              "zh": "媽媽就在旁邊。",
+              "id": "008-go-go-go:6:6dc02b21fba6"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "One step at a time.",
+              "zh": "一次一步。",
+              "id": "008-go-go-go:6:789227ae5e8f"
+            },
+            {
+              "en": "I’m right here.",
+              "zh": "我就在這裡。",
+              "id": "008-go-go-go:6:14c1de2a98ed"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "What is she climbing?",
+              "zh": "她在爬什麼？",
+              "id": "008-go-go-go:6:8c175d8e1f84",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A ladder.",
+              "zh": "梯子。",
+              "id": "008-go-go-go:6:17ac18118eb9",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a wooden ladder.",
+              "zh": "對，木梯子。",
+              "id": "008-go-go-go:6:59f30a1679a6",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Ask Mom to stay with you.",
+              "zh": "請媽媽陪妳。",
+              "id": "008-go-go-go:6:ebca481ae378"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make your fingers climb up your arm.",
+              "zh": "讓手指沿手臂往上爬。",
+              "id": "008-go-go-go:6:76901536e3b3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/008-go-go-go/007-f398ae25a369.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can swim",
+              "zh": "我會游泳。",
+              "id": "008-go-go-go:7:e05f1509a4d3"
+            },
+            {
+              "en": "Swim swim swim",
+              "zh": "游、游、游。",
+              "id": "008-go-go-go:7:c716e51c2dc9"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "swim 是游泳。這頁換了泳衣與泳帽，可以找到水花、媽媽和女孩；不用在閱讀時真的練游泳。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩穿黃色泳衣、紅色泳帽在泳池游，媽媽坐在池邊。",
+          "phrases": [
+            {
+              "en": "She is in the pool.",
+              "zh": "她在泳池裡。",
+              "id": "008-go-go-go:7:2ca6c7f73bba"
+            },
+            {
+              "en": "I see splashes.",
+              "zh": "我看到水花。",
+              "id": "008-go-go-go:7:dbbccef170ed"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Move your arms.",
+              "zh": "動動妳的手臂。",
+              "id": "008-go-go-go:7:174f5fc2edb3"
+            },
+            {
+              "en": "Splash, splash!",
+              "zh": "水花、水花！",
+              "id": "008-go-go-go:7:e0a8bcbc77ad"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Where is Mom?",
+              "zh": "媽媽在哪裡？",
+              "id": "008-go-go-go:7:c67099ee0581",
+              "label": "媽媽問"
+            },
+            {
+              "en": "By the pool.",
+              "zh": "泳池旁。",
+              "id": "008-go-go-go:7:b76b2b2b7788",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, watching her swim.",
+              "zh": "對，看著她游泳。",
+              "id": "008-go-go-go:7:875239cfdf94",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s go swimming with a grown-up.",
+              "zh": "我們跟大人一起去游泳。",
+              "id": "008-go-go-go:7:e9a59eabb891"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to swim while sitting.",
+              "zh": "坐著假裝游泳。",
+              "id": "008-go-go-go:7:cd3537eb8f0b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/008-go-go-go/008-57a645c6c4d9.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can, I can, I can go go go",
+              "zh": "我能、我能、我能動起來。",
+              "id": "008-go-go-go:8:b1bb4fcb2f70"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "重複 I can 是開心地說自己能做事。這頁走向手作攤，接著會出現寫字、畫畫等活動。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩走向手作桌，桌邊的人拿著彩色花朵，妈妈在後面。",
+          "phrases": [
+            {
+              "en": "I see a colorful flower.",
+              "zh": "我看到彩色花朵。",
+              "id": "008-go-go-go:8:6efa35f0bf86"
+            },
+            {
+              "en": "There are pencils on the table.",
+              "zh": "桌上有筆。",
+              "id": "008-go-go-go:8:e3f3a359e1ff"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s try something new.",
+              "zh": "我們試點新東西。",
+              "id": "008-go-go-go:8:ce4236b4fc7b"
+            },
+            {
+              "en": "What would you like to make?",
+              "zh": "妳想做什麼？",
+              "id": "008-go-go-go:8:c1fa417c24fd"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Can you see the flower?",
+              "zh": "妳看得到花朵嗎？",
+              "id": "008-go-go-go:8:63d8ceee0925",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "看得到。",
+              "id": "008-go-go-go:8:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It has many colors.",
+              "zh": "它有好多顏色。",
+              "id": "008-go-go-go:8:a019d9b18d3a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Choose something you want to try.",
+              "zh": "選一件想試試的事。",
+              "id": "008-go-go-go:8:63a154d3fa51"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Name a color on the flower.",
+              "zh": "說一個花上的顏色。",
+              "id": "008-go-go-go:8:32dd4033fe61"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/008-go-go-go/009-da6281e72599.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can write",
+              "zh": "我會寫。",
+              "id": "008-go-go-go:9:2ee81f6b61d0"
+            },
+            {
+              "en": "Write write write",
+              "zh": "寫、寫、寫。",
+              "id": "008-go-go-go:9:418cad5fa935"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "write 是寫字。女孩用鉛筆在本子上練習，媽媽陪在旁；孩子畫線也可以是起點。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿黃色鉛筆在本子上寫，媽媽托著臉看，貓趴在書旁。",
+          "phrases": [
+            {
+              "en": "She has a yellow pencil.",
+              "zh": "她拿黃色鉛筆。",
+              "id": "008-go-go-go:9:97f8c39759b0"
+            },
+            {
+              "en": "The cat is resting.",
+              "zh": "貓在休息。",
+              "id": "008-go-go-go:9:830a092b51cc"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s make a line.",
+              "zh": "我們畫一條線。",
+              "id": "008-go-go-go:9:2b4b988e0ce8"
+            },
+            {
+              "en": "Take your time.",
+              "zh": "慢慢來。",
+              "id": "008-go-go-go:9:e940392ed26f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "What does she write with?",
+              "zh": "她用什麼寫？",
+              "id": "008-go-go-go:9:5fd6bce2db9b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A pencil.",
+              "zh": "鉛筆。",
+              "id": "008-go-go-go:9:3752f6cf45c1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a yellow pencil.",
+              "zh": "對，黃色鉛筆。",
+              "id": "008-go-go-go:9:216680aaf664",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Get some paper.",
+              "zh": "拿一些紙。",
+              "id": "008-go-go-go:9:df8a559266c5"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Write a little line or shape.",
+              "zh": "寫一條線或畫一個形狀。",
+              "id": "008-go-go-go:9:b2c9d3e9ea55"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/008-go-go-go/010-7d27a2d6a575.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can draw",
+              "zh": "我會畫。",
+              "id": "008-go-go-go:10:0e51ea69bf6b"
+            },
+            {
+              "en": "Draw draw draw",
+              "zh": "畫、畫、畫。",
+              "id": "008-go-go-go:10:258c57b6f398"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "draw 是畫圖，與上一頁 write 不同。看畫中的花，聊顏色就能延伸。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩用紅色蠟筆畫紅花與綠葉，妈妈看著，桌上有其他蠟筆。",
+          "phrases": [
+            {
+              "en": "She draws a red flower.",
+              "zh": "她畫紅色花朵。",
+              "id": "008-go-go-go:10:d3bc17650b06"
+            },
+            {
+              "en": "The leaves are green.",
+              "zh": "葉子是綠色的。",
+              "id": "008-go-go-go:10:39df227abfb0"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Choose a color.",
+              "zh": "選一個顏色。",
+              "id": "008-go-go-go:10:6405794931bd"
+            },
+            {
+              "en": "I like your picture.",
+              "zh": "我喜歡妳的畫。",
+              "id": "008-go-go-go:10:f961c6633931"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "What is she drawing?",
+              "zh": "她畫什麼？",
+              "id": "008-go-go-go:10:24523dcf3dea",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A flower.",
+              "zh": "花。",
+              "id": "008-go-go-go:10:22ae510f3611",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A red flower with green leaves.",
+              "zh": "有綠葉的紅花。",
+              "id": "008-go-go-go:10:cf7397819f36",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Show Mom your drawing.",
+              "zh": "給媽媽看妳的畫。",
+              "id": "008-go-go-go:10:98411951c648"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw a flower in the air.",
+              "zh": "在空中畫一朵花。",
+              "id": "008-go-go-go:10:b46b385248ba"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/008-go-go-go/011-ba6df8472ec9.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can cook",
+              "zh": "我會做料理。",
+              "id": "008-go-go-go:11:af7fa7db2aa2"
+            },
+            {
+              "en": "Cook cook cook",
+              "zh": "做料理、做料理、做料理。",
+              "id": "008-go-go-go:11:cead4a74b90b"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "cook 在這裡泛指準備食物；圖片是在攪拌沙拉，沒有爐火。可以挑孩子能幫忙的小步驟。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩穿圍裙用木匙拌沙拉，媽媽站在旁，桌上有小番茄、黃瓜和甜椒。",
+          "phrases": [
+            {
+              "en": "She mixes a salad.",
+              "zh": "她拌沙拉。",
+              "id": "008-go-go-go:11:d8fb4526dca6"
+            },
+            {
+              "en": "I see tomatoes.",
+              "zh": "我看到番茄。",
+              "id": "008-go-go-go:11:00610f157a4c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Mix it gently.",
+              "zh": "輕輕拌。",
+              "id": "008-go-go-go:11:9c85f4a99a6c"
+            },
+            {
+              "en": "Let’s make lunch together.",
+              "zh": "我們一起準備午餐。",
+              "id": "008-go-go-go:11:618e7023f835"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Can you find a tomato?",
+              "zh": "妳找得到番茄嗎？",
+              "id": "008-go-go-go:11:cb521229a4dc",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "008-go-go-go:11:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a red tomato.",
+              "zh": "對，紅色番茄。",
+              "id": "008-go-go-go:11:17e0dea318f3",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can help me mix.",
+              "zh": "妳可以幫我拌一拌。",
+              "id": "008-go-go-go:11:9c8b0ae22de0"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to stir a bowl.",
+              "zh": "假裝攪拌一個碗。",
+              "id": "008-go-go-go:11:7230c4fc35f0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/008-go-go-go/012-cc471a03c33c.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I can fly",
+              "zh": "我會飛。",
+              "id": "008-go-go-go:12:63f30c5f3ee7"
+            },
+            {
+              "en": "Fly fly fly",
+              "zh": "飛、飛、飛。",
+              "id": "008-go-go-go:12:7da6a8d1a1ef"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這是想像遊戲：女孩戴紙板翅膀，在心裡想著搭飛機。她沒有真的在天空飛。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩戴紙板翅膀伸開雙手跑，想像泡泡裡有飛機，妈妈與狗在旁。",
+          "phrases": [
+            {
+              "en": "She has cardboard wings.",
+              "zh": "她戴紙板翅膀。",
+              "id": "008-go-go-go:12:60d2af9cb4f6"
+            },
+            {
+              "en": "I see a plane in her thought bubble.",
+              "zh": "我看到她想像泡泡裡的飛機。",
+              "id": "008-go-go-go:12:7d17858daed5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s pretend to fly.",
+              "zh": "我們假裝飛。",
+              "id": "008-go-go-go:12:a7daa5d942e3"
+            },
+            {
+              "en": "I’m a little plane.",
+              "zh": "我是一架小飛機。",
+              "id": "008-go-go-go:12:15e970590b6f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說動作，或媽媽示範一次。孩子做動作、指圖或說一個字都可以，不需要背句子。",
+          "phrases": [
+            {
+              "en": "Is she really flying in the sky?",
+              "zh": "她真的在天空飛嗎？",
+              "id": "008-go-go-go:12:17f1d39fdedb",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No, she is playing.",
+              "zh": "沒有，她在玩。",
+              "id": "008-go-go-go:12:619ae420c0cd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She is pretending.",
+              "zh": "她在假裝。",
+              "id": "008-go-go-go:12:f5fc98e7af3e",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What would you like to pretend to be?",
+              "zh": "妳想假裝是什麼？",
+              "id": "008-go-go-go:12:e963183b460a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Open your arms like a plane.",
+              "zh": "像飛機一樣張開雙手。",
+              "id": "008-go-go-go:12:45ac1f0d710c"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

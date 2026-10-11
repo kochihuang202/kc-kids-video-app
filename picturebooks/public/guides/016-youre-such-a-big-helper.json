@@ -1,0 +1,1358 @@
+{
+  "version": 1,
+  "bookId": "016-youre-such-a-big-helper",
+  "title": "Youre Such A Big Helper",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/016-youre-such-a-big-helper/001-f485c155bc0d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You're Such A Big Helper!",
+              "zh": "妳真是個很棒的小幫手！",
+              "id": "016-youre-such-a-big-helper:1:5e73496e2db7"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "big helper 是幫很多忙，不是身體變大；可具體說謝謝她做的事。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿盤子，媽媽拿布擦盤，桌上有摺好衣服與碗盤。",
+          "phrases": [
+            {
+              "en": "She holds a plate.",
+              "zh": "她拿盤子。",
+              "id": "016-youre-such-a-big-helper:1:6523468b8b3d"
+            },
+            {
+              "en": "Mom holds a towel.",
+              "zh": "媽媽拿布。",
+              "id": "016-youre-such-a-big-helper:1:7f256e00da26"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You helped me.",
+              "zh": "妳幫了我。",
+              "id": "016-youre-such-a-big-helper:1:ebd243395add"
+            },
+            {
+              "en": "Thank you for your help.",
+              "zh": "謝謝妳幫忙。",
+              "id": "016-youre-such-a-big-helper:1:c127589d70de"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "What does she hold?",
+              "zh": "她拿什麼？",
+              "id": "016-youre-such-a-big-helper:1:b52144e26455",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A plate.",
+              "zh": "盤子。",
+              "id": "016-youre-such-a-big-helper:1:9bb60cbb1bc1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A plate with two hands.",
+              "zh": "用兩手拿的盤子。",
+              "id": "016-youre-such-a-big-helper:1:a498e5b07ba0",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can help with one small thing.",
+              "zh": "妳可以幫一件小事。",
+              "id": "016-youre-such-a-big-helper:1:d9fedae85828"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to hand me a toy plate.",
+              "zh": "假裝遞玩具盤給我。",
+              "id": "016-youre-such-a-big-helper:1:fb3944d80adb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/016-youre-such-a-big-helper/002-48601f615d0a.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hey little darling",
+              "zh": "嘿，小寶貝，",
+              "id": "016-youre-such-a-big-helper:2:42fc4f0a33e9"
+            },
+            {
+              "en": "Can you help with the dishes?",
+              "zh": "妳可以幫忙洗碗盤嗎？",
+              "id": "016-youre-such-a-big-helper:2:af6972daddb8"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "darling 是親暱的小寶貝。dishes 指碗盘，也能指洗碗這項家事。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女在水槽旁用海綿洗盤，有泡泡與流水。",
+          "phrases": [
+            {
+              "en": "I see bubbles.",
+              "zh": "我看到泡泡。",
+              "id": "016-youre-such-a-big-helper:2:d3f081f99ee6"
+            },
+            {
+              "en": "They hold sponges.",
+              "zh": "她們拿海綿。",
+              "id": "016-youre-such-a-big-helper:2:b27c18342e22"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s wash together.",
+              "zh": "我們一起洗。",
+              "id": "016-youre-such-a-big-helper:2:67ffb501b0c9"
+            },
+            {
+              "en": "I’ll help you.",
+              "zh": "我會幫妳。",
+              "id": "016-youre-such-a-big-helper:2:18c3e3aeae4a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "Can you find the bubbles?",
+              "zh": "妳找得到泡泡嗎？",
+              "id": "016-youre-such-a-big-helper:2:53e234ad4a01",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "這裡。",
+              "id": "016-youre-such-a-big-helper:2:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Little white bubbles.",
+              "zh": "小白泡泡。",
+              "id": "016-youre-such-a-big-helper:2:fa0420c46e19",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can use a toy dish to practice.",
+              "zh": "我們可以用玩具碗盤練。",
+              "id": "016-youre-such-a-big-helper:2:b990dd72a2e5"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to scrub a toy plate.",
+              "zh": "假裝擦洗玩具盤。",
+              "id": "016-youre-such-a-big-helper:2:fb42de795c11"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/016-youre-such-a-big-helper/003-d803cbb9c252.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can you help me clear the table?",
+              "zh": "妳可以幫我收餐桌嗎？",
+              "id": "016-youre-such-a-big-helper:3:79b33ef28507"
+            },
+            {
+              "en": "Thank you dear",
+              "zh": "謝謝妳，寶貝。",
+              "id": "016-youre-such-a-big-helper:3:2672c0f6fbc6"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "clear the table 是把用完的餐具收走，不是把桌子搬走。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩雙手遞盤子，媽媽伸手接，桌上還有碗盤。",
+          "phrases": [
+            {
+              "en": "She hands Mom a plate.",
+              "zh": "她遞盤給媽媽。",
+              "id": "016-youre-such-a-big-helper:3:d55608703dd6"
+            },
+            {
+              "en": "Mom reaches for it.",
+              "zh": "媽媽伸手接。",
+              "id": "016-youre-such-a-big-helper:3:745f5a49cb23"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Here you are.",
+              "zh": "給妳。",
+              "id": "016-youre-such-a-big-helper:3:e4daafe46307"
+            },
+            {
+              "en": "Thank you, dear.",
+              "zh": "謝謝，寶貝。",
+              "id": "016-youre-such-a-big-helper:3:2483bc3d9fb8"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "Who is taking the plate?",
+              "zh": "誰接盤子？",
+              "id": "016-youre-such-a-big-helper:3:0452d4059f69",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "016-youre-such-a-big-helper:3:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They are helping each other.",
+              "zh": "她們互相幫忙。",
+              "id": "016-youre-such-a-big-helper:3:cb95323a5ae7",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Carry one small thing at a time.",
+              "zh": "一次拿一件小東西。",
+              "id": "016-youre-such-a-big-helper:3:2aedafccdffc"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pass a soft toy with two hands.",
+              "zh": "用兩手遞軟玩具。",
+              "id": "016-youre-such-a-big-helper:3:fe4a101b0af3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/016-youre-such-a-big-helper/004-312ca166e479.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You're such a big helper",
+              "zh": "妳真是很棒的小幫手，",
+              "id": "016-youre-such-a-big-helper:4:cfbac59644e8"
+            },
+            {
+              "en": "Yeah yeah!",
+              "zh": "耶、耶！",
+              "id": "016-youre-such-a-big-helper:4:3ba31755c19e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Yeah 是開心的耶，完成小事也能一起慶祝。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女在廚房擊掌，女孩抬起一隻腳。",
+          "phrases": [
+            {
+              "en": "They give a high five.",
+              "zh": "她們擊掌。",
+              "id": "016-youre-such-a-big-helper:4:64a85d519865"
+            },
+            {
+              "en": "She looks excited.",
+              "zh": "她看起來興奮。",
+              "id": "016-youre-such-a-big-helper:4:73b58ee4ce23"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We did it!",
+              "zh": "我們做到了！",
+              "id": "016-youre-such-a-big-helper:4:a5e6c28942f4"
+            },
+            {
+              "en": "Thank you for helping.",
+              "zh": "謝謝妳幫忙。",
+              "id": "016-youre-such-a-big-helper:4:b34bab2f7ba6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "What are their hands doing?",
+              "zh": "她們的手做什麼？",
+              "id": "016-youre-such-a-big-helper:4:917c01e61e20",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A high five.",
+              "zh": "擊掌。",
+              "id": "016-youre-such-a-big-helper:4:76085631a88e",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A happy high five.",
+              "zh": "開心擊掌。",
+              "id": "016-youre-such-a-big-helper:4:9adab58df9f2",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can celebrate small steps.",
+              "zh": "小進步也可以慶祝。",
+              "id": "016-youre-such-a-big-helper:4:4ce06c847f22"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Give a high five if you like.",
+              "zh": "想的話擊掌。",
+              "id": "016-youre-such-a-big-helper:4:5f5dc702dc30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/016-youre-such-a-big-helper/005-b1e112b09661.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You helped clear the table",
+              "zh": "妳幫忙收了餐桌，",
+              "id": "016-youre-such-a-big-helper:5:9f83135ca9fa"
+            },
+            {
+              "en": "Yeah yeah!",
+              "zh": "耶、耶！",
+              "id": "016-youre-such-a-big-helper:5:3ba31755c19e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "helped 表示剛才幫好了。畫面餐桌空一些，可以比較前頁餐具。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩張手展示收好的木餐桌，媽媽合手微笑。",
+          "phrases": [
+            {
+              "en": "The table is clear.",
+              "zh": "餐桌收好了。",
+              "id": "016-youre-such-a-big-helper:5:157efea6236c"
+            },
+            {
+              "en": "She opens her arms.",
+              "zh": "她張開雙手。",
+              "id": "016-youre-such-a-big-helper:5:2763ebea425f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look at the table now.",
+              "zh": "看看現在的桌子。",
+              "id": "016-youre-such-a-big-helper:5:0f3b9b607312"
+            },
+            {
+              "en": "There is space.",
+              "zh": "有空間了。",
+              "id": "016-youre-such-a-big-helper:5:20c789416015"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "Do you see many plates on the table?",
+              "zh": "桌上還有很多盤子嗎？",
+              "id": "016-youre-such-a-big-helper:5:e3ae14028ec4",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "沒有。",
+              "id": "016-youre-such-a-big-helper:5:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She helped clear it.",
+              "zh": "她幫忙收好了。",
+              "id": "016-youre-such-a-big-helper:5:282cf6097f76",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put your cup in its place.",
+              "zh": "把妳的杯子放好。",
+              "id": "016-youre-such-a-big-helper:5:3c947b580987"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to clear a toy table.",
+              "zh": "假裝收玩具桌。",
+              "id": "016-youre-such-a-big-helper:5:1da92b816329"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/016-youre-such-a-big-helper/006-9132de5774c9.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You helped with the dishes",
+              "zh": "妳幫忙洗了碗盤，",
+              "id": "016-youre-such-a-big-helper:6:3a6a7a2381ca"
+            },
+            {
+              "en": "Yeah yeah!",
+              "zh": "耶、耶！",
+              "id": "016-youre-such-a-big-helper:6:3ba31755c19e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "dishes 包含洗與擦乾，圖正在擦盤，不必只說洗。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女各拿布擦盤，桌上有乾淨碗盤。",
+          "phrases": [
+            {
+              "en": "They dry the plates.",
+              "zh": "她們擦乾盤子。",
+              "id": "016-youre-such-a-big-helper:6:e8a54a66dce8"
+            },
+            {
+              "en": "I see a stack of plates.",
+              "zh": "我看到一疊盤子。",
+              "id": "016-youre-such-a-big-helper:6:b250045bcf4f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Clean and dry.",
+              "zh": "乾淨又乾燥。",
+              "id": "016-youre-such-a-big-helper:6:d1f58d7e279b"
+            },
+            {
+              "en": "Let’s finish together.",
+              "zh": "我們一起做完。",
+              "id": "016-youre-such-a-big-helper:6:b7cd3b47daad"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "What are they using?",
+              "zh": "她們用什麼？",
+              "id": "016-youre-such-a-big-helper:6:a181ca029341",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Towels.",
+              "zh": "布。",
+              "id": "016-youre-such-a-big-helper:6:72cd596ac54d",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "To dry the plates.",
+              "zh": "擦乾盤子用。",
+              "id": "016-youre-such-a-big-helper:6:b43cb4217427",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Use a small cloth to help.",
+              "zh": "用小布幫忙。",
+              "id": "016-youre-such-a-big-helper:6:3133e67a9794"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Wipe a toy dish gently.",
+              "zh": "輕輕擦玩具碗盤。",
+              "id": "016-youre-such-a-big-helper:6:c5c8b9a573a9"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/016-youre-such-a-big-helper/007-66de499eafdd.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hey little darling",
+              "zh": "嘿，小寶貝，",
+              "id": "016-youre-such-a-big-helper:7:42fc4f0a33e9"
+            },
+            {
+              "en": "Can you help with the laundry?",
+              "zh": "妳可以幫忙整理衣物嗎？",
+              "id": "016-youre-such-a-big-helper:7:41679c63237e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "laundry 是要洗或洗好的衣物及相關家事，不只洗衣機。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女一起拿装衣物的籃，旁邊洗衣機門打開。",
+          "phrases": [
+            {
+              "en": "The basket has clothes.",
+              "zh": "籃裡有衣物。",
+              "id": "016-youre-such-a-big-helper:7:f69576317011"
+            },
+            {
+              "en": "Mom helps hold it.",
+              "zh": "媽媽幫忙拿。",
+              "id": "016-youre-such-a-big-helper:7:4e11170816a5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s do it together.",
+              "zh": "我們一起做。",
+              "id": "016-youre-such-a-big-helper:7:54b8610fbb95"
+            },
+            {
+              "en": "A little help is lovely.",
+              "zh": "一點幫忙就很好。",
+              "id": "016-youre-such-a-big-helper:7:95975e8a3c53"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "What is in the basket?",
+              "zh": "籃裡有什麼？",
+              "id": "016-youre-such-a-big-helper:7:f5df684d1f8e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Clothes.",
+              "zh": "衣服。",
+              "id": "016-youre-such-a-big-helper:7:78df42be5943",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Clean clothes to put away.",
+              "zh": "要收好的乾淨衣服。",
+              "id": "016-youre-such-a-big-helper:7:23ee175c8bbc",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can help with a small towel.",
+              "zh": "妳可以幫忙一條小毛巾。",
+              "id": "016-youre-such-a-big-helper:7:46a519ccff3a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to lift an empty basket.",
+              "zh": "假裝提空籃。",
+              "id": "016-youre-such-a-big-helper:7:8c07592f4bdd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/016-youre-such-a-big-helper/008-4597d6ead2c9.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can you help fold the clothes?",
+              "zh": "妳可以幫忙摺衣服嗎？",
+              "id": "016-youre-such-a-big-helper:8:daa0e6d84eaa"
+            },
+            {
+              "en": "Thank you dear",
+              "zh": "謝謝妳，寶貝。",
+              "id": "016-youre-such-a-big-helper:8:2672c0f6fbc6"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "fold 是摺起來，孩子先跟做一小步即可，不要求摺得完全一樣。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩摺桌上的藍襯衫，媽媽指其中一邊。",
+          "phrases": [
+            {
+              "en": "The shirt is blue.",
+              "zh": "襯衫藍色的。",
+              "id": "016-youre-such-a-big-helper:8:03ae6ed7a471"
+            },
+            {
+              "en": "Mom shows her how.",
+              "zh": "媽媽示範怎麼做。",
+              "id": "016-youre-such-a-big-helper:8:cb0bd02ae950"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Fold this side in.",
+              "zh": "把這邊摺進來。",
+              "id": "016-youre-such-a-big-helper:8:c4bb529dadbf"
+            },
+            {
+              "en": "Let’s try one fold.",
+              "zh": "我們試摺一下。",
+              "id": "016-youre-such-a-big-helper:8:5ad1407907c3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "What are they folding?",
+              "zh": "她們摺什麼？",
+              "id": "016-youre-such-a-big-helper:8:7d6195724972",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A shirt.",
+              "zh": "襯衫。",
+              "id": "016-youre-such-a-big-helper:8:186dbdb8bcc6",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A blue shirt.",
+              "zh": "藍襯衫。",
+              "id": "016-youre-such-a-big-helper:8:84b05027f18b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can fold a little towel.",
+              "zh": "我們可以摺小毛巾。",
+              "id": "016-youre-such-a-big-helper:8:e0ffda5b355d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Fold a cloth in half.",
+              "zh": "把布對摺。",
+              "id": "016-youre-such-a-big-helper:8:8fc726f9988c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/016-youre-such-a-big-helper/009-6d6c532aae00.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You helped fold the clothes",
+              "zh": "妳幫忙摺了衣服，",
+              "id": "016-youre-such-a-big-helper:9:f531b7b3cfaa"
+            },
+            {
+              "en": "Yeah yeah!",
+              "zh": "耶、耶！",
+              "id": "016-youre-such-a-big-helper:9:3ba31755c19e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "肯定具體做的事。圖有一疊衣物，女孩正放最上面那件。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把花衣物放在摺好的衣服堆上，媽媽笑。",
+          "phrases": [
+            {
+              "en": "The clothes are in a stack.",
+              "zh": "衣服疊成一堆。",
+              "id": "016-youre-such-a-big-helper:9:a582bc8d9adc"
+            },
+            {
+              "en": "She puts one on top.",
+              "zh": "她把一件放上面。",
+              "id": "016-youre-such-a-big-helper:9:c45d615ca0f3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "One on top of another.",
+              "zh": "一件疊一件。",
+              "id": "016-youre-such-a-big-helper:9:9ca2aa7424c3"
+            },
+            {
+              "en": "You folded it.",
+              "zh": "妳把它摺好了。",
+              "id": "016-youre-such-a-big-helper:9:0294a2ddcd17"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "Where does she put it?",
+              "zh": "她把它放哪？",
+              "id": "016-youre-such-a-big-helper:9:343ce8c47ceb",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On top.",
+              "zh": "上面。",
+              "id": "016-youre-such-a-big-helper:9:7ddd65c0d92e",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "On the stack.",
+              "zh": "衣服堆上面。",
+              "id": "016-youre-such-a-big-helper:9:dfa7445a81c8",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put folded clothes together.",
+              "zh": "摺好衣服放一起。",
+              "id": "016-youre-such-a-big-helper:9:6c8bc689c0b9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Stack two small towels.",
+              "zh": "疊兩條小毛巾。",
+              "id": "016-youre-such-a-big-helper:9:0791ffab6f17"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/016-youre-such-a-big-helper/010-85cec7d532af.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You helped with the laundry",
+              "zh": "妳幫忙整理了衣物，",
+              "id": "016-youre-such-a-big-helper:10:319f620012ad"
+            },
+            {
+              "en": "Yeah yeah!",
+              "zh": "耶、耶！",
+              "id": "016-youre-such-a-big-helper:10:3ba31755c19e"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這頁搬衣物籃，實際孩子只拿輕巧份量，大籃由媽媽一起拿。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抱著裝衣物的籃走向架子，媽媽蹲旁看。",
+          "phrases": [
+            {
+              "en": "She carries a basket.",
+              "zh": "她拿籃子。",
+              "id": "016-youre-such-a-big-helper:10:6586a42b9ed7"
+            },
+            {
+              "en": "Clothes are on the shelves.",
+              "zh": "衣服在架上。",
+              "id": "016-youre-such-a-big-helper:10:be19ab86ccf4"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let me help with the basket.",
+              "zh": "我幫妳拿籃。",
+              "id": "016-youre-such-a-big-helper:10:6f6cd7d31afc"
+            },
+            {
+              "en": "We can share the work.",
+              "zh": "我們可以一起做。",
+              "id": "016-youre-such-a-big-helper:10:d95b736c4489"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "Where can the clothes go?",
+              "zh": "衣物可以放哪？",
+              "id": "016-youre-such-a-big-helper:10:094cfaffc339",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the shelf.",
+              "zh": "架上。",
+              "id": "016-youre-such-a-big-helper:10:2f265e2e0035",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "In their own place.",
+              "zh": "放固定的地方。",
+              "id": "016-youre-such-a-big-helper:10:539304d73820",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Ask for help with heavy things.",
+              "zh": "重東西請人幫忙。",
+              "id": "016-youre-such-a-big-helper:10:9bcdc2cbf5b5"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Carry one soft toy to its shelf.",
+              "zh": "把一個軟玩具送回架子。",
+              "id": "016-youre-such-a-big-helper:10:a4ef0366a4b5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/016-youre-such-a-big-helper/011-9e9ad2e46b90.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You help so much, so much, so much",
+              "zh": "妳幫了好多、好多、好多忙。",
+              "id": "016-youre-such-a-big-helper:11:fdb9bbdfb348"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "so much 重複表達感謝，不是要求孩子做更多才算幫手。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩蹲下把衣物放低架，媽媽在旁合手微笑。",
+          "phrases": [
+            {
+              "en": "She puts clothes on a low shelf.",
+              "zh": "她把衣物放低架。",
+              "id": "016-youre-such-a-big-helper:11:f28691f657bd"
+            },
+            {
+              "en": "Mom looks happy.",
+              "zh": "媽媽看起來開心。",
+              "id": "016-youre-such-a-big-helper:11:f98a207f0e12"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You found their place.",
+              "zh": "妳找到它們的地方。",
+              "id": "016-youre-such-a-big-helper:11:8bee46711154"
+            },
+            {
+              "en": "A little help matters.",
+              "zh": "小幫忙也有用。",
+              "id": "016-youre-such-a-big-helper:11:4afb40f9695b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "Is the shelf high or low?",
+              "zh": "架子高還是低？",
+              "id": "016-youre-such-a-big-helper:11:2665f62da5cf",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Low.",
+              "zh": "低。",
+              "id": "016-youre-such-a-big-helper:11:9b5fb1d952d5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She can reach it.",
+              "zh": "她伸手拿得到。",
+              "id": "016-youre-such-a-big-helper:11:0c9c27b320cd",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Use a shelf you can reach.",
+              "zh": "用妳拿得到的架子。",
+              "id": "016-youre-such-a-big-helper:11:eb772219a627"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find a low place for one toy.",
+              "zh": "給一個玩具找低低的位置。",
+              "id": "016-youre-such-a-big-helper:11:ba008bcb75a2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/016-youre-such-a-big-helper/012-5ddac63f1a7b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You help around the house",
+              "zh": "妳在家裡幫忙，",
+              "id": "016-youre-such-a-big-helper:12:70e1d8c73212"
+            },
+            {
+              "en": "You helped a lot, you big helper!",
+              "zh": "妳幫了很多忙，小幫手！",
+              "id": "016-youre-such-a-big-helper:12:4590d45018a2"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "around the house 是在家中，不是一定繞屋外一圈。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女抱在一起笑，旁邊籃裡有摺好衣物。",
+          "phrases": [
+            {
+              "en": "Mom hugs her.",
+              "zh": "媽媽抱她。",
+              "id": "016-youre-such-a-big-helper:12:a0f78bd41f0a"
+            },
+            {
+              "en": "The clothes are folded.",
+              "zh": "衣物摺好了。",
+              "id": "016-youre-such-a-big-helper:12:f02db9603789"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Thank you for working with me.",
+              "zh": "謝謝妳跟我一起做。",
+              "id": "016-youre-such-a-big-helper:12:c3a54950a41f"
+            },
+            {
+              "en": "Now we can rest.",
+              "zh": "現在我們可以休息。",
+              "id": "016-youre-such-a-big-helper:12:69789af805de"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "How do they feel?",
+              "zh": "她們感覺怎樣？",
+              "id": "016-youre-such-a-big-helper:12:94d7d32f94dd",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Happy.",
+              "zh": "開心。",
+              "id": "016-youre-such-a-big-helper:12:0b74e0c2be82",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Happy together.",
+              "zh": "一起很開心。",
+              "id": "016-youre-such-a-big-helper:12:fba5aa5641d4",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Helping can be time together.",
+              "zh": "幫忙也可以是一起的時間。",
+              "id": "016-youre-such-a-big-helper:12:c40f276f456b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Choose a smile or a high five to finish.",
+              "zh": "選微笑或擊掌做結尾。",
+              "id": "016-youre-such-a-big-helper:12:b232a2454129"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/016-youre-such-a-big-helper/013-791a360e722b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, you're such a big helper",
+              "zh": "對，妳真是很棒的小幫手。",
+              "id": "016-youre-such-a-big-helper:13:c7fbd8bb3f73"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "收尾已坐下休息，幫忙後可以一起享受完成的感覺。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐媽媽腿上拿花盆，媽媽環抱她，旁有衣物籃。",
+          "phrases": [
+            {
+              "en": "She holds a pot of flowers.",
+              "zh": "她拿花盆。",
+              "id": "016-youre-such-a-big-helper:13:7df740c0f472"
+            },
+            {
+              "en": "Mom sits with her.",
+              "zh": "媽媽跟她坐一起。",
+              "id": "016-youre-such-a-big-helper:13:d2be0d7fa812"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We helped each other.",
+              "zh": "我們互相幫忙。",
+              "id": "016-youre-such-a-big-helper:13:5a3c04e0fe76"
+            },
+            {
+              "en": "Time for a little rest.",
+              "zh": "休息一下了。",
+              "id": "016-youre-such-a-big-helper:13:c93e1ebaec7f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她幫了什麼忙？」孩子指圖就好。實際練習挑輕巧、不易破的物品，媽媽陪著做，也可以只用玩具。",
+          "phrases": [
+            {
+              "en": "What does she hold now?",
+              "zh": "她現在拿什麼？",
+              "id": "016-youre-such-a-big-helper:13:abce4e3fe70f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Flowers.",
+              "zh": "花。",
+              "id": "016-youre-such-a-big-helper:13:6181e37e14f6",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Flowers in a pot.",
+              "zh": "盆裡的花。",
+              "id": "016-youre-such-a-big-helper:13:9416123c4b4d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What small job would you like to try?",
+              "zh": "妳想試哪件小事？",
+              "id": "016-youre-such-a-big-helper:13:6e3ac0d65418"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy thank another toy for helping.",
+              "zh": "讓玩具謝謝另一個玩具幫忙。",
+              "id": "016-youre-such-a-big-helper:13:d7c770711dec"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -25,7 +25,30 @@ test('every published image has a complete, translated guide with stable unique 
       }
     }
   }
-  assert.equal(total, 100);
+  assert.equal(total, catalog.books.reduce((sum, book) => sum + book.pages.length, 0));
+});
+test('new books preserve image facts and explain figurative wording without inventing outcomes', async () => {
+  const get = async number => {
+    const book = catalog.books.find(b => Number(b.number) === number);
+    assert.ok(book, `Published book ${number}`);
+    return JSON.parse(await readFile(new URL(`guides/${book.id}.json`, publicDir)));
+  };
+  assert.equal(catalog.books.length, 18);
+  assert.equal(catalog.books.reduce((sum, b) => sum + b.pages.length, 0), 244);
+  const fly = await get(8);
+  assert.match(fly.pages[11].sections[1].note, /假裝|想像/);
+  const worms = await get(10);
+  assert.match(worms.pages[3].sections[1].note, /鼻頭外面/);
+  assert.match(worms.pages[10].sections[1].note, /倒影/);
+  const clothes = await get(12);
+  assert.match(clothes.pages[13].sections[1].note, /仍沒有找到/);
+  const tidy = await get(13);
+  assert.match(tidy.pages[12].sections[1].note, /不是食物灑出/);
+  const pack = await get(14);
+  for (const index of [9, 18]) assert.match(pack.pages[index].sections[1].note, /貓布偶/);
+  const bathroom = await get(18);
+  assert.match(bathroom.pages[2].sections[1].note, /number one.*尿尿.*number two.*便便/);
+  assert.match(bathroom.pages[7].sections[1].note, /不是.*壞事/);
 });
 test('image-specific original wording and known visual nuances remain intact', async () => {
   const get = async id => JSON.parse(await readFile(new URL(`guides/${id}.json`, publicDir)));

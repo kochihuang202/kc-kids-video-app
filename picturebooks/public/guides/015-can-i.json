@@ -1,0 +1,1568 @@
+{
+  "version": 1,
+  "bookId": "015-can-i",
+  "title": "Can I",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/015-can-i/001-8b031c9765ed.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can I?",
+              "zh": "我可以嗎？",
+              "id": "015-can-i:1:a589cdc8e71c"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Can I? 是先問我可以做某件事嗎，接後面內容才知道想做什麼。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿自己的畫給父母看，爸爸穿藍襯衫，媽媽穿綠上衣。",
+          "phrases": [
+            {
+              "en": "She shows a picture.",
+              "zh": "她展示一張畫。",
+              "id": "015-can-i:1:350e249bcc46"
+            },
+            {
+              "en": "Mom and Dad are listening.",
+              "zh": "爸爸媽媽在聽。",
+              "id": "015-can-i:1:eb3be319340b"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Can I show you?",
+              "zh": "我可以給妳看嗎？",
+              "id": "015-can-i:1:3112195bedf6"
+            },
+            {
+              "en": "Tell me what you want.",
+              "zh": "告訴我妳想要什麼。",
+              "id": "015-can-i:1:46bb24c6ab97"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Who is with the girl?",
+              "zh": "誰跟女孩在一起？",
+              "id": "015-can-i:1:61c2df896ae1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom and Dad.",
+              "zh": "爸爸媽媽。",
+              "id": "015-can-i:1:0b0437866281",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They are listening to her.",
+              "zh": "他們在聽她說。",
+              "id": "015-can-i:1:c00d41476f4c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can ask me a question.",
+              "zh": "妳可以問我問題。",
+              "id": "015-can-i:1:24060eaf439c"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy ask, Can I play?",
+              "zh": "讓玩具問：我可以玩嗎？",
+              "id": "015-can-i:1:fee92e75dff4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/015-can-i/002-f9987a95322d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can I play on the phone?",
+              "zh": "我可以玩手機嗎？",
+              "id": "015-can-i:2:fda58a776981"
+            },
+            {
+              "en": "Ask daddy if it's okay",
+              "zh": "問問爸爸可不可以。",
+              "id": "015-can-i:2:936b0d889796"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "play on the phone 是用手機玩；先問，不代表一定答應。圖中手機仍在桌上。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩指桌上的手機，爸爸坐旁看她。",
+          "phrases": [
+            {
+              "en": "The phone is on the table.",
+              "zh": "手機在桌上。",
+              "id": "015-can-i:2:465690358443"
+            },
+            {
+              "en": "She points to it.",
+              "zh": "她指著它。",
+              "id": "015-can-i:2:4e4a5fbe0d2e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Ask first.",
+              "zh": "先問一下。",
+              "id": "015-can-i:2:cd2c2edba589"
+            },
+            {
+              "en": "Can I use it?",
+              "zh": "我可以用嗎？",
+              "id": "015-can-i:2:a7e6460c8e7e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Is she holding the phone?",
+              "zh": "她拿手機嗎？",
+              "id": "015-can-i:2:f264f3c1d9cf",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "沒有。",
+              "id": "015-can-i:2:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It is on the table.",
+              "zh": "它在桌上。",
+              "id": "015-can-i:2:99eae8895415",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can talk about screen time.",
+              "zh": "我們可以討論看螢幕的時間。",
+              "id": "015-can-i:2:aa7164f0cd91"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to ask to borrow a toy.",
+              "zh": "假裝問能否借玩具。",
+              "id": "015-can-i:2:308d069a0592"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/015-can-i/003-1dce9ccd08d1.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Go ask your daddy",
+              "zh": "去問問妳的爸爸，",
+              "id": "015-can-i:3:8d32104ce645"
+            },
+            {
+              "en": "And see what he says",
+              "zh": "看看他怎麼說。",
+              "id": "015-can-i:3:883911f9a2b5"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "see what he says 是聽聽他的回答，並非用眼睛看聲音。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩走向坐著讀書的爸爸，手機放桌上。",
+          "phrases": [
+            {
+              "en": "Dad has a book.",
+              "zh": "爸爸有本書。",
+              "id": "015-can-i:3:13b6b37e5cdc"
+            },
+            {
+              "en": "She comes to talk to him.",
+              "zh": "她過來跟他說話。",
+              "id": "015-can-i:3:4d233ffa8ac3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Dad, can I ask you?",
+              "zh": "爸爸，我可以問你嗎？",
+              "id": "015-can-i:3:00a60c9e3f84"
+            },
+            {
+              "en": "I’m listening.",
+              "zh": "我在聽。",
+              "id": "015-can-i:3:77a912d434ed"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "What is Dad holding?",
+              "zh": "爸爸拿什麼？",
+              "id": "015-can-i:3:7ef8133ce3c8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A book.",
+              "zh": "一本書。",
+              "id": "015-can-i:3:0108faf400d4",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "He can stop and listen.",
+              "zh": "他可以停下來聽。",
+              "id": "015-can-i:3:95a9f8e78a29",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Wait for a turn to talk.",
+              "zh": "等一下輪到妳再說。",
+              "id": "015-can-i:3:03efca575715"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Take turns asking a toy a question.",
+              "zh": "輪流問玩具問題。",
+              "id": "015-can-i:3:e3b76a124911"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/015-can-i/004-02c8a2079e9a.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, I asked daddy",
+              "zh": "噢，我問了爸爸，",
+              "id": "015-can-i:4:31fbca239282"
+            },
+            {
+              "en": "If I could play on the phone",
+              "zh": "我能不能玩手機。",
+              "id": "015-can-i:4:d8905d4309d1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "asked 是已經問了，could 在這裡轉述能不能。用簡單 Can I? 延伸就好。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐父母中間，爸爸拿手機並指著它。",
+          "phrases": [
+            {
+              "en": "Dad holds the phone.",
+              "zh": "爸爸拿手机。",
+              "id": "015-can-i:4:f97018c182e5"
+            },
+            {
+              "en": "The girl sits between them.",
+              "zh": "女孩坐他們中間。",
+              "id": "015-can-i:4:3f422682a282"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Can I play for a little while?",
+              "zh": "我可以玩一下嗎？",
+              "id": "015-can-i:4:e079035ee975"
+            },
+            {
+              "en": "Let’s talk about it.",
+              "zh": "我們說說看。",
+              "id": "015-can-i:4:4157870c1090"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Who has the phone now?",
+              "zh": "誰現在拿手機？",
+              "id": "015-can-i:4:1314dabd6b2e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Dad.",
+              "zh": "爸爸。",
+              "id": "015-can-i:4:728264d6ef5d",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She is asking him.",
+              "zh": "她正在問他。",
+              "id": "015-can-i:4:88c4bfcad0a8",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me what you would like.",
+              "zh": "告訴我妳想做什麼。",
+              "id": "015-can-i:4:162628954dcb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Practice asking with a toy phone.",
+              "zh": "用玩具手機練問一句。",
+              "id": "015-can-i:4:0fb8fb643d5a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/015-can-i/005-42307c809628.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I asked if it's okay",
+              "zh": "我問可不可以，",
+              "id": "015-can-i:5:f700f0cb7905"
+            },
+            {
+              "en": "He smiled and said",
+              "zh": "他微笑著說，",
+              "id": "015-can-i:5:77683d440c73"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "下一頁才是回答，先觀察爸爸友善的表情。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩與爸爸托下巴聊天，桌上有女孩的畫和蠟筆。",
+          "phrases": [
+            {
+              "en": "Dad is smiling.",
+              "zh": "爸爸在微笑。",
+              "id": "015-can-i:5:74f990ba834d"
+            },
+            {
+              "en": "I see crayons on the table.",
+              "zh": "我看到桌上的蠟筆。",
+              "id": "015-can-i:5:fedd81d2e098"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A kind answer.",
+              "zh": "友善的回答。",
+              "id": "015-can-i:5:18461bacdef7"
+            },
+            {
+              "en": "What will he say?",
+              "zh": "他會說什麼？",
+              "id": "015-can-i:5:9fe9e1ef2d7e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Is Dad smiling?",
+              "zh": "爸爸在微笑嗎？",
+              "id": "015-can-i:5:0ecaee528a6a",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "是。",
+              "id": "015-can-i:5:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "He looks kind.",
+              "zh": "他看起來很友善。",
+              "id": "015-can-i:5:4dcfca283bc0",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can speak in a kind voice.",
+              "zh": "我們可以用友善的聲音說話。",
+              "id": "015-can-i:5:c1f21889673f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Guess his answer, then turn the page.",
+              "zh": "猜他的回答，再翻頁。",
+              "id": "015-can-i:5:b55ffeb2dbeb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/015-can-i/006-fb989882cd59.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I'm glad you asked",
+              "zh": "我很高興妳先問了，",
+              "id": "015-can-i:6:6ef18b9e3e0b"
+            },
+            {
+              "en": "But you should go out and play!",
+              "zh": "不過妳應該出去玩！",
+              "id": "015-can-i:6:7659006577d6"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "爸爸感謝她先問，再提出出去玩的替代選擇；不表示孩子問錯了。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "爸爸指向門外花園，女孩轉向門口，手機留桌上。",
+          "phrases": [
+            {
+              "en": "Dad points outside.",
+              "zh": "爸爸指外面。",
+              "id": "015-can-i:6:22a0bb54bad5"
+            },
+            {
+              "en": "The phone stays on the table.",
+              "zh": "手機留桌上。",
+              "id": "015-can-i:6:8b6d270325f3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s play outside instead.",
+              "zh": "我們改去外面玩。",
+              "id": "015-can-i:6:50286c1cdeec"
+            },
+            {
+              "en": "There is room to run.",
+              "zh": "那裡可以跑跑。",
+              "id": "015-can-i:6:a4f582b7a302"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Where does Dad point?",
+              "zh": "爸爸指哪裡？",
+              "id": "015-can-i:6:61a08b005c01",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Outside.",
+              "zh": "外面。",
+              "id": "015-can-i:6:d6d9cf4927c8",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "To the garden.",
+              "zh": "花園那邊。",
+              "id": "015-can-i:6:c8a29fc732dc",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can choose another activity.",
+              "zh": "我們可以選另一個活動。",
+              "id": "015-can-i:6:8b330c18c7a4"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Name one game to play outside.",
+              "zh": "說一個戶外遊戲。",
+              "id": "015-can-i:6:8b0e7b7fcd16"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/015-can-i/007-4761460f0874.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can I go out and play?",
+              "zh": "我可以出去玩嗎？",
+              "id": "015-can-i:7:fd95edb259eb"
+            },
+            {
+              "en": "Ask mommy if it's okay",
+              "zh": "問問媽媽可不可以。",
+              "id": "015-can-i:7:0f40f09b6d62"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "換個需求，去問媽媽；可以連到出門先告訴大人的習慣。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩站門口問蹲著的媽媽，外面很多花。",
+          "phrases": [
+            {
+              "en": "Mom is down low.",
+              "zh": "媽媽蹲低。",
+              "id": "015-can-i:7:74417f83b68b"
+            },
+            {
+              "en": "They look at each other.",
+              "zh": "她們互相看。",
+              "id": "015-can-i:7:e774bc6eb8d1"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Mom, can I go out?",
+              "zh": "媽媽，我可以出去嗎？",
+              "id": "015-can-i:7:5bf9715c5bb4"
+            },
+            {
+              "en": "Let’s go together.",
+              "zh": "我們一起去。",
+              "id": "015-can-i:7:8949cb161555"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Who is she asking?",
+              "zh": "她在問誰？",
+              "id": "015-can-i:7:d177558f1d49",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "015-can-i:7:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Mom is listening.",
+              "zh": "媽媽在聽。",
+              "id": "015-can-i:7:517fc33091c1",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me before you go out.",
+              "zh": "出去前告訴我。",
+              "id": "015-can-i:7:7c7fabddac91"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy ask to go to the garden.",
+              "zh": "讓玩具問能否去花園。",
+              "id": "015-can-i:7:da1ea725834f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/015-can-i/008-d99aa102a430.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Go ask your mommy",
+              "zh": "去問問妳的媽媽，",
+              "id": "015-can-i:8:4c98fe5d811e"
+            },
+            {
+              "en": "And see what she says",
+              "zh": "看看她怎麼說。",
+              "id": "015-can-i:8:3d4aa54f82e6"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "重複請求的句型，換成 mommy / she。媽媽會先停下來聽。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩走向在整理盆栽的媽媽，旁有澆水壺。",
+          "phrases": [
+            {
+              "en": "Mom is by a plant.",
+              "zh": "媽媽在植物旁。",
+              "id": "015-can-i:8:4481f119df1f"
+            },
+            {
+              "en": "The girl walks toward her.",
+              "zh": "女孩走向她。",
+              "id": "015-can-i:8:dfa8d09cd33d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Mom, may I ask?",
+              "zh": "媽媽，可以問妳嗎？",
+              "id": "015-can-i:8:222e519f69f8"
+            },
+            {
+              "en": "What would you like?",
+              "zh": "妳想要什麼？",
+              "id": "015-can-i:8:c6f89afeaaf0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "What is beside Mom?",
+              "zh": "媽媽旁有什麼？",
+              "id": "015-can-i:8:00f2610fe327",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A plant.",
+              "zh": "植物。",
+              "id": "015-can-i:8:1bb7a6a37bb3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Green leaves.",
+              "zh": "綠葉。",
+              "id": "015-can-i:8:d1157bd7b52a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Say my name when you need me.",
+              "zh": "需要我時叫我。",
+              "id": "015-can-i:8:eda18bbf61f2"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Call a toy’s name, then ask a question.",
+              "zh": "先叫玩具名字再問問題。",
+              "id": "015-can-i:8:b53839cb4cb0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/015-can-i/009-fe39f119a67f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, I asked mommy",
+              "zh": "噢，我問了媽媽，",
+              "id": "015-can-i:9:c1c0d59b051b"
+            },
+            {
+              "en": "If I could go out and play",
+              "zh": "我能不能出去玩。",
+              "id": "015-can-i:9:e36a7b2430a0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "女孩直接表達需求，媽媽聽著；此頁還沒給答案。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩指外面花園，媽媽蹲在她旁聽。",
+          "phrases": [
+            {
+              "en": "She points to the garden.",
+              "zh": "她指花園。",
+              "id": "015-can-i:9:0814c72f5fb4"
+            },
+            {
+              "en": "Mom is beside her.",
+              "zh": "媽媽在她旁邊。",
+              "id": "015-can-i:9:8d3948db4ff3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I want to play outside.",
+              "zh": "我想去外面玩。",
+              "id": "015-can-i:9:dda96f8a73bc"
+            },
+            {
+              "en": "Can we go together?",
+              "zh": "我們可以一起去嗎？",
+              "id": "015-can-i:9:4cde119bada3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Where does she want to play?",
+              "zh": "她想在哪玩？",
+              "id": "015-can-i:9:43cebcd24f4d",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Outside.",
+              "zh": "外面。",
+              "id": "015-can-i:9:d6d9cf4927c8",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "In the garden.",
+              "zh": "花園裡。",
+              "id": "015-can-i:9:656f3c7190d9",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can tell me your idea.",
+              "zh": "妳可以告訴我妳的想法。",
+              "id": "015-can-i:9:5f655939c949"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to where you would like to play.",
+              "zh": "指妳想玩耍的地方。",
+              "id": "015-can-i:9:837d00f44ef1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/015-can-i/010-328329b4852e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I asked if it's okay",
+              "zh": "我問可不可以，",
+              "id": "015-can-i:10:f700f0cb7905"
+            },
+            {
+              "en": "She smiled and said",
+              "zh": "她微笑著說，",
+              "id": "015-can-i:10:517772191fc4"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "她指媽媽。這裡等待回答，可預測下一頁再確認。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女坐低聊天，媽媽靠近女孩微笑。",
+          "phrases": [
+            {
+              "en": "Mom is smiling.",
+              "zh": "媽媽微笑。",
+              "id": "015-can-i:10:1ef96f7f04e5"
+            },
+            {
+              "en": "They sit close together.",
+              "zh": "她們坐得近近的。",
+              "id": "015-can-i:10:772ef1546962"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I’m glad you asked.",
+              "zh": "我很高興妳先問。",
+              "id": "015-can-i:10:e61841c93026"
+            },
+            {
+              "en": "Let’s listen to Mom.",
+              "zh": "我們聽媽媽說。",
+              "id": "015-can-i:10:1e0585e61d80"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "How does Mom look?",
+              "zh": "媽媽看起來怎樣？",
+              "id": "015-can-i:10:7b0e9d08f64a",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Happy.",
+              "zh": "開心。",
+              "id": "015-can-i:10:0b74e0c2be82",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She has a gentle smile.",
+              "zh": "她溫柔地笑。",
+              "id": "015-can-i:10:32e73ce2b24f",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can listen to each other.",
+              "zh": "我們可以互相聽。",
+              "id": "015-can-i:10:4ec304cd08b9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Try a gentle voice for Mom’s answer.",
+              "zh": "用溫柔聲音演媽媽回答。",
+              "id": "015-can-i:10:443ff3272c0a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/015-can-i/011-88a6dfeb1cab.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I'm glad you asked",
+              "zh": "我很高興妳先問了，",
+              "id": "015-can-i:11:6ef18b9e3e0b"
+            },
+            {
+              "en": "Of course you can go out and play!",
+              "zh": "妳當然可以出去玩！",
+              "id": "015-can-i:11:1c5054edac36"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Of course 是當然可以，這次媽媽答應了，與爸爸的回答比較即可。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽開著花園門，女孩張手向外走。",
+          "phrases": [
+            {
+              "en": "The gate is open.",
+              "zh": "門打開了。",
+              "id": "015-can-i:11:079349c02bfa"
+            },
+            {
+              "en": "She opens her arms.",
+              "zh": "她張開手。",
+              "id": "015-can-i:11:2763ebea425f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Yes, you can.",
+              "zh": "對，可以。",
+              "id": "015-can-i:11:21085de51cc4"
+            },
+            {
+              "en": "I’ll come with you.",
+              "zh": "我跟妳去。",
+              "id": "015-can-i:11:c1661635bfc0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Did Mom say yes?",
+              "zh": "媽媽說可以嗎？",
+              "id": "015-can-i:11:7369b7a22458",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "可以。",
+              "id": "015-can-i:11:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Now they can go out.",
+              "zh": "現在她們能出去了。",
+              "id": "015-can-i:11:4edc30710a30",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can make a plan before going out.",
+              "zh": "出去前我們可以先想好。",
+              "id": "015-can-i:11:69ad40fbe275"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to open a little gate.",
+              "zh": "假裝開小門。",
+              "id": "015-can-i:11:64000bb4963d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/015-can-i/012-26914f7f7ffa.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, I asked daddy",
+              "zh": "噢，我問了爸爸，",
+              "id": "015-can-i:12:31fbca239282"
+            },
+            {
+              "en": "And I asked mommy",
+              "zh": "也問了媽媽。",
+              "id": "015-can-i:12:bd15e88587b0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "回顧今天的兩次詢問，不必要求孩子背誦長句。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩張手在父母中間，爸媽也伸手向她。",
+          "phrases": [
+            {
+              "en": "Both parents open their arms.",
+              "zh": "爸媽都張開手。",
+              "id": "015-can-i:12:886f70a5f039"
+            },
+            {
+              "en": "She is in the middle.",
+              "zh": "她在中間。",
+              "id": "015-can-i:12:76b803b49d57"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I asked both of you.",
+              "zh": "我問了你們兩個。",
+              "id": "015-can-i:12:a5ae13b15ad3"
+            },
+            {
+              "en": "Thank you for listening.",
+              "zh": "謝謝你們聽我說。",
+              "id": "015-can-i:12:6d9feab119af"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "Who did she ask?",
+              "zh": "她問了誰？",
+              "id": "015-can-i:12:c0b6f50be592",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom and Dad.",
+              "zh": "爸媽。",
+              "id": "015-can-i:12:0b0437866281",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She asked both.",
+              "zh": "她兩個都問了。",
+              "id": "015-can-i:12:98bc12523400",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can talk as a family.",
+              "zh": "我們可以一起聊天。",
+              "id": "015-can-i:12:ef17e26ac78b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let two toys take turns listening.",
+              "zh": "讓兩個玩具輪流聽。",
+              "id": "015-can-i:12:9d92b4b4325e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/015-can-i/013-377ff02ec61c.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I asked them both today",
+              "zh": "今天我問了他們兩個。",
+              "id": "015-can-i:13:175d739c01fc"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "both 指爸爸和媽媽兩人，問不同事情，不是找另一人推翻限制。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐父母中間，兩手攤開說話，父母微笑聽。",
+          "phrases": [
+            {
+              "en": "She is talking.",
+              "zh": "她在說話。",
+              "id": "015-can-i:13:c0f18ba64313"
+            },
+            {
+              "en": "Mom and Dad smile.",
+              "zh": "爸媽微笑。",
+              "id": "015-can-i:13:3cf60d61b6dd"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I have a question.",
+              "zh": "我有個問題。",
+              "id": "015-can-i:13:a699941444db"
+            },
+            {
+              "en": "We can talk about it.",
+              "zh": "我們可以一起說。",
+              "id": "015-can-i:13:40a842f9fd16"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "How many parents are here?",
+              "zh": "這裡有幾個家長？",
+              "id": "015-can-i:13:e0f023a7c0f1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Two.",
+              "zh": "兩個。",
+              "id": "015-can-i:13:fb2367517760",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Mom and Dad.",
+              "zh": "爸爸媽媽。",
+              "id": "015-can-i:13:cef9914d1f9d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What would you like to ask today?",
+              "zh": "今天妳想問什麼？",
+              "id": "015-can-i:13:f22952a78be2"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Count the people in the picture.",
+              "zh": "數圖裡的人。",
+              "id": "015-can-i:13:bf930136c8e0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "image": "/media/books/015-can-i/014-bc3a94e1f13d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "They both smiled",
+              "zh": "他們兩個都微笑，",
+              "id": "015-can-i:14:328dff67fd1a"
+            },
+            {
+              "en": "And then they said",
+              "zh": "接著他們說，",
+              "id": "015-can-i:14:3ebfdfa3f36d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "both smiled 是兩人都笑，下一頁接感謝她詢問。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "一家三口在桌旁，女孩畫畫，父母靠近看。",
+          "phrases": [
+            {
+              "en": "She draws a picture.",
+              "zh": "她畫一張圖。",
+              "id": "015-can-i:14:83a5b194fd01"
+            },
+            {
+              "en": "Her parents look at it.",
+              "zh": "父母看著它。",
+              "id": "015-can-i:14:1a94cfc26cb4"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Tell us about your picture.",
+              "zh": "說說妳的畫。",
+              "id": "015-can-i:14:8b6e07580e4a"
+            },
+            {
+              "en": "We like hearing your ideas.",
+              "zh": "我們喜歡聽妳的想法。",
+              "id": "015-can-i:14:aac57517ef88"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "What is she doing?",
+              "zh": "她做什麼？",
+              "id": "015-can-i:14:65b0ba009978",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Drawing.",
+              "zh": "畫畫。",
+              "id": "015-can-i:14:667f3e4710f3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Drawing with crayons.",
+              "zh": "用蠟筆畫。",
+              "id": "015-can-i:14:89852096af8b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Can I show you my picture?",
+              "zh": "我可以給妳看我的畫嗎？",
+              "id": "015-can-i:14:de86b9a70a6a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw one thing you want to do.",
+              "zh": "畫一樣妳想做的事。",
+              "id": "015-can-i:14:5e37f1a560e3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 15,
+      "image": "/media/books/015-can-i/015-0c181c29aff9.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I'm glad you asked today!",
+              "zh": "我很高興妳今天先問了！",
+              "id": "015-can-i:15:220a5c4ca36a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "收尾肯定願意開口問，沒有責備；出去玩是這次的共同選擇。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩跑向草地上的紅球，父母在旁笑。",
+          "phrases": [
+            {
+              "en": "The ball is red.",
+              "zh": "球是紅色。",
+              "id": "015-can-i:15:306f2703805e"
+            },
+            {
+              "en": "She plays on the grass.",
+              "zh": "她在草地玩。",
+              "id": "015-can-i:15:cd0389707894"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Thank you for asking.",
+              "zh": "謝謝妳先問。",
+              "id": "015-can-i:15:510c6aacbbd0"
+            },
+            {
+              "en": "Let’s play together.",
+              "zh": "我們一起玩。",
+              "id": "015-can-i:15:ca7e9b7d971b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「她在問誰？她想做什麼？」可以指圖回答。陪孩子練表達需求，也可以溫柔說明限制與替代選擇。",
+          "phrases": [
+            {
+              "en": "What can she play with?",
+              "zh": "她可以玩什麼？",
+              "id": "015-can-i:15:92dfb85fc48f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The ball.",
+              "zh": "球。",
+              "id": "015-can-i:15:e828ff2ce5f8",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A big red ball.",
+              "zh": "大紅球。",
+              "id": "015-can-i:15:ff04f494a8e4",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can always ask me.",
+              "zh": "妳隨時可以問我。",
+              "id": "015-can-i:15:a53cea7d0334"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Ask, Can we play ball? then pretend to roll it.",
+              "zh": "問能否玩球，再假裝滾球。",
+              "id": "015-can-i:15:8d615ed03086"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

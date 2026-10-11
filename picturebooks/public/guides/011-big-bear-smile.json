@@ -1,0 +1,1438 @@
+{
+  "version": 1,
+  "bookId": "011-big-bear-smile",
+  "title": "Big Bear Smile",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/011-big-bear-smile/001-9c740aa9e7a1.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Big Bear Smile!",
+              "zh": "大熊般的大大笑容！",
+              "id": "011-big-bear-smile:1:178cebf485f1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "bear smile 是故事的可愛說法，像 bear hug 一樣大大、溫暖；兩隻都是布偶熊。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐著抱兩隻熊，媽媽在旁，書攤開在地毯上。",
+          "phrases": [
+            {
+              "en": "One bear is big.",
+              "zh": "一隻熊大。",
+              "id": "011-big-bear-smile:1:1f71d6316953"
+            },
+            {
+              "en": "One bear is small.",
+              "zh": "一隻熊小。",
+              "id": "011-big-bear-smile:1:2796d1ee678c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "They look soft.",
+              "zh": "牠們看起來軟軟的。",
+              "id": "011-big-bear-smile:1:2555b9acc481"
+            },
+            {
+              "en": "What a happy smile!",
+              "zh": "好開心的笑容！",
+              "id": "011-big-bear-smile:1:4b94f9c03d75"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Which bear is big?",
+              "zh": "哪隻熊大？",
+              "id": "011-big-bear-smile:1:3ba8d2087fad",
+              "label": "媽媽問"
+            },
+            {
+              "en": "This one.",
+              "zh": "這一隻。",
+              "id": "011-big-bear-smile:1:ec417bde0084",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "The cream bear is big.",
+              "zh": "奶油色熊很大。",
+              "id": "011-big-bear-smile:1:de3a6fa4e553",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Do you have a teddy bear?",
+              "zh": "妳有熊布偶嗎？",
+              "id": "011-big-bear-smile:1:9377bea9d9a7"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Give your toy a big smile.",
+              "zh": "給玩具一個大大微笑。",
+              "id": "011-big-bear-smile:1:d47669a0dc76"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/011-big-bear-smile/002-49dd9c5f5192.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hello, Teddy My little teddy",
+              "zh": "哈囉 Teddy，我的小熊。",
+              "id": "011-big-bear-smile:2:774a7ccc8652"
+            },
+            {
+              "en": "Can you give me a hug?",
+              "zh": "可以給我一個抱抱嗎？",
+              "id": "011-big-bear-smile:2:6fdfe97bdf82"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Teddy 是小熊名字。Can you give me a hug 是邀請抱抱的說法。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩張開雙手朝小熊，小熊有綠色蝴蝶結。",
+          "phrases": [
+            {
+              "en": "She opens her arms.",
+              "zh": "她張開雙手。",
+              "id": "011-big-bear-smile:2:505a38455ed1"
+            },
+            {
+              "en": "Teddy has a green bow.",
+              "zh": "Teddy 有綠色蝴蝶結。",
+              "id": "011-big-bear-smile:2:fa9cd49dd78a"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hello, little bear.",
+              "zh": "哈囉，小熊。",
+              "id": "011-big-bear-smile:2:77ec2cd8346a"
+            },
+            {
+              "en": "May I hug you?",
+              "zh": "我可以抱妳嗎？",
+              "id": "011-big-bear-smile:2:1cc02e8a8330"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Who is little?",
+              "zh": "誰小小的？",
+              "id": "011-big-bear-smile:2:eeb01f832454",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Teddy.",
+              "zh": "Teddy。",
+              "id": "011-big-bear-smile:2:fed5f26bcc24",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, the little bear.",
+              "zh": "對，小熊。",
+              "id": "011-big-bear-smile:2:a1cc8cf094d2",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Would you like a hug?",
+              "zh": "妳想抱抱嗎？",
+              "id": "011-big-bear-smile:2:a4684a8a5452"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Open your arms like the girl.",
+              "zh": "像女孩一樣張開手。",
+              "id": "011-big-bear-smile:2:52f47bd7f197"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/011-big-bear-smile/003-173b560b966b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hello, Betty My big Betty",
+              "zh": "哈囉 Betty，我的大熊。",
+              "id": "011-big-bear-smile:3:0c216ab84234"
+            },
+            {
+              "en": "Can you give me a hug?",
+              "zh": "可以給我一個抱抱嗎？",
+              "id": "011-big-bear-smile:3:6fdfe97bdf82"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Betty 是大熊名字，用 little 與 big 比較大小。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩向大熊張開手，旁邊小熊坐著。",
+          "phrases": [
+            {
+              "en": "Betty has a red bow.",
+              "zh": "Betty 有紅色蝴蝶結。",
+              "id": "011-big-bear-smile:3:b517952b6a70"
+            },
+            {
+              "en": "The little bear sits nearby.",
+              "zh": "小熊坐在旁邊。",
+              "id": "011-big-bear-smile:3:a03b57e4930c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hello, big bear.",
+              "zh": "哈囉，大熊。",
+              "id": "011-big-bear-smile:3:3d92b5ef2d33"
+            },
+            {
+              "en": "Your arms are wide!",
+              "zh": "妳的手張得好開！",
+              "id": "011-big-bear-smile:3:42ad80873dcb"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Who is Betty?",
+              "zh": "誰是 Betty？",
+              "id": "011-big-bear-smile:3:b3cf28d8aaca",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The big bear.",
+              "zh": "大熊。",
+              "id": "011-big-bear-smile:3:a3da74768e88",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, with the red bow.",
+              "zh": "對，有紅色蝴蝶結的。",
+              "id": "011-big-bear-smile:3:35810d8365c7",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Which toy would you hug?",
+              "zh": "妳想抱哪個玩具？",
+              "id": "011-big-bear-smile:3:50576a9d74a1"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Stretch your arms wide, then small.",
+              "zh": "手張大，再縮小。",
+              "id": "011-big-bear-smile:3:f36cbb79c3fc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/011-big-bear-smile/004-076807eb2eec.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, Teddy gave Betty",
+              "zh": "噢，Teddy 給 Betty，",
+              "id": "011-big-bear-smile:4:88218dbdfa4b"
+            },
+            {
+              "en": "And Betty gave Teddy",
+              "zh": "而 Betty 給 Teddy，",
+              "id": "011-big-bear-smile:4:086c80d0c81c"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "歌詞還沒說給什麼，下一頁才接 bear hug。這裡是女孩讓布偶互相靠近。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把兩隻熊靠在一起，媽媽看著笑。",
+          "phrases": [
+            {
+              "en": "The bears are close.",
+              "zh": "熊靠得很近。",
+              "id": "011-big-bear-smile:4:2aef1db503d2"
+            },
+            {
+              "en": "The girl holds both bears.",
+              "zh": "女孩拿著兩隻熊。",
+              "id": "011-big-bear-smile:4:95b198c762af"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A hug for you.",
+              "zh": "給妳一個抱抱。",
+              "id": "011-big-bear-smile:4:a367cb7eb469"
+            },
+            {
+              "en": "And a hug for me.",
+              "zh": "也給我一個抱抱。",
+              "id": "011-big-bear-smile:4:7464c41fc7e0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Are the bears close?",
+              "zh": "熊靠得近嗎？",
+              "id": "011-big-bear-smile:4:0e18d6fe3139",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "011-big-bear-smile:4:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They are together.",
+              "zh": "牠們在一起。",
+              "id": "011-big-bear-smile:4:6109d18935af",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can share a kind smile.",
+              "zh": "我們可以分享友善的微笑。",
+              "id": "011-big-bear-smile:4:199a52938f5a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let two toys meet and say hello.",
+              "zh": "讓兩個玩具見面打招呼。",
+              "id": "011-big-bear-smile:4:0458beca2b5f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/011-big-bear-smile/005-350f63b9a93b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "A big old bear hug",
+              "zh": "一個大大的熊抱。",
+              "id": "011-big-bear-smile:5:aee09adf556c"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "bear hug 是大大、溫暖的抱抱，old 在這句加強親切語氣，不是在說熊老了。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩閉眼笑，雙臂抱著兩隻熊。",
+          "phrases": [
+            {
+              "en": "Her eyes are closed.",
+              "zh": "她閉著眼睛。",
+              "id": "011-big-bear-smile:5:623712f441bf"
+            },
+            {
+              "en": "She hugs both bears.",
+              "zh": "她抱兩隻熊。",
+              "id": "011-big-bear-smile:5:a831c19d70b3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A big, warm hug.",
+              "zh": "大大、溫暖的抱抱。",
+              "id": "011-big-bear-smile:5:ec906b3db504"
+            },
+            {
+              "en": "You look happy.",
+              "zh": "妳看起來開心。",
+              "id": "011-big-bear-smile:5:d04000eae52a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Is she happy?",
+              "zh": "她開心嗎？",
+              "id": "011-big-bear-smile:5:caa3f8ce2a82",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "011-big-bear-smile:5:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Look at her smile.",
+              "zh": "看看她的笑容。",
+              "id": "011-big-bear-smile:5:0388f99974d4",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "A hug can feel cozy.",
+              "zh": "抱抱可以很舒服。",
+              "id": "011-big-bear-smile:5:0f82fdfcc0a1"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Hug a cushion if you like.",
+              "zh": "想的話，抱抱靠墊。",
+              "id": "011-big-bear-smile:5:76d92e683603"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/011-big-bear-smile/006-b2f29e625d52.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, Teddy gave Betty",
+              "zh": "對，Teddy 給 Betty，",
+              "id": "011-big-bear-smile:6:47c8a83e097d"
+            },
+            {
+              "en": "And Betty gave Teddy",
+              "zh": "而 Betty 給 Teddy，",
+              "id": "011-big-bear-smile:6:086c80d0c81c"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "重複上一段歌詞，接前面的熊抱；可以換成輕聲唱，不必每次問新問題。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把小熊與大熊抱在懷裡，媽媽托著下巴微笑。",
+          "phrases": [
+            {
+              "en": "Mom is smiling.",
+              "zh": "媽媽在笑。",
+              "id": "011-big-bear-smile:6:1ef96f7f04e5"
+            },
+            {
+              "en": "The bears sit together.",
+              "zh": "兩隻熊坐在一起。",
+              "id": "011-big-bear-smile:6:b5adb51ce23e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Together again.",
+              "zh": "又在一起。",
+              "id": "011-big-bear-smile:6:cbb1c84501ba"
+            },
+            {
+              "en": "A hug for each bear.",
+              "zh": "每隻熊一個抱抱。",
+              "id": "011-big-bear-smile:6:34d6484e5bce"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "How many bears?",
+              "zh": "幾隻熊？",
+              "id": "011-big-bear-smile:6:a055bfda7eab",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Two.",
+              "zh": "兩隻。",
+              "id": "011-big-bear-smile:6:fb2367517760",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "One big and one small.",
+              "zh": "一大一小。",
+              "id": "011-big-bear-smile:6:fbe6e6c0030c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Who makes you smile?",
+              "zh": "誰讓妳微笑？",
+              "id": "011-big-bear-smile:6:716322a86afb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Count the bears with two fingers.",
+              "zh": "用兩根手指数熊。",
+              "id": "011-big-bear-smile:6:99404b6b90e4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/011-big-bear-smile/007-e1c38333abaf.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hello, Teddy My little teddy",
+              "zh": "哈囉 Teddy，我的小熊。",
+              "id": "011-big-bear-smile:7:774a7ccc8652"
+            },
+            {
+              "en": "Can you give me a smooch?",
+              "zh": "可以給我一個親親嗎？",
+              "id": "011-big-bear-smile:7:45ed99b0dc64"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "smooch 是親暱口語的親親。可以用飛吻替代親吻，讓孩子自己選。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把小熊拿到臉旁親親，大熊坐在旁。",
+          "phrases": [
+            {
+              "en": "She holds the little bear.",
+              "zh": "她拿著小熊。",
+              "id": "011-big-bear-smile:7:f87135d8ea1c"
+            },
+            {
+              "en": "Betty sits beside her.",
+              "zh": "Betty 坐她旁邊。",
+              "id": "011-big-bear-smile:7:97e2afd66ea5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A little kiss.",
+              "zh": "一個小親親。",
+              "id": "011-big-bear-smile:7:b3e5be865141"
+            },
+            {
+              "en": "You can blow a kiss.",
+              "zh": "妳可以送飛吻。",
+              "id": "011-big-bear-smile:7:2aaef1595a0f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Which bear is near her face?",
+              "zh": "哪隻熊靠近她的臉？",
+              "id": "011-big-bear-smile:7:f5af18ebbede",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Teddy.",
+              "zh": "Teddy。",
+              "id": "011-big-bear-smile:7:fed5f26bcc24",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "The little bear.",
+              "zh": "小熊。",
+              "id": "011-big-bear-smile:7:e3af65d8ed8d",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Would you like a wave or a kiss?",
+              "zh": "妳想揮手還是送飛吻？",
+              "id": "011-big-bear-smile:7:08641e3f3d3b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Blow a kiss to a toy.",
+              "zh": "給玩具送飛吻。",
+              "id": "011-big-bear-smile:7:c409a55b3e53"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/011-big-bear-smile/008-fa77e804560b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hello, Betty My big Betty",
+              "zh": "哈囉 Betty，我的大熊。",
+              "id": "011-big-bear-smile:8:0c216ab84234"
+            },
+            {
+              "en": "Can you give me a smooch?",
+              "zh": "可以給我一個親親嗎？",
+              "id": "011-big-bear-smile:8:45ed99b0dc64"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "同樣的邀請換成大熊，讓孩子自然聽懂名字與大小。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩親大熊臉頰，小熊在懷裡。",
+          "phrases": [
+            {
+              "en": "She kisses the big bear.",
+              "zh": "她親大熊。",
+              "id": "011-big-bear-smile:8:a1725c927d81"
+            },
+            {
+              "en": "The little bear is in her lap.",
+              "zh": "小熊在她腿上。",
+              "id": "011-big-bear-smile:8:4c933f542c36"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hello, Betty.",
+              "zh": "哈囉 Betty。",
+              "id": "011-big-bear-smile:8:9ed1ca18435c"
+            },
+            {
+              "en": "A kiss for you.",
+              "zh": "給妳一個親親。",
+              "id": "011-big-bear-smile:8:7e8f3852ec7b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Is Betty big or small?",
+              "zh": "Betty 大還是小？",
+              "id": "011-big-bear-smile:8:20e258d8acc8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Big.",
+              "zh": "大。",
+              "id": "011-big-bear-smile:8:73d239b4fe88",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a big soft bear.",
+              "zh": "對，大大軟軟的熊。",
+              "id": "011-big-bear-smile:8:7bd859e04c2e",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can choose how to say hello.",
+              "zh": "妳可以選怎麼打招呼。",
+              "id": "011-big-bear-smile:8:9883dd548511"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Say hello to two different toys.",
+              "zh": "跟兩個不同玩具說哈囉。",
+              "id": "011-big-bear-smile:8:00d218f22420"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/011-big-bear-smile/009-49483d1349a6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "A big old bear smooch",
+              "zh": "一個大大的熊親親。",
+              "id": "011-big-bear-smile:9:5391ca9842c8"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "接前面歌詞，女孩讓熊碰臉，愛心是表達喜歡的圖案。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "兩隻熊臉靠在一起，上方畫了愛心。",
+          "phrases": [
+            {
+              "en": "I see hearts.",
+              "zh": "我看到愛心。",
+              "id": "011-big-bear-smile:9:ab0105de3e9b"
+            },
+            {
+              "en": "The bears touch cheeks.",
+              "zh": "熊的臉頰碰在一起。",
+              "id": "011-big-bear-smile:9:ee2ebc8984d0"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "They are toy friends.",
+              "zh": "牠們是玩具朋友。",
+              "id": "011-big-bear-smile:9:8afcf027dffb"
+            },
+            {
+              "en": "So sweet!",
+              "zh": "好可愛！",
+              "id": "011-big-bear-smile:9:02f6a1c6db46"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Can you find a heart?",
+              "zh": "妳找得到愛心嗎？",
+              "id": "011-big-bear-smile:9:6b0c327d7be3",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "011-big-bear-smile:9:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A pink heart.",
+              "zh": "粉紅愛心。",
+              "id": "011-big-bear-smile:9:2b3b04a925ae",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can show love with kind words.",
+              "zh": "我們可以用好聽的話表達喜歡。",
+              "id": "011-big-bear-smile:9:8156edb735d6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a heart with your hands.",
+              "zh": "用手比愛心。",
+              "id": "011-big-bear-smile:9:804c12f598cf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/011-big-bear-smile/010-51b8864e9f54.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hugs and smooches",
+              "zh": "抱抱和親親。",
+              "id": "011-big-bear-smile:10:8f929f778ac3"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "兩種親暱動作一起出現。讓孩子選喜歡的動作，不需要照做。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩親大熊，雙手抱著大小熊，媽媽微笑。",
+          "phrases": [
+            {
+              "en": "She hugs the bears.",
+              "zh": "她抱著熊。",
+              "id": "011-big-bear-smile:10:773bf23d1714"
+            },
+            {
+              "en": "Mom sits beside her.",
+              "zh": "媽媽坐她旁邊。",
+              "id": "011-big-bear-smile:10:a3cc48ecdd36"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hugs and kisses.",
+              "zh": "抱抱與親親。",
+              "id": "011-big-bear-smile:10:c36fade5f2b4"
+            },
+            {
+              "en": "Or a friendly wave.",
+              "zh": "或者友善地揮手。",
+              "id": "011-big-bear-smile:10:d096f6586770"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Would you like to wave?",
+              "zh": "妳想揮揮手嗎？",
+              "id": "011-big-bear-smile:10:0a2b7ae427fb",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "想。",
+              "id": "011-big-bear-smile:10:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Hello, bears!",
+              "zh": "哈囉，小熊們！",
+              "id": "011-big-bear-smile:10:d4a2f31767e6",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can ask before a hug.",
+              "zh": "抱抱前可以先問。",
+              "id": "011-big-bear-smile:10:65de974cb38d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy wave with its paw.",
+              "zh": "讓玩具揮揮手。",
+              "id": "011-big-bear-smile:10:83532ecb240d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/011-big-bear-smile/011-5c0a1a659808.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "They always give me a smile",
+              "zh": "它們總是讓我微笑。",
+              "id": "011-big-bear-smile:11:ccb540939fc9"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "they 指前頁的抱抱與親親，give me a smile 是讓我笑的意思。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抱熊笑，大熊靠在她身旁。",
+          "phrases": [
+            {
+              "en": "She has a big smile.",
+              "zh": "她笑得很開心。",
+              "id": "011-big-bear-smile:11:efc2e316a184"
+            },
+            {
+              "en": "The bears are in her arms.",
+              "zh": "熊在她懷裡。",
+              "id": "011-big-bear-smile:11:023fa7efb5a5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You make me smile.",
+              "zh": "妳讓我微笑。",
+              "id": "011-big-bear-smile:11:db1f3fed3559"
+            },
+            {
+              "en": "I feel happy.",
+              "zh": "我覺得開心。",
+              "id": "011-big-bear-smile:11:59c8c9c2830b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "What makes you smile?",
+              "zh": "什麼讓妳微笑？",
+              "id": "011-big-bear-smile:11:61bfd23a4193",
+              "label": "媽媽問"
+            },
+            {
+              "en": "My toy.",
+              "zh": "我的玩具。",
+              "id": "011-big-bear-smile:11:e92b621eef7d",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "You love your toy.",
+              "zh": "妳喜歡妳的玩具。",
+              "id": "011-big-bear-smile:11:c53a25c79bb6",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me one happy thing.",
+              "zh": "告訴我一件開心的事。",
+              "id": "011-big-bear-smile:11:32ba31d109af"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Try a tiny smile and a big smile.",
+              "zh": "試試小微笑與大微笑。",
+              "id": "011-big-bear-smile:11:994aa1fc55ad"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/011-big-bear-smile/012-0e8230379441.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Thanks for your hugs",
+              "zh": "謝謝妳的抱抱。",
+              "id": "011-big-bear-smile:12:653fe1119e13"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Thanks for 是謝謝對方做的事，這裡感謝抱抱。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩閉眼抱兩隻熊，媽媽在旁看。",
+          "phrases": [
+            {
+              "en": "She hugs them tightly.",
+              "zh": "她抱得很緊。",
+              "id": "011-big-bear-smile:12:34cd8dc3bd8b"
+            },
+            {
+              "en": "The bears have bows.",
+              "zh": "熊有蝴蝶結。",
+              "id": "011-big-bear-smile:12:e94574031589"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Thank you, Teddy.",
+              "zh": "謝謝 Teddy。",
+              "id": "011-big-bear-smile:12:93ce09571620"
+            },
+            {
+              "en": "Thank you, Betty.",
+              "zh": "謝謝 Betty。",
+              "id": "011-big-bear-smile:12:87a9b474f47a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "What can we say after a hug?",
+              "zh": "抱抱後可以說什麼？",
+              "id": "011-big-bear-smile:12:1a8c9b17fed8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Thank you.",
+              "zh": "謝謝。",
+              "id": "011-big-bear-smile:12:d89f38e5f7e1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "That is a kind thing to say.",
+              "zh": "這是友善的說法。",
+              "id": "011-big-bear-smile:12:91e7e53bc3da",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Thank you for helping me.",
+              "zh": "謝謝妳幫我。",
+              "id": "011-big-bear-smile:12:63a4a04d613d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Let a toy say thank you in a tiny voice.",
+              "zh": "讓玩具用小小聲說謝謝。",
+              "id": "011-big-bear-smile:12:5b493a8f4c31"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/011-big-bear-smile/013-0717889201ce.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Thanks for your smooches",
+              "zh": "謝謝妳的親親。",
+              "id": "011-big-bear-smile:13:c7e1a7b58aa7"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "謝謝與親暱回應可以用舒服的方式；這頁也能只聊笑容。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩一手托著臉，兩隻熊靠在她身邊，媽媽也笑。",
+          "phrases": [
+            {
+              "en": "Her hand is by her cheek.",
+              "zh": "她的手在臉頰旁。",
+              "id": "011-big-bear-smile:13:f3a9390c7cc7"
+            },
+            {
+              "en": "Mom looks happy too.",
+              "zh": "媽媽也看起來開心。",
+              "id": "011-big-bear-smile:13:d07638e996e5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Thank you for being kind.",
+              "zh": "謝謝妳這麼友善。",
+              "id": "011-big-bear-smile:13:7f2453785b8e"
+            },
+            {
+              "en": "That feels nice.",
+              "zh": "感覺很好。",
+              "id": "011-big-bear-smile:13:e5004e1031a1"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Can you show me a smile?",
+              "zh": "可以給我看妳的微笑嗎？",
+              "id": "011-big-bear-smile:13:5cc46b5873e1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Like this.",
+              "zh": "像這樣。",
+              "id": "011-big-bear-smile:13:544addc08935",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "What a lovely smile!",
+              "zh": "好可愛的微笑！",
+              "id": "011-big-bear-smile:13:a92ea90c6b27",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "A kind word can make us happy.",
+              "zh": "友善的話可以讓我們開心。",
+              "id": "011-big-bear-smile:13:cb33cb2fae24"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Smile at each other without talking.",
+              "zh": "不說話，互相微笑。",
+              "id": "011-big-bear-smile:13:0519d8301fbf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "image": "/media/books/011-big-bear-smile/014-4830dc26b551.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "You gave me a big bear smile!",
+              "zh": "妳給了我一個大大的熊笑容！",
+              "id": "011-big-bear-smile:14:6c219d517055"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "gave 是 give 的過去式，意思是剛才的親暱互動讓我很開心。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽從女孩背後抱著她，女孩抱兩隻熊，大家微笑。",
+          "phrases": [
+            {
+              "en": "Mom hugs the girl.",
+              "zh": "媽媽抱女孩。",
+              "id": "011-big-bear-smile:14:346760b00bfe"
+            },
+            {
+              "en": "The girl holds both bears.",
+              "zh": "女孩抱兩隻熊。",
+              "id": "011-big-bear-smile:14:95b198c762af"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We are happy together.",
+              "zh": "我們在一起很開心。",
+              "id": "011-big-bear-smile:14:4555181a726b"
+            },
+            {
+              "en": "I love our story time.",
+              "zh": "我喜歡我們的故事時間。",
+              "id": "011-big-bear-smile:14:f849f41ebb38"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指大小熊，用中文問「妳想抱哪一隻？」指一下就可以。抱抱或親親先問孩子意願，也能改成揮手。",
+          "phrases": [
+            {
+              "en": "Who is hugging the girl?",
+              "zh": "誰抱著女孩？",
+              "id": "011-big-bear-smile:14:d2af87b72060",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "011-big-bear-smile:14:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A warm hug from Mom.",
+              "zh": "媽媽溫暖的抱抱。",
+              "id": "011-big-bear-smile:14:993e7925109a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What was your favorite part?",
+              "zh": "妳最喜歡哪一段？",
+              "id": "011-big-bear-smile:14:36023e3f04c9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Choose a happy ending: wave, smile, or hug.",
+              "zh": "選開心結尾：揮手、微笑或抱抱。",
+              "id": "011-big-bear-smile:14:e0d9c5ee32e9"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
