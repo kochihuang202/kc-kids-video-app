@@ -1565,7 +1565,7 @@ export function WatchPage() {
               <span>{video.parentLabel}</span>
               <small>
                 {video.seriesType === "learning"
-                  ? `學習系列 · 每集播放 ${learningListenRepeatCount} 次後換下一集 🔁`
+                  ? `學習系列 · 正在播放第 ${Math.min(learningListenRepeatCount, completedLearningListenPlays + 1)} / ${learningListenRepeatCount} 次（播滿自動換下一集 🔁）`
                   : "休閒系列 · 自動接續下一集 ⏭️"}
               </small>
             </div>
