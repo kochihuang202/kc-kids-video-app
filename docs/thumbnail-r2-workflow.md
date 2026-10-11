@@ -13,6 +13,8 @@
 
 ## 一次完成產生、上傳與 D1 更新
 
+Cloudflare 認證先依 [存取與認證排查 SOP](cloudflare-access-sop.md) 確認。受限環境的登入失敗不能直接判定需要重新登入。
+
 先確認 Mac 與 Windows 都登入同一個 Tailscale 帳號，且正式 App API 能回傳該分類的 `mediaUrl`。
 
 專案已安裝 `ffmpeg-static`。腳本會優先使用系統 FFmpeg；找不到時自動改用 `node_modules/ffmpeg-static/ffmpeg.exe`，不需要另外修改 Windows PATH。

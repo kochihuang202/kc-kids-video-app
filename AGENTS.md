@@ -9,6 +9,12 @@ Before changing code, search `docs/REGRESSIONS.md` for bugs related to the files
 - Change a historical expectation only when the user explicitly changes the intended behavior, and record that decision in the regression entry.
 - Add a regression entry and the smallest real user-flow test when a confirmed important bug is fixed.
 
+# Cloudflare access SOP
+
+- Before concluding Cloudflare is disconnected or requires a new login, follow `docs/cloudflare-access-sop.md`.
+- A sandboxed Wrangler authentication failure is not sufficient evidence that the existing login is unusable. Retry the read-only `wrangler whoami` check with approved full local permissions when configuration, log writes, network access, or token refresh are restricted.
+- Never print OAuth tokens, refresh tokens, API tokens, or credential file contents. Authentication checks do not authorize deployment or remote data changes.
+
 # Git commit SOP
 
 After completing each feature, fix, or task — once tests pass — immediately run:
