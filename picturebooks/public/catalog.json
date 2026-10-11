@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "books": [
+    {
+      "id": "001-i-took-them-all",
+      "number": "01",
+      "title": "I Took Them All",
+      "cover": "/media/books/001-i-took-them-all/cover-8489eb5a6e4f.webp",
+      "pages": [
+        "/media/books/001-i-took-them-all/001-8489eb5a6e4f.webp",
+        "/media/books/001-i-took-them-all/002-8fe65b133d28.webp",
+        "/media/books/001-i-took-them-all/003-4b08c19625de.webp",
+        "/media/books/001-i-took-them-all/004-7098bc2d09a2.webp",
+        "/media/books/001-i-took-them-all/005-ceca02e04f87.webp",
+        "/media/books/001-i-took-them-all/006-60a5b1e4fb5e.webp",
+        "/media/books/001-i-took-them-all/007-88fed7298fa5.webp",
+        "/media/books/001-i-took-them-all/008-93bb8bbcca67.webp",
+        "/media/books/001-i-took-them-all/009-6da1beb6a0cf.webp",
+        "/media/books/001-i-took-them-all/010-c7acd0fd6735.webp",
+        "/media/books/001-i-took-them-all/011-db3a80f7fbb2.webp",
+        "/media/books/001-i-took-them-all/012-f72303166940.webp",
+        "/media/books/001-i-took-them-all/013-1de752201539.webp",
+        "/media/books/001-i-took-them-all/014-0db5c1d802eb.webp",
+        "/media/books/001-i-took-them-all/015-912626e0b246.webp",
+        "/media/books/001-i-took-them-all/016-0697b72d4060.webp",
+        "/media/books/001-i-took-them-all/017-4ae0268e9931.webp",
+        "/media/books/001-i-took-them-all/018-6f59b927f1de.webp",
+        "/media/books/001-i-took-them-all/019-2eedf86bab47.webp",
+        "/media/books/001-i-took-them-all/020-1d945e5008e0.webp",
+        "/media/books/001-i-took-them-all/021-6cc2f2e5c578.webp",
+        "/media/books/001-i-took-them-all/022-0f618d255211.webp"
+      ]
+    },
+    {
+      "id": "002-no-not-there",
+      "number": "02",
+      "title": "No, Not There",
+      "cover": "/media/books/002-no-not-there/cover-212aefd7d6ef.webp",
+      "pages": [
+        "/media/books/002-no-not-there/001-212aefd7d6ef.webp",
+        "/media/books/002-no-not-there/002-a97045b1ae02.webp",
+        "/media/books/002-no-not-there/003-99decbc47cfe.webp",
+        "/media/books/002-no-not-there/004-d2eb1670361e.webp",
+        "/media/books/002-no-not-there/005-4b113c8ed446.webp",
+        "/media/books/002-no-not-there/006-808eef148fc4.webp",
+        "/media/books/002-no-not-there/007-c2e46f916042.webp",
+        "/media/books/002-no-not-there/008-663bdf74bf99.webp",
+        "/media/books/002-no-not-there/009-e3ba846b523d.webp",
+        "/media/books/002-no-not-there/010-3da36cc126ef.webp",
+        "/media/books/002-no-not-there/011-8b829d554652.webp",
+        "/media/books/002-no-not-there/012-84cc843b207a.webp",
+        "/media/books/002-no-not-there/013-b056b32136ff.webp",
+        "/media/books/002-no-not-there/014-ab3401081d7f.webp",
+        "/media/books/002-no-not-there/015-b3fd97f9003a.webp",
+        "/media/books/002-no-not-there/016-a1253f348eed.webp",
+        "/media/books/002-no-not-there/017-ff8f35c2ed0b.webp",
+        "/media/books/002-no-not-there/018-f41aa958a11c.webp",
+        "/media/books/002-no-not-there/019-6cac293b2be8.webp",
+        "/media/books/002-no-not-there/020-583e1ddff688.webp"
+      ]
+    },
+    {
+      "id": "003-me-and-my-dog",
+      "number": "03",
+      "title": "Me and My Dog",
+      "cover": "/media/books/003-me-and-my-dog/cover-54cdf6303cc8.webp",
+      "pages": [
+        "/media/books/003-me-and-my-dog/001-54cdf6303cc8.webp",
+        "/media/books/003-me-and-my-dog/002-c3f416dae8ce.webp",
+        "/media/books/003-me-and-my-dog/003-58e9b62529cc.webp",
+        "/media/books/003-me-and-my-dog/004-f42b5bd7ef33.webp",
+        "/media/books/003-me-and-my-dog/005-7ecd1d412795.webp",
+        "/media/books/003-me-and-my-dog/006-5b7954ff9b60.webp",
+        "/media/books/003-me-and-my-dog/007-8031db8d1446.webp",
+        "/media/books/003-me-and-my-dog/008-664ef5685264.webp",
+        "/media/books/003-me-and-my-dog/009-9dfb6cede43f.webp",
+        "/media/books/003-me-and-my-dog/010-dc328c751cd5.webp",
+        "/media/books/003-me-and-my-dog/011-26d92975f736.webp",
+        "/media/books/003-me-and-my-dog/012-66fc8c4096b7.webp",
+        "/media/books/003-me-and-my-dog/013-e8172736a3aa.webp"
+      ]
+    },
+    {
+      "id": "004-hurry-up",
+      "number": "04",
+      "title": "Hurry Up!",
+      "cover": "/media/books/004-hurry-up/cover-8b2636abd6c0.webp",
+      "pages": [
+        "/media/books/004-hurry-up/001-8b2636abd6c0.webp",
+        "/media/books/004-hurry-up/002-0ee067bea32e.webp",
+        "/media/books/004-hurry-up/003-82ade8426987.webp",
+        "/media/books/004-hurry-up/004-e0f565de35da.webp",
+        "/media/books/004-hurry-up/005-8f7c111395d7.webp",
+        "/media/books/004-hurry-up/006-e1643c25b4cb.webp",
+        "/media/books/004-hurry-up/007-d1b1ad877b84.webp",
+        "/media/books/004-hurry-up/008-a5fbd4bcee1e.webp",
+        "/media/books/004-hurry-up/009-c2838ca43bf9.webp",
+        "/media/books/004-hurry-up/010-a44d711740d0.webp",
+        "/media/books/004-hurry-up/011-822ccdfbf587.webp",
+        "/media/books/004-hurry-up/012-dd3e2eb5d530.webp",
+        "/media/books/004-hurry-up/013-6dd96cd4b40d.webp",
+        "/media/books/004-hurry-up/014-8317a737fac5.webp"
+      ]
+    },
+    {
+      "id": "005-bounce-bounce-bounce",
+      "number": "05",
+      "title": "Bounce Bounce Bounce",
+      "cover": "/media/books/005-bounce-bounce-bounce/cover-c1a64a7e98dd.webp",
+      "pages": [
+        "/media/books/005-bounce-bounce-bounce/001-c1a64a7e98dd.webp",
+        "/media/books/005-bounce-bounce-bounce/002-1d8886a4ba53.webp",
+        "/media/books/005-bounce-bounce-bounce/003-7b54119afad7.webp",
+        "/media/books/005-bounce-bounce-bounce/004-0bea7239b4b6.webp",
+        "/media/books/005-bounce-bounce-bounce/005-66fdfeec814b.webp",
+        "/media/books/005-bounce-bounce-bounce/006-bbc42d52f0f4.webp",
+        "/media/books/005-bounce-bounce-bounce/007-4f540c2f27ff.webp",
+        "/media/books/005-bounce-bounce-bounce/008-69186b129f04.webp",
+        "/media/books/005-bounce-bounce-bounce/009-8f116361bda1.webp",
+        "/media/books/005-bounce-bounce-bounce/010-1407d8f96e42.webp",
+        "/media/books/005-bounce-bounce-bounce/011-d021970332ff.webp"
+      ]
+    },
+    {
+      "id": "006-look-at-the-little-birdy",
+      "number": "06",
+      "title": "Look At The Little Birdy",
+      "cover": "/media/books/006-look-at-the-little-birdy/cover-fb2f32665e47.webp",
+      "pages": [
+        "/media/books/006-look-at-the-little-birdy/001-fb2f32665e47.webp",
+        "/media/books/006-look-at-the-little-birdy/002-275c49c21458.webp",
+        "/media/books/006-look-at-the-little-birdy/003-39b6ba71bc5d.webp",
+        "/media/books/006-look-at-the-little-birdy/004-6391c10c9a63.webp",
+        "/media/books/006-look-at-the-little-birdy/005-e7e35b341918.webp",
+        "/media/books/006-look-at-the-little-birdy/006-768ad1d49323.webp",
+        "/media/books/006-look-at-the-little-birdy/007-6a79128b1878.webp",
+        "/media/books/006-look-at-the-little-birdy/008-ca6a27a95be6.webp",
+        "/media/books/006-look-at-the-little-birdy/009-9a5bb8dfabd6.webp",
+        "/media/books/006-look-at-the-little-birdy/010-1aac92e9c6bd.webp",
+        "/media/books/006-look-at-the-little-birdy/011-56c242818b95.webp",
+        "/media/books/006-look-at-the-little-birdy/012-6cec91d5e1ec.webp"
+      ]
+    },
+    {
+      "id": "007-its-mine",
+      "number": "07",
+      "title": "Its Mine",
+      "cover": "/media/books/007-its-mine/cover-09b70a1fd7a5.webp",
+      "pages": [
+        "/media/books/007-its-mine/001-09b70a1fd7a5.webp",
+        "/media/books/007-its-mine/002-5e3b398c8c99.webp",
+        "/media/books/007-its-mine/003-3a5324b9faaa.webp",
+        "/media/books/007-its-mine/004-46bead795b95.webp",
+        "/media/books/007-its-mine/005-b44b035b3b00.webp",
+        "/media/books/007-its-mine/006-e016f29cd467.webp",
+        "/media/books/007-its-mine/007-7de334433207.webp",
+        "/media/books/007-its-mine/008-d20aed03cbb8.webp"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+public/media/
+.wrangler/
+test-results/
+playwright-report/
