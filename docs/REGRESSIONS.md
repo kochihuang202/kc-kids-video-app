@@ -321,3 +321,12 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: The guide content scrolls inside the available viewport; navigation remains visible and each page restores its independent position. Guide previews never change picturebook progress.
 - Root cause: Vertical auto margins on the nested guide grid let it grow with its content instead of occupying the bounded reader grid row. Explicit row height and bounded overflow restore the internal scroll container.
 - Regression test: `picturebooks/test/guide.spec.ts` (`guide scroll position survives closing and page navigation`) in Chromium and WebKit, iPad landscape and portrait.
+
+## REG-041 — Picturebook slow speech is too close to normal to help with listening
+
+- Problem: The user reports no perceptible difference between normal and slow reading.
+- Reproduction: Listen to the same guide sentence with normal rate 1.0 and the original slow setting 0.8.
+- Correct behavior: Slow uses rate 0.6 to request a stronger difference; selecting speed cancels playback, and tapping the same sentence again speaks with the selected rate. Previously saved slow selections migrate to 0.6 without losing favorites or scroll positions. Actual acoustic timing still depends on the device voice.
+- Root cause: The original 0.8 setting offered only a modest separation from 1.0. Automated tests verified the API value, not perceptual audibility on the user's device.
+- Intended behavior update: In response to the user's 2026-10-11 report, slow-rate expectations change from 0.8 to 0.6; normal remains 1.0 and selecting a speed never starts speech automatically.
+- Regression test: `picturebooks/test/guide.spec.ts` (`legacy preference migrates to a clearly slower rate and the same sentence can be compared`), plus existing speech switching, persistence and error/stop flows in Chromium/WebKit iPad layouts.

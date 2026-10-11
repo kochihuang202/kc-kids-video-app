@@ -1,11 +1,14 @@
 const $ = id => document.getElementById(id);
 const key = 'mother-daughter-guide:v1';
+const NORMAL_RATE = 1, SLOW_RATE = 0.6;
 let saved = {};
 try { saved = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch {}
 if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
 for (const field of ['favorites', 'scroll']) {
   if (!saved[field] || typeof saved[field] !== 'object' || Array.isArray(saved[field])) saved[field] = {};
 }
+// Preserve an earlier slow selection when upgrading its rate from 0.8.
+saved.rate = saved.rate === 0.8 || saved.rate === SLOW_RATE ? SLOW_RATE : NORMAL_RATE;
 let book, index = 0, data, request = 0, onlyFavorites = false, active, lastPhrase, speechRequest = 0;
 const cache = new Map();
 function persist() { try { localStorage.setItem(key, JSON.stringify(saved)); } catch {} }
@@ -21,7 +24,7 @@ function speak(node, phrase) {
   const token = speechRequest;
   try {
     const utterance = new SpeechSynthesisUtterance(phrase.en);
-    utterance.lang = 'en-US'; utterance.rate = saved.rate === 0.8 ? 0.8 : 1;
+    utterance.lang = 'en-US'; utterance.rate = saved.rate;
     const voices = speechSynthesis.getVoices();
     utterance.voice = voices.find(v => /^en[-_]US$/i.test(v.lang)) || voices.find(v => /^en\b/i.test(v.lang)) || null;
     const clear = () => { if (token !== speechRequest) return; node.classList.remove('is-speaking'); node.removeAttribute('aria-current'); active = null; };
@@ -84,7 +87,7 @@ export function guideOpen() { return !!book; }
 export function openGuide(target, page) {
   book = target; index = page; onlyFavorites = false; data = null;
   $('guide').hidden = false; $('reader').hidden = true; $('guide-title').textContent = target.title;
-  $('speech-error').hidden = true; setRate(saved.rate === 0.8 ? 0.8 : 1); load(); $('guide-return').focus();
+  $('speech-error').hidden = true; setRate(saved.rate); load(); $('guide-return').focus();
 }
 export function closeGuide() {
   if (!book) return;
@@ -95,13 +98,13 @@ export function guidePage(delta) {
   if (!book || index + delta < 0 || index + delta >= book.pages.length) return;
   saveScroll(); stopSpeech(); lastPhrase = null; $('speech-error').hidden = true; index += delta; render();
 }
-function setRate(rate) { saved.rate = rate; persist(); $('speech-normal').setAttribute('aria-pressed', String(rate === 1)); $('speech-slow').setAttribute('aria-pressed', String(rate === 0.8)); }
+function setRate(rate) { saved.rate = rate; persist(); $('speech-normal').setAttribute('aria-pressed', String(rate === NORMAL_RATE)); $('speech-slow').setAttribute('aria-pressed', String(rate === SLOW_RATE)); }
 $('guide-return').onclick = closeGuide;
 $('guide-previous').onclick = () => guidePage(-1); $('guide-next').onclick = () => guidePage(1);
 $('guide-retry').onclick = load;
 $('guide-filter').onclick = () => { saveScroll(); stopSpeech(); onlyFavorites = !onlyFavorites; render(); };
-$('speech-normal').onclick = () => { stopSpeech(); setRate(1); };
-$('speech-slow').onclick = () => { stopSpeech(); setRate(0.8); };
+$('speech-normal').onclick = () => { stopSpeech(); setRate(NORMAL_RATE); };
+$('speech-slow').onclick = () => { stopSpeech(); setRate(SLOW_RATE); };
 $('speech-retry').onclick = () => { if (lastPhrase?.node.isConnected) speak(lastPhrase.node, lastPhrase.phrase); };
 $('guide-scroll').addEventListener('scroll', saveScroll, { passive: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { saveScroll(); stopSpeech(); } });

@@ -47,7 +47,7 @@ test('tap English speaks one sentence, restart and switch cancel old speech, Chi
   expect(await page.evaluate(() => window.__speechCalls.filter(call => call.type === 'speak').length)).toBe(3);
   await page.getByRole('button', { name: '慢速', exact: true }).click();
   await phrases.first().click();
-  expect(await page.evaluate(() => window.__speechCalls.filter(call => call.type === 'speak').at(-1).rate)).toBe(0.8);
+  expect(await page.evaluate(() => window.__speechCalls.filter(call => call.type === 'speak').at(-1).rate)).toBe(0.6);
   await page.getByRole('button', { name: '指南下一頁', exact: true }).click();
   await expect(page.locator('.is-speaking')).toHaveCount(0);
 });
@@ -116,7 +116,7 @@ test('slow speed persists after reopening and malformed guide preferences do not
   await page.getByRole('button', { name: '媽媽陪讀指南', exact: true }).click();
   await expect(page.getByRole('button', { name: '慢速', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.locator('.english-phrase').first().click();
-  expect(await page.evaluate(() => window.__speechCalls.filter(call => call.type === 'speak').at(-1).rate)).toBe(0.8);
+  expect(await page.evaluate(() => window.__speechCalls.filter(call => call.type === 'speak').at(-1).rate)).toBe(0.6);
 });
 
 test('every published book opens its matching guide and wrong guide data stays recoverable', async ({ page }) => {
@@ -137,4 +137,28 @@ test('every published book opens its matching guide and wrong guide data stays r
   await page.locator('#guide-return').click();
   await page.locator('#next-page').click();
   await expect(page.locator('#page-count')).toHaveText('5 / 22');
+});
+
+test('legacy preference migrates to a clearly slower rate and the same sentence can be compared', async ({ page }) => {
+  await mockSpeech(page);
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('mother-daughter-guide:v1')) localStorage.setItem('mother-daughter-guide:v1', JSON.stringify({ rate: 0.8, favorites: { keep: true }, scroll: {} }));
+  });
+  await openGuide(page);
+  await expect(page.locator('#speech-slow')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.english-phrase').first().click();
+  expect(await page.evaluate(() => window.__speechCalls.filter(c => c.type === 'speak').at(-1).rate)).toBe(0.6);
+  await page.locator('#speech-normal').click();
+  await expect(page.locator('.is-speaking')).toHaveCount(0);
+  await page.locator('.english-phrase').first().click();
+  const calls = await page.evaluate(() => window.__speechCalls.filter(c => c.type === 'speak'));
+  expect(calls[1].rate).toBe(1);
+  expect(calls[1].text).toBe(calls[0].text);
+  expect(calls[1].voice).toBe(calls[0].voice);
+  await page.locator('#speech-slow').click();
+  await page.reload();
+  await page.locator('#open-guide').click();
+  await page.locator('.english-phrase').first().click();
+  expect(await page.evaluate(() => window.__speechCalls.filter(c => c.type === 'speak').at(-1).rate)).toBe(0.6);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mother-daughter-guide:v1')).favorites.keep)).toBe(true);
 });
