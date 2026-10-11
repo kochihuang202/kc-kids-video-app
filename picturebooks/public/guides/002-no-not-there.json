@@ -1,0 +1,2073 @@
+{
+  "version": 1,
+  "bookId": "002-no-not-there",
+  "title": "No, Not There",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/002-no-not-there/001-212aefd7d6ef.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "No, Not There!",
+              "zh": "不，不是那裡！",
+              "id": "002-no-not-there:1:5ff233897df6"
+            },
+            {
+              "en": "A tidy-up song",
+              "zh": "一首收拾歌。",
+              "id": "002-no-not-there:1:1253008a0bb1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這是練習物品放哪裡的故事。用溫柔的提醒口氣說「不是那裡」，不用扮演生氣的媽媽。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽與女孩在散落的玩具旁，綠色白點的收納箱打開，地上有熊、兔子、車與積木。",
+          "phrases": [
+            {
+              "en": "I see many toys.",
+              "zh": "我看到好多玩具。",
+              "id": "002-no-not-there:1:af2af11234a3"
+            },
+            {
+              "en": "The box is green.",
+              "zh": "箱子是綠色的。",
+              "id": "002-no-not-there:1:f034b4f73bb7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s tidy up.",
+              "zh": "我們來收拾。",
+              "id": "002-no-not-there:1:a355e366c423"
+            },
+            {
+              "en": "We can do it together.",
+              "zh": "我們可以一起做。",
+              "id": "002-no-not-there:1:acbfe3b66546"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Can you find the box?",
+              "zh": "妳找得到箱子嗎？",
+              "id": "002-no-not-there:1:e111206cf475",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "002-no-not-there:1:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, the green box.",
+              "zh": "對，綠色箱子。",
+              "id": "002-no-not-there:1:58b57a80143c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s put one toy away.",
+              "zh": "我們收好一個玩具。",
+              "id": "002-no-not-there:1:c0a4148bb659"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find the toy car.",
+              "zh": "找出玩具車。",
+              "id": "002-no-not-there:1:174342fc430e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/002-no-not-there/002-a97045b1ae02.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where does the book go?",
+              "zh": "書要放在哪裡？",
+              "id": "002-no-not-there:2:ebe2ea480622"
+            },
+            {
+              "en": "It goes on the shelf.",
+              "zh": "它要放在書架上。",
+              "id": "002-no-not-there:2:282703bf46b1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "go 在這裡是「要放在」，不是書自己走路。on 是在架子上。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著綠色兔子封面的書，指向書架。",
+          "phrases": [
+            {
+              "en": "She has a book.",
+              "zh": "她拿著一本書。",
+              "id": "002-no-not-there:2:fa51e44104fd"
+            },
+            {
+              "en": "I see a rabbit on it.",
+              "zh": "我看到書上的兔子。",
+              "id": "002-no-not-there:2:5b6ece426718"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The shelf is for books.",
+              "zh": "書架放書。",
+              "id": "002-no-not-there:2:af3cc951542f"
+            },
+            {
+              "en": "Let’s put it here.",
+              "zh": "我們把它放這裡。",
+              "id": "002-no-not-there:2:67b5c38da786"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where does the book go?",
+              "zh": "書要放哪裡？",
+              "id": "002-no-not-there:2:5a593513f60e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the shelf.",
+              "zh": "書架上。",
+              "id": "002-no-not-there:2:2f265e2e0035",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the shelf.",
+              "zh": "對，在書架上。",
+              "id": "002-no-not-there:2:073f54f275c2",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Choose a place for your books.",
+              "zh": "替妳的書選一個位置。",
+              "id": "002-no-not-there:2:e88f5b8135ae"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to the shelf.",
+              "zh": "指指書架。",
+              "id": "002-no-not-there:2:bf2edb4a5e31"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/002-no-not-there/003-99decbc47cfe.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where does the book go?",
+              "zh": "書要放在哪裡？",
+              "id": "002-no-not-there:3:ebe2ea480622"
+            },
+            {
+              "en": "It goes on the shelf.",
+              "zh": "它要放在書架上。",
+              "id": "002-no-not-there:3:282703bf46b1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "同一句配上實際動作：看到她把書放好。可以一邊指圖一邊說，不必再解釋文法。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把熊封面的書放到書架上，媽媽在旁邊看著。",
+          "phrases": [
+            {
+              "en": "The book has a bear.",
+              "zh": "書上有一隻熊。",
+              "id": "002-no-not-there:3:6cab84f7abcb"
+            },
+            {
+              "en": "She puts it on the shelf.",
+              "zh": "她把它放在書架上。",
+              "id": "002-no-not-there:3:97838aa8a712"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "One book is put away.",
+              "zh": "一本書收好了。",
+              "id": "002-no-not-there:3:b62f393ba78b"
+            },
+            {
+              "en": "Well done!",
+              "zh": "做得好！",
+              "id": "002-no-not-there:3:4fc5af0a33f0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Is the book on the shelf?",
+              "zh": "書在書架上嗎？",
+              "id": "002-no-not-there:3:0f75eee1dde1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "002-no-not-there:3:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "That’s the right place.",
+              "zh": "那是正確的位置。",
+              "id": "002-no-not-there:3:8754864fd9ab",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put your book away.",
+              "zh": "把妳的書收好。",
+              "id": "002-no-not-there:3:9843efc8309a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put a book on a shelf.",
+              "zh": "假裝把書放上書架。",
+              "id": "002-no-not-there:3:bee21ae64022"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/002-no-not-there/004-d2eb1670361e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "No, not there!",
+              "zh": "不，不是那裡！",
+              "id": "002-no-not-there:4:c7986af8b7e4"
+            },
+            {
+              "en": "That’s not where it goes!",
+              "zh": "那不是它該放的地方！",
+              "id": "002-no-not-there:4:d2e6883ea6ce"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "it 是書。女孩這次放進玩具箱，媽媽提醒她試別的位置；用「再試一次」的感覺陪讀。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把書放進綠色玩具箱，媽媽抬起手掌提醒。",
+          "phrases": [
+            {
+              "en": "The book is in the toy box.",
+              "zh": "書在玩具箱裡。",
+              "id": "002-no-not-there:4:3a194cdd2887"
+            },
+            {
+              "en": "Mom holds up her hand.",
+              "zh": "媽媽抬起手。",
+              "id": "002-no-not-there:4:85208cf3b9a5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Try the shelf.",
+              "zh": "試試書架。",
+              "id": "002-no-not-there:4:8adc29e7c35a"
+            },
+            {
+              "en": "You can try again.",
+              "zh": "妳可以再試一次。",
+              "id": "002-no-not-there:4:d4b86f123453"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Does the book go in the toy box?",
+              "zh": "書要放進玩具箱嗎？",
+              "id": "002-no-not-there:4:b3b1fa8309ab",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "不是。",
+              "id": "002-no-not-there:4:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It goes on the shelf.",
+              "zh": "它要放在書架上。",
+              "id": "002-no-not-there:4:06d9ccb27802",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s find its place.",
+              "zh": "我們找它的位置。",
+              "id": "002-no-not-there:4:d1301b57000c"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to the right place for the book.",
+              "zh": "指指書該放的地方。",
+              "id": "002-no-not-there:4:b459224a2c40"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/002-no-not-there/005-4b113c8ed446.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where do the toys go?",
+              "zh": "玩具要放在哪裡？",
+              "id": "002-no-not-there:5:1ac3ac38c2fa"
+            },
+            {
+              "en": "They go in the box.",
+              "zh": "它們要放在箱子裡。",
+              "id": "002-no-not-there:5:db7c9d4e84c2"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "toys 有好幾個，用 they。in 是「在裡面」，和書在架子上不同。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著熊與紅色車，媽媽指著綠色箱子。",
+          "phrases": [
+            {
+              "en": "I see a bear and a car.",
+              "zh": "我看到熊和車。",
+              "id": "002-no-not-there:5:cbf5d68e5db1"
+            },
+            {
+              "en": "Mom points to the box.",
+              "zh": "媽媽指著箱子。",
+              "id": "002-no-not-there:5:22e6786eca8b"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The box is open.",
+              "zh": "箱子是打開的。",
+              "id": "002-no-not-there:5:d16aef6c54ae"
+            },
+            {
+              "en": "Put the toys inside.",
+              "zh": "把玩具放進去。",
+              "id": "002-no-not-there:5:54a34fff2798"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where do the toys go?",
+              "zh": "玩具放哪裡？",
+              "id": "002-no-not-there:5:0472a8d78393",
+              "label": "媽媽問"
+            },
+            {
+              "en": "In the box.",
+              "zh": "箱子裡。",
+              "id": "002-no-not-there:5:018f6e411f5b",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, inside the box.",
+              "zh": "對，在箱子裡面。",
+              "id": "002-no-not-there:5:a209237eb930",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put your toys in a box.",
+              "zh": "把妳的玩具放進箱子。",
+              "id": "002-no-not-there:5:90df89c7d024"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to drop a toy into a box.",
+              "zh": "假裝把玩具放進箱子。",
+              "id": "002-no-not-there:5:37937723a3f4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/002-no-not-there/006-808eef148fc4.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "No, not there!",
+              "zh": "不，不是那裡！",
+              "id": "002-no-not-there:6:c7986af8b7e4"
+            },
+            {
+              "en": "That’s not where they go!",
+              "zh": "那不是它們該放的地方！",
+              "id": "002-no-not-there:6:354fd315ebd9"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "they 是玩具；這次放到書架上，與上一頁的箱子作比較。錯誤是嘗試的一部分。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "玩具被放到書架上，玩具箱就在下方。",
+          "phrases": [
+            {
+              "en": "The toys are on the shelf.",
+              "zh": "玩具在書架上。",
+              "id": "002-no-not-there:6:41cbd60cf190"
+            },
+            {
+              "en": "The box is below.",
+              "zh": "箱子在下面。",
+              "id": "002-no-not-there:6:b64b3dc83fc3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s move the toys.",
+              "zh": "我們把玩具移一移。",
+              "id": "002-no-not-there:6:90a0f086f07a"
+            },
+            {
+              "en": "Try the box.",
+              "zh": "試試箱子。",
+              "id": "002-no-not-there:6:138a32c2b6c8"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Shelf or box?",
+              "zh": "書架還是箱子？",
+              "id": "002-no-not-there:6:622caaef8978",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Box.",
+              "zh": "箱子。",
+              "id": "002-no-not-there:6:2e545a704e4b",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "The toys go in the box.",
+              "zh": "玩具要放進箱子。",
+              "id": "002-no-not-there:6:c6fbb1f5d2c0",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Find a home for each toy.",
+              "zh": "幫每個玩具找位置。",
+              "id": "002-no-not-there:6:ac82f8632e79"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point down to the box.",
+              "zh": "往下指指箱子。",
+              "id": "002-no-not-there:6:8e1f9206751c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/002-no-not-there/007-c2e46f916042.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where do the toys go?",
+              "zh": "玩具要放在哪裡？",
+              "id": "002-no-not-there:7:1ac3ac38c2fa"
+            },
+            {
+              "en": "They go in the box.",
+              "zh": "它們要放在箱子裡。",
+              "id": "002-no-not-there:7:db7c9d4e84c2"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "現在放對了。把「放對位置」當成一起解決問題，給孩子具體的肯定。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩將玩具放進綠色箱子。",
+          "phrases": [
+            {
+              "en": "The toys are in the box.",
+              "zh": "玩具在箱子裡。",
+              "id": "002-no-not-there:7:1b2ed4062805"
+            },
+            {
+              "en": "She is putting them away.",
+              "zh": "她正在收玩具。",
+              "id": "002-no-not-there:7:7c7b4674334c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The toys are home.",
+              "zh": "玩具回到它們的位置了。",
+              "id": "002-no-not-there:7:cd7c60cfceef"
+            },
+            {
+              "en": "Thank you for helping.",
+              "zh": "謝謝妳幫忙。",
+              "id": "002-no-not-there:7:b34bab2f7ba6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Are the toys in the box?",
+              "zh": "玩具在箱子裡嗎？",
+              "id": "002-no-not-there:7:9f3226e5f64e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "對！",
+              "id": "002-no-not-there:7:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "You found the right place.",
+              "zh": "妳找到正確的位置了。",
+              "id": "002-no-not-there:7:cf55f6cf85af",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s tidy one small spot.",
+              "zh": "我們收拾一個小地方。",
+              "id": "002-no-not-there:7:58940212d937"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to close the box.",
+              "zh": "假裝把箱子關起來。",
+              "id": "002-no-not-there:7:18ef2fe2e77d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/002-no-not-there/008-663bdf74bf99.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "That’s not where the book goes.",
+              "zh": "那不是書該放的地方。",
+              "id": "002-no-not-there:8:87125792012f"
+            },
+            {
+              "en": "Put it back where the book goes.",
+              "zh": "把它放回書該放的地方。",
+              "id": "002-no-not-there:8:cc8916bf3659"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "文字回顧提醒，再說明放回去；圖裡已經是在放回書架的動作。不要把正確動作又說成做錯。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩將熊封面的書放回書架。",
+          "phrases": [
+            {
+              "en": "She puts the book back.",
+              "zh": "她把書放回去。",
+              "id": "002-no-not-there:8:6ecf926fc8c9"
+            },
+            {
+              "en": "I see books on the shelf.",
+              "zh": "我看到書架上的書。",
+              "id": "002-no-not-there:8:9eeca22a95e7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Back on the shelf.",
+              "zh": "放回書架上。",
+              "id": "002-no-not-there:8:6f78ec94301b"
+            },
+            {
+              "en": "Here is its place.",
+              "zh": "這是它的位置。",
+              "id": "002-no-not-there:8:423d47a0e900"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where is she putting the book?",
+              "zh": "她把書放到哪裡？",
+              "id": "002-no-not-there:8:34587346cb5c",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the shelf.",
+              "zh": "書架上。",
+              "id": "002-no-not-there:8:2f265e2e0035",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, back on the shelf.",
+              "zh": "對，放回書架。",
+              "id": "002-no-not-there:8:3ecf5fca8d95",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put it back when you finish.",
+              "zh": "用完把它放回去。",
+              "id": "002-no-not-there:8:472c21e686b5"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to take a book and put it back.",
+              "zh": "假裝拿書，再放回去。",
+              "id": "002-no-not-there:8:1821f8d16c11"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/002-no-not-there/009-e3ba846b523d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "That’s not where the toys go.",
+              "zh": "那不是玩具該放的地方。",
+              "id": "002-no-not-there:9:4f20fee2e250"
+            },
+            {
+              "en": "Put them back where the toys go.",
+              "zh": "把它們放回玩具該放的地方。",
+              "id": "002-no-not-there:9:ce275d79ec73"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "them 指玩具，back 是回到原本的位置。圖中正在做正確的收拾動作。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把紅色玩具車放回箱子裡。",
+          "phrases": [
+            {
+              "en": "The car is red.",
+              "zh": "車是紅色的。",
+              "id": "002-no-not-there:9:00f5d37fba81"
+            },
+            {
+              "en": "She puts it in the box.",
+              "zh": "她把它放進箱子。",
+              "id": "002-no-not-there:9:c79a0352ecbc"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The car goes here.",
+              "zh": "車要放這裡。",
+              "id": "002-no-not-there:9:e0cf48bee227"
+            },
+            {
+              "en": "Let’s finish together.",
+              "zh": "我們一起收完。",
+              "id": "002-no-not-there:9:b7cd3b47daad"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where is the car going?",
+              "zh": "車要放哪裡？",
+              "id": "002-no-not-there:9:f9c8faa4194f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "In the box.",
+              "zh": "箱子裡。",
+              "id": "002-no-not-there:9:018f6e411f5b",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, with the other toys.",
+              "zh": "對，和其他玩具放一起。",
+              "id": "002-no-not-there:9:c343ad6ec983",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Can you put your car away?",
+              "zh": "妳可以收好妳的小車嗎？",
+              "id": "002-no-not-there:9:ebd0d04d5fb9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a car sound as you put it away.",
+              "zh": "收車時模仿車子的聲音。",
+              "id": "002-no-not-there:9:9b49520d29b0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/002-no-not-there/010-3da36cc126ef.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where does the coat go?",
+              "zh": "外套要放在哪裡？",
+              "id": "002-no-not-there:10:0a30a5e355fe"
+            },
+            {
+              "en": "It goes on the hanger.",
+              "zh": "它要掛在掛衣處。",
+              "id": "002-no-not-there:10:13d021308114"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "hanger 常指衣架；這張圖實際畫的是牆上的掛鉤，可以說「掛衣處」或「掛鉤」，不必硬說是手拿的衣架。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著藍色外套，媽媽指著牆上掛鉤。",
+          "phrases": [
+            {
+              "en": "The coat is blue.",
+              "zh": "外套是藍色的。",
+              "id": "002-no-not-there:10:8a4f459071ec"
+            },
+            {
+              "en": "I see hooks on the wall.",
+              "zh": "我看到牆上的掛鉤。",
+              "id": "002-no-not-there:10:21666929b168"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hang up your coat.",
+              "zh": "掛好妳的外套。",
+              "id": "002-no-not-there:10:448df969966c"
+            },
+            {
+              "en": "Use a hook.",
+              "zh": "用一個掛鉤。",
+              "id": "002-no-not-there:10:70995dad1307"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where can we hang the coat?",
+              "zh": "我們可以把外套掛在哪？",
+              "id": "002-no-not-there:10:633317b2c42f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On a hook.",
+              "zh": "掛鉤上。",
+              "id": "002-no-not-there:10:fe4337c0278e",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the wall.",
+              "zh": "對，在牆上。",
+              "id": "002-no-not-there:10:b0ea880f3016",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Find your coat hook.",
+              "zh": "找找妳的外套掛鉤。",
+              "id": "002-no-not-there:10:65aa9d235089"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to hang a coat.",
+              "zh": "假裝掛外套。",
+              "id": "002-no-not-there:10:df821a1fc447"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/002-no-not-there/011-8b829d554652.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "The coat goes on the hanger.",
+              "zh": "外套要掛在掛衣處。",
+              "id": "002-no-not-there:11:088eadbc158a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "同一種收納方式換成粉紅色外套。看到黃色包與藍色外套，可以聊「旁邊」和顏色。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把粉紅色外套掛在黃色包、藍色外套旁邊。",
+          "phrases": [
+            {
+              "en": "This coat is pink.",
+              "zh": "這件外套是粉紅色。",
+              "id": "002-no-not-there:11:cff1273ec2d8"
+            },
+            {
+              "en": "I see a yellow bag.",
+              "zh": "我看到黃色包包。",
+              "id": "002-no-not-there:11:be6edcb62127"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The coats hang here.",
+              "zh": "外套掛在這裡。",
+              "id": "002-no-not-there:11:711e5319110a"
+            },
+            {
+              "en": "Keep them off the floor.",
+              "zh": "不要把它們放在地上。",
+              "id": "002-no-not-there:11:983e82456c41"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "What color is this coat?",
+              "zh": "這件外套是什麼顏色？",
+              "id": "002-no-not-there:11:dd2429638831",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Pink.",
+              "zh": "粉紅色。",
+              "id": "002-no-not-there:11:65029bfe991a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a pink coat.",
+              "zh": "對，粉紅色外套。",
+              "id": "002-no-not-there:11:616f6cb9b6c4",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Hang your coat after you come home.",
+              "zh": "回家後掛好外套。",
+              "id": "002-no-not-there:11:4dff6bb4e789"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find something yellow.",
+              "zh": "找一個黃色的東西。",
+              "id": "002-no-not-there:11:6864537be420"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/002-no-not-there/012-84cc843b207a.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "No, not there!",
+              "zh": "不，不是那裡！",
+              "id": "002-no-not-there:12:c7986af8b7e4"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這次外套放在床上。可以說床是休息的地方，外套有自己的掛衣處；不要延伸成孩子不乖。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "粉紅色外套攤在床上。",
+          "phrases": [
+            {
+              "en": "The coat is on the bed.",
+              "zh": "外套在床上。",
+              "id": "002-no-not-there:12:3d1b585f6344"
+            },
+            {
+              "en": "It is a pink coat.",
+              "zh": "它是粉紅色外套。",
+              "id": "002-no-not-there:12:2b4e2e2e2ad6"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s hang it up.",
+              "zh": "我們把它掛起來。",
+              "id": "002-no-not-there:12:264cda7f6017"
+            },
+            {
+              "en": "The bed is for resting.",
+              "zh": "床是休息的地方。",
+              "id": "002-no-not-there:12:7e531c7fe683"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Bed or hook?",
+              "zh": "床還是掛鉤？",
+              "id": "002-no-not-there:12:41547fc4e5e0",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Hook.",
+              "zh": "掛鉤。",
+              "id": "002-no-not-there:12:86fb01662f0c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, let’s use the hook.",
+              "zh": "對，我們用掛鉤。",
+              "id": "002-no-not-there:12:abd366f93a4c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Keep your bed clear.",
+              "zh": "讓妳的床保持清爽。",
+              "id": "002-no-not-there:12:a787b11eaac2"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to where the coat should go.",
+              "zh": "指指外套該放哪裡。",
+              "id": "002-no-not-there:12:881ba249aca6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/002-no-not-there/013-b056b32136ff.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Put it back on the hanger.",
+              "zh": "把它掛回掛衣處。",
+              "id": "002-no-not-there:13:b8dd5e593487"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "it 指外套。媽媽在旁邊鼓勵，讓孩子知道自己能修正。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把粉紅色外套掛回掛鉤，媽媽拍手鼓勵。",
+          "phrases": [
+            {
+              "en": "She hangs up the coat.",
+              "zh": "她掛好外套。",
+              "id": "002-no-not-there:13:f3267a4d35b9"
+            },
+            {
+              "en": "Mom is clapping.",
+              "zh": "媽媽正在拍手。",
+              "id": "002-no-not-there:13:c96eebbb3243"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You did it!",
+              "zh": "妳做到了！",
+              "id": "002-no-not-there:13:02424cef980b"
+            },
+            {
+              "en": "Now it is put away.",
+              "zh": "現在它收好了。",
+              "id": "002-no-not-there:13:e951d7d51731"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Is the coat put away?",
+              "zh": "外套收好了嗎？",
+              "id": "002-no-not-there:13:126bb6c4cdd6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "好了！",
+              "id": "002-no-not-there:13:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Well done, little helper.",
+              "zh": "小幫手，做得好。",
+              "id": "002-no-not-there:13:6396b4c55f1c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Thank you for putting it away.",
+              "zh": "謝謝妳把它收好。",
+              "id": "002-no-not-there:13:3400e3b95cc7"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Give yourself a little clap.",
+              "zh": "給自己輕輕拍拍手。",
+              "id": "002-no-not-there:13:c0ae9addcd9b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "image": "/media/books/002-no-not-there/014-ab3401081d7f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Where do the shoes go?",
+              "zh": "鞋子要放在哪裡？",
+              "id": "002-no-not-there:14:f652dc192232"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "shoes 通常成雙，所以用 do。先找鞋子再找鞋架，比解釋文法更適合孩子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著粉紅色鞋子，旁邊有鞋架。",
+          "phrases": [
+            {
+              "en": "She has pink shoes.",
+              "zh": "她拿著粉紅色鞋子。",
+              "id": "002-no-not-there:14:bd1b601bf8b3"
+            },
+            {
+              "en": "I see a shoe rack.",
+              "zh": "我看到一個鞋架。",
+              "id": "002-no-not-there:14:836f4c82e36d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Shoes go together.",
+              "zh": "一雙鞋放在一起。",
+              "id": "002-no-not-there:14:358f4d8927c7"
+            },
+            {
+              "en": "Let’s put them away.",
+              "zh": "我們把它們收好。",
+              "id": "002-no-not-there:14:69dc1f0859a0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where do the shoes go?",
+              "zh": "鞋子放哪裡？",
+              "id": "002-no-not-there:14:afd74722445a",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the rack.",
+              "zh": "鞋架上。",
+              "id": "002-no-not-there:14:ef64a402a26f",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the shoe rack.",
+              "zh": "對，在鞋架上。",
+              "id": "002-no-not-there:14:15fbc41f2f58",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put your shoes together.",
+              "zh": "把妳的兩隻鞋放一起。",
+              "id": "002-no-not-there:14:53c1e36b5d94"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find a pair of shoes.",
+              "zh": "找出一雙鞋。",
+              "id": "002-no-not-there:14:58571c58db42"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 15,
+      "image": "/media/books/002-no-not-there/015-b3fd97f9003a.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "The shoes go on the rack.",
+              "zh": "鞋子要放在鞋架上。",
+              "id": "002-no-not-there:15:2d08ec05aab1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "rack 是架子，這裡是鞋架。可看黃色鞋和下方的粉紅靴子，練習顏色與上下。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "黃色鞋子整齊放在鞋架上，下層有粉紅色靴子。",
+          "phrases": [
+            {
+              "en": "I see yellow shoes.",
+              "zh": "我看到黃色鞋子。",
+              "id": "002-no-not-there:15:60e84a45ab3a"
+            },
+            {
+              "en": "The boots are below.",
+              "zh": "靴子在下面。",
+              "id": "002-no-not-there:15:5e8434477539"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Keep the pair together.",
+              "zh": "讓兩隻鞋放在一起。",
+              "id": "002-no-not-there:15:7648f03bfced"
+            },
+            {
+              "en": "Here is a good place.",
+              "zh": "這是個好位置。",
+              "id": "002-no-not-there:15:8f87a8d87119"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "What color are the shoes?",
+              "zh": "鞋子是什麼顏色？",
+              "id": "002-no-not-there:15:1a5d3a66a270",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yellow.",
+              "zh": "黃色。",
+              "id": "002-no-not-there:15:f447a3867713",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, yellow shoes.",
+              "zh": "對，黃色鞋子。",
+              "id": "002-no-not-there:15:f03e82bcc6de",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Find a place for your shoes.",
+              "zh": "替妳的鞋找個位置。",
+              "id": "002-no-not-there:15:451daf201e30"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point up, then down.",
+              "zh": "先往上指，再往下指。",
+              "id": "002-no-not-there:15:55ee280f4851"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 16,
+      "image": "/media/books/002-no-not-there/016-a1253f348eed.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "No, not there!",
+              "zh": "不，不是那裡！",
+              "id": "002-no-not-there:16:c7986af8b7e4"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "鞋子被放到床上。可以輕聲提醒「放回鞋架」，不必加重責備。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "粉紅色鞋子放在床上。",
+          "phrases": [
+            {
+              "en": "The shoes are on the bed.",
+              "zh": "鞋子在床上。",
+              "id": "002-no-not-there:16:186ae1ee44c2"
+            },
+            {
+              "en": "I see two shoes.",
+              "zh": "我看到兩隻鞋。",
+              "id": "002-no-not-there:16:eff59b76fc4e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Try the shoe rack.",
+              "zh": "試試鞋架。",
+              "id": "002-no-not-there:16:db85909373a3"
+            },
+            {
+              "en": "Let’s move them.",
+              "zh": "我們把它們移一移。",
+              "id": "002-no-not-there:16:c570db20c6e7"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Do shoes go on the bed?",
+              "zh": "鞋子要放床上嗎？",
+              "id": "002-no-not-there:16:8ef2948b9351",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "不要。",
+              "id": "002-no-not-there:16:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They go on the rack.",
+              "zh": "它們放在鞋架上。",
+              "id": "002-no-not-there:16:873d60f03fb8",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Take off your shoes here.",
+              "zh": "在這裡脫鞋。",
+              "id": "002-no-not-there:16:e1e8da39e830"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put two shoes on a rack.",
+              "zh": "假裝把兩隻鞋放上鞋架。",
+              "id": "002-no-not-there:16:af2ce3663803"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 17,
+      "image": "/media/books/002-no-not-there/017-ff8f35c2ed0b.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Put them back where the toys go.",
+              "zh": "把它們放回玩具該放的地方。",
+              "id": "002-no-not-there:17:ce2c3890ba12"
+            },
+            {
+              "en": "Put it back where the book goes.",
+              "zh": "把它放回書該放的地方。",
+              "id": "002-no-not-there:17:cc8916bf3659"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "同頁畫出兩個收納動作：玩具回箱子、書回書架。不要因女孩出現兩次就說是兩姊妹。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "一個動作是拿熊到箱子，另一個動作是把書放回書架，媽媽與貓也在畫面裡。",
+          "phrases": [
+            {
+              "en": "The bear goes in the box.",
+              "zh": "熊玩偶放進箱子。",
+              "id": "002-no-not-there:17:f447cfaa408c"
+            },
+            {
+              "en": "The book goes on the shelf.",
+              "zh": "書放上書架。",
+              "id": "002-no-not-there:17:098429ad1abd"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Two things, two places.",
+              "zh": "兩種東西，兩個位置。",
+              "id": "002-no-not-there:17:f1fc1c2f44ea"
+            },
+            {
+              "en": "Let’s sort them.",
+              "zh": "我們把它們分類。",
+              "id": "002-no-not-there:17:42a303bee83b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Where does the bear go?",
+              "zh": "熊熊放哪裡？",
+              "id": "002-no-not-there:17:dc1ddf89302d",
+              "label": "媽媽問"
+            },
+            {
+              "en": "In the box.",
+              "zh": "箱子裡。",
+              "id": "002-no-not-there:17:018f6e411f5b",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "And the book goes on the shelf.",
+              "zh": "書則放在書架上。",
+              "id": "002-no-not-there:17:b6724775dd31",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Sort a toy and a book.",
+              "zh": "把一個玩具和一本書分開收好。",
+              "id": "002-no-not-there:17:f93969f46f69"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Match each thing to its place.",
+              "zh": "幫每樣東西配上它的位置。",
+              "id": "002-no-not-there:17:c8a9e49f64ab"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 18,
+      "image": "/media/books/002-no-not-there/018-f41aa958a11c.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "That’s not where the coat goes.",
+              "zh": "那不是外套該放的地方。",
+              "id": "002-no-not-there:18:fc01e9c497df"
+            },
+            {
+              "en": "That’s not where the shoes go.",
+              "zh": "那不是鞋子該放的地方。",
+              "id": "002-no-not-there:18:5a5181eb4126"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "兩種物品都放錯了。把情境當成找位置的小謎題，不假設是誰故意弄亂。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "藍色外套塞在鞋架上方的籃子裡，粉紅鞋放到了架子上不合適的位置。",
+          "phrases": [
+            {
+              "en": "I see a blue coat.",
+              "zh": "我看到藍色外套。",
+              "id": "002-no-not-there:18:311611de0cd2"
+            },
+            {
+              "en": "The shoes need their place.",
+              "zh": "鞋子需要自己的位置。",
+              "id": "002-no-not-there:18:7a4f7f63f3d0"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s fix it together.",
+              "zh": "我們一起調整。",
+              "id": "002-no-not-there:18:0c84dd6d71c3"
+            },
+            {
+              "en": "Where is the coat hook?",
+              "zh": "外套掛鉤在哪？",
+              "id": "002-no-not-there:18:8405d8e00010"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Does the coat go with the shoes?",
+              "zh": "外套要跟鞋子放一起嗎？",
+              "id": "002-no-not-there:18:8d7b6e8809a9",
+              "label": "媽媽問"
+            },
+            {
+              "en": "No.",
+              "zh": "不是。",
+              "id": "002-no-not-there:18:6a1bc3251ed1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "The coat hangs on a hook.",
+              "zh": "外套掛在掛鉤上。",
+              "id": "002-no-not-there:18:d3a11f2e73b0",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Find the right place first.",
+              "zh": "先找到正確的位置。",
+              "id": "002-no-not-there:18:8f8a15f39267"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to move the coat.",
+              "zh": "假裝把外套移回去。",
+              "id": "002-no-not-there:18:0de84d2de409"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 19,
+      "image": "/media/books/002-no-not-there/019-6cac293b2be8.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Put it back where the coat goes.",
+              "zh": "把它放回外套該放的地方。",
+              "id": "002-no-not-there:19:89b75d00e236"
+            },
+            {
+              "en": "Put them back where the shoes go.",
+              "zh": "把它們放回鞋子該放的地方。",
+              "id": "002-no-not-there:19:dd56666a1271"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "it 是一件外套，them 是鞋子。媽媽和孩子分工，一起做會更容易。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽把藍色外套掛好，女孩將鞋子放回鞋架。",
+          "phrases": [
+            {
+              "en": "Mom hangs up the coat.",
+              "zh": "媽媽掛好外套。",
+              "id": "002-no-not-there:19:bfbcf1018649"
+            },
+            {
+              "en": "The girl puts away the shoes.",
+              "zh": "女孩收好鞋子。",
+              "id": "002-no-not-there:19:5a71959775be"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We are a team.",
+              "zh": "我們是一隊。",
+              "id": "002-no-not-there:19:a60b5958cba2"
+            },
+            {
+              "en": "I can help you.",
+              "zh": "我可以幫妳。",
+              "id": "002-no-not-there:19:fe657868a566"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Who is putting away the shoes?",
+              "zh": "誰在收鞋子？",
+              "id": "002-no-not-there:19:2ec4a4d89e5e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The girl.",
+              "zh": "女孩。",
+              "id": "002-no-not-there:19:9a5f412d0812",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, she is helping.",
+              "zh": "對，她在幫忙。",
+              "id": "002-no-not-there:19:624161cb8dc0",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You do the shoes. I’ll do the coat.",
+              "zh": "妳收鞋子，我收外套。",
+              "id": "002-no-not-there:19:a3ad88ce6e12"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Choose a small job to do.",
+              "zh": "選一件小工作來做。",
+              "id": "002-no-not-there:19:9fa1141a337d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 20,
+      "image": "/media/books/002-no-not-there/020-583e1ddff688.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Everything is in the right place!",
+              "zh": "每樣東西都放在正確的位置了！",
+              "id": "002-no-not-there:20:e08ecceac220"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "right place 是「正確的位置」，不是右邊。最後一起欣賞整齊的小空間。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽和女孩開心慶祝，書架與玩具箱都收好了，小貓在旁邊。",
+          "phrases": [
+            {
+              "en": "The room is tidy.",
+              "zh": "房間整齊了。",
+              "id": "002-no-not-there:20:206502cc3a19"
+            },
+            {
+              "en": "They look happy.",
+              "zh": "她們看起來很開心。",
+              "id": "002-no-not-there:20:17b8c4cd734a"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We did it together.",
+              "zh": "我們一起做到了。",
+              "id": "002-no-not-there:20:a6d690bebf97"
+            },
+            {
+              "en": "Now we can play.",
+              "zh": "現在可以玩了。",
+              "id": "002-no-not-there:20:4dc8786f257b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問一次，或指著兩個地方讓孩子選。孩子用手指回答就夠了，再聽媽媽示範短句。",
+          "phrases": [
+            {
+              "en": "Is the room tidy now?",
+              "zh": "房間現在整齊了嗎？",
+              "id": "002-no-not-there:20:be7c3946e2db",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "對！",
+              "id": "002-no-not-there:20:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Thank you, little helper.",
+              "zh": "謝謝妳，小幫手。",
+              "id": "002-no-not-there:20:c587e37bc0ee",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s enjoy our tidy room.",
+              "zh": "我們享受整齊的房間吧。",
+              "id": "002-no-not-there:20:6070d60180cc"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Give Mom a high five.",
+              "zh": "和媽媽擊掌。",
+              "id": "002-no-not-there:20:3ce073542d27"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

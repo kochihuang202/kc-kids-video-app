@@ -6,7 +6,7 @@
     "dev": "node scripts/preview.mjs",
     "import": "node scripts/import-books.mjs",
     "upload": "node scripts/upload-images.mjs",
-    "test": "node --test test/worker.test.mjs && ../node_modules/.bin/playwright test --config playwright.config.ts",
+    "test": "node --test test/*.test.mjs && ../node_modules/.bin/playwright test --config playwright.config.ts",
     "deploy": "../node_modules/.bin/wrangler deploy --config wrangler.jsonc"
   }
 }

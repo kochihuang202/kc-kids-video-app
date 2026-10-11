@@ -1,0 +1,1238 @@
+{
+  "version": 1,
+  "bookId": "006-look-at-the-little-birdy",
+  "title": "Look At The Little Birdy",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/006-look-at-the-little-birdy/001-fb2f32665e47.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Look At The Little Birdy",
+              "zh": "看看那隻小鳥。",
+              "id": "006-look-at-the-little-birdy:1:e0bae5a4da6f"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "birdy 是親暱地說小鳥；常見標準寫法也有 birdie。先說 bird 就很好，不需要孩子記拼字。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽與女孩蹲在花叢邊，女孩指著右邊樹枝上的棕色小鳥，背景有湖。",
+          "phrases": [
+            {
+              "en": "I see a little bird.",
+              "zh": "我看到一隻小鳥。",
+              "id": "006-look-at-the-little-birdy:1:709388f1ece7"
+            },
+            {
+              "en": "Mom is with the girl.",
+              "zh": "媽媽陪著女孩。",
+              "id": "006-look-at-the-little-birdy:1:b8db5276ce07"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look over there.",
+              "zh": "看那邊。",
+              "id": "006-look-at-the-little-birdy:1:00177f6ead9b"
+            },
+            {
+              "en": "Let’s look quietly.",
+              "zh": "我們安靜看看。",
+              "id": "006-look-at-the-little-birdy:1:37fa6452e9bb"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Can you find the bird?",
+              "zh": "妳找得到小鳥嗎？",
+              "id": "006-look-at-the-little-birdy:1:4ccae3a9183c",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There.",
+              "zh": "在那裡。",
+              "id": "006-look-at-the-little-birdy:1:7df685e63e9c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the branch.",
+              "zh": "對，在樹枝上。",
+              "id": "006-look-at-the-little-birdy:1:905d16bc726f",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Look for birds outside.",
+              "zh": "在外面找找小鳥。",
+              "id": "006-look-at-the-little-birdy:1:c91a11f86f19"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point like the girl.",
+              "zh": "像女孩一樣指一指。",
+              "id": "006-look-at-the-little-birdy:1:f2770cc2f28a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/006-look-at-the-little-birdy/002-275c49c21458.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Look, look, look at that bird",
+              "zh": "看、看、看看那隻鳥。",
+              "id": "006-look-at-the-little-birdy:2:00ee30e0be77"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "look 是請人把目光轉過去。重複三次很有節奏，可以輕聲說，並停一下讓孩子觀察。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩指著樹枝上的鳥，媽媽在身邊，後面有木長椅。",
+          "phrases": [
+            {
+              "en": "The bird is on a branch.",
+              "zh": "鳥在樹枝上。",
+              "id": "006-look-at-the-little-birdy:2:025cb6ee66a3"
+            },
+            {
+              "en": "I see a bench behind them.",
+              "zh": "我看到她們後面的長椅。",
+              "id": "006-look-at-the-little-birdy:2:ed810e50d377"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A bird in the tree.",
+              "zh": "樹上的一隻鳥。",
+              "id": "006-look-at-the-little-birdy:2:75fdb4624ba8"
+            },
+            {
+              "en": "Stay still and look.",
+              "zh": "停一下，看看。",
+              "id": "006-look-at-the-little-birdy:2:8cd081f0d9a2"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Is the bird in the tree?",
+              "zh": "鳥在樹上嗎？",
+              "id": "006-look-at-the-little-birdy:2:6e2009c2c3ed",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "006-look-at-the-little-birdy:2:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on a little branch.",
+              "zh": "對，在一根小樹枝上。",
+              "id": "006-look-at-the-little-birdy:2:ec949b2304b8",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s watch from here.",
+              "zh": "我們從這裡看。",
+              "id": "006-look-at-the-little-birdy:2:0e5e5a05d73e"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find the tree, then the bird.",
+              "zh": "先找樹，再找鳥。",
+              "id": "006-look-at-the-little-birdy:2:3e031e29eef1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/006-look-at-the-little-birdy/003-39b6ba71bc5d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Look at the little birdy",
+              "zh": "看看那隻小鳥。",
+              "id": "006-look-at-the-little-birdy:3:b435f8f7c00f"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "little 是小小的。這頁視角靠近小鳥，可以看嘴巴、身體與尾巴，不用猜鳥的品種。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "小鳥站在女孩前方的樹枝上，棕色背、淺色肚子，周圍有綠葉。",
+          "phrases": [
+            {
+              "en": "The bird has a little beak.",
+              "zh": "鳥有小小的嘴。",
+              "id": "006-look-at-the-little-birdy:3:c865f37c4969"
+            },
+            {
+              "en": "I see green leaves.",
+              "zh": "我看到綠葉。",
+              "id": "006-look-at-the-little-birdy:3:41dea5e0de8e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "It has a tail.",
+              "zh": "牠有尾巴。",
+              "id": "006-look-at-the-little-birdy:3:05d00a0ca6ca"
+            },
+            {
+              "en": "It looks small.",
+              "zh": "牠看起來小小的。",
+              "id": "006-look-at-the-little-birdy:3:e72359118979"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Can you see its tail?",
+              "zh": "妳看得到牠的尾巴嗎？",
+              "id": "006-look-at-the-little-birdy:3:0657717cdf61",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "看得到。",
+              "id": "006-look-at-the-little-birdy:3:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "There, behind the bird.",
+              "zh": "在那裡，鳥的後面。",
+              "id": "006-look-at-the-little-birdy:3:bc9d7c1a1dd2",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What little animals have you seen?",
+              "zh": "妳看過什麼小動物？",
+              "id": "006-look-at-the-little-birdy:3:387f4adc1f81"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to its beak and tail.",
+              "zh": "指指牠的嘴和尾巴。",
+              "id": "006-look-at-the-little-birdy:3:8ca6468568c2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/006-look-at-the-little-birdy/004-6391c10c9a63.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Look, look, look at that bird",
+              "zh": "看、看、看看那隻鳥。",
+              "id": "006-look-at-the-little-birdy:4:00ee30e0be77"
+            },
+            {
+              "en": "Can you see the birdy?",
+              "zh": "妳看得到小鳥嗎？",
+              "id": "006-look-at-the-little-birdy:4:b2338cceda3f"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "Can you see 是很簡單的觀察問句。孩子點頭或指出位置就可以，不必立刻說完整答案。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "小鳥在右邊樹枝上，媽媽用手遮在額前，女孩往上指。",
+          "phrases": [
+            {
+              "en": "Mom looks up.",
+              "zh": "媽媽往上看。",
+              "id": "006-look-at-the-little-birdy:4:ef80abde6b00"
+            },
+            {
+              "en": "The girl points up.",
+              "zh": "女孩往上指。",
+              "id": "006-look-at-the-little-birdy:4:6810bb598374"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look up a little.",
+              "zh": "稍微往上看。",
+              "id": "006-look-at-the-little-birdy:4:89e0508bf1dc"
+            },
+            {
+              "en": "I can see it too.",
+              "zh": "我也看得見。",
+              "id": "006-look-at-the-little-birdy:4:7719f9eb8f90"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Can you see the bird?",
+              "zh": "妳看得到鳥嗎？",
+              "id": "006-look-at-the-little-birdy:4:7c9065030519",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes, I can.",
+              "zh": "對，看得到。",
+              "id": "006-look-at-the-little-birdy:4:7b9e80d32bec",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "There it is.",
+              "zh": "牠在那裡。",
+              "id": "006-look-at-the-little-birdy:4:97cc7d3fd537",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me what you can see.",
+              "zh": "告訴我妳看見什麼。",
+              "id": "006-look-at-the-little-birdy:4:08c58385a331"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Use your hand like a little sun shade.",
+              "zh": "用手做小小遮陽棚。",
+              "id": "006-look-at-the-little-birdy:4:84815e76d9bb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/006-look-at-the-little-birdy/005-e7e35b341918.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Watch, watch, watch it now!",
+              "zh": "看、看、現在看著牠！",
+              "id": "006-look-at-the-little-birdy:5:c823bfaac3fe"
+            },
+            {
+              "en": "Watch it fly!",
+              "zh": "看牠飛！",
+              "id": "006-look-at-the-little-birdy:5:7acff791b727"
+            },
+            {
+              "en": "Fly so high!",
+              "zh": "飛得好高！",
+              "id": "006-look-at-the-little-birdy:5:5b3d4d7c2999"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "watch 是持續看動作，fly 是飛。小鳥從站在枝上變成張翅飛起，可以比一比前一頁。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "鳥張開翅膀飛起，媽媽與女孩抬頭看，女孩指向牠。",
+          "phrases": [
+            {
+              "en": "The bird opens its wings.",
+              "zh": "鳥張開翅膀。",
+              "id": "006-look-at-the-little-birdy:5:665f5bdbb742"
+            },
+            {
+              "en": "It is flying.",
+              "zh": "牠在飛。",
+              "id": "006-look-at-the-little-birdy:5:52bc6a776e36"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Up it goes.",
+              "zh": "牠飛上去了。",
+              "id": "006-look-at-the-little-birdy:5:3b72a90461f4"
+            },
+            {
+              "en": "Look at its wings.",
+              "zh": "看看牠的翅膀。",
+              "id": "006-look-at-the-little-birdy:5:3f937a5571ff"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Is it flying now?",
+              "zh": "牠現在在飛嗎？",
+              "id": "006-look-at-the-little-birdy:5:fc1a96d0d710",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "對！",
+              "id": "006-look-at-the-little-birdy:5:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Its wings are open.",
+              "zh": "牠的翅膀張開了。",
+              "id": "006-look-at-the-little-birdy:5:ca563d3b05e6",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Watch birds without chasing them.",
+              "zh": "看小鳥時不追牠。",
+              "id": "006-look-at-the-little-birdy:5:73b1222130d8"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Open your arms like wings.",
+              "zh": "張開手臂，像翅膀。",
+              "id": "006-look-at-the-little-birdy:5:e1d7251b197e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/006-look-at-the-little-birdy/006-768ad1d49323.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Watch, watch, watch it now!",
+              "zh": "看、看、現在看著牠！",
+              "id": "006-look-at-the-little-birdy:6:c823bfaac3fe"
+            },
+            {
+              "en": "Watch it fly In the sky!",
+              "zh": "看牠在天空飛！",
+              "id": "006-look-at-the-little-birdy:6:1b22f0259f0f"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "sky 是天空。圖片原字 In 用大寫，朗讀不影響意思；聊天時用簡單的 in the sky 即可。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "小鳥飛在藍天白雲間，母女抬頭望著牠，背景有湖與房屋。",
+          "phrases": [
+            {
+              "en": "The sky is blue.",
+              "zh": "天空是藍色的。",
+              "id": "006-look-at-the-little-birdy:6:d65bb8081275"
+            },
+            {
+              "en": "I see white clouds.",
+              "zh": "我看到白雲。",
+              "id": "006-look-at-the-little-birdy:6:075b4ec17b4e"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A bird in the sky.",
+              "zh": "天空中的一隻鳥。",
+              "id": "006-look-at-the-little-birdy:6:44dd0ccacadb"
+            },
+            {
+              "en": "It can fly.",
+              "zh": "牠會飛。",
+              "id": "006-look-at-the-little-birdy:6:310f9a10cb35"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Where is the bird?",
+              "zh": "鳥在哪裡？",
+              "id": "006-look-at-the-little-birdy:6:0e2f6dbc9b4f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "In the sky.",
+              "zh": "天空中。",
+              "id": "006-look-at-the-little-birdy:6:b8255b226f63",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, above the flowers.",
+              "zh": "對，在花的上方。",
+              "id": "006-look-at-the-little-birdy:6:a5aa5be27507",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Look at the sky today.",
+              "zh": "看看今天的天空。",
+              "id": "006-look-at-the-little-birdy:6:5fcaea182ca6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw a cloud in the air.",
+              "zh": "在空中畫一朵雲。",
+              "id": "006-look-at-the-little-birdy:6:6226ea42f2e4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/006-look-at-the-little-birdy/007-6a79128b1878.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can, can, can you see?",
+              "zh": "妳、妳、妳看得到嗎？",
+              "id": "006-look-at-the-little-birdy:7:9af007f8c8a3"
+            },
+            {
+              "en": "Can you see it flying around?",
+              "zh": "妳看得到牠飛來飛去嗎？",
+              "id": "006-look-at-the-little-birdy:7:1e88631a10e1"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "around 是繞著、到處；白色線條表示圖中的飛行路徑，不是一根真的繩子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩站起來指鳥，小鳥在樹幹旁飛，白線畫出繞行方向。",
+          "phrases": [
+            {
+              "en": "The bird flies by the tree.",
+              "zh": "鳥在樹旁飛。",
+              "id": "006-look-at-the-little-birdy:7:945c1ef6b7ff"
+            },
+            {
+              "en": "The girl is standing.",
+              "zh": "女孩站著。",
+              "id": "006-look-at-the-little-birdy:7:079b35083d20"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Round and round.",
+              "zh": "繞呀繞。",
+              "id": "006-look-at-the-little-birdy:7:ae86cd818fa4"
+            },
+            {
+              "en": "Follow it with your eyes.",
+              "zh": "用眼睛跟著牠。",
+              "id": "006-look-at-the-little-birdy:7:de40f06d25ad"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "What is the bird near?",
+              "zh": "鳥靠近什麼？",
+              "id": "006-look-at-the-little-birdy:7:b8d4aae35da4",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The tree.",
+              "zh": "樹。",
+              "id": "006-look-at-the-little-birdy:7:d2f49999d988",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, the big tree.",
+              "zh": "對，那棵大樹。",
+              "id": "006-look-at-the-little-birdy:7:37410ad75563",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Watch how a bird moves.",
+              "zh": "看看鳥怎麼動。",
+              "id": "006-look-at-the-little-birdy:7:b40c49fa37fd"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Trace a circle with your finger.",
+              "zh": "用手指畫一個圓。",
+              "id": "006-look-at-the-little-birdy:7:a233c61afa89"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/006-look-at-the-little-birdy/008-ca6a27a95be6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Can, can, can you see?",
+              "zh": "妳、妳、妳看得到嗎？",
+              "id": "006-look-at-the-little-birdy:8:9af007f8c8a3"
+            },
+            {
+              "en": "The little birdy flying around?",
+              "zh": "那隻飛來飛去的小鳥？",
+              "id": "006-look-at-the-little-birdy:8:b269464bd095"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "第二句是接著上一句的歌曲式問法。整體是在問「看得到那隻飛來飛去的小鳥嗎」，不必硬把它當完整獨立句。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽和女孩一起指著樹邊飛的小鳥。",
+          "phrases": [
+            {
+              "en": "They point at the bird.",
+              "zh": "她們指著鳥。",
+              "id": "006-look-at-the-little-birdy:8:f4a43a687326"
+            },
+            {
+              "en": "The bird is near a branch.",
+              "zh": "鳥在樹枝附近。",
+              "id": "006-look-at-the-little-birdy:8:b6527f286809"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We can see it together.",
+              "zh": "我們一起看得到牠。",
+              "id": "006-look-at-the-little-birdy:8:588138c743c8"
+            },
+            {
+              "en": "Look where Mom is pointing.",
+              "zh": "看看媽媽指哪裡。",
+              "id": "006-look-at-the-little-birdy:8:d0b30b06e92b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Can Mom see it too?",
+              "zh": "媽媽也看得到嗎？",
+              "id": "006-look-at-the-little-birdy:8:27001f73efb4",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "006-look-at-the-little-birdy:8:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They can both see it.",
+              "zh": "她們都看得到。",
+              "id": "006-look-at-the-little-birdy:8:6a944efe5c10",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Show me something you notice.",
+              "zh": "給我看妳注意到的東西。",
+              "id": "006-look-at-the-little-birdy:8:c5e39c20e47b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Take turns pointing at something.",
+              "zh": "輪流指一個東西給對方看。",
+              "id": "006-look-at-the-little-birdy:8:ca959395ffbe"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/006-look-at-the-little-birdy/009-9a5bb8dfabd6.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I see it, yes I do!",
+              "zh": "我看到了，對，我看到了！",
+              "id": "006-look-at-the-little-birdy:9:f29d7085c845"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "yes I do 是加強說「真的看到了」。可以讓孩子開心說 I see it，不用要求重複整段。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "小鳥又停在枝上，女孩指著牠，媽媽在旁微笑。",
+          "phrases": [
+            {
+              "en": "The bird is on the branch again.",
+              "zh": "鳥又在樹枝上了。",
+              "id": "006-look-at-the-little-birdy:9:e6bbaddefb1c"
+            },
+            {
+              "en": "The girl is smiling.",
+              "zh": "女孩在微笑。",
+              "id": "006-look-at-the-little-birdy:9:7e4ff004e8f7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "I found it!",
+              "zh": "我找到了！",
+              "id": "006-look-at-the-little-birdy:9:f2eb3a5ddb43"
+            },
+            {
+              "en": "There is the bird.",
+              "zh": "鳥在那裡。",
+              "id": "006-look-at-the-little-birdy:9:8ce88a27a55a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Is it on the branch now?",
+              "zh": "牠現在在樹枝上嗎？",
+              "id": "006-look-at-the-little-birdy:9:93892c67793e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "006-look-at-the-little-birdy:9:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It stopped there.",
+              "zh": "牠停在那裡。",
+              "id": "006-look-at-the-little-birdy:9:6c0f02e0d452",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell Mom what you found.",
+              "zh": "告訴媽媽妳找到什麼。",
+              "id": "006-look-at-the-little-birdy:9:ed5bfaffffa6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find the bird without Mom pointing first.",
+              "zh": "媽媽先不指，自己找找鳥。",
+              "id": "006-look-at-the-little-birdy:9:89a442e06eff"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/006-look-at-the-little-birdy/010-1aac92e9c6bd.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Look at the little birdy fly!",
+              "zh": "看小鳥飛呀！",
+              "id": "006-look-at-the-little-birdy:10:0675e4135ce7"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "再一次飛起。這頁可以注意母女托著下巴安靜看，分享看動物的樂趣。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "小鳥張翅飛，女孩與媽媽托著下巴看，背後是湖與長椅。",
+          "phrases": [
+            {
+              "en": "Its wings are open.",
+              "zh": "牠的翅膀張開了。",
+              "id": "006-look-at-the-little-birdy:10:3c584a25f3d4"
+            },
+            {
+              "en": "They watch quietly.",
+              "zh": "她們安靜地看。",
+              "id": "006-look-at-the-little-birdy:10:3611de35a4d9"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "What a little bird!",
+              "zh": "好可愛的小鳥！",
+              "id": "006-look-at-the-little-birdy:10:cca65fc61dc6"
+            },
+            {
+              "en": "Let’s enjoy watching.",
+              "zh": "我們開心看看。",
+              "id": "006-look-at-the-little-birdy:10:99967b86835f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Are its wings open?",
+              "zh": "牠的翅膀張開了嗎？",
+              "id": "006-look-at-the-little-birdy:10:5a800acea6a8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "006-look-at-the-little-birdy:10:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Ready to fly.",
+              "zh": "準備飛。",
+              "id": "006-look-at-the-little-birdy:10:f31d47bda9d8",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Take a quiet moment outside.",
+              "zh": "在外面享受一小段安靜時間。",
+              "id": "006-look-at-the-little-birdy:10:77a85cab962f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to fly slowly with your arms.",
+              "zh": "用手臂假裝慢慢飛。",
+              "id": "006-look-at-the-little-birdy:10:e78be7e78f79"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/006-look-at-the-little-birdy/011-56c242818b95.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Watch it flying high!",
+              "zh": "看牠飛得高高的！",
+              "id": "006-look-at-the-little-birdy:11:59e50649108a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "high 是高。媽媽和女孩站起来，小鳥在上方。可以用身體動作理解高與低。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽和女孩站在步道上，女孩往上指，鳥飛在右上方。",
+          "phrases": [
+            {
+              "en": "They are standing now.",
+              "zh": "她們現在站著。",
+              "id": "006-look-at-the-little-birdy:11:1106bebef5a3"
+            },
+            {
+              "en": "The bird is high up.",
+              "zh": "鳥在高高的上方。",
+              "id": "006-look-at-the-little-birdy:11:6ba5b8ab4d82"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Up high.",
+              "zh": "高高的上方。",
+              "id": "006-look-at-the-little-birdy:11:ccb095daffda"
+            },
+            {
+              "en": "Down low.",
+              "zh": "低低的下面。",
+              "id": "006-look-at-the-little-birdy:11:0040360e8415"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Is the bird high or low?",
+              "zh": "鳥在高處還是低處？",
+              "id": "006-look-at-the-little-birdy:11:a24a20c8b3c1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "High.",
+              "zh": "高處。",
+              "id": "006-look-at-the-little-birdy:11:ae6fc87a3b12",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, up in the sky.",
+              "zh": "對，在天空上方。",
+              "id": "006-look-at-the-little-birdy:11:b85c91ef922b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Look up, then look down.",
+              "zh": "往上看，再往下看。",
+              "id": "006-look-at-the-little-birdy:11:510582c59e4a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Move your hand high, then low.",
+              "zh": "手先舉高，再放低。",
+              "id": "006-look-at-the-little-birdy:11:f1f4d5b3f8cb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/006-look-at-the-little-birdy/012-6cec91d5e1ec.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Flying high... in... the... sky",
+              "zh": "在……天……空……飛得高高的。",
+              "id": "006-look-at-the-little-birdy:12:732d4ce61f5a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "省略號讓歌詞慢慢收尾。讀得放鬆一點，媽媽可以和孩子回想看鳥的經驗。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "母女坐在長椅上，女孩指著空中張翅的小鳥，遠處是湖與房屋。",
+          "phrases": [
+            {
+              "en": "They sit on the bench.",
+              "zh": "她們坐在長椅上。",
+              "id": "006-look-at-the-little-birdy:12:703551fa319b"
+            },
+            {
+              "en": "The bird is in the sky.",
+              "zh": "鳥在天空中。",
+              "id": "006-look-at-the-little-birdy:12:2c5129f406cb"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Bye, little bird.",
+              "zh": "小鳥，再見。",
+              "id": "006-look-at-the-little-birdy:12:0affd8a9eddc"
+            },
+            {
+              "en": "Thank you for this lovely moment.",
+              "zh": "謝謝這段美好時光。",
+              "id": "006-look-at-the-little-birdy:12:5e2161e1165c"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩手指的方向，再問「小鳥在哪裡？」孩子可指圖或用中文回答，媽媽再說簡單英文。",
+          "phrases": [
+            {
+              "en": "Where are Mom and the girl sitting?",
+              "zh": "媽媽和女孩坐在哪？",
+              "id": "006-look-at-the-little-birdy:12:ad43950f0656",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the bench.",
+              "zh": "長椅上。",
+              "id": "006-look-at-the-little-birdy:12:114907c11aac",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, watching the bird.",
+              "zh": "對，看著小鳥。",
+              "id": "006-look-at-the-little-birdy:12:d53791d1b95c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s sit and look together.",
+              "zh": "我們坐著一起看。",
+              "id": "006-look-at-the-little-birdy:12:56dea9e5c608"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Wave goodbye to the bird.",
+              "zh": "跟小鳥揮手再見。",
+              "id": "006-look-at-the-little-birdy:12:6775fd98a069"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

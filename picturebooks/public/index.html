@@ -64,7 +64,7 @@
     <header class="reader-header">
       <button id="back-to-shelf" class="soft-button" type="button"><span aria-hidden="true">←</span> 書櫃</button>
       <div class="reader-heading"><small id="reader-number"></small><h1 id="reader-title"></h1></div>
-      <button id="focus-toggle" class="icon-button" type="button" aria-label="專心閱讀" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
+      <div class="reader-actions"><button id="open-guide" class="soft-button" type="button">媽媽陪讀指南</button><button id="focus-toggle" class="icon-button" type="button" aria-label="專心閱讀" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
     </header>
     <div id="reading-stage" class="reading-stage">
       <img id="page-image" class="page-image" alt="" draggable="false">
@@ -75,6 +75,15 @@
     <div class="reader-bottom"><span class="reading-hint">左右滑動翻頁 · 點圖片收起按鈕</span><div class="page-progress"><span id="page-count" aria-live="polite"></span><progress id="page-progress" max="1" value="1" aria-label="閱讀進度"></progress></div><button id="start-over" class="quiet-button" type="button">從頭讀</button></div>
     <button id="restore-controls" class="restore-controls" type="button" hidden aria-label="顯示閱讀按鈕">顯示按鈕</button>
     <dialog id="finished-dialog"><span class="end-flower" aria-hidden="true">✿</span><p class="eyebrow">又一起讀完了一個故事</p><h2>把這一刻，<br>留在心裡。</h2><p>再讀一次，還是挑下一本？</p><div class="end-actions"><button id="reread-book" class="primary-button" type="button">再讀一次</button><button id="finish-to-shelf" class="soft-button" type="button">回到書櫃</button></div><button id="close-finished" class="quiet-button" type="button">留在這一頁</button></dialog>
+  </main>
+  <main id="guide" class="guide" hidden aria-label="媽媽陪讀指南">
+    <header class="guide-header"><button id="guide-return" class="soft-button" type="button" aria-label="回到繪本"><span aria-hidden="true">←</span> 回到繪本</button><div><p class="eyebrow">給媽媽的一點靈感</p><h1>媽媽陪讀指南</h1></div><div class="speech-speed" aria-label="朗讀速度"><button id="speech-normal" type="button" aria-pressed="true">正常</button><button id="speech-slow" type="button" aria-pressed="false">慢速</button></div></header>
+    <div class="guide-layout">
+      <aside class="guide-context"><img id="guide-preview" alt=""><h2 id="guide-title"></h2><p>先看懂，再挑妳想說的。<br>不用全部念，也不必考孩子。</p><button id="guide-filter" class="soft-button" type="button" aria-pressed="false">只看收藏</button><p class="guide-tip">點英文，聽一句。<br>點愛心，留下喜歡的說法。</p></aside>
+      <div id="guide-scroll" class="guide-scroll"><div class="guide-intro">妳的聲音，就是最好的陪伴。<small>這裡翻頁只是預習，回到繪本會留在原來那一頁。</small></div><p id="guide-status" role="status"></p><button id="guide-retry" class="soft-button" type="button" hidden>重新載入指南</button><div id="guide-content"></div></div>
+    </div>
+    <div id="speech-error" class="speech-error" role="status" hidden>這一句暫時沒有唸出來，請再點一次。<button id="speech-retry" class="quiet-button" type="button">重新朗讀</button></div>
+    <nav class="guide-navigation" aria-label="指南頁面"><button id="guide-previous" class="soft-button" type="button" aria-label="指南上一頁">← 上一頁</button><span id="guide-page-count" aria-live="polite"></span><button id="guide-next" class="soft-button" type="button" aria-label="指南下一頁">下一頁 →</button></nav>
   </main>
   <noscript>請開啟 JavaScript，才能使用繪本書櫃與翻頁功能。</noscript>
 </body>

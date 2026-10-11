@@ -1,0 +1,1443 @@
+{
+  "version": 1,
+  "bookId": "004-hurry-up",
+  "title": "Hurry Up!",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/004-hurry-up/001-8b2636abd6c0.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Hurry Up!",
+              "zh": "快一點！",
+              "id": "004-hurry-up:1:3bf3c11cc12d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這是出門前準備與一起上學的故事。hurry up 可以溫柔提醒，陪讀時不用真的催促孩子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "爸爸、媽媽與背紅書包的女孩走出家門，門內有時鐘。",
+          "phrases": [
+            {
+              "en": "I see Mom and Dad.",
+              "zh": "我看到媽媽和爸爸。",
+              "id": "004-hurry-up:1:fcec16a40014"
+            },
+            {
+              "en": "The girl has a red bag.",
+              "zh": "女孩背紅書包。",
+              "id": "004-hurry-up:1:9d2aba596857"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s get ready.",
+              "zh": "我們準備一下。",
+              "id": "004-hurry-up:1:679fbc7e1db1"
+            },
+            {
+              "en": "We can go together.",
+              "zh": "我們可以一起走。",
+              "id": "004-hurry-up:1:6e40e7c4864b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Who is with the girl?",
+              "zh": "誰和女孩在一起？",
+              "id": "004-hurry-up:1:61c2df896ae1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom and Dad.",
+              "zh": "媽媽和爸爸。",
+              "id": "004-hurry-up:1:0b0437866281",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her family.",
+              "zh": "對，她的家人。",
+              "id": "004-hurry-up:1:c14661e7e877",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What do you need before we go?",
+              "zh": "出門前妳需要什麼？",
+              "id": "004-hurry-up:1:991caf34b749"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put on your bag.",
+              "zh": "假裝背上書包。",
+              "id": "004-hurry-up:1:c6baa248b420"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/004-hurry-up/002-0ee067bea32e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "What did mom say?",
+              "zh": "媽媽說了什麼？",
+              "id": "004-hurry-up:2:e8cdddfee83a"
+            },
+            {
+              "en": "She said it’s time to go!",
+              "zh": "她說該出發了！",
+              "id": "004-hurry-up:2:dcb4f23a806a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "said 是 say 的過去式，這裡是在回顧媽媽剛說的話。孩子只需聽懂「該走了」。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在矮桌旁玩拼圖，媽媽站著說話，爸爸坐在沙發上。",
+          "phrases": [
+            {
+              "en": "She is doing a puzzle.",
+              "zh": "她在玩拼圖。",
+              "id": "004-hurry-up:2:f7eaf173a19e"
+            },
+            {
+              "en": "Mom is standing.",
+              "zh": "媽媽站著。",
+              "id": "004-hurry-up:2:453c309cf15a"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "One more piece.",
+              "zh": "再一片。",
+              "id": "004-hurry-up:2:e6481f4b88e8"
+            },
+            {
+              "en": "Then we can go.",
+              "zh": "然後我們就出發。",
+              "id": "004-hurry-up:2:e78db8d35cf5"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "What is she playing with?",
+              "zh": "她在玩什麼？",
+              "id": "004-hurry-up:2:4f0c2df3294b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A puzzle.",
+              "zh": "拼圖。",
+              "id": "004-hurry-up:2:10ae923f0eb5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a puzzle on the table.",
+              "zh": "對，桌上的拼圖。",
+              "id": "004-hurry-up:2:d447c7e04738",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s finish this little part.",
+              "zh": "我們先完成這一小部分。",
+              "id": "004-hurry-up:2:da1cf012798d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put a puzzle piece in.",
+              "zh": "假裝放入一片拼圖。",
+              "id": "004-hurry-up:2:35f3e2c7c854"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/004-hurry-up/003-82ade8426987.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "What did mom say?",
+              "zh": "媽媽說了什麼？",
+              "id": "004-hurry-up:3:e8cdddfee83a"
+            },
+            {
+              "en": "She said, hurry up, it’s time to go!",
+              "zh": "她說，快一點，該出發了！",
+              "id": "004-hurry-up:3:8e891a884c41"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "圖裡正準備拿書包。可以先整理好用品，再說「出發」，不用把催促變成責備。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽指向牆上時鐘，女孩拿紅書包，爸爸在旁邊幫忙。",
+          "phrases": [
+            {
+              "en": "Mom points to the clock.",
+              "zh": "媽媽指著時鐘。",
+              "id": "004-hurry-up:3:f74bd892c335"
+            },
+            {
+              "en": "The bag is red.",
+              "zh": "書包是紅色。",
+              "id": "004-hurry-up:3:19f5d7be40c6"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Get your bag.",
+              "zh": "拿妳的書包。",
+              "id": "004-hurry-up:3:a5e7f2d9157c"
+            },
+            {
+              "en": "I can help.",
+              "zh": "我可以幫忙。",
+              "id": "004-hurry-up:3:76910ac0c343"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Can you find the clock?",
+              "zh": "妳找得到時鐘嗎？",
+              "id": "004-hurry-up:3:50c11f5c4146",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There.",
+              "zh": "在那裡。",
+              "id": "004-hurry-up:3:7df685e63e9c",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the wall.",
+              "zh": "對，在牆上。",
+              "id": "004-hurry-up:3:b0ea880f3016",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Keep your bag by the door.",
+              "zh": "把書包放在門邊。",
+              "id": "004-hurry-up:3:b3351efb3813"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to the clock, then the bag.",
+              "zh": "先指時鐘，再指書包。",
+              "id": "004-hurry-up:3:3e7a37661f4a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/004-hurry-up/004-e0f565de35da.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "She said let’s go",
+              "zh": "她說，我們走吧。",
+              "id": "004-hurry-up:4:fca176f612f8"
+            },
+            {
+              "en": "She said hurry up",
+              "zh": "她說，快一點。",
+              "id": "004-hurry-up:4:565856879f8a"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "兩句都是出發提醒。女孩還在放水瓶，媽媽爸爸陪著她準備。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐在門邊長椅，把藍色水瓶放進紅書包，媽媽與爸爸蹲坐在旁。",
+          "phrases": [
+            {
+              "en": "The bottle is blue.",
+              "zh": "水瓶是藍色。",
+              "id": "004-hurry-up:4:42d4d28fc778"
+            },
+            {
+              "en": "She puts it in her bag.",
+              "zh": "她把它放進書包。",
+              "id": "004-hurry-up:4:fe9dd85823a9"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Don’t forget your water.",
+              "zh": "別忘了妳的水。",
+              "id": "004-hurry-up:4:2e53fd8724da"
+            },
+            {
+              "en": "Now you are ready.",
+              "zh": "現在妳準備好了。",
+              "id": "004-hurry-up:4:de49c1eb0277"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "What goes in her bag?",
+              "zh": "什麼放進她書包？",
+              "id": "004-hurry-up:4:36cd119bbbcb",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Water.",
+              "zh": "水。",
+              "id": "004-hurry-up:4:d81a7d78ff9f",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her water bottle.",
+              "zh": "對，她的水瓶。",
+              "id": "004-hurry-up:4:a3fc2fd809e2",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Check your water before we go.",
+              "zh": "出門前檢查妳的水。",
+              "id": "004-hurry-up:4:8f1175a7704d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put a bottle in your bag.",
+              "zh": "假裝把水瓶放進書包。",
+              "id": "004-hurry-up:4:212f43827064"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/004-hurry-up/005-8f7c111395d7.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "She said pick up the pace",
+              "zh": "她說，動作快一點。",
+              "id": "004-hurry-up:5:54697778d9d0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "pick up the pace 是「加快速度」，不是把 pace 這個東西撿起來。媽媽對孩子可以用更簡單的短句。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐在長椅上穿紅鞋，媽媽伸手陪她，紅書包在旁。",
+          "phrases": [
+            {
+              "en": "She is putting on her shoe.",
+              "zh": "她在穿鞋。",
+              "id": "004-hurry-up:5:1828197c35a5"
+            },
+            {
+              "en": "Mom is beside her.",
+              "zh": "媽媽在她身邊。",
+              "id": "004-hurry-up:5:8d3948db4ff3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s get your shoes on.",
+              "zh": "我們穿好妳的鞋。",
+              "id": "004-hurry-up:5:e61e8adcf16a"
+            },
+            {
+              "en": "A little faster, please.",
+              "zh": "請稍微快一點。",
+              "id": "004-hurry-up:5:78d7f05a78b3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "What is she putting on?",
+              "zh": "她在穿什麼？",
+              "id": "004-hurry-up:5:6b506394b78d",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Her shoe.",
+              "zh": "她的鞋。",
+              "id": "004-hurry-up:5:cdae1e7dcce8",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her red shoe.",
+              "zh": "對，她的紅鞋。",
+              "id": "004-hurry-up:5:8ef24827b648",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Do you need help with your shoes?",
+              "zh": "妳需要幫忙穿鞋嗎？",
+              "id": "004-hurry-up:5:1910670cf6c9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put on one shoe.",
+              "zh": "假裝穿上一隻鞋。",
+              "id": "004-hurry-up:5:04b43b895be7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/004-hurry-up/006-e1643c25b4cb.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "She said let’s not be late",
+              "zh": "她說，我們別遲到。",
+              "id": "004-hurry-up:6:6d2158b16afb"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "late 是遲到。可以把重點放在「準備好、一起走」，不用讓孩子緊張。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽牽著背紅書包的女孩走出家門，時鐘仍在門內。",
+          "phrases": [
+            {
+              "en": "They are holding hands.",
+              "zh": "她們牽著手。",
+              "id": "004-hurry-up:6:9f19f383e31b"
+            },
+            {
+              "en": "They are leaving home.",
+              "zh": "她們正離開家。",
+              "id": "004-hurry-up:6:42be2838759c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We are ready now.",
+              "zh": "我們現在準備好了。",
+              "id": "004-hurry-up:6:06f280a5dc63"
+            },
+            {
+              "en": "Let’s walk together.",
+              "zh": "我們一起走。",
+              "id": "004-hurry-up:6:8da500f175de"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Who holds her hand?",
+              "zh": "誰牽著她的手？",
+              "id": "004-hurry-up:6:f9350b4204df",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "004-hurry-up:6:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, Mom is with her.",
+              "zh": "對，媽媽跟她在一起。",
+              "id": "004-hurry-up:6:456c850d4b91",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Hold my hand outside.",
+              "zh": "在外面牽我的手。",
+              "id": "004-hurry-up:6:c5d7aed050bc"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Take two little pretend steps.",
+              "zh": "假裝走兩小步。",
+              "id": "004-hurry-up:6:46896b87d67e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/004-hurry-up/007-d1b1ad877b84.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "What did dad say?",
+              "zh": "爸爸說了什麼？",
+              "id": "004-hurry-up:7:6b7bdaa7f179"
+            },
+            {
+              "en": "He said it’s time to go!",
+              "zh": "他說該出發了！",
+              "id": "004-hurry-up:7:fe99ae517020"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "從媽媽的話換成爸爸的話，he 指爸爸。可以換個溫柔聲線扮演爸爸。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "爸爸彎腰伸手引導女孩走向外面，媽媽站在門口。",
+          "phrases": [
+            {
+              "en": "Dad is beside the girl.",
+              "zh": "爸爸在女孩旁邊。",
+              "id": "004-hurry-up:7:dce9b6587f6d"
+            },
+            {
+              "en": "Mom is at the door.",
+              "zh": "媽媽在門口。",
+              "id": "004-hurry-up:7:a500d168e7f4"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Come with me.",
+              "zh": "跟我來。",
+              "id": "004-hurry-up:7:2105452af1ad"
+            },
+            {
+              "en": "We’re going out.",
+              "zh": "我們要出門。",
+              "id": "004-hurry-up:7:78e910005441"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Who is at the door?",
+              "zh": "誰在門口？",
+              "id": "004-hurry-up:7:e94c3e9dcbf6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "004-hurry-up:7:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, Mom is there.",
+              "zh": "對，媽媽在那裡。",
+              "id": "004-hurry-up:7:a69678187fb9",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell Dad you are ready.",
+              "zh": "告訴爸爸妳準備好了。",
+              "id": "004-hurry-up:7:f9fa51e77f73"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Wave to Mom at the door.",
+              "zh": "向門口的媽媽揮手。",
+              "id": "004-hurry-up:7:194d0af6dc02"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/004-hurry-up/008-a5fbd4bcee1e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "What did dad say?",
+              "zh": "爸爸說了什麼？",
+              "id": "004-hurry-up:8:6b7bdaa7f179"
+            },
+            {
+              "en": "He said, hurry up, it’s time to go!",
+              "zh": "他說，快一點，該出發了！",
+              "id": "004-hurry-up:8:04e7f5866837"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "全家都出了門。可以觀察前後的位置，別把重複句當成需要背誦的作業。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "爸爸伸手向前，女孩在身邊，媽媽跟在後面，路邊有樹。",
+          "phrases": [
+            {
+              "en": "Dad points the way.",
+              "zh": "爸爸指引方向。",
+              "id": "004-hurry-up:8:2ea8d6c0c271"
+            },
+            {
+              "en": "Mom walks behind them.",
+              "zh": "媽媽走在她們後面。",
+              "id": "004-hurry-up:8:0841249296dc"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "This way.",
+              "zh": "這邊走。",
+              "id": "004-hurry-up:8:7b592faed550"
+            },
+            {
+              "en": "Stay close to me.",
+              "zh": "靠近我。",
+              "id": "004-hurry-up:8:58e7d7c8daae"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Can you find Dad?",
+              "zh": "妳找得到爸爸嗎？",
+              "id": "004-hurry-up:8:de198d53aeea",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "004-hurry-up:8:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, in the blue shirt.",
+              "zh": "對，穿藍色襯衫的爸爸。",
+              "id": "004-hurry-up:8:be113ad9da71",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Stay close when we walk.",
+              "zh": "走路時跟在我身邊。",
+              "id": "004-hurry-up:8:b944bb2d7eb2"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point in the direction they go.",
+              "zh": "指指她們前進的方向。",
+              "id": "004-hurry-up:8:db45c9187ffe"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/004-hurry-up/009-c2838ca43bf9.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "He said let’s go",
+              "zh": "他說，我們走吧。",
+              "id": "004-hurry-up:9:bd9d812dce47"
+            },
+            {
+              "en": "He said hurry up",
+              "zh": "他說，快一點。",
+              "id": "004-hurry-up:9:90a2de226bf2"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "let’s 是一起做的邀請。看著牽手畫面，可以自然說「一起走」。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩牽著爸爸的手向前走，媽媽在後面，旁邊有白花。",
+          "phrases": [
+            {
+              "en": "She holds Dad’s hand.",
+              "zh": "她牽爸爸的手。",
+              "id": "004-hurry-up:9:8f463adbf5dc"
+            },
+            {
+              "en": "I see white flowers.",
+              "zh": "我看到白色的花。",
+              "id": "004-hurry-up:9:d14158de7093"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s keep walking.",
+              "zh": "我們繼續走。",
+              "id": "004-hurry-up:9:f62a16973397"
+            },
+            {
+              "en": "We’re together.",
+              "zh": "我們在一起。",
+              "id": "004-hurry-up:9:d577be3cc6db"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Who is she holding hands with?",
+              "zh": "她跟誰牽手？",
+              "id": "004-hurry-up:9:276e65a2477a",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Dad.",
+              "zh": "爸爸。",
+              "id": "004-hurry-up:9:728264d6ef5d",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, with Dad.",
+              "zh": "對，跟爸爸。",
+              "id": "004-hurry-up:9:4290d823de74",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Which hand would you like to hold?",
+              "zh": "妳想牽哪隻手？",
+              "id": "004-hurry-up:9:9120e834614a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Hold hands with Mom.",
+              "zh": "和媽媽牽手。",
+              "id": "004-hurry-up:9:caabbc3e9e92"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/004-hurry-up/010-a44d711740d0.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "He said pick up the pace",
+              "zh": "他說，走快一點。",
+              "id": "004-hurry-up:10:1c6449e72c57"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "同樣的片語，這次配上走路。pace 是步伐；可以用快、慢兩種手指步伐演示。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "三人向前走，遠處可看到學校與背書包的孩子。",
+          "phrases": [
+            {
+              "en": "I see a school ahead.",
+              "zh": "我看到前面的學校。",
+              "id": "004-hurry-up:10:5ca484107e61"
+            },
+            {
+              "en": "Other children have bags.",
+              "zh": "其他孩子背著書包。",
+              "id": "004-hurry-up:10:cb7bc57e541c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A little faster.",
+              "zh": "稍微快一點。",
+              "id": "004-hurry-up:10:cf7808a48771"
+            },
+            {
+              "en": "We’re nearly there.",
+              "zh": "我們快到了。",
+              "id": "004-hurry-up:10:2f449694263f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Can you see the school?",
+              "zh": "妳看得到學校嗎？",
+              "id": "004-hurry-up:10:d8718bb65de0",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "看得到。",
+              "id": "004-hurry-up:10:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It is ahead of them.",
+              "zh": "它在她們前面。",
+              "id": "004-hurry-up:10:9b43001ffd90",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s leave a little earlier next time.",
+              "zh": "下次我們早一點出門。",
+              "id": "004-hurry-up:10:53e3f9a09dd6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Walk your fingers slowly, then faster.",
+              "zh": "手指先慢慢走，再快一點。",
+              "id": "004-hurry-up:10:52cf1ddc40de"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/004-hurry-up/011-822ccdfbf587.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "He said let’s not be late",
+              "zh": "他說，我們別遲到。",
+              "id": "004-hurry-up:11:b9bf21992849"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "爸爸指著學校時鐘。圖沒有清楚告訴我們上課時間，所以不要斷言已經遲到。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "爸爸指向學校建築上的時鐘，牽著女孩的手。",
+          "phrases": [
+            {
+              "en": "Dad points to the clock.",
+              "zh": "爸爸指著時鐘。",
+              "id": "004-hurry-up:11:b3dcd70c6e8d"
+            },
+            {
+              "en": "The school is close.",
+              "zh": "學校就在附近。",
+              "id": "004-hurry-up:11:8a505f925b4f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s get there on time.",
+              "zh": "我們準時到。",
+              "id": "004-hurry-up:11:22a501413dde"
+            },
+            {
+              "en": "The clock tells the time.",
+              "zh": "時鐘告訴我們時間。",
+              "id": "004-hurry-up:11:994019afd124"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Where is the clock?",
+              "zh": "時鐘在哪裡？",
+              "id": "004-hurry-up:11:d9c59f691143",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On the school.",
+              "zh": "在學校上。",
+              "id": "004-hurry-up:11:8c1068d8a310",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, above the door.",
+              "zh": "對，在門上方。",
+              "id": "004-hurry-up:11:4db8ff7816ca",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Check the time before we go.",
+              "zh": "出門前看看時間。",
+              "id": "004-hurry-up:11:9caa1047574f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find the round clock.",
+              "zh": "找出圓圓的時鐘。",
+              "id": "004-hurry-up:11:452b4058c9f4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/004-hurry-up/012-dd3e2eb5d530.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "They said let’s go",
+              "zh": "他們說，我們走吧。",
+              "id": "004-hurry-up:12:5a2087458956"
+            },
+            {
+              "en": "They said hurry up",
+              "zh": "他們說，快一點。",
+              "id": "004-hurry-up:12:5f7c80c8229d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "they 指媽媽和爸爸。女孩牽著兩人的手，可以說她們一起走。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在媽媽與爸爸中間，牽著兩人的手，學校在後面。",
+          "phrases": [
+            {
+              "en": "The girl is in the middle.",
+              "zh": "女孩在中間。",
+              "id": "004-hurry-up:12:240a5743307d"
+            },
+            {
+              "en": "She holds two hands.",
+              "zh": "她牽著兩隻手。",
+              "id": "004-hurry-up:12:bf0855c43b6c"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Mom and Dad are with her.",
+              "zh": "媽媽和爸爸陪著她。",
+              "id": "004-hurry-up:12:15df5155b8db"
+            },
+            {
+              "en": "Let’s go as a family.",
+              "zh": "我們全家一起走。",
+              "id": "004-hurry-up:12:f93fa8afb4cb"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Who is in the middle?",
+              "zh": "誰在中間？",
+              "id": "004-hurry-up:12:77294a2d03de",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The girl.",
+              "zh": "女孩。",
+              "id": "004-hurry-up:12:9a5f412d0812",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, between Mom and Dad.",
+              "zh": "對，在媽媽和爸爸之間。",
+              "id": "004-hurry-up:12:42b1be0fdea3",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s walk side by side.",
+              "zh": "我們並肩走。",
+              "id": "004-hurry-up:12:116ce7aabfc6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Put a toy between two other toys.",
+              "zh": "把玩具放在另外兩個玩具中間。",
+              "id": "004-hurry-up:12:6f832ca4711a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/004-hurry-up/013-6dd96cd4b40d.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "They said pick up the pace",
+              "zh": "他們說，走快一點。",
+              "id": "004-hurry-up:13:adc9c8da43a2"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "現在更接近校門。陪讀可以找「背包」與「門」等具體物品，讓重複頁也有觀察內容。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "三人接近校門，其他孩子正在往入口走。",
+          "phrases": [
+            {
+              "en": "The children walk to the door.",
+              "zh": "孩子們走向門。",
+              "id": "004-hurry-up:13:043bcb9eb1ce"
+            },
+            {
+              "en": "She wears her red bag.",
+              "zh": "她背著紅書包。",
+              "id": "004-hurry-up:13:2eda1ba510e7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Just a few more steps.",
+              "zh": "再幾步就到了。",
+              "id": "004-hurry-up:13:81918e4cd06c"
+            },
+            {
+              "en": "You’re doing well.",
+              "zh": "妳做得很好。",
+              "id": "004-hurry-up:13:1b705cd867ba"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "Where are the children going?",
+              "zh": "孩子們要去哪裡？",
+              "id": "004-hurry-up:13:87eb7d5402b5",
+              "label": "媽媽問"
+            },
+            {
+              "en": "To school.",
+              "zh": "去學校。",
+              "id": "004-hurry-up:13:b2825d2d92ff",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, through the door.",
+              "zh": "對，從門進去。",
+              "id": "004-hurry-up:13:969d1e2a4276",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me when you need help.",
+              "zh": "需要幫忙時告訴我。",
+              "id": "004-hurry-up:13:a64824941c5f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Count three little steps with your fingers.",
+              "zh": "用手指數三小步。",
+              "id": "004-hurry-up:13:dcff6291c5f6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "image": "/media/books/004-hurry-up/014-8317a737fac5.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Mom and Dad said let’s not be late!",
+              "zh": "媽媽和爸爸說，我們別遲到！",
+              "id": "004-hurry-up:14:91d07fa525f0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "女孩到學校了，與父母揮手告別。故事沒有明說實際到校時間，陪讀時可說「到囉」而不用判斷有沒有遲到。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩走上學校台階回頭揮手，媽媽爸爸在門外揮手。",
+          "phrases": [
+            {
+              "en": "She waves goodbye.",
+              "zh": "她揮手說再見。",
+              "id": "004-hurry-up:14:8b1302970f9c"
+            },
+            {
+              "en": "Mom and Dad wave too.",
+              "zh": "媽媽和爸爸也揮手。",
+              "id": "004-hurry-up:14:69577a3f378d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Have a good day!",
+              "zh": "祝妳今天開心！",
+              "id": "004-hurry-up:14:88f20f3d6ebb"
+            },
+            {
+              "en": "See you later.",
+              "zh": "待會見。",
+              "id": "004-hurry-up:14:dffc140d8863"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文說情境，再用手指或動作提示。孩子只回答「媽媽」「爸爸」或指圖，也可以；媽媽再自然接上英文。",
+          "phrases": [
+            {
+              "en": "What is she doing?",
+              "zh": "她在做什麼？",
+              "id": "004-hurry-up:14:65b0ba009978",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Waving.",
+              "zh": "揮手。",
+              "id": "004-hurry-up:14:11a7331e44a1",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, saying goodbye.",
+              "zh": "對，在說再見。",
+              "id": "004-hurry-up:14:f8be7c72317c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "I’ll see you after school.",
+              "zh": "放學後我會見到妳。",
+              "id": "004-hurry-up:14:7833588ceece"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Wave and say goodbye.",
+              "zh": "揮揮手說再見。",
+              "id": "004-hurry-up:14:b82f2977e0d1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

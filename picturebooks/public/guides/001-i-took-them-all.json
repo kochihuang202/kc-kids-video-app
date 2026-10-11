@@ -1,0 +1,2283 @@
+{
+  "version": 1,
+  "bookId": "001-i-took-them-all",
+  "title": "I Took Them All",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/001-i-took-them-all/001-8489eb5a6e4f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "note": "這一頁沒有故事英文，下面的英文是陪讀建議。",
+          "phrases": []
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這一頁沒有故事英文，適合先看圖猜猜：她們準備去哪裡？答案可以很多，不用急著公布。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽坐在門邊，女孩在黃色書包旁拿著紅色玩具車；旁邊有小貓與兔子玩偶。",
+          "phrases": [
+            {
+              "en": "I see a bag.",
+              "zh": "我看到一個書包。",
+              "id": "001-i-took-them-all:1:d536bfb7f18f"
+            },
+            {
+              "en": "The car is red.",
+              "zh": "車子是紅色的。",
+              "id": "001-i-took-them-all:1:a787d0742a93"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s pack.",
+              "zh": "我們來整理要帶的東西。",
+              "id": "001-i-took-them-all:1:b74026af2c18"
+            },
+            {
+              "en": "What do we need?",
+              "zh": "我們需要什麼？",
+              "id": "001-i-took-them-all:1:eea3860b8dfe"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先用中文問「小貓在哪裡？」媽媽自己指一下，再等孩子試試。",
+          "phrases": [
+            {
+              "en": "Can you find the cat?",
+              "zh": "妳找得到小貓嗎？",
+              "id": "001-i-took-them-all:1:4200f04761a6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here!",
+              "zh": "在這裡！",
+              "id": "001-i-took-them-all:1:7f28df9209b6",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a little cat.",
+              "zh": "對，一隻小貓。",
+              "id": "001-i-took-them-all:1:1967ed51f90c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Get your bag.",
+              "zh": "拿妳的書包。",
+              "id": "001-i-took-them-all:1:bb7bcc288b74"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to something red.",
+              "zh": "指一個紅色的東西。",
+              "id": "001-i-took-them-all:1:6e72fdb3f011"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/001-i-took-them-all/002-8fe65b133d28.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your water?",
+              "zh": "妳帶了妳的水嗎？",
+              "id": "001-i-took-them-all:2:68efeebfc679"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:2:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩背上黃色書包，透明水瓶放在側邊口袋，瓶蓋是粉紅色。",
+          "phrases": [
+            {
+              "en": "The bottle is here.",
+              "zh": "水瓶在這裡。",
+              "id": "001-i-took-them-all:2:4ef1aa757e08"
+            },
+            {
+              "en": "The cap is pink.",
+              "zh": "瓶蓋是粉紅色。",
+              "id": "001-i-took-them-all:2:c90ddd7358cd"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We need water.",
+              "zh": "我們需要水。",
+              "id": "001-i-took-them-all:2:b3c213e79330"
+            },
+            {
+              "en": "Take a little sip.",
+              "zh": "喝一小口。",
+              "id": "001-i-took-them-all:2:7a87e9c1570c"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著水，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Is the water in the bag?",
+              "zh": "水在書包裡嗎？",
+              "id": "001-i-took-them-all:2:21db66c95f26",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "有！",
+              "id": "001-i-took-them-all:2:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, in the side pocket.",
+              "zh": "對，在側邊口袋。",
+              "id": "001-i-took-them-all:2:184dc04fc631",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s fill your bottle.",
+              "zh": "我們把妳的水瓶裝好。",
+              "id": "001-i-took-them-all:2:ff136b392911"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find your water bottle.",
+              "zh": "找找妳的水瓶。",
+              "id": "001-i-took-them-all:2:d1952cc11002"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/001-i-took-them-all/003-4b08c19625de.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your toys?",
+              "zh": "妳帶了妳的玩具嗎？",
+              "id": "001-i-took-them-all:3:0bf2fd77e4ee"
+            },
+            {
+              "en": "Yes, I took them!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:3:50439253c7fe"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。them 指前面提到的物品。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩手上有棕色熊玩偶與紅色玩具車，媽媽在旁邊看著。",
+          "phrases": [
+            {
+              "en": "I see a teddy bear.",
+              "zh": "我看到一隻玩具熊。",
+              "id": "001-i-took-them-all:3:2a6ee6db91b5"
+            },
+            {
+              "en": "I see a red car.",
+              "zh": "我看到一台紅色車。",
+              "id": "001-i-took-them-all:3:bbe8a418d1bb"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The bear is soft.",
+              "zh": "熊玩偶軟軟的。",
+              "id": "001-i-took-them-all:3:c0a711ec37be"
+            },
+            {
+              "en": "The car can roll.",
+              "zh": "車子可以滾動。",
+              "id": "001-i-took-them-all:3:1175a6c63d35"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著玩具，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Which toy do you like?",
+              "zh": "妳喜歡哪個玩具？",
+              "id": "001-i-took-them-all:3:48cea6b8adb1",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The bear.",
+              "zh": "熊熊。",
+              "id": "001-i-took-them-all:3:ad7b66330086",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "You like the bear.",
+              "zh": "妳喜歡熊熊。",
+              "id": "001-i-took-them-all:3:bcc06475ae84",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Choose one toy.",
+              "zh": "選一個玩具。",
+              "id": "001-i-took-them-all:3:61fa39785470"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make the car go.",
+              "zh": "讓車子動起來。",
+              "id": "001-i-took-them-all:3:39938c4eb06d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/001-i-took-them-all/004-7098bc2d09a2.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your sweater?",
+              "zh": "妳帶了妳的毛衣嗎？",
+              "id": "001-i-took-them-all:4:e5dc20c386eb"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:4:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩舉起粉紅色毛衣，媽媽伸手指著它，小貓在腳邊。",
+          "phrases": [
+            {
+              "en": "The sweater is pink.",
+              "zh": "毛衣是粉紅色的。",
+              "id": "001-i-took-them-all:4:591d43377142"
+            },
+            {
+              "en": "Mom is pointing.",
+              "zh": "媽媽正在指。",
+              "id": "001-i-took-them-all:4:b9f49024d054"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "It can keep you warm.",
+              "zh": "它可以讓妳暖暖的。",
+              "id": "001-i-took-them-all:4:d6a26d886af8"
+            },
+            {
+              "en": "Put it in the bag.",
+              "zh": "把它放進書包。",
+              "id": "001-i-took-them-all:4:37f72c4d77c2"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著毛衣，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "What color is the sweater?",
+              "zh": "毛衣是什麼顏色？",
+              "id": "001-i-took-them-all:4:9234ca0126e8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Pink.",
+              "zh": "粉紅色。",
+              "id": "001-i-took-them-all:4:65029bfe991a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a pink sweater.",
+              "zh": "對，粉紅色毛衣。",
+              "id": "001-i-took-them-all:4:c21888b65f24",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Do you feel cold?",
+              "zh": "妳覺得冷嗎？",
+              "id": "001-i-took-them-all:4:d59878ef7a71"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to put on a sweater.",
+              "zh": "假裝穿上毛衣。",
+              "id": "001-i-took-them-all:4:4ba664164c72"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/001-i-took-them-all/005-ceca02e04f87.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, I took them all!",
+              "zh": "有，我全部都帶了！",
+              "id": "001-i-took-them-all:5:09c9bcd22a51"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "all 是「全部」。先回顧本頁勾選的三樣物品，再讓孩子用手指確認；不用背完整句子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "水、玩具與毛衣出現在小圖框裡，都有勾勾；女孩高興地舉手。",
+          "phrases": [
+            {
+              "en": "I see three pictures.",
+              "zh": "我看到三張小圖。",
+              "id": "001-i-took-them-all:5:52f347eb1847"
+            },
+            {
+              "en": "She looks happy.",
+              "zh": "她看起來很開心。",
+              "id": "001-i-took-them-all:5:6a9c98279a5d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Water, toys, and a sweater.",
+              "zh": "水、玩具和毛衣。",
+              "id": "001-i-took-them-all:5:38b6f69e5510"
+            },
+            {
+              "en": "All ready!",
+              "zh": "都準備好了！",
+              "id": "001-i-took-them-all:5:186b4bd2e9b1"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著一個小圖問「有沒有帶這個？」讓孩子點頭，再一起看下一個。",
+          "phrases": [
+            {
+              "en": "Did she take the water?",
+              "zh": "她帶水了嗎？",
+              "id": "001-i-took-them-all:5:193ba2103dc8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes, she did.",
+              "zh": "有，她帶了。",
+              "id": "001-i-took-them-all:5:f65b5c186f2b",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She took them all.",
+              "zh": "她全部帶了。",
+              "id": "001-i-took-them-all:5:a2e6cc56a6ea",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Check your bag.",
+              "zh": "檢查妳的書包。",
+              "id": "001-i-took-them-all:5:ed5a19814585"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Count the check marks.",
+              "zh": "數一數勾勾。",
+              "id": "001-i-took-them-all:5:e451526c1d6d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/001-i-took-them-all/006-60a5b1e4fb5e.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your pencil?",
+              "zh": "妳帶了妳的鉛筆嗎？",
+              "id": "001-i-took-them-all:6:8862e1efce11"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:6:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把黃色鉛筆舉高，黃色書包打開放在地上，小貓在旁邊。",
+          "phrases": [
+            {
+              "en": "The pencil is yellow.",
+              "zh": "鉛筆是黃色的。",
+              "id": "001-i-took-them-all:6:2e9b2d96ae0a"
+            },
+            {
+              "en": "The bag is open.",
+              "zh": "書包是打開的。",
+              "id": "001-i-took-them-all:6:af7bfb50b7fc"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We can draw with it.",
+              "zh": "我們可以用它畫畫。",
+              "id": "001-i-took-them-all:6:2c07d9c154e2"
+            },
+            {
+              "en": "Let’s draw a cat.",
+              "zh": "我們畫一隻貓吧。",
+              "id": "001-i-took-them-all:6:427a23087edc"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著鉛筆，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Can you find the pencil?",
+              "zh": "妳找得到鉛筆嗎？",
+              "id": "001-i-took-them-all:6:da2637b4adda",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here it is.",
+              "zh": "在這裡。",
+              "id": "001-i-took-them-all:6:8da56ed8adc3",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, the yellow pencil.",
+              "zh": "對，黃色鉛筆。",
+              "id": "001-i-took-them-all:6:bb8774e79254",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Get some paper.",
+              "zh": "拿一些紙。",
+              "id": "001-i-took-them-all:6:df8a559266c5"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw a line in the air.",
+              "zh": "在空中畫一條線。",
+              "id": "001-i-took-them-all:6:c193d40163b6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/001-i-took-them-all/007-88fed7298fa5.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your books?",
+              "zh": "妳帶了妳的書嗎？",
+              "id": "001-i-took-them-all:7:c19f7a06b792"
+            },
+            {
+              "en": "Yes, I took them!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:7:50439253c7fe"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。them 指前面提到的物品。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抱著幾本圖畫書，封面可以看到熊、兔子與車子。",
+          "phrases": [
+            {
+              "en": "She has some books.",
+              "zh": "她拿著一些書。",
+              "id": "001-i-took-them-all:7:da8eeaaeaaef"
+            },
+            {
+              "en": "I see a bear on a book.",
+              "zh": "我看到書上的熊。",
+              "id": "001-i-took-them-all:7:98f00a739a51"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s read together.",
+              "zh": "我們一起讀。",
+              "id": "001-i-took-them-all:7:19b97d10e549"
+            },
+            {
+              "en": "Turn a page.",
+              "zh": "翻一頁。",
+              "id": "001-i-took-them-all:7:70381b5d8ff8"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著書，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Can you see a rabbit?",
+              "zh": "妳看得到兔子嗎？",
+              "id": "001-i-took-them-all:7:3aebbce8372d",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes, here.",
+              "zh": "有，在這裡。",
+              "id": "001-i-took-them-all:7:0c52e91c03e4",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It’s on the book.",
+              "zh": "牠在書上。",
+              "id": "001-i-took-them-all:7:185d70ff4b46",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Pick a book for tonight.",
+              "zh": "選一本今晚要讀的書。",
+              "id": "001-i-took-them-all:7:2cc1c8ed0e86"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to a book you like.",
+              "zh": "指一本妳喜歡的書。",
+              "id": "001-i-took-them-all:7:405af027796f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/001-i-took-them-all/008-93bb8bbcca67.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your homework?",
+              "zh": "妳帶了妳的作業嗎？",
+              "id": "001-i-took-them-all:8:eb54cac6de9a"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:8:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩舉起寫著 Homework 的本子，上面有英文字母與太陽、樹、房屋的小圖。",
+          "phrases": [
+            {
+              "en": "This is her homework.",
+              "zh": "這是她的作業。",
+              "id": "001-i-took-them-all:8:af2de06072b4"
+            },
+            {
+              "en": "I see a little house.",
+              "zh": "我看到一間小房子。",
+              "id": "001-i-took-them-all:8:e98f608ea5b5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s look at your work.",
+              "zh": "我們看看妳做的東西。",
+              "id": "001-i-took-them-all:8:089c808a9d80"
+            },
+            {
+              "en": "You worked hard.",
+              "zh": "妳很用心。",
+              "id": "001-i-took-them-all:8:b0a211378dbe"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著作業，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Can you find the sun?",
+              "zh": "妳找得到太陽嗎？",
+              "id": "001-i-took-them-all:8:4ea9d43a567b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here!",
+              "zh": "在這裡！",
+              "id": "001-i-took-them-all:8:7f28df9209b6",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the page.",
+              "zh": "對，在這一頁上。",
+              "id": "001-i-took-them-all:8:86db97a1d3f5",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Show me your drawing.",
+              "zh": "給我看妳的畫。",
+              "id": "001-i-took-them-all:8:df1c0fabc20a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw a little house.",
+              "zh": "畫一間小房子。",
+              "id": "001-i-took-them-all:8:8f7ce89c53e3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/001-i-took-them-all/009-6da1beb6a0cf.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, I took them all!",
+              "zh": "有，我全部都帶了！",
+              "id": "001-i-took-them-all:9:09c9bcd22a51"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "all 是「全部」。先回顧本頁勾選的三樣物品，再讓孩子用手指確認；不用背完整句子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "本頁回顧鉛筆、書與作業，女孩拿著鉛筆，媽媽笑得瞇起眼睛。",
+          "phrases": [
+            {
+              "en": "I see a pencil.",
+              "zh": "我看到一支鉛筆。",
+              "id": "001-i-took-them-all:9:5cb03bbb707f"
+            },
+            {
+              "en": "Mom is smiling.",
+              "zh": "媽媽正在微笑。",
+              "id": "001-i-took-them-all:9:168c1a6dd5b1"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Books and homework are ready.",
+              "zh": "書和作業都準備好了。",
+              "id": "001-i-took-them-all:9:a500d065440f"
+            },
+            {
+              "en": "Good job!",
+              "zh": "做得好！",
+              "id": "001-i-took-them-all:9:9eca98e1cf9f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著一個小圖問「有沒有帶這個？」讓孩子點頭，再一起看下一個。",
+          "phrases": [
+            {
+              "en": "Are the books ready?",
+              "zh": "書準備好了嗎？",
+              "id": "001-i-took-them-all:9:055bab7a0dd3",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "好了！",
+              "id": "001-i-took-them-all:9:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Now we can go.",
+              "zh": "現在我們可以出發。",
+              "id": "001-i-took-them-all:9:cbeca0af2273",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s check once more.",
+              "zh": "我們再檢查一次。",
+              "id": "001-i-took-them-all:9:ce8f787791cd"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Name the three things.",
+              "zh": "說說這三樣東西。",
+              "id": "001-i-took-them-all:9:237c9d5f309f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/001-i-took-them-all/010-c7acd0fd6735.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Now off we go, here we go!",
+              "zh": "現在出發囉，我們走吧！",
+              "id": "001-i-took-them-all:10:4b1c14b87132"
+            },
+            {
+              "en": "There’s nothing left to take",
+              "zh": "沒有東西漏帶了。",
+              "id": "001-i-took-them-all:10:c3bb6fbbe1ab"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "off we go 是開心地說「出發吧」。nothing left to take 在這裡是該帶的都帶了，不是家裡沒有東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽和女孩在門口牽手，旁邊有整理好的物品提示。",
+          "phrases": [
+            {
+              "en": "They are holding hands.",
+              "zh": "她們牽著手。",
+              "id": "001-i-took-them-all:10:9f19f383e31b"
+            },
+            {
+              "en": "The door is open.",
+              "zh": "門是打開的。",
+              "id": "001-i-took-them-all:10:bf92b1eeeca3"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s go together.",
+              "zh": "我們一起走。",
+              "id": "001-i-took-them-all:10:4caae6e06ae9"
+            },
+            {
+              "en": "Are you ready?",
+              "zh": "妳準備好了嗎？",
+              "id": "001-i-took-them-all:10:319eb30d860f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著媽媽的手，讓孩子先用中文說「媽媽」。",
+          "phrases": [
+            {
+              "en": "Who is holding her hand?",
+              "zh": "誰牽著她的手？",
+              "id": "001-i-took-them-all:10:3742b188641b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Mom.",
+              "zh": "媽媽。",
+              "id": "001-i-took-them-all:10:e87927d57ddd",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, Mom is with her.",
+              "zh": "對，媽媽跟她在一起。",
+              "id": "001-i-took-them-all:10:456c850d4b91",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Hold my hand.",
+              "zh": "牽我的手。",
+              "id": "001-i-took-them-all:10:b9e9dbdb79be"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to open the door.",
+              "zh": "假裝打開門。",
+              "id": "001-i-took-them-all:10:605102d20411"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/001-i-took-them-all/011-db3a80f7fbb2.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Now off we go, here we go!",
+              "zh": "現在出發囉，我們走吧！",
+              "id": "001-i-took-them-all:11:4b1c14b87132"
+            },
+            {
+              "en": "We took all we need, let’s go",
+              "zh": "需要的都帶了，我們走吧。",
+              "id": "001-i-took-them-all:11:b01c6257b419"
+            },
+            {
+              "en": "There’s nothing left to take",
+              "zh": "沒有東西漏帶了。",
+              "id": "001-i-took-them-all:11:0b1b7044f402"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "need 是「需要」。這一頁用到出門口的重複句，可以有節奏地輕聲說，不需要加快閱讀。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽牽著女孩到學校，建築上有 SCHOOL，其他孩子也背著書包。",
+          "phrases": [
+            {
+              "en": "I see a school.",
+              "zh": "我看到一所學校。",
+              "id": "001-i-took-them-all:11:12b1ae0c9565"
+            },
+            {
+              "en": "The children have bags.",
+              "zh": "孩子們背著書包。",
+              "id": "001-i-took-them-all:11:11854b51db43"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hello, school!",
+              "zh": "學校，妳好！",
+              "id": "001-i-took-them-all:11:43177d089bbf"
+            },
+            {
+              "en": "Have a lovely day.",
+              "zh": "祝妳有美好的一天。",
+              "id": "001-i-took-them-all:11:e452137ed4f0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著學校說「學校」，再讓孩子聽簡單的英文。",
+          "phrases": [
+            {
+              "en": "Where are they going?",
+              "zh": "她們要去哪裡？",
+              "id": "001-i-took-them-all:11:e7387961b78c",
+              "label": "媽媽問"
+            },
+            {
+              "en": "To school.",
+              "zh": "去學校。",
+              "id": "001-i-took-them-all:11:b2825d2d92ff",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, to school together.",
+              "zh": "對，一起去學校。",
+              "id": "001-i-took-them-all:11:907545ad153b",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Say goodbye to Mom.",
+              "zh": "跟媽媽說再見。",
+              "id": "001-i-took-them-all:11:b0c02b928e03"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Wave to the children.",
+              "zh": "向畫裡的孩子揮揮手。",
+              "id": "001-i-took-them-all:11:7de50f872f6d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/001-i-took-them-all/012-f72303166940.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your red ball?",
+              "zh": "妳帶了妳的紅色球嗎？",
+              "id": "001-i-took-them-all:12:f1bcf16857bc"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:12:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在門邊高舉一顆紅色球，媽媽在旁邊。",
+          "phrases": [
+            {
+              "en": "The ball is red.",
+              "zh": "球是紅色的。",
+              "id": "001-i-took-them-all:12:306f2703805e"
+            },
+            {
+              "en": "She holds it up.",
+              "zh": "她把它舉高。",
+              "id": "001-i-took-them-all:12:ad2e66c62e24"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "It is round.",
+              "zh": "它是圓的。",
+              "id": "001-i-took-them-all:12:5005c5c733a3"
+            },
+            {
+              "en": "Let’s play ball.",
+              "zh": "我們玩球吧。",
+              "id": "001-i-took-them-all:12:6f9e1e39ee2d"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著紅色球，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Is the ball red or blue?",
+              "zh": "球是紅色還是藍色？",
+              "id": "001-i-took-them-all:12:94e15f9603bf",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Red.",
+              "zh": "紅色。",
+              "id": "001-i-took-them-all:12:d4837d72f6c9",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a red ball.",
+              "zh": "對，一顆紅球。",
+              "id": "001-i-took-them-all:12:c467ec661999",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Roll the ball to me.",
+              "zh": "把球滾給我。",
+              "id": "001-i-took-them-all:12:b3eb7acf9fd6"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a circle with your hands.",
+              "zh": "用手做一個圓。",
+              "id": "001-i-took-them-all:12:46680fdcbd48"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/001-i-took-them-all/013-1de752201539.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your glasses?",
+              "zh": "妳帶了妳的眼鏡嗎？",
+              "id": "001-i-took-them-all:13:20532427049c"
+            },
+            {
+              "en": "Yes, I took them!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:13:50439253c7fe"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。them 指前面提到的物品。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著盒子裡的粉紅色眼鏡。眼鏡即使只有一副，英文仍用 glasses 和 them。",
+          "phrases": [
+            {
+              "en": "The glasses are pink.",
+              "zh": "眼鏡是粉紅色的。",
+              "id": "001-i-took-them-all:13:412f4a45d07a"
+            },
+            {
+              "en": "They are in a case.",
+              "zh": "它們在眼鏡盒裡。",
+              "id": "001-i-took-them-all:13:272a90d3d942"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Glasses help us see.",
+              "zh": "眼鏡幫助我們看清楚。",
+              "id": "001-i-took-them-all:13:1a62dd785e0e"
+            },
+            {
+              "en": "Keep them safe.",
+              "zh": "把它們保護好。",
+              "id": "001-i-took-them-all:13:3be82545f391"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著眼鏡，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Where are the glasses?",
+              "zh": "眼鏡在哪裡？",
+              "id": "001-i-took-them-all:13:713038afae3f",
+              "label": "媽媽問"
+            },
+            {
+              "en": "In the case.",
+              "zh": "在盒子裡。",
+              "id": "001-i-took-them-all:13:96f1af5464eb",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, in the case.",
+              "zh": "對，在眼鏡盒裡。",
+              "id": "001-i-took-them-all:13:a4849f1777f5",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put your glasses away.",
+              "zh": "把妳的眼鏡收好。",
+              "id": "001-i-took-them-all:13:84b7ce0cec25"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make pretend glasses with your hands.",
+              "zh": "用手假裝做一副眼鏡。",
+              "id": "001-i-took-them-all:13:6010d7edf908"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "image": "/media/books/001-i-took-them-all/014-0db5c1d802eb.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your blue hat?",
+              "zh": "妳帶了妳的藍色帽子嗎？",
+              "id": "001-i-took-them-all:14:239f79ae041d"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:14:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩頭上戴著有花朵裝飾的藍色帽子，媽媽伸手指著帽子。",
+          "phrases": [
+            {
+              "en": "The hat is blue.",
+              "zh": "帽子是藍色的。",
+              "id": "001-i-took-them-all:14:53f4a1249649"
+            },
+            {
+              "en": "It has a flower.",
+              "zh": "它上面有一朵花。",
+              "id": "001-i-took-them-all:14:7bd54461b6c2"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Put your hat on.",
+              "zh": "戴上妳的帽子。",
+              "id": "001-i-took-them-all:14:3fb6809e002e"
+            },
+            {
+              "en": "It’s on her head.",
+              "zh": "它在她頭上。",
+              "id": "001-i-took-them-all:14:207b556feb83"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著藍色帽子，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Where is her hat?",
+              "zh": "她的帽子在哪裡？",
+              "id": "001-i-took-them-all:14:3eca0e9d73be",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On her head.",
+              "zh": "在她頭上。",
+              "id": "001-i-took-them-all:14:a0d3b8f84d45",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on her head.",
+              "zh": "對，在她頭上。",
+              "id": "001-i-took-them-all:14:64e0c110b49c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Do you have a hat?",
+              "zh": "妳有帽子嗎？",
+              "id": "001-i-took-them-all:14:43a40fa03a26"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Touch your head.",
+              "zh": "摸摸妳的頭。",
+              "id": "001-i-took-them-all:14:f818da547e9c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 15,
+      "image": "/media/books/001-i-took-them-all/015-912626e0b246.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, I took them all!",
+              "zh": "有，我全部都帶了！",
+              "id": "001-i-took-them-all:15:09c9bcd22a51"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "all 是「全部」。先回顧本頁勾選的三樣物品，再讓孩子用手指確認；不用背完整句子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "本頁小圖框回顧紅球、粉紅眼鏡與藍帽，女孩開心地舉手。",
+          "phrases": [
+            {
+              "en": "I see a blue hat.",
+              "zh": "我看到藍帽子。",
+              "id": "001-i-took-them-all:15:7144a3cad3d2"
+            },
+            {
+              "en": "I see pink glasses.",
+              "zh": "我看到粉紅色眼鏡。",
+              "id": "001-i-took-them-all:15:4b0056c267a4"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Red, pink, and blue.",
+              "zh": "紅色、粉紅色和藍色。",
+              "id": "001-i-took-them-all:15:d9907d91c6be"
+            },
+            {
+              "en": "She is ready.",
+              "zh": "她準備好了。",
+              "id": "001-i-took-them-all:15:2c31eb436f8e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著一個小圖問「有沒有帶這個？」讓孩子點頭，再一起看下一個。",
+          "phrases": [
+            {
+              "en": "Which thing is round?",
+              "zh": "哪個東西是圓的？",
+              "id": "001-i-took-them-all:15:34246dfd8c65",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The ball.",
+              "zh": "球。",
+              "id": "001-i-took-them-all:15:e828ff2ce5f8",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, the red ball.",
+              "zh": "對，紅色的球。",
+              "id": "001-i-took-them-all:15:48f6b658dbce",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Choose your hat.",
+              "zh": "選妳的帽子。",
+              "id": "001-i-took-them-all:15:5843680856f4"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Match each color to a thing.",
+              "zh": "把顏色和物品配一配。",
+              "id": "001-i-took-them-all:15:562cf3b29e46"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 16,
+      "image": "/media/books/001-i-took-them-all/016-0697b72d4060.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your watch?",
+              "zh": "妳帶了妳的手錶嗎？",
+              "id": "001-i-took-them-all:16:a70438e93eaa"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:16:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抬起手腕，展示粉紅色手錶。",
+          "phrases": [
+            {
+              "en": "The watch is pink.",
+              "zh": "手錶是粉紅色的。",
+              "id": "001-i-took-them-all:16:605914587ef4"
+            },
+            {
+              "en": "It is on her wrist.",
+              "zh": "它在她手腕上。",
+              "id": "001-i-took-them-all:16:67e32492f479"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "A watch tells the time.",
+              "zh": "手錶告訴我們時間。",
+              "id": "001-i-took-them-all:16:cf5e5bccaf97"
+            },
+            {
+              "en": "Time to go.",
+              "zh": "該出發了。",
+              "id": "001-i-took-them-all:16:84401d1ff172"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著手錶，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Can you see her watch?",
+              "zh": "妳看得到她的手錶嗎？",
+              "id": "001-i-took-them-all:16:dc8ae4045221",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "看得到！",
+              "id": "001-i-took-them-all:16:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It’s on her wrist.",
+              "zh": "它在她手腕上。",
+              "id": "001-i-took-them-all:16:658741170062",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What time is it?",
+              "zh": "現在幾點呢？",
+              "id": "001-i-took-them-all:16:15601e99eebf"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Tap your wrist gently.",
+              "zh": "輕輕點妳的手腕。",
+              "id": "001-i-took-them-all:16:6aa9b832d461"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 17,
+      "image": "/media/books/001-i-took-them-all/017-4ae0268e9931.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your crayons?",
+              "zh": "妳帶了妳的蠟筆嗎？",
+              "id": "001-i-took-them-all:17:0c3b9f770348"
+            },
+            {
+              "en": "Yes, I took them!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:17:50439253c7fe"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。them 指前面提到的物品。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著一盒彩色蠟筆，可以看到多種顏色。",
+          "phrases": [
+            {
+              "en": "I see many colors.",
+              "zh": "我看到好多顏色。",
+              "id": "001-i-took-them-all:17:1803ef45a340"
+            },
+            {
+              "en": "The crayons are in a box.",
+              "zh": "蠟筆在盒子裡。",
+              "id": "001-i-took-them-all:17:e05910f02217"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s color a picture.",
+              "zh": "我們來塗色。",
+              "id": "001-i-took-them-all:17:f7a1beecdd8b"
+            },
+            {
+              "en": "Choose a color.",
+              "zh": "選一個顏色。",
+              "id": "001-i-took-them-all:17:974257ca73b2"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著蠟筆，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Which color do you want?",
+              "zh": "妳想要什麼顏色？",
+              "id": "001-i-took-them-all:17:707444425377",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Blue.",
+              "zh": "藍色。",
+              "id": "001-i-took-them-all:17:25fb22b4d679",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Let’s use blue.",
+              "zh": "我們用藍色。",
+              "id": "001-i-took-them-all:17:208742a7c040",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put the crayons back.",
+              "zh": "把蠟筆放回去。",
+              "id": "001-i-took-them-all:17:2b8340ea45ed"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw with your favorite color.",
+              "zh": "用妳喜歡的顏色畫畫。",
+              "id": "001-i-took-them-all:17:f3ba3b93af9a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 18,
+      "image": "/media/books/001-i-took-them-all/018-6f59b927f1de.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Did you take your comic?",
+              "zh": "妳帶了妳的漫畫嗎？",
+              "id": "001-i-took-them-all:18:c1107ced9631"
+            },
+            {
+              "en": "Yes, I took it!",
+              "zh": "有，我帶了！",
+              "id": "001-i-took-them-all:18:bfa316ef5e66"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "媽媽在確認出門用品。take 在這裡是「帶上」，不是「拿走別人的東西」。it 指前面提到的那樣東西。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩拿著一本封面寫 COMIC 的書，封面有穿超人服裝的貓。",
+          "phrases": [
+            {
+              "en": "I see a cat on the cover.",
+              "zh": "我看到封面上的貓。",
+              "id": "001-i-took-them-all:18:394215f7fbd8"
+            },
+            {
+              "en": "She has a comic.",
+              "zh": "她拿著漫畫。",
+              "id": "001-i-took-them-all:18:c5508ac1df0d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The cat looks strong.",
+              "zh": "這隻貓看起來很強壯。",
+              "id": "001-i-took-them-all:18:d32356d294e7"
+            },
+            {
+              "en": "Let’s look inside.",
+              "zh": "我們看看裡面。",
+              "id": "001-i-took-them-all:18:bcede7de91b9"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指著漫畫，問「這是什麼？」孩子指一下或用中文說也可以，再示範英文回答。",
+          "phrases": [
+            {
+              "en": "Is that a cat?",
+              "zh": "那是一隻貓嗎？",
+              "id": "001-i-took-them-all:18:e56235734916",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes, a cat.",
+              "zh": "對，是貓。",
+              "id": "001-i-took-them-all:18:94212ee95565",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "A cat on her comic.",
+              "zh": "她漫畫上的貓。",
+              "id": "001-i-took-them-all:18:49006eebc940",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Show me your favorite page.",
+              "zh": "給我看妳最喜歡的一頁。",
+              "id": "001-i-took-them-all:18:2e3005c25aba"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to be a super cat.",
+              "zh": "假裝自己是超級貓。",
+              "id": "001-i-took-them-all:18:e9d8921aeb2e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 19,
+      "image": "/media/books/001-i-took-them-all/019-2eedf86bab47.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Yes, I took them all!",
+              "zh": "有，我全部都帶了！",
+              "id": "001-i-took-them-all:19:09c9bcd22a51"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "all 是「全部」。先回顧本頁勾選的三樣物品，再讓孩子用手指確認；不用背完整句子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "小圖框回顧手錶、蠟筆與漫畫，女孩舉手確認都帶了。",
+          "phrases": [
+            {
+              "en": "The crayons have many colors.",
+              "zh": "蠟筆有好多顏色。",
+              "id": "001-i-took-them-all:19:f5a835b582c1"
+            },
+            {
+              "en": "The watch is pink.",
+              "zh": "手錶是粉紅色的。",
+              "id": "001-i-took-them-all:19:ad4221384f57"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Time to draw and read.",
+              "zh": "畫畫和讀書的時間到囉。",
+              "id": "001-i-took-them-all:19:457fc12136c8"
+            },
+            {
+              "en": "All packed!",
+              "zh": "全部收好了！",
+              "id": "001-i-took-them-all:19:e73a583a7e3e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著一個小圖問「有沒有帶這個？」讓孩子點頭，再一起看下一個。",
+          "phrases": [
+            {
+              "en": "What can we draw with?",
+              "zh": "我們可以用什麼畫畫？",
+              "id": "001-i-took-them-all:19:5800218edd49",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Crayons.",
+              "zh": "蠟筆。",
+              "id": "001-i-took-them-all:19:7ef7abd9c5a5",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, colorful crayons.",
+              "zh": "對，彩色蠟筆。",
+              "id": "001-i-took-them-all:19:7cbef62637d9",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Pack something to draw with.",
+              "zh": "帶上畫畫的東西。",
+              "id": "001-i-took-them-all:19:79395a351ada"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to pack the three things.",
+              "zh": "假裝把這三樣東西放進包包。",
+              "id": "001-i-took-them-all:19:330e8b813a46"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 20,
+      "image": "/media/books/001-i-took-them-all/020-1d945e5008e0.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Now off we go, here we go!",
+              "zh": "現在出發囉，我們走吧！",
+              "id": "001-i-took-them-all:20:4b1c14b87132"
+            },
+            {
+              "en": "There’s nothing left to take",
+              "zh": "沒有東西漏帶了。",
+              "id": "001-i-took-them-all:20:c3bb6fbbe1ab"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "同樣的出發句又出現了。這次畫面走向公園，讓孩子找找與去學校那次不同的用品。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽與女孩走向公園遊戲場；女孩戴藍帽、帶紅球，小貓在旁邊。",
+          "phrases": [
+            {
+              "en": "She has her red ball.",
+              "zh": "她帶著紅球。",
+              "id": "001-i-took-them-all:20:cbea231e8392"
+            },
+            {
+              "en": "I see a playground.",
+              "zh": "我看到遊戲場。",
+              "id": "001-i-took-them-all:20:e9c324eb5eac"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s go to the park.",
+              "zh": "我們去公園吧。",
+              "id": "001-i-took-them-all:20:760a9a733e8d"
+            },
+            {
+              "en": "Let’s have fun.",
+              "zh": "我們開心玩吧。",
+              "id": "001-i-took-them-all:20:c16bc00ed7b6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著帽子，用中文問「頭上戴什麼？」",
+          "phrases": [
+            {
+              "en": "What is she wearing?",
+              "zh": "她戴著什麼？",
+              "id": "001-i-took-them-all:20:43b1994d6ce6",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A blue hat.",
+              "zh": "一頂藍色帽子。",
+              "id": "001-i-took-them-all:20:3fcae8f2e845",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her blue hat.",
+              "zh": "對，她的藍色帽子。",
+              "id": "001-i-took-them-all:20:bc62cc09ea90",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Take your water to the park.",
+              "zh": "去公園要帶水。",
+              "id": "001-i-took-them-all:20:c0f22f97894b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to walk to the park.",
+              "zh": "假裝走到公園。",
+              "id": "001-i-took-them-all:20:1ce08bdd09ea"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 21,
+      "image": "/media/books/001-i-took-them-all/021-6cc2f2e5c578.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "We took all we need, let’s go",
+              "zh": "需要的都帶了，我們走吧。",
+              "id": "001-i-took-them-all:21:323a1b07abba"
+            },
+            {
+              "en": "There’s nothing left to take",
+              "zh": "沒有東西漏帶了。",
+              "id": "001-i-took-them-all:21:c3bb6fbbe1ab"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "用品都帶齊了，可以一起留意路上的小驚喜。女孩指著蝴蝶，是很自然的看圖聊天起點。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "她們牽手走在湖邊公園，女孩戴藍帽，指著蝴蝶，小貓跟在旁邊。",
+          "phrases": [
+            {
+              "en": "I see a butterfly.",
+              "zh": "我看到一隻蝴蝶。",
+              "id": "001-i-took-them-all:21:911b11a233a1"
+            },
+            {
+              "en": "They are holding hands.",
+              "zh": "她們牽著手。",
+              "id": "001-i-took-them-all:21:0417abc31c8a"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look over there.",
+              "zh": "看那邊。",
+              "id": "001-i-took-them-all:21:00177f6ead9b"
+            },
+            {
+              "en": "What a lovely day!",
+              "zh": "多美好的一天！",
+              "id": "001-i-took-them-all:21:c17c746f21d1"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：沿著女孩手指的方向找，不用孩子說完整句子。",
+          "phrases": [
+            {
+              "en": "Can you find the butterfly?",
+              "zh": "妳找得到蝴蝶嗎？",
+              "id": "001-i-took-them-all:21:b86df6c3d7ca",
+              "label": "媽媽問"
+            },
+            {
+              "en": "There!",
+              "zh": "在那裡！",
+              "id": "001-i-took-them-all:21:640fc4f70dcf",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, by the girl.",
+              "zh": "對，在女孩旁邊。",
+              "id": "001-i-took-them-all:21:190148a8fbc6",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Look for something small outside.",
+              "zh": "出門找找小小的東西。",
+              "id": "001-i-took-them-all:21:3fdb7102637b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make butterfly wings with your hands.",
+              "zh": "用手做蝴蝶翅膀。",
+              "id": "001-i-took-them-all:21:0a5b4ae57e5f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 22,
+      "image": "/media/books/001-i-took-them-all/022-0f618d255211.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "note": "這一頁沒有故事英文，下面的英文是陪讀建議。",
+          "phrases": []
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "這一頁沒有故事英文。可以把前面準備的用品與現在做的事情連起來：帶蠟筆和鉛筆，所以可以畫畫。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "媽媽坐在樹下野餐墊上，女孩用鉛筆與蠟筆畫貓；旁邊有小貓、漫畫與紅球。",
+          "phrases": [
+            {
+              "en": "She is drawing a cat.",
+              "zh": "她正在畫貓。",
+              "id": "001-i-took-them-all:22:bcae7e25679e"
+            },
+            {
+              "en": "Mom is sitting with her.",
+              "zh": "媽媽坐在她身邊。",
+              "id": "001-i-took-them-all:22:0254576982a1"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "We can draw outside.",
+              "zh": "我們可以在外面畫畫。",
+              "id": "001-i-took-them-all:22:a69653c34d67"
+            },
+            {
+              "en": "Show Mom your picture.",
+              "zh": "把妳的畫給媽媽看。",
+              "id": "001-i-took-them-all:22:0c5b672072a5"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：指著紙上的貓，再指旁邊的小貓，問「她畫的是誰？」",
+          "phrases": [
+            {
+              "en": "What is she drawing?",
+              "zh": "她在畫什麼？",
+              "id": "001-i-took-them-all:22:24523dcf3dea",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A cat.",
+              "zh": "一隻貓。",
+              "id": "001-i-took-them-all:22:798e9f664c92",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her little cat.",
+              "zh": "對，她的小貓。",
+              "id": "001-i-took-them-all:22:666f86fa440c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s draw together.",
+              "zh": "我們一起畫畫。",
+              "id": "001-i-took-them-all:22:04f077c2ecdb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Draw something from the story.",
+              "zh": "畫一個故事裡的東西。",
+              "id": "001-i-took-them-all:22:4f173a2419e5"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

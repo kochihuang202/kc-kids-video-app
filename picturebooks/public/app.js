@@ -1,3 +1,4 @@
+import { openGuide, closeGuide, guideOpen, guidePage } from './guide.js';
 const $ = (id) => document.getElementById(id);
 const storageKey = 'mother-daughter-books:v1';
 let books = [], currentBook = null, currentPage = 0, focused = false, touch = null, imageRequest = 0;
@@ -104,6 +105,7 @@ function updatePage() {
   if (book.pages[index + 1]) { const preload = new Image(); preload.src = book.pages[index + 1]; }
 }
 function route() {
+  closeGuide();
   if (!books.length) return;
   const match = location.hash.match(/^#book\/([^?]+)(?:\?page=(\d+))?$/);
   const book = match && books.find(item => encodeURIComponent(item.id) === match[1]);
@@ -144,6 +146,7 @@ async function loadCatalog() {
   }
 }
 $('catalog-retry').onclick = loadCatalog;
+$('open-guide').onclick = () => { if (currentBook) openGuide(currentBook, currentPage); };
 $('search').addEventListener('input', event => { searchTerm = event.target.value.trim().toLowerCase(); renderShelf(); });
 $('back-to-shelf').onclick = () => { location.hash = ''; };
 $('focus-toggle').onclick = () => setFocus(!focused);
@@ -170,6 +173,12 @@ $('reading-stage').addEventListener('touchend', event => {
 $('reading-stage').addEventListener('touchcancel', () => { touch = null; }, { passive: true });
 window.addEventListener('hashchange', route);
 document.addEventListener('keydown', event => {
+  if (guideOpen()) {
+    if (event.key === 'Escape') closeGuide();
+    if (event.key === 'ArrowRight') { event.preventDefault(); guidePage(1); }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); guidePage(-1); }
+    return;
+  }
   if (!currentBook || $('finished-dialog').open || /INPUT|TEXTAREA/.test(event.target.tagName)) return;
   if (event.key === 'ArrowRight') { event.preventDefault(); goPage(currentPage + 1); }
   if (event.key === 'ArrowLeft') { event.preventDefault(); goPage(currentPage - 1); }

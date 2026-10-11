@@ -1,0 +1,808 @@
+{
+  "version": 1,
+  "bookId": "007-its-mine",
+  "title": "Its Mine",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/007-its-mine/001-09b70a1fd7a5.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "It’s Mine!",
+              "zh": "這是我的！",
+              "id": "007-its-mine:1:c8faa3097343"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "mine 是我的。故事先承認玩具的主人與喜愛，最後再邀請朋友一起玩。紫衣女孩的關係沒有寫明，只稱另一個女孩，不猜是姊妹。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "黃衣女孩拿著藍色玩具卡車，紫衣女孩站在旁邊看，地上有彩色積木。",
+          "phrases": [
+            {
+              "en": "The truck is blue.",
+              "zh": "卡車是藍色。",
+              "id": "007-its-mine:1:c82b4d9850fc"
+            },
+            {
+              "en": "I see two girls.",
+              "zh": "我看到兩個女孩。",
+              "id": "007-its-mine:1:6907e6394e4d"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "This is my toy.",
+              "zh": "這是我的玩具。",
+              "id": "007-its-mine:1:a3114579ea78"
+            },
+            {
+              "en": "I like it.",
+              "zh": "我喜歡它。",
+              "id": "007-its-mine:1:5bef18de7ceb"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Can you find the blue truck?",
+              "zh": "妳找得到藍色卡車嗎？",
+              "id": "007-its-mine:1:77f05b32649e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "007-its-mine:1:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, in her hands.",
+              "zh": "對，在她手裡。",
+              "id": "007-its-mine:1:40a1c57d6b0a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Which toy is yours?",
+              "zh": "哪個玩具是妳的？",
+              "id": "007-its-mine:1:2ad381455081"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Point to something blue.",
+              "zh": "指一個藍色的東西。",
+              "id": "007-its-mine:1:f2bb742e9492"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/007-its-mine/002-5e3b398c8c99.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I like my blue toy",
+              "zh": "我喜歡我的藍色玩具。",
+              "id": "007-its-mine:2:023c1b815f7f"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "like 是喜歡。讓孩子有機會說自己喜歡的物品，先享受分享喜愛，不等於馬上分享所有權。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "黃衣女孩舉著卡車，紫衣女孩趴著托臉看。",
+          "phrases": [
+            {
+              "en": "She holds up the truck.",
+              "zh": "她舉起卡車。",
+              "id": "007-its-mine:2:4b6ee19b09a8"
+            },
+            {
+              "en": "The other girl is watching.",
+              "zh": "另一個女孩在看。",
+              "id": "007-its-mine:2:fa08fa3a1515"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Look at my truck.",
+              "zh": "看看我的卡車。",
+              "id": "007-its-mine:2:df30c9e0794f"
+            },
+            {
+              "en": "It has wheels.",
+              "zh": "它有輪子。",
+              "id": "007-its-mine:2:76985784a6d3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "What color is her toy?",
+              "zh": "她的玩具是什麼顏色？",
+              "id": "007-its-mine:2:dcd6da4b2fb2",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Blue.",
+              "zh": "藍色。",
+              "id": "007-its-mine:2:25fb22b4d679",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a blue truck.",
+              "zh": "對，藍色卡車。",
+              "id": "007-its-mine:2:50fbc5f71e27",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Show me a toy you like.",
+              "zh": "給我看一個妳喜歡的玩具。",
+              "id": "007-its-mine:2:dae0245d5b51"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a little truck sound.",
+              "zh": "學一個小卡車的聲音。",
+              "id": "007-its-mine:2:d60f9859a59f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/007-its-mine/003-3a5324b9faaa.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "It’s my new toy",
+              "zh": "這是我的新玩具。",
+              "id": "007-its-mine:3:e9e018caad86"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "new 是新的；文字告訴我們是新玩具，圖片不需要畫出包裝才算新。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "兩個女孩坐著，黃衣女孩把卡車舉起給另一個女孩看。",
+          "phrases": [
+            {
+              "en": "She shows her truck.",
+              "zh": "她展示她的卡車。",
+              "id": "007-its-mine:3:fc1caf300cd2"
+            },
+            {
+              "en": "The girls are sitting.",
+              "zh": "女孩們坐著。",
+              "id": "007-its-mine:3:dfe8c4bfea6a"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "My toy is new.",
+              "zh": "我的玩具是新的。",
+              "id": "007-its-mine:3:af39bf88650a"
+            },
+            {
+              "en": "Let’s look at it.",
+              "zh": "我們看看它。",
+              "id": "007-its-mine:3:5d4d14f43726"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Is her toy new?",
+              "zh": "她的玩具是新的嗎？",
+              "id": "007-its-mine:3:e1732fe56075",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "007-its-mine:3:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She has a new truck.",
+              "zh": "她有一台新卡車。",
+              "id": "007-its-mine:3:c8f580737e86",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Tell me about your toy.",
+              "zh": "跟我說說妳的玩具。",
+              "id": "007-its-mine:3:7906fba45b96"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Show Mom your favorite toy.",
+              "zh": "把最喜歡的玩具給媽媽看。",
+              "id": "007-its-mine:3:46e6f51fb192"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/007-its-mine/004-46bead795b95.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "It’s my blue toy",
+              "zh": "這是我的藍色玩具。",
+              "id": "007-its-mine:4:988f47d6a60d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "再次說顏色和主人。可以看車斗、車輪等細節，但畫面只看到一側輪子，不用說畫裡一定有四個可見輪子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "黃衣女孩指著藍色卡車的車斗，紫衣女孩靠近看。",
+          "phrases": [
+            {
+              "en": "She points to the truck.",
+              "zh": "她指著卡車。",
+              "id": "007-its-mine:4:0dec0f805539"
+            },
+            {
+              "en": "I see black wheels.",
+              "zh": "我看到黑色輪子。",
+              "id": "007-its-mine:4:0fe1bb0ad32f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "The wheels can turn.",
+              "zh": "輪子可以轉。",
+              "id": "007-its-mine:4:fc0289378046"
+            },
+            {
+              "en": "The truck can roll.",
+              "zh": "卡車可以滾動。",
+              "id": "007-its-mine:4:8ea5962f6180"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Can you find a wheel?",
+              "zh": "妳找得到一個輪子嗎？",
+              "id": "007-its-mine:4:b8cb7a3ec7c3",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here.",
+              "zh": "在這裡。",
+              "id": "007-its-mine:4:8f6768d1701a",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a black wheel.",
+              "zh": "對，一個黑色輪子。",
+              "id": "007-its-mine:4:dc79296e5187",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Roll your toy gently.",
+              "zh": "輕輕推妳的玩具。",
+              "id": "007-its-mine:4:a873ed11a33a"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Turn your hands like wheels.",
+              "zh": "把手轉一轉，像輪子。",
+              "id": "007-its-mine:4:f157b9fa4aa1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/007-its-mine/005-b44b035b3b00.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "And it’s mine",
+              "zh": "而且，它是我的。",
+              "id": "007-its-mine:5:834ce54acfb0"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "強調玩具屬於女孩。孩子喜歡自己的東西很自然，媽媽可以先理解，再聊邀請別人。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抱緊藍卡車，閉眼笑，另一個女孩坐在旁看。",
+          "phrases": [
+            {
+              "en": "She hugs her truck.",
+              "zh": "她抱著她的卡車。",
+              "id": "007-its-mine:5:4d10675f08d2"
+            },
+            {
+              "en": "She has a big smile.",
+              "zh": "她笑得很開心。",
+              "id": "007-its-mine:5:f156bfcd8ccb"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You really like it.",
+              "zh": "妳真的很喜歡它。",
+              "id": "007-its-mine:5:934335028895"
+            },
+            {
+              "en": "It is your toy.",
+              "zh": "這是妳的玩具。",
+              "id": "007-its-mine:5:d41a2fa7fe09"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Who is holding the truck?",
+              "zh": "誰拿著卡車？",
+              "id": "007-its-mine:5:534e437fd3f5",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The girl in yellow.",
+              "zh": "穿黃衣的女孩。",
+              "id": "007-its-mine:5:09aa2a835550",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, it is her toy.",
+              "zh": "對，那是她的玩具。",
+              "id": "007-its-mine:5:d834158aa3a1",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can say it is yours.",
+              "zh": "妳可以說這是妳的。",
+              "id": "007-its-mine:5:0cf429f2ee3f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Hug a favorite toy gently.",
+              "zh": "輕輕抱抱最喜歡的玩具。",
+              "id": "007-its-mine:5:0a5d9190dc61"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/007-its-mine/006-e016f29cd467.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Oh, it’s mine mine mine, it’s all mine",
+              "zh": "噢，是我的、我的、我的，全都是我的。",
+              "id": "007-its-mine:6:de1a9126c11d"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "mine 重複是歌曲節奏與強調。不要演成吵架，也不要把想保留玩具說成壞孩子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩仍抱著卡車微笑，紫衣女孩在旁看，積木散在地毯上。",
+          "phrases": [
+            {
+              "en": "She keeps the truck close.",
+              "zh": "她把卡車抱在身邊。",
+              "id": "007-its-mine:6:38c1f3669fef"
+            },
+            {
+              "en": "The other girl sits nearby.",
+              "zh": "另一個女孩坐在附近。",
+              "id": "007-its-mine:6:05f4a1af01b5"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "You can have a turn first.",
+              "zh": "妳可以先玩一輪。",
+              "id": "007-its-mine:6:535fb411266b"
+            },
+            {
+              "en": "We can wait.",
+              "zh": "我們可以等。",
+              "id": "007-its-mine:6:4d41b9839bd3"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Is she holding her toy close?",
+              "zh": "她把玩具抱在身邊嗎？",
+              "id": "007-its-mine:6:f09005a99e97",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "對。",
+              "id": "007-its-mine:6:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It is special to her.",
+              "zh": "它對她很特別。",
+              "id": "007-its-mine:6:029fe6054e67",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Ask before taking a toy.",
+              "zh": "拿別人的玩具前先問。",
+              "id": "007-its-mine:6:a0147a4bfd2e"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to ask for a turn.",
+              "zh": "假裝詢問可不可以玩一輪。",
+              "id": "007-its-mine:6:707a4ea1a224"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/007-its-mine/007-7de334433207.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "This new blue toy of mine",
+              "zh": "我的這個藍色新玩具。",
+              "id": "007-its-mine:7:376d2084c8d2"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "of mine 也是「我的」。這是一個名詞片語，媽媽聊天可以直接說 This is my blue toy。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把卡車放在腿前展示，另一個女孩雙手托在下巴旁看。",
+          "phrases": [
+            {
+              "en": "The truck is in front of her.",
+              "zh": "卡車在她前面。",
+              "id": "007-its-mine:7:4754b0c23e4c"
+            },
+            {
+              "en": "They look at the toy.",
+              "zh": "她們看著玩具。",
+              "id": "007-its-mine:7:a1947252fda7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "This is my blue toy.",
+              "zh": "這是我的藍色玩具。",
+              "id": "007-its-mine:7:25d66ff963c8"
+            },
+            {
+              "en": "Would you like a turn?",
+              "zh": "妳想玩一輪嗎？",
+              "id": "007-its-mine:7:cbd5630603f6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Do you like this toy?",
+              "zh": "妳喜歡這個玩具嗎？",
+              "id": "007-its-mine:7:5525327be0f8",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes, I do.",
+              "zh": "對，我喜歡。",
+              "id": "007-its-mine:7:5849793ea264",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "It looks fun.",
+              "zh": "它看起來很好玩。",
+              "id": "007-its-mine:7:66aac30d967e",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "You can choose when to offer a turn.",
+              "zh": "妳可以選擇什麼時候邀請人玩。",
+              "id": "007-its-mine:7:cf9a5e2ae3c4"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend the truck carries a block.",
+              "zh": "假裝卡車載一塊積木。",
+              "id": "007-its-mine:7:397460863c9e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/007-its-mine/008-d20aed03cbb8.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "...but hey, you can play with it too...",
+              "zh": "……不過，嘿，妳也可以玩它喔……",
+              "id": "007-its-mine:8:36d46b3729fc"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "too 是「也」。女孩主動讓朋友玩，借玩不代表玩具不再屬於她；重點是願意邀請、輪流與一起享受。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "兩個女孩一起扶著藍卡車微笑，旁邊有積木和兔子玩偶。",
+          "phrases": [
+            {
+              "en": "They hold the truck together.",
+              "zh": "她們一起扶著卡車。",
+              "id": "007-its-mine:8:70b2b0ea700e"
+            },
+            {
+              "en": "Both girls are smiling.",
+              "zh": "兩個女孩都在笑。",
+              "id": "007-its-mine:8:6c6b5f7d2c05"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Your turn.",
+              "zh": "換妳。",
+              "id": "007-its-mine:8:a2f546fe1fd0"
+            },
+            {
+              "en": "Let’s play together.",
+              "zh": "我們一起玩。",
+              "id": "007-its-mine:8:ca7e9b7d971b"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指女孩、車或顏色，讓孩子用手指回答也可以。談分享時先承認「這是妳的」，不必要求孩子立刻借出去。",
+          "phrases": [
+            {
+              "en": "Can the other girl play too?",
+              "zh": "另一個女孩也可以玩嗎？",
+              "id": "007-its-mine:8:ea2e4b3bde29",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "可以！",
+              "id": "007-its-mine:8:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "They can take turns.",
+              "zh": "她們可以輪流。",
+              "id": "007-its-mine:8:5fefc52d1e11",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Thank you for letting me play.",
+              "zh": "謝謝妳讓我玩。",
+              "id": "007-its-mine:8:30e6821f7d0f"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Take turns rolling a toy to each other.",
+              "zh": "輪流把玩具推給對方。",
+              "id": "007-its-mine:8:6b5847bf06d9"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

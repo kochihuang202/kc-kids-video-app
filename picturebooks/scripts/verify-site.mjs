@@ -22,6 +22,13 @@ async function checkImages() {
 }
 await Promise.all([checkImages(), checkImages(), checkImages(), checkImages()]);
 console.log(`Verified ${books.length} books and all ${verified} WebP images.`);
+for (const book of books) {
+  const response = await fetch(`${baseURL}/guides/${book.id}.json`);
+  if (!response.ok) throw new Error(`Guide unavailable: ${book.id}`);
+  const guide = await response.json();
+  if (guide.bookId !== book.id || guide.pages.length !== book.pages.length || guide.pages.some((p, i) => p.image !== book.pages[i] || p.page !== i + 1)) throw new Error(`Guide mapping mismatch: ${book.id}`);
+}
+console.log(`Verified guides for all ${books.reduce((n, b) => n + b.pages.length, 0)} pages.`);
 const outputDir = path.join(root, '../artifacts/picturebooks');
 await mkdir(outputDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -44,8 +51,22 @@ try {
   await page.getByRole('button', { name: '專心閱讀' }).click();
   await page.screenshot({ path: path.join(outputDir, 'reader-focused-ipad.png') });
   await page.getByRole('button', { name: '顯示閱讀按鈕' }).click();
+  await page.locator('#open-guide').click();
+  await page.locator('.english-phrase').first().waitFor();
+  await page.locator('#guide-preview').evaluate(image => image.decode());
+  await page.screenshot({ path: path.join(outputDir, 'guide-landscape-ipad.png') });
+  await page.locator('.favorite-sentence').first().click();
+  await page.locator('#guide-filter').click();
+  if (await page.locator('.english-phrase').count() !== 1) throw new Error('Favorite filtering failed');
+  await page.locator('#guide-filter').click();
+  await page.locator('#guide-next').click();
+  if (await page.locator('#guide-page-count').textContent() !== '5 / 22') throw new Error('Guide navigation failed');
+  await page.locator('#guide-return').click();
+  if (await page.locator('#page-count').textContent() !== '4 / 22') throw new Error('Guide altered reader position');
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.screenshot({ path: path.join(outputDir, 'reader-portrait-ipad.png') });
+  await page.locator('#open-guide').click();
+  await page.screenshot({ path: path.join(outputDir, 'guide-portrait-ipad.png') });
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(`iPad screenshots and live smoke flow passed: ${outputDir}`);
 } finally { await browser.close(); }

@@ -1,0 +1,1328 @@
+{
+  "version": 1,
+  "bookId": "003-me-and-my-dog",
+  "title": "Me and My Dog",
+  "reviewedAt": "2026-10-11",
+  "pages": [
+    {
+      "page": 1,
+      "image": "/media/books/003-me-and-my-dog/001-54cdf6303cc8.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Me And My Dog",
+              "zh": "我和我的狗。",
+              "id": "003-me-and-my-dog:1:c7dbdf2703d6"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "先認識女孩和狗。故事用女孩的聲音說 my dog，媽媽可以指圖代替女孩說，不用孩子真的養狗。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩在門外台階抱著棕白色狗，地上有紅球，狗戴藍色項圈。",
+          "phrases": [
+            {
+              "en": "The girl hugs her dog.",
+              "zh": "女孩抱著她的狗。",
+              "id": "003-me-and-my-dog:1:e6b6011345a1"
+            },
+            {
+              "en": "I see a red ball.",
+              "zh": "我看到紅色的球。",
+              "id": "003-me-and-my-dog:1:6b54b67431b8"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "They are friends.",
+              "zh": "她們是朋友。",
+              "id": "003-me-and-my-dog:1:9747985a1c2e"
+            },
+            {
+              "en": "The dog has soft fur.",
+              "zh": "狗有軟軟的毛。",
+              "id": "003-me-and-my-dog:1:a7690d8e65e0"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Can you find the dog?",
+              "zh": "妳找得到狗嗎？",
+              "id": "003-me-and-my-dog:1:9ed8cceee803",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Here!",
+              "zh": "在這裡！",
+              "id": "003-me-and-my-dog:1:7f28df9209b6",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her little dog.",
+              "zh": "對，她的小狗。",
+              "id": "003-me-and-my-dog:1:c2d5b9ac32bc",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Do you have a toy dog?",
+              "zh": "妳有玩具狗嗎？",
+              "id": "003-me-and-my-dog:1:1e4e1a3f15a9"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to hug a toy dog.",
+              "zh": "假裝抱一隻玩具狗。",
+              "id": "003-me-and-my-dog:1:5e54d0e80f28"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "image": "/media/books/003-me-and-my-dog/002-c3f416dae8ce.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "My dog gets happy when I come home",
+              "zh": "我回家時，我的狗會很開心。",
+              "id": "003-me-and-my-dog:2:180bb9dc7056"
+            },
+            {
+              "en": "Woof, woof, woof",
+              "zh": "汪、汪、汪。",
+              "id": "003-me-and-my-dog:2:f38e13849dbd"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "come home 是回家，woof 是英文模仿狗叫的聲音。這裡用擬人方式說狗開心，搭配迎接動作就很好懂。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩推開綠色門，狗朝她跳過來，尾巴翹起。",
+          "phrases": [
+            {
+              "en": "The girl is home.",
+              "zh": "女孩回家了。",
+              "id": "003-me-and-my-dog:2:a3d8f21accb7"
+            },
+            {
+              "en": "The dog runs to her.",
+              "zh": "狗朝她跑過來。",
+              "id": "003-me-and-my-dog:2:450782fb1505"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Hello, little dog!",
+              "zh": "小狗，妳好！",
+              "id": "003-me-and-my-dog:2:8aaf71d3568a"
+            },
+            {
+              "en": "I’m home!",
+              "zh": "我回來了！",
+              "id": "003-me-and-my-dog:2:75e629bca6f6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Is the dog happy?",
+              "zh": "狗開心嗎？",
+              "id": "003-me-and-my-dog:2:25449f397dad",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "開心！",
+              "id": "003-me-and-my-dog:2:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Happy to see her.",
+              "zh": "看到她很開心。",
+              "id": "003-me-and-my-dog:2:d239e673c1f9",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Say hello when you come home.",
+              "zh": "回家時打個招呼。",
+              "id": "003-me-and-my-dog:2:ad1722c71354"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a gentle woof sound.",
+              "zh": "輕輕學一聲汪。",
+              "id": "003-me-and-my-dog:2:2da5ab651513"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "image": "/media/books/003-me-and-my-dog/003-58e9b62529cc.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "He gets a big smile on his furry face",
+              "zh": "牠毛茸茸的臉上露出大大的笑容。",
+              "id": "003-me-and-my-dog:3:8b5c5b0445b3"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "furry 是毛茸茸的。這是故事把狗的表情說成笑容，可以和孩子一起看看張嘴、伸舌頭的樣子。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抱著狗，狗嘴巴張開、舌頭伸出，臉部毛茸茸。",
+          "phrases": [
+            {
+              "en": "The dog has furry ears.",
+              "zh": "狗有毛茸茸的耳朵。",
+              "id": "003-me-and-my-dog:3:e994e79adf99"
+            },
+            {
+              "en": "The girl is smiling.",
+              "zh": "女孩正在笑。",
+              "id": "003-me-and-my-dog:3:7e4ff004e8f7"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Show me a big smile.",
+              "zh": "給我一個大大的笑容。",
+              "id": "003-me-and-my-dog:3:7a7ad76e6ae4"
+            },
+            {
+              "en": "What a happy face!",
+              "zh": "好開心的表情！",
+              "id": "003-me-and-my-dog:3:26c443497036"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Can you smile like her?",
+              "zh": "妳可以像她一樣笑嗎？",
+              "id": "003-me-and-my-dog:3:a76a3470d4cb",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes!",
+              "zh": "可以！",
+              "id": "003-me-and-my-dog:3:c548cd2ad498",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "That’s a lovely smile.",
+              "zh": "好可愛的笑容。",
+              "id": "003-me-and-my-dog:3:2312e2dbfa2a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "What makes you happy?",
+              "zh": "什麼讓妳開心？",
+              "id": "003-me-and-my-dog:3:7fc59ac0d3b4"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Touch something soft.",
+              "zh": "摸摸一個軟軟的東西。",
+              "id": "003-me-and-my-dog:3:7eeebfaafdf2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "image": "/media/books/003-me-and-my-dog/004-f42b5bd7ef33.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Then he gets up and we start to race",
+              "zh": "接著牠起身，我們開始比賽跑步。",
+              "id": "003-me-and-my-dog:4:047225a94ecb"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "gets up 是站起來，race 是比賽。故事裡跑在草地上，可以用手指跑代替真的跑。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩與狗跑在庭院草地上，旁邊有白花。",
+          "phrases": [
+            {
+              "en": "They are running.",
+              "zh": "她們在跑。",
+              "id": "003-me-and-my-dog:4:98f81854af3f"
+            },
+            {
+              "en": "I see grass and flowers.",
+              "zh": "我看到草和花。",
+              "id": "003-me-and-my-dog:4:1b6b4ef3baa2"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Ready, set, go!",
+              "zh": "預備，準備，走！",
+              "id": "003-me-and-my-dog:4:187a945b53ad"
+            },
+            {
+              "en": "Run with me.",
+              "zh": "跟我一起跑。",
+              "id": "003-me-and-my-dog:4:0ec89261d582"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Are they sitting or running?",
+              "zh": "她們坐著還是在跑？",
+              "id": "003-me-and-my-dog:4:b58ed2631106",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Running.",
+              "zh": "在跑。",
+              "id": "003-me-and-my-dog:4:f3f72005df33",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, running together.",
+              "zh": "對，一起跑。",
+              "id": "003-me-and-my-dog:4:4b5905b25f01",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s move our feet.",
+              "zh": "我們動動腳。",
+              "id": "003-me-and-my-dog:4:009e789b6e38"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Race two fingers across your lap.",
+              "zh": "讓兩根手指在腿上比賽。",
+              "id": "003-me-and-my-dog:4:4708b2fdedaf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "image": "/media/books/003-me-and-my-dog/005-7ecd1d412795.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "We get my red ball and we play in the yard",
+              "zh": "我們拿我的紅球，在院子裡玩。",
+              "id": "003-me-and-my-dog:5:17ef23698b98"
+            },
+            {
+              "en": "Fetch, fetch, fetch",
+              "zh": "撿回來、撿回來、撿回來。",
+              "id": "003-me-and-my-dog:5:a22096ccdf62"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "yard 是院子。fetch 是請狗把丟出去的東西撿回來；這頁女孩先拿著球準備玩。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩雙手拿紅球，狗抬起一隻前腳望著她。",
+          "phrases": [
+            {
+              "en": "The ball is in her hands.",
+              "zh": "球在她手裡。",
+              "id": "003-me-and-my-dog:5:f10f674a25fd"
+            },
+            {
+              "en": "The dog looks at the ball.",
+              "zh": "狗看著球。",
+              "id": "003-me-and-my-dog:5:23d8d8bc844f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Do you want to play?",
+              "zh": "妳想玩嗎？",
+              "id": "003-me-and-my-dog:5:3d7e91fc10b6"
+            },
+            {
+              "en": "Let’s roll the ball.",
+              "zh": "我們把球滾一滾。",
+              "id": "003-me-and-my-dog:5:dc683c4cd6e5"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "What color is the ball?",
+              "zh": "球是什麼顏色？",
+              "id": "003-me-and-my-dog:5:ce1751af365c",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Red.",
+              "zh": "紅色。",
+              "id": "003-me-and-my-dog:5:d4837d72f6c9",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, her red ball.",
+              "zh": "對，她的紅球。",
+              "id": "003-me-and-my-dog:5:770a03d53369",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Roll a soft ball to Mom.",
+              "zh": "把軟球滾給媽媽。",
+              "id": "003-me-and-my-dog:5:8e4573e17a4d"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend your toy dog brings the ball back.",
+              "zh": "假裝玩具狗把球送回來。",
+              "id": "003-me-and-my-dog:5:c2a7bb5553c8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "image": "/media/books/003-me-and-my-dog/006-5b7954ff9b60.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I throw the ball and he runs so fast",
+              "zh": "我把球丟出去，牠跑得好快。",
+              "id": "003-me-and-my-dog:6:cd52422018ad"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "throw 是丟，fast 是快。可以沿球的方向移動手指，理解誰丟、誰追。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩手臂伸出，紅球在空中，狗朝球跑。",
+          "phrases": [
+            {
+              "en": "The ball is in the air.",
+              "zh": "球在空中。",
+              "id": "003-me-and-my-dog:6:463cf9a1f68f"
+            },
+            {
+              "en": "The dog runs fast.",
+              "zh": "狗跑得很快。",
+              "id": "003-me-and-my-dog:6:481d89ef2e3f"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Watch the ball.",
+              "zh": "看著球。",
+              "id": "003-me-and-my-dog:6:f9d181fc0927"
+            },
+            {
+              "en": "Go get it!",
+              "zh": "去拿回來吧！",
+              "id": "003-me-and-my-dog:6:b62fd687293f"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Who runs after the ball?",
+              "zh": "誰追著球跑？",
+              "id": "003-me-and-my-dog:6:0df5ad3566de",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The dog.",
+              "zh": "狗。",
+              "id": "003-me-and-my-dog:6:8f57bba9be44",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, the dog runs fast.",
+              "zh": "對，狗跑得很快。",
+              "id": "003-me-and-my-dog:6:c29c2502f63c",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Let’s play in an open space.",
+              "zh": "我們在空一點的地方玩。",
+              "id": "003-me-and-my-dog:6:d134d172849b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Move your finger along the ball’s path.",
+              "zh": "用手指畫出球飛的方向。",
+              "id": "003-me-and-my-dog:6:9068ab602c30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "image": "/media/books/003-me-and-my-dog/007-8031db8d1446.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I try to race him but I’m always last",
+              "zh": "我試著跟牠賽跑，但我總是最後一個。",
+              "id": "003-me-and-my-dog:7:4074feb29291"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "last 是最後。故事在說狗跑得快，不代表女孩不好；可以享受一起玩，不必總要贏。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "狗嘴裡叼著紅球跑在前面，女孩跟在後面。",
+          "phrases": [
+            {
+              "en": "The dog has the ball.",
+              "zh": "狗叼著球。",
+              "id": "003-me-and-my-dog:7:8c007491198e"
+            },
+            {
+              "en": "The girl runs behind him.",
+              "zh": "女孩在牠後面跑。",
+              "id": "003-me-and-my-dog:7:736f2f50d145"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "He is very fast.",
+              "zh": "牠好快。",
+              "id": "003-me-and-my-dog:7:5e03bf45f952"
+            },
+            {
+              "en": "Playing together is fun.",
+              "zh": "一起玩很好玩。",
+              "id": "003-me-and-my-dog:7:873726e6aa6e"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Who is in front?",
+              "zh": "誰在前面？",
+              "id": "003-me-and-my-dog:7:a239e13d6e46",
+              "label": "媽媽問"
+            },
+            {
+              "en": "The dog.",
+              "zh": "狗。",
+              "id": "003-me-and-my-dog:7:8f57bba9be44",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, with the red ball.",
+              "zh": "對，還叼著紅球。",
+              "id": "003-me-and-my-dog:7:9cbe18fe94d7",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "We can have fun without winning.",
+              "zh": "沒有贏也可以玩得開心。",
+              "id": "003-me-and-my-dog:7:f8e4579735cb"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Put a toy in front and one behind.",
+              "zh": "把一個玩具放前面，另一個放後面。",
+              "id": "003-me-and-my-dog:7:7827e9f04734"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "image": "/media/books/003-me-and-my-dog/008-664ef5685264.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "He got my toy train and he hid it away",
+              "zh": "牠拿了我的玩具火車，把它藏起來。",
+              "id": "003-me-and-my-dog:8:db4a6b642b10"
+            },
+            {
+              "en": "Where, oh where did it go?",
+              "zh": "它到哪裡去了呢？",
+              "id": "003-me-and-my-dog:8:299b09eeec8b"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "hid 是藏起來。女孩在找，但讀者可以在床底看見火車；讓孩子當小幫手找，不先說答案。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩和狗趴低看床底，紅色火車就在床下，床上有兔子玩偶。",
+          "phrases": [
+            {
+              "en": "I see a red train.",
+              "zh": "我看到紅色火車。",
+              "id": "003-me-and-my-dog:8:4c6e352144c1"
+            },
+            {
+              "en": "It is under the bed.",
+              "zh": "它在床底下。",
+              "id": "003-me-and-my-dog:8:c6515aba8e28"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Let’s look down low.",
+              "zh": "我們往低一點的地方找。",
+              "id": "003-me-and-my-dog:8:2629689496e8"
+            },
+            {
+              "en": "Where is it hiding?",
+              "zh": "它躲在哪裡？",
+              "id": "003-me-and-my-dog:8:65eaefb49f3a"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Can you find the train?",
+              "zh": "妳找得到火車嗎？",
+              "id": "003-me-and-my-dog:8:b0261498962e",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Under the bed.",
+              "zh": "床底下。",
+              "id": "003-me-and-my-dog:8:e9bd94ed86af",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, I can see it too.",
+              "zh": "對，我也看到了。",
+              "id": "003-me-and-my-dog:8:54e52798c8c5",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Ask for help when you lose a toy.",
+              "zh": "找不到玩具時可以請人幫忙。",
+              "id": "003-me-and-my-dog:8:f620b4a61223"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Hide a toy under a cloth.",
+              "zh": "把玩具藏在布下面。",
+              "id": "003-me-and-my-dog:8:53299e794dd8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "image": "/media/books/003-me-and-my-dog/009-9dfb6cede43f.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I got it back from under my bed",
+              "zh": "我從床底下把它拿回來了。",
+              "id": "003-me-and-my-dog:9:cd64377ad295"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "got it back 是找回、拿回。under 是下面，配合女孩伸手就能理解。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩趴在地毯上伸手拿床下的紅火車，狗坐在旁邊。",
+          "phrases": [
+            {
+              "en": "She reaches for the train.",
+              "zh": "她伸手拿火車。",
+              "id": "003-me-and-my-dog:9:1d4e990d4b3a"
+            },
+            {
+              "en": "The dog is sitting.",
+              "zh": "狗坐著。",
+              "id": "003-me-and-my-dog:9:0709b93baf33"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "There it is!",
+              "zh": "它在那裡！",
+              "id": "003-me-and-my-dog:9:8967496cde4c"
+            },
+            {
+              "en": "We found it.",
+              "zh": "我們找到了。",
+              "id": "003-me-and-my-dog:9:0af59c7774f7"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Did she find the train?",
+              "zh": "她找到火車了嗎？",
+              "id": "003-me-and-my-dog:9:cd1541ecfd0b",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "找到了。",
+              "id": "003-me-and-my-dog:9:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "She got it back.",
+              "zh": "她拿回來了。",
+              "id": "003-me-and-my-dog:9:50f865a02d70",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Put your toy in its place.",
+              "zh": "把玩具放回它的位置。",
+              "id": "003-me-and-my-dog:9:9933c762edfa"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Find the toy under the cloth.",
+              "zh": "找出布下面的玩具。",
+              "id": "003-me-and-my-dog:9:650f0216ba74"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "image": "/media/books/003-me-and-my-dog/010-dc328c751cd5.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "Then I got a toy bone for him instead",
+              "zh": "接著我改拿一根玩具骨頭給牠。",
+              "id": "003-me-and-my-dog:10:1ea24336a352"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "instead 是改成另一個選擇。女孩拿適合狗玩的玩具骨頭，不是給牠真骨頭。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩把淺色玩具骨頭拿給狗，紅火車已放在書架上。",
+          "phrases": [
+            {
+              "en": "She has a toy bone.",
+              "zh": "她拿著玩具骨頭。",
+              "id": "003-me-and-my-dog:10:dfdc23204410"
+            },
+            {
+              "en": "The train is on the shelf.",
+              "zh": "火車在書架上。",
+              "id": "003-me-and-my-dog:10:a51f7a0a253b"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "This toy is for you.",
+              "zh": "這個玩具是給妳的。",
+              "id": "003-me-and-my-dog:10:bde3592de763"
+            },
+            {
+              "en": "Let’s choose a dog toy.",
+              "zh": "我們選一個狗玩具。",
+              "id": "003-me-and-my-dog:10:ef4641b69b42"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "What does she give the dog?",
+              "zh": "她給狗什麼？",
+              "id": "003-me-and-my-dog:10:ae7258034657",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A toy bone.",
+              "zh": "玩具骨頭。",
+              "id": "003-me-and-my-dog:10:b2f47448e769",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, a toy just for him.",
+              "zh": "對，專門給牠的玩具。",
+              "id": "003-me-and-my-dog:10:46e0dcdef587",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Choose the right toy for your pet.",
+              "zh": "替寵物選適合的玩具。",
+              "id": "003-me-and-my-dog:10:9954eec76ade"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Pretend to give your toy dog a toy.",
+              "zh": "假裝給玩具狗一個玩具。",
+              "id": "003-me-and-my-dog:10:dd654f340583"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "image": "/media/books/003-me-and-my-dog/011-26d92975f736.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "We get very tired when the day is done",
+              "zh": "一天結束時，我們都很累。",
+              "id": "003-me-and-my-dog:11:214dcb59d157"
+            },
+            {
+              "en": "Sleepy time, it’s sleepy time",
+              "zh": "睡覺時間，睡覺時間到了。",
+              "id": "003-me-and-my-dog:11:428f0ceb6d01"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "tired 是累，sleepy 是想睡。從奔跑轉到安靜，可以把聲音也放輕。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩坐在床邊打哈欠，狗也張嘴打哈欠，窗外是傍晚。",
+          "phrases": [
+            {
+              "en": "They are yawning.",
+              "zh": "她們在打哈欠。",
+              "id": "003-me-and-my-dog:11:ff37d942ae10"
+            },
+            {
+              "en": "Her shoes are on the floor.",
+              "zh": "她的鞋在地板上。",
+              "id": "003-me-and-my-dog:11:14dfab71ff75"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Time to rest.",
+              "zh": "該休息了。",
+              "id": "003-me-and-my-dog:11:0fe1dda03d8c"
+            },
+            {
+              "en": "Let’s slow down.",
+              "zh": "我們慢下來。",
+              "id": "003-me-and-my-dog:11:7e0c8dc73284"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Is she sleepy?",
+              "zh": "她想睡嗎？",
+              "id": "003-me-and-my-dog:11:3d74648aeee4",
+              "label": "媽媽問"
+            },
+            {
+              "en": "Yes.",
+              "zh": "是。",
+              "id": "003-me-and-my-dog:11:d4db3c9d25dc",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "The dog is sleepy too.",
+              "zh": "狗也想睡了。",
+              "id": "003-me-and-my-dog:11:d202179ea90a",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Are you feeling sleepy?",
+              "zh": "妳覺得想睡了嗎？",
+              "id": "003-me-and-my-dog:11:91ee57673a1b"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Make a quiet pretend yawn.",
+              "zh": "輕輕假裝打哈欠。",
+              "id": "003-me-and-my-dog:11:44e97ec43169"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "image": "/media/books/003-me-and-my-dog/012-66fc8c4096b7.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "He gets cozy on his soft little mat",
+              "zh": "牠在軟軟的小墊子上舒舒服服地休息。",
+              "id": "003-me-and-my-dog:12:a9270772962b"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "cozy 是舒適、窩得很舒服。mat 是墊子；狗睡在床邊自己的圓墊上。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "狗蜷在綠色圓墊上睡覺，女孩在床上睡，窗外有月亮。",
+          "phrases": [
+            {
+              "en": "The dog is asleep.",
+              "zh": "狗睡著了。",
+              "id": "003-me-and-my-dog:12:df6633bc0180"
+            },
+            {
+              "en": "His mat is by the bed.",
+              "zh": "牠的墊子在床邊。",
+              "id": "003-me-and-my-dog:12:8f6fc387b05b"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Good night, little dog.",
+              "zh": "小狗，晚安。",
+              "id": "003-me-and-my-dog:12:7985be1d7f6a"
+            },
+            {
+              "en": "Sleep well.",
+              "zh": "好好睡。",
+              "id": "003-me-and-my-dog:12:c36b17d51ec6"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "Where does the dog sleep?",
+              "zh": "狗睡在哪裡？",
+              "id": "003-me-and-my-dog:12:9de8dddf4db4",
+              "label": "媽媽問"
+            },
+            {
+              "en": "On his mat.",
+              "zh": "牠的墊子上。",
+              "id": "003-me-and-my-dog:12:ec125e5295e4",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Yes, on the soft mat.",
+              "zh": "對，軟軟的墊子上。",
+              "id": "003-me-and-my-dog:12:d95db18faac4",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Make your bed cozy.",
+              "zh": "把妳的床整理得舒服一點。",
+              "id": "003-me-and-my-dog:12:79bf19953ba8"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Put a toy on a little blanket.",
+              "zh": "把玩具放在小毯子上。",
+              "id": "003-me-and-my-dog:12:a488174c4f2b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "image": "/media/books/003-me-and-my-dog/013-e8172736a3aa.webp",
+      "reviewedAgainstImage": true,
+      "sections": [
+        {
+          "title": "原文與翻譯",
+          "phrases": [
+            {
+              "en": "I get my toy teddy and my toy cat",
+              "zh": "我拿了我的玩具熊和玩具貓。",
+              "id": "003-me-and-my-dog:13:794eb0123f51"
+            }
+          ]
+        },
+        {
+          "title": "媽媽先看懂",
+          "note": "toy cat 是玩具貓，不是床上的真貓。故事最後以熟悉的玩偶陪伴入睡。",
+          "phrases": []
+        },
+        {
+          "title": "一起看看畫面",
+          "note": "女孩抱著熊與灰色貓玩偶躺在床上，狗在床邊墊子上睡，窗外有月亮。",
+          "phrases": [
+            {
+              "en": "She hugs two toys.",
+              "zh": "她抱著兩個玩具。",
+              "id": "003-me-and-my-dog:13:9df3828b0602"
+            },
+            {
+              "en": "The dog sleeps nearby.",
+              "zh": "狗睡在旁邊。",
+              "id": "003-me-and-my-dog:13:2f211a938520"
+            }
+          ]
+        },
+        {
+          "title": "可以這樣聊",
+          "note": "以下是媽媽可以加上的簡單說法，並非繪本原文；疑問或猜測不代表畫面已發生。",
+          "phrases": [
+            {
+              "en": "Your toys can stay with you.",
+              "zh": "妳的玩偶可以陪妳。",
+              "id": "003-me-and-my-dog:13:1aadfde6de89"
+            },
+            {
+              "en": "Good night, everyone.",
+              "zh": "大家晚安。",
+              "id": "003-me-and-my-dog:13:252abdb7dbaf"
+            }
+          ]
+        },
+        {
+          "title": "問一句，接一句",
+          "note": "孩子沒回答時：先指圖，用中文或二選一幫孩子理解。孩子指一下、做動作或說一個字也算回答，再接上媽媽的示範句。",
+          "phrases": [
+            {
+              "en": "What toys does she have?",
+              "zh": "她拿著什麼玩具？",
+              "id": "003-me-and-my-dog:13:b70803b3e06c",
+              "label": "媽媽問"
+            },
+            {
+              "en": "A bear and a cat.",
+              "zh": "熊和貓。",
+              "id": "003-me-and-my-dog:13:6450f4e9c951",
+              "label": "孩子可能回答"
+            },
+            {
+              "en": "Two soft friends.",
+              "zh": "兩個軟軟的朋友。",
+              "id": "003-me-and-my-dog:13:a4bbb21dd1df",
+              "label": "媽媽接話"
+            }
+          ]
+        },
+        {
+          "title": "連到我們的生活",
+          "note": "把故事連到妳們的日常，依實際生活選用。",
+          "phrases": [
+            {
+              "en": "Choose your bedtime toy.",
+              "zh": "選妳睡前的玩偶。",
+              "id": "003-me-and-my-dog:13:988113dd0e84"
+            }
+          ]
+        },
+        {
+          "title": "一起玩一下 · 想像延伸",
+          "note": "這是延伸小活動，不是畫面中的事實。想玩就玩，不必每頁都做。",
+          "phrases": [
+            {
+              "en": "Tuck a toy into a blanket.",
+              "zh": "替玩偶蓋上毯子。",
+              "id": "003-me-and-my-dog:13:d94c390a237a"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

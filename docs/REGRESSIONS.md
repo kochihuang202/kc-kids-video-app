@@ -313,3 +313,11 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: Every completion created before the multi-child Worker deployment remains assigned to 阿云 with its original completion timestamp. 阿涵 remains independent, and a repair must not overwrite newer per-child state.
 - Root cause: Migration `0015` copied `video_learned_state` to `child_video_learned` once on 2026-09-27, but the old Worker continued writing only to the legacy table until the multi-child Worker was deployed on 2026-10-06. The new Worker correctly reads the per-child table, leaving records created in that deployment window invisible.
 - Regression test: `test/multi-child.spec.ts` (`MC 10`)
+
+## REG-040 — Long picturebook guides expand beyond the iPad instead of scrolling
+
+- Problem: Opening a rich mother reading guide produces a content area taller than the viewport, so setting its scroll position has no effect and returning restores the top.
+- Reproduction: Open picturebook 001 page 4, open「媽媽陪讀指南」, scroll, return to the picturebook, then reopen the guide.
+- Correct behavior: The guide content scrolls inside the available viewport; navigation remains visible and each page restores its independent position. Guide previews never change picturebook progress.
+- Root cause: Vertical auto margins on the nested guide grid let it grow with its content instead of occupying the bounded reader grid row. Explicit row height and bounded overflow restore the internal scroll container.
+- Regression test: `picturebooks/test/guide.spec.ts` (`guide scroll position survives closing and page navigation`) in Chromium and WebKit, iPad landscape and portrait.
