@@ -117,6 +117,7 @@ function route() {
     $('reader-number').textContent = `STORY ${book.number}`;
   }
   currentBook = book;
+  $('open-guide').hidden = book.guide === false;
   currentPage = match[2] ? Math.max(0, Math.min(book.pages.length - 1, Number(match[2]) - 1)) : savedPage(book);
   $('bookshelf').hidden = true; $('reader').hidden = false; document.body.classList.add('reading');
   history.replaceState(null, '', routeFor(book, currentPage));
@@ -146,7 +147,7 @@ async function loadCatalog() {
   }
 }
 $('catalog-retry').onclick = loadCatalog;
-$('open-guide').onclick = () => { if (currentBook) openGuide(currentBook, currentPage); };
+$('open-guide').onclick = () => { if (currentBook && currentBook.guide !== false) openGuide(currentBook, currentPage); };
 $('search').addEventListener('input', event => { searchTerm = event.target.value.trim().toLowerCase(); renderShelf(); });
 $('back-to-shelf').onclick = () => { location.hash = ''; };
 $('focus-toggle').onclick = () => setFocus(!focused);

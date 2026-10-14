@@ -123,6 +123,13 @@ test('every published book opens its matching guide and wrong guide data stays r
   const catalog = await (await page.request.get('/catalog.json')).json();
   for (const book of catalog.books) {
     await page.goto(`/#book/${book.id}?page=${book.pages.length}`);
+    if (book.guide === false) {
+      await expect(page.locator('#open-guide')).toBeHidden();
+      await expect(page.locator('#page-count')).toHaveText(`${book.pages.length} / ${book.pages.length}`);
+      await expect(page.locator('#page-image')).toHaveAttribute('src', book.pages.at(-1));
+      await page.locator('#page-image').evaluate((image: HTMLImageElement) => image.decode());
+      continue;
+    }
     await page.locator('#open-guide').click();
     await expect(page.locator('.english-phrase').first()).toBeVisible();
     await expect(page.locator('#guide-page-count')).toHaveText(`${book.pages.length} / ${book.pages.length}`);

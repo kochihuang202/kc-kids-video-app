@@ -8,6 +8,10 @@ import ffmpeg from 'ffmpeg-static';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = process.argv[2];
 if (!source) throw new Error('Usage: node scripts/import-books.mjs <source-folder>');
+const imageOnlyNew = process.argv.includes('--image-only-new');
+let previous = [];
+try { previous = JSON.parse(await readFile(path.join(root, 'public', 'catalog.json'), 'utf8')).books; }
+catch (error) { if (error.code !== 'ENOENT') throw error; }
 const folders = (await readdir(source, { withFileTypes: true })).filter(item => item.isDirectory() && /^\d+_/.test(item.name));
 folders.sort((a, b) => Number(a.name.split('_')[0]) - Number(b.name.split('_')[0]));
 const seen = new Set(), books = [];
@@ -40,7 +44,9 @@ for (const folder of folders) {
       cover = `/media/books/${id}/${coverName}`;
     }
   }
-  books.push({ id, number: String(Number(number)).padStart(2, '0'), title: words.join(' ').replace(/^No Not There$/, 'No, Not There').replace(/^Hurry Up$/, 'Hurry Up!'), cover, pages });
+  const existing = previous.find(book => book.id === id);
+  const noGuide = existing?.guide === false || (imageOnlyNew && !existing);
+  books.push({ id, number: String(Number(number)).padStart(2, '0'), title: words.join(' ').replace(/^No Not There$/, 'No, Not There').replace(/^Hurry Up$/, 'Hurry Up!'), cover, pages, ...(noGuide ? { guide: false } : {}) });
   console.log(`Imported ${books.at(-1).title}: ${pages.length} pages`);
 }
 if (!books.length) throw new Error('No book folders found');

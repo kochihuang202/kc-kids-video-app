@@ -5,6 +5,7 @@ const publicDir = new URL('../public/', import.meta.url);
 const catalog = JSON.parse(await readFile(new URL('catalog.json', publicDir), 'utf8'));
 await mkdir(new URL('guides/', publicDir), { recursive: true });
 for (const book of catalog.books) {
+  if (book.guide === false) continue;
   const { default: rows } = await import(`../content/${String(Number(book.number)).padStart(3, '0')}.mjs`);
   if (rows.length !== book.pages.length) throw new Error(`Page mismatch: ${book.id}`);
   const pages = rows.map((r, i) => {

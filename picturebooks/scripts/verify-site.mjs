@@ -22,13 +22,13 @@ async function checkImages() {
 }
 await Promise.all([checkImages(), checkImages(), checkImages(), checkImages()]);
 console.log(`Verified ${books.length} books and all ${verified} WebP images.`);
-for (const book of books) {
+for (const book of books.filter(book => book.guide !== false)) {
   const response = await fetch(`${baseURL}/guides/${book.id}.json`);
   if (!response.ok) throw new Error(`Guide unavailable: ${book.id}`);
   const guide = await response.json();
   if (guide.bookId !== book.id || guide.pages.length !== book.pages.length || guide.pages.some((p, i) => p.image !== book.pages[i] || p.page !== i + 1)) throw new Error(`Guide mapping mismatch: ${book.id}`);
 }
-console.log(`Verified guides for all ${books.reduce((n, b) => n + b.pages.length, 0)} pages.`);
+console.log(`Verified guides for ${books.filter(b => b.guide !== false).reduce((n, b) => n + b.pages.length, 0)} guide-enabled pages.`);
 const outputDir = path.join(root, '../artifacts/picturebooks');
 await mkdir(outputDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -67,6 +67,15 @@ try {
   await page.screenshot({ path: path.join(outputDir, 'reader-portrait-ipad.png') });
   await page.locator('#open-guide').click();
   await page.screenshot({ path: path.join(outputDir, 'guide-portrait-ipad.png') });
+  for (const book of books.filter(book => book.guide === false)) {
+    for (const number of [1, book.pages.length]) {
+      await page.goto(`${baseURL}/#book/${book.id}?page=${number}`);
+      await page.locator('#page-image').evaluate(image => image.decode());
+      if (!(await page.locator('#open-guide').isHidden())) throw new Error(`Unexpected guide button: ${book.id}`);
+      if (await page.locator('#page-count').textContent() !== `${number} / ${book.pages.length}`) throw new Error(`Reader mapping: ${book.id}`);
+    }
+  }
+  if (books.some(book => book.guide === false)) await page.screenshot({ path: path.join(outputDir, 'image-only-reader-ipad.png') });
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(`iPad screenshots and live smoke flow passed: ${outputDir}`);
 } finally { await browser.close(); }

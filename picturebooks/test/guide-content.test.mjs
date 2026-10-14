@@ -3,9 +3,20 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const publicDir = new URL('../public/', import.meta.url);
 const catalog = JSON.parse(await readFile(new URL('catalog.json', publicDir)));
-test('every published image has a complete, translated guide with stable unique sentence IDs', async () => {
+const guidedBooks = catalog.books.filter(book => book.guide !== false);
+test('image-only releases explicitly opt out of guides and retain all previous guided books', async () => {
+  const imageOnly = catalog.books.filter(book => book.guide === false);
+  assert.deepEqual(imageOnly.map(book => Number(book.number)), Array.from({ length: 10 }, (_, i) => i + 19));
+  assert.equal(imageOnly.reduce((sum, book) => sum + book.pages.length, 0), 125);
+  assert.equal(catalog.books.length, 28);
+  assert.equal(catalog.books.reduce((sum, book) => sum + book.pages.length, 0), 369);
+  for (const book of imageOnly) {
+    await assert.rejects(readFile(new URL(`guides/${book.id}.json`, publicDir)), { code: 'ENOENT' });
+  }
+});
+test('every guide-enabled image has a complete, translated guide with stable unique sentence IDs', async () => {
   const ids = new Set(); let total = 0;
-  for (const book of catalog.books) {
+  for (const book of guidedBooks) {
     const guide = JSON.parse(await readFile(new URL(`guides/${book.id}.json`, publicDir)));
     assert.equal(guide.bookId, book.id); assert.equal(guide.version, 1);
     assert.equal(guide.pages.length, book.pages.length);
@@ -25,7 +36,7 @@ test('every published image has a complete, translated guide with stable unique 
       }
     }
   }
-  assert.equal(total, catalog.books.reduce((sum, book) => sum + book.pages.length, 0));
+  assert.equal(total, guidedBooks.reduce((sum, book) => sum + book.pages.length, 0));
 });
 test('new books preserve image facts and explain figurative wording without inventing outcomes', async () => {
   const get = async number => {
@@ -33,8 +44,8 @@ test('new books preserve image facts and explain figurative wording without inve
     assert.ok(book, `Published book ${number}`);
     return JSON.parse(await readFile(new URL(`guides/${book.id}.json`, publicDir)));
   };
-  assert.equal(catalog.books.length, 18);
-  assert.equal(catalog.books.reduce((sum, b) => sum + b.pages.length, 0), 244);
+  assert.equal(guidedBooks.length, 18);
+  assert.equal(guidedBooks.reduce((sum, b) => sum + b.pages.length, 0), 244);
   const fly = await get(8);
   assert.match(fly.pages[11].sections[1].note, /假裝|想像/);
   const worms = await get(10);

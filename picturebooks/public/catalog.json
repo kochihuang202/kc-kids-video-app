@@ -388,6 +388,221 @@
         "/media/books/018-i-needed-to-go/009-90d66505d3b7.webp",
         "/media/books/018-i-needed-to-go/010-b6c8f2206d5e.webp"
       ]
+    },
+    {
+      "id": "019-kitty-likes-to-sleep",
+      "number": "19",
+      "title": "Kitty Likes To Sleep",
+      "cover": "/media/books/019-kitty-likes-to-sleep/cover-30cab0b7a7e4.webp",
+      "pages": [
+        "/media/books/019-kitty-likes-to-sleep/001-30cab0b7a7e4.webp",
+        "/media/books/019-kitty-likes-to-sleep/002-b7c7d342f7c0.webp",
+        "/media/books/019-kitty-likes-to-sleep/003-b8aec58c3147.webp",
+        "/media/books/019-kitty-likes-to-sleep/004-f5196350a9e6.webp",
+        "/media/books/019-kitty-likes-to-sleep/005-c8fd13e52888.webp",
+        "/media/books/019-kitty-likes-to-sleep/006-5172c1c6a1f1.webp",
+        "/media/books/019-kitty-likes-to-sleep/007-9a5df0099af6.webp",
+        "/media/books/019-kitty-likes-to-sleep/008-a1d92a19a8d6.webp",
+        "/media/books/019-kitty-likes-to-sleep/009-6e9a5284c9ab.webp",
+        "/media/books/019-kitty-likes-to-sleep/010-269acb9d4400.webp",
+        "/media/books/019-kitty-likes-to-sleep/011-c9619641b86e.webp",
+        "/media/books/019-kitty-likes-to-sleep/012-171c7ff3f6d8.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "020-i-used-it-all-up",
+      "number": "20",
+      "title": "I Used It All Up",
+      "cover": "/media/books/020-i-used-it-all-up/cover-57fcb2130d33.webp",
+      "pages": [
+        "/media/books/020-i-used-it-all-up/001-57fcb2130d33.webp",
+        "/media/books/020-i-used-it-all-up/002-884d7e6669c1.webp",
+        "/media/books/020-i-used-it-all-up/003-35f7f64c53ad.webp",
+        "/media/books/020-i-used-it-all-up/004-d21242d38b87.webp",
+        "/media/books/020-i-used-it-all-up/005-133cd475b97a.webp",
+        "/media/books/020-i-used-it-all-up/006-db2498e15d37.webp",
+        "/media/books/020-i-used-it-all-up/007-3a72d4d7c590.webp",
+        "/media/books/020-i-used-it-all-up/008-986b8ef8e219.webp",
+        "/media/books/020-i-used-it-all-up/009-0edb9b77071c.webp",
+        "/media/books/020-i-used-it-all-up/010-19f30fc224b9.webp",
+        "/media/books/020-i-used-it-all-up/011-afc04ce2360d.webp",
+        "/media/books/020-i-used-it-all-up/012-89065348854c.webp",
+        "/media/books/020-i-used-it-all-up/013-824dd48bc9a0.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "021-i-opened-it",
+      "number": "21",
+      "title": "I Opened It",
+      "cover": "/media/books/021-i-opened-it/cover-4ef3584fa247.webp",
+      "pages": [
+        "/media/books/021-i-opened-it/001-4ef3584fa247.webp",
+        "/media/books/021-i-opened-it/002-e2c5a080bb20.webp",
+        "/media/books/021-i-opened-it/003-04a08cd535d3.webp",
+        "/media/books/021-i-opened-it/004-e2de306dfeb3.webp",
+        "/media/books/021-i-opened-it/005-2cf3cf0431d7.webp",
+        "/media/books/021-i-opened-it/006-b53b3d2cb920.webp",
+        "/media/books/021-i-opened-it/007-62097e082235.webp",
+        "/media/books/021-i-opened-it/008-a457af0e0f2f.webp",
+        "/media/books/021-i-opened-it/009-42311a25b46b.webp",
+        "/media/books/021-i-opened-it/010-6ba3b1e059a9.webp",
+        "/media/books/021-i-opened-it/011-4d8f2cb1b5a7.webp",
+        "/media/books/021-i-opened-it/012-1e25c07e4c11.webp",
+        "/media/books/021-i-opened-it/013-597602b61ea5.webp",
+        "/media/books/021-i-opened-it/014-062a3cd3f2e0.webp",
+        "/media/books/021-i-opened-it/015-42b77bfe572b.webp",
+        "/media/books/021-i-opened-it/016-5db6829b3edc.webp",
+        "/media/books/021-i-opened-it/017-35cf49c9eb89.webp",
+        "/media/books/021-i-opened-it/018-a264b0f02d6f.webp",
+        "/media/books/021-i-opened-it/019-f285e630cddd.webp",
+        "/media/books/021-i-opened-it/020-61608745b417.webp",
+        "/media/books/021-i-opened-it/021-de1ed92f9e7d.webp",
+        "/media/books/021-i-opened-it/022-330c1b8509e9.webp",
+        "/media/books/021-i-opened-it/023-2e096964298a.webp",
+        "/media/books/021-i-opened-it/024-497a44183d4b.webp",
+        "/media/books/021-i-opened-it/025-7617e16cff2b.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "022-turn-it-on",
+      "number": "22",
+      "title": "Turn It On",
+      "cover": "/media/books/022-turn-it-on/cover-bfe9eecb23c3.webp",
+      "pages": [
+        "/media/books/022-turn-it-on/001-bfe9eecb23c3.webp",
+        "/media/books/022-turn-it-on/002-d5e4bb427c3a.webp",
+        "/media/books/022-turn-it-on/003-fc2c704f5f2e.webp",
+        "/media/books/022-turn-it-on/004-38ad49f36326.webp",
+        "/media/books/022-turn-it-on/005-24ef36306653.webp",
+        "/media/books/022-turn-it-on/006-7fbda17e409f.webp",
+        "/media/books/022-turn-it-on/007-603f18d7f20b.webp",
+        "/media/books/022-turn-it-on/008-456ce90e9e5c.webp",
+        "/media/books/022-turn-it-on/009-4e1b1930d68f.webp",
+        "/media/books/022-turn-it-on/010-d9d2a9bae95f.webp",
+        "/media/books/022-turn-it-on/011-44e0d5899b4d.webp",
+        "/media/books/022-turn-it-on/012-ca3b5883174c.webp",
+        "/media/books/022-turn-it-on/013-e7b4de63dbf7.webp",
+        "/media/books/022-turn-it-on/014-5ebe9fc43247.webp",
+        "/media/books/022-turn-it-on/015-764f8bf99b26.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "023-i-won-the-race",
+      "number": "23",
+      "title": "I Won The Race",
+      "cover": "/media/books/023-i-won-the-race/cover-f59404014ccb.webp",
+      "pages": [
+        "/media/books/023-i-won-the-race/001-f59404014ccb.webp",
+        "/media/books/023-i-won-the-race/002-1bf2ccfde504.webp",
+        "/media/books/023-i-won-the-race/003-56aa81e849c3.webp",
+        "/media/books/023-i-won-the-race/004-ab4ac40ad5bb.webp",
+        "/media/books/023-i-won-the-race/005-30d4b70c24c1.webp",
+        "/media/books/023-i-won-the-race/006-ac01d482f4c7.webp",
+        "/media/books/023-i-won-the-race/007-fdd0e33ddbf0.webp",
+        "/media/books/023-i-won-the-race/008-a9b1c9b24fc1.webp",
+        "/media/books/023-i-won-the-race/009-8cb5f585fe3e.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "024-you-couldnt-catch-me",
+      "number": "24",
+      "title": "You Couldnt Catch Me",
+      "cover": "/media/books/024-you-couldnt-catch-me/cover-e2da569a1c6a.webp",
+      "pages": [
+        "/media/books/024-you-couldnt-catch-me/001-e2da569a1c6a.webp",
+        "/media/books/024-you-couldnt-catch-me/002-4b217b8fe208.webp",
+        "/media/books/024-you-couldnt-catch-me/003-0e69629183ba.webp",
+        "/media/books/024-you-couldnt-catch-me/004-d2f01b9b2ca7.webp",
+        "/media/books/024-you-couldnt-catch-me/005-fef340513ab7.webp",
+        "/media/books/024-you-couldnt-catch-me/006-a82048a2752a.webp",
+        "/media/books/024-you-couldnt-catch-me/007-898624430f35.webp",
+        "/media/books/024-you-couldnt-catch-me/008-4149b240ebfd.webp",
+        "/media/books/024-you-couldnt-catch-me/009-480b0964b071.webp",
+        "/media/books/024-you-couldnt-catch-me/010-3e5249e7f948.webp",
+        "/media/books/024-you-couldnt-catch-me/011-6c287f9cccab.webp",
+        "/media/books/024-you-couldnt-catch-me/012-b081eae9b307.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "025-move-the-box",
+      "number": "25",
+      "title": "Move The Box",
+      "cover": "/media/books/025-move-the-box/cover-02469d841074.webp",
+      "pages": [
+        "/media/books/025-move-the-box/001-02469d841074.webp",
+        "/media/books/025-move-the-box/002-649f953f4a9b.webp",
+        "/media/books/025-move-the-box/003-667eedea2a35.webp",
+        "/media/books/025-move-the-box/004-ca29885ba918.webp",
+        "/media/books/025-move-the-box/005-159c9e9d0d94.webp",
+        "/media/books/025-move-the-box/006-57e10db419e6.webp",
+        "/media/books/025-move-the-box/007-023973edc845.webp",
+        "/media/books/025-move-the-box/008-3856401691a5.webp",
+        "/media/books/025-move-the-box/009-2ff0ed60a2bb.webp",
+        "/media/books/025-move-the-box/010-b47f1ee49c3b.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "026-hold-my-hand",
+      "number": "26",
+      "title": "Hold My Hand",
+      "cover": "/media/books/026-hold-my-hand/cover-463a2510a040.webp",
+      "pages": [
+        "/media/books/026-hold-my-hand/001-463a2510a040.webp",
+        "/media/books/026-hold-my-hand/002-d7497f70de76.webp",
+        "/media/books/026-hold-my-hand/003-a18760e160c3.webp",
+        "/media/books/026-hold-my-hand/004-d4d8aa439cf2.webp",
+        "/media/books/026-hold-my-hand/005-a5714f794309.webp",
+        "/media/books/026-hold-my-hand/006-22a33cdc9bae.webp",
+        "/media/books/026-hold-my-hand/007-216e023345f5.webp",
+        "/media/books/026-hold-my-hand/008-f576de4b1539.webp",
+        "/media/books/026-hold-my-hand/009-b997330d70ac.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "027-going-to-the-beach",
+      "number": "27",
+      "title": "Going To The Beach",
+      "cover": "/media/books/027-going-to-the-beach/cover-125b49e6eead.webp",
+      "pages": [
+        "/media/books/027-going-to-the-beach/001-125b49e6eead.webp",
+        "/media/books/027-going-to-the-beach/002-baf0ab291537.webp",
+        "/media/books/027-going-to-the-beach/003-ef246b758c62.webp",
+        "/media/books/027-going-to-the-beach/004-98bcb3b31492.webp",
+        "/media/books/027-going-to-the-beach/005-2690a8e77263.webp",
+        "/media/books/027-going-to-the-beach/006-85634ac973cd.webp",
+        "/media/books/027-going-to-the-beach/007-7840f885fa92.webp",
+        "/media/books/027-going-to-the-beach/008-12d895dd7d23.webp",
+        "/media/books/027-going-to-the-beach/009-daab655de88d.webp",
+        "/media/books/027-going-to-the-beach/010-b551be011313.webp",
+        "/media/books/027-going-to-the-beach/011-1b31b60e6b2c.webp"
+      ],
+      "guide": false
+    },
+    {
+      "id": "028-wakey-wakey",
+      "number": "28",
+      "title": "Wakey Wakey",
+      "cover": "/media/books/028-wakey-wakey/cover-0913cd01af70.webp",
+      "pages": [
+        "/media/books/028-wakey-wakey/001-0913cd01af70.webp",
+        "/media/books/028-wakey-wakey/002-5bc4cf4654cd.webp",
+        "/media/books/028-wakey-wakey/003-c93474a5ab0c.webp",
+        "/media/books/028-wakey-wakey/004-ce62ec5848f4.webp",
+        "/media/books/028-wakey-wakey/005-0121c3cb511d.webp",
+        "/media/books/028-wakey-wakey/006-160c812b9d2d.webp",
+        "/media/books/028-wakey-wakey/007-fd722ad90dac.webp",
+        "/media/books/028-wakey-wakey/008-ccfcf86754f6.webp",
+        "/media/books/028-wakey-wakey/009-f4db8f4428fe.webp"
+      ],
+      "guide": false
     }
   ]
 }

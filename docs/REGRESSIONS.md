@@ -330,3 +330,11 @@ Only important bugs that have occurred in the real app belong here.
 - Root cause: The original 0.8 setting offered only a modest separation from 1.0. Automated tests verified the API value, not perceptual audibility on the user's device.
 - Intended behavior update: In response to the user's 2026-10-11 report, slow-rate expectations change from 0.8 to 0.6; normal remains 1.0 and selecting a speed never starts speech automatically.
 - Regression test: `picturebooks/test/guide.spec.ts` (`legacy preference migrates to a clearly slower rate and the same sentence can be compared`), plus existing speech switching, persistence and error/stop flows in Chromium/WebKit iPad layouts.
+
+## REG-042 — Image-only picturebooks show a guide button despite having no guide
+
+- Reproduction: Load a catalog book explicitly marked `guide: false`, open it, turn a page and reload.
+- Correct behavior: Image-only books hide the guide button and preserve ordinary reading/progress; switching to an existing guided book restores the button.
+- Root cause: The reader previously assumed every book offered a guide, so image-only books exposed a button that would load missing content.
+- Intended behavior update: The user requested new books without guides on 2026-10-12 and confirmed uploading new source images on 2026-10-14. Guide coverage tests now apply to guide-enabled books; the original 18 books/244 guided pages remain required. New books 19–28 are explicitly image-only, not silently missing guides.
+- Regression test: `picturebooks/test/reading.spec.ts` (`image-only books hide the guide, turn pages and resume while existing guides remain available`), with all-book matching in `guide.spec.ts` and explicit release coverage in `guide-content.test.mjs`.

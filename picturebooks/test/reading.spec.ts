@@ -9,6 +9,25 @@ async function openFirst(page) {
   await expect(page.locator('#page-image')).toHaveJSProperty('complete', true);
 }
 
+test('image-only books hide the guide, turn pages and resume while existing guides remain available', async ({ page }) => {
+  const imageOnly = { ...catalog.books[0], id: 'test-image-only', title: 'New Picture Story', number: '99', pages: catalog.books[0].pages.slice(0, 2), guide: false };
+  await page.route('**/catalog.json', route => route.fulfill({ json: { ...catalog, books: [...catalog.books, imageOnly] } }));
+  await page.goto('/');
+  await page.getByRole('button', { name: '閱讀 New Picture Story', exact: true }).click();
+  await expect(page.locator('#page-image')).toBeVisible();
+  await expect(page.locator('#open-guide')).toBeHidden();
+  await page.getByRole('button', { name: '下一頁', exact: true }).click();
+  await expect(page.locator('#page-count')).toHaveText('2 / 2');
+  await page.reload();
+  await expect(page.locator('#page-count')).toHaveText('2 / 2');
+  await expect(page.locator('#open-guide')).toBeHidden();
+  await page.getByRole('button', { name: '書櫃', exact: true }).click();
+  await page.getByRole('button', { name: '閱讀 I Took Them All', exact: true }).click();
+  await expect(page.locator('#open-guide')).toBeVisible();
+  await page.locator('#open-guide').click();
+  await expect(page.locator('.english-phrase').first()).toBeVisible();
+});
+
 test('mother and daughter can choose, turn pages and resume after reopening', async ({ page }) => {
   await openFirst(page);
   await expect(page.locator('#page-count')).toHaveText('1 / 22');
