@@ -7,15 +7,20 @@ async (sessionPage) => {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:4178/');
   await page.setViewportSize({width:820,height:1180});
+  check(await page.locator('.character-cover img').evaluate(img=>img.complete&&img.naturalWidth===640),'supplied character picture loads on the cover');
+  await page.screenshot({path:'output/playwright/cover-portrait.png'});
   await page.getByRole('button',{name:'一起讀故事',exact:true}).click();
   await page.locator('.prose').waitFor();
-  check(await page.locator('.prose p').count()===8,'chapter has continuous novel paragraphs');
+  const story=await page.evaluate(async()=> (await fetch('story.json')).json());
+  check(await page.locator('.prose p').count()===story.chapters[0].paragraphs.length,'chapter has all source paragraphs');
   check(await page.locator('.prose rt').count()>600,'story phonetics enabled by default');
   await page.getByRole('button',{name:'上一章',exact:true}).isDisabled().then(v=>check(v,'first chapter previous button disabled'));
-  const story=await page.evaluate(async()=> (await fetch('story.json')).json());
-  for(let chapter=0;chapter<8;chapter++){
+  for(let chapter=0;chapter<story.chapters.length;chapter++){
     if(chapter){await page.getByRole('button',{name:'繼續下一章',exact:true}).click();}
     check((await plain(page.locator('#chapter-title')))===story.chapters[chapter].title,`chapter ${chapter+1} opens in order`);
+    const actual=await page.locator('.prose').evaluate(el=>{const copy=el.cloneNode(true);copy.querySelectorAll('rt').forEach(n=>n.remove());return [...copy.children].map(n=>n.textContent);});
+    const expected=story.chapters[chapter].blocks.map(b=>b.text.replace(/\*\*/g,''));
+    check(JSON.stringify(actual)===JSON.stringify(expected),`chapter ${chapter+1} preserves every source heading, dialogue and question`);
     for(let branch=0;branch<4;branch++){
       await page.locator(`[data-choice="${branch}"]`).click();
       check(await page.locator(`[data-choice="${branch}"]`).getAttribute('aria-pressed')==='true',`chapter ${chapter+1} choice ${branch+1} selected`);
@@ -23,7 +28,7 @@ async (sessionPage) => {
       const expected=branch===3?story.chapters[chapter].chat.unsure:story.chapters[chapter].chat.choices[branch].reply;
       check(text===expected,`chapter ${chapter+1} choice ${branch+1} receives its own response`);
     }
-    if(chapter===5){await page.locator('#chat').screenshot({path:'output/playwright/conversation.png'});}
+    if(chapter===3){await page.locator('#chat').screenshot({path:'output/playwright/conversation.png'});}
   }
   await page.getByRole('button',{name:'先繼續讀故事',exact:true}).click();
   check(await page.getByRole('button',{name:'讀完了，回到封面',exact:true}).evaluate(el=>document.activeElement===el),'conversation skip reaches story continuation');
@@ -49,14 +54,14 @@ async (sessionPage) => {
   }
   await page.setViewportSize({width:820,height:1180});
   await page.getByRole('button',{name:'故事目錄',exact:true}).click();
-  await page.getByRole('dialog').getByRole('button',{name:'婷婷說的話',exact:true}).click();
-  check((await plain(page.locator('#chapter-title')))===story.chapters[5].title,'table of contents opens a selected chapter');
+  await page.getByRole('dialog').getByRole('button',{name:story.chapters[3].title,exact:true}).click();
+  check((await plain(page.locator('#chapter-title')))===story.chapters[3].title,'table of contents opens a selected chapter');
   check(await page.locator('[data-choice="3"]').getAttribute('aria-pressed')==='true','earlier conversation choice persists when returning');
   await page.evaluate(()=>window.scrollTo(0,1250));await page.waitForTimeout(300);
-  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v1')));
-  check(saved.chapter===5&&saved.positions[5]>1200&&saved.size===2&&saved.bopo,'chapter, position and settings saved');
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v2')));
+  check(saved.chapter===3&&saved.positions[3]>1200&&saved.size===2&&saved.bopo,'chapter, position and settings saved');
   await page.reload();
-  await page.getByRole('button',{name:'接著讀・婷婷說的話',exact:true}).click();
+  await page.getByRole('button',{name:'接著讀・'+story.chapters[3].title,exact:true}).click();
   await page.waitForTimeout(100);
   check(await page.evaluate(()=>Math.abs(scrollY-1250)<8),'reopening resumes the saved reading position');
   check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','reading settings survive reopening');
@@ -67,10 +72,20 @@ async (sessionPage) => {
   await blocked.getByRole('button',{name:'一起讀故事',exact:true}).click();
   await blocked.getByRole('button',{name:'我還沒想好',exact:true}).click();
   check(await blocked.locator('#reply').isVisible(),'conversation works without browser storage');
-  for(let i=0;i<7;i++)await blocked.getByRole('button',{name:'繼續下一章',exact:true}).click();
+  for(let i=0;i<story.chapters.length-1;i++)await blocked.getByRole('button',{name:'繼續下一章',exact:true}).click();
   await blocked.getByRole('button',{name:'讀完了，回到封面',exact:true}).click();
   check(await blocked.getByRole('button',{name:'從第一章重讀',exact:true}).isVisible(),'whole book remains readable when storage is blocked');
   await isolated.close();
+  const migrationContext=await page.context().browser().newContext({viewport:{width:820,height:1180}});
+  const migration=await migrationContext.newPage();
+  await migration.addInitScript(()=>localStorage.setItem('shimajiro-novel:v1',JSON.stringify({chapter:7,started:true,positions:{7:6500},choices:{7:2},bopo:false,size:1})));
+  await migration.goto('http://127.0.0.1:4178/');
+  await migration.getByRole('button',{name:'一起讀故事',exact:true}).click();
+  check((await plain(migration.locator('#chapter-title')))===story.chapters[0].title,'old eight-chapter position never opens the wrong new chapter');
+  check(await migration.locator('#bopo-toggle').getAttribute('aria-pressed')==='false','old annotation preference survives edition replacement');
+  check(await migration.locator('[data-size="1"]').getAttribute('aria-pressed')==='true','old font preference survives edition replacement');
+  check(await migration.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v2')).choices[0]===undefined),'old conversation choices are not reassigned to new chapters');
+  await migrationContext.close();
   check(errors.length===0,`no uncaught browser errors (${errors.length})`);
   await context.close();
   return {passed:checks.length,checks};

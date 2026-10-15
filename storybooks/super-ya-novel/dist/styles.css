@@ -10,3 +10,9 @@ ruby{display:inline-flex;align-items:center;vertical-align:middle;white-space:no
 ruby rt{font-size:max(9px,.37em)}
 .primary rt,.size-buttons button[aria-pressed="true"] rt{color:#fff6dc}
 .prose{font-weight:500}
+.character-cover{margin:0;padding:10px 0 10px 16px;align-self:center}
+.character-cover img{display:block;width:100%;height:auto;aspect-ratio:640/359;border-radius:24px;border:6px solid #fffdf8;box-shadow:0 12px 28px #42664f20}
+.character-cover figcaption{text-align:center;color:var(--green);font-size:17px;line-height:2.3;margin:18px 0 0}
+.prose .section-heading{font-size:1.05em;color:var(--green);line-height:2.2;margin:2em 0 1em;padding-top:.5em;border-top:1px solid var(--line);scroll-margin-top:180px}
+.prose strong{font-weight:800}
+@media(max-width:600px){.character-cover{padding:0}.character-cover figcaption{font-size:15px;margin-top:12px}.character-cover img{border-width:4px;border-radius:18px}}

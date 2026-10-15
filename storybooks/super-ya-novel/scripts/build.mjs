@@ -10,8 +10,8 @@ catch { ({pinyin} = require(path.join(root,'.tools/node_modules/pinyin-pro'))); 
 const read = name => JSON.parse(readFileSync(path.join(root,'content',name),'utf8'));
 const story=read('story.json'),ui=read('ui.json'),overrides=read('readings-overrides.json');
 const strings = new Set();
-function collect(v){if(typeof v==='string'){if(/\p{Script=Han}/u.test(v)) strings.add(v);}else if(v&&typeof v==='object')Object.values(v).forEach(collect);}
-collect(story);collect(ui);
+function collect(v){if(typeof v==='string'){if(/\p{Script=Han}/u.test(v)){strings.add(v);if(v.includes('**'))for(const part of v.split(/(\*\*[^*]+\*\*)/g)){const text=part.startsWith('**')?part.slice(2,-2):part;if(/\p{Script=Han}/u.test(text))strings.add(text);}}}else if(v&&typeof v==='object')Object.values(v).forEach(collect);}
+collect(story);collect(ui);collect(read('reading-fixtures.json'));
 ['飛吧！','一起飛進故事，也看看心裡的小風景。',`${ui.bopo}：${ui.on}`,`${ui.bopo}：${ui.off}`,...story.chapters.map(c=>`${ui.resume}・${c.title}`)].forEach(s=>strings.add(s));
 const initials={b:'ㄅ',p:'ㄆ',m:'ㄇ',f:'ㄈ',d:'ㄉ',t:'ㄊ',n:'ㄋ',l:'ㄌ',g:'ㄍ',k:'ㄎ',h:'ㄏ',j:'ㄐ',q:'ㄑ',x:'ㄒ',zh:'ㄓ',ch:'ㄔ',sh:'ㄕ',r:'ㄖ',z:'ㄗ',c:'ㄘ',s:'ㄙ'};
 const finals={a:'ㄚ',o:'ㄛ',e:'ㄜ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',i:'ㄧ',ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',u:'ㄨ',ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uang:'ㄨㄤ',ong:'ㄨㄥ',ueng:'ㄨㄥ',v:'ㄩ',ve:'ㄩㄝ',van:'ㄩㄢ',vn:'ㄩㄣ',ü:'ㄩ',üe:'ㄩㄝ',üan:'ㄩㄢ',ün:'ㄩㄣ',ê:'ㄝ'};
@@ -48,6 +48,6 @@ cpSync(path.join(root,'public'),path.join(root,'dist'),{recursive:true});
 for(const [name,value] of Object.entries({'story.json':story,'ui.json':ui,'readings.json':readings}))writeFileSync(path.join(root,'dist',name),JSON.stringify(value));
 mkdirSync(path.join(root,'output'),{recursive:true});
 const audit=[];
-for(const c of story.chapters){audit.push(`# ${c.title}`);for(const text of [...c.paragraphs,c.chat.intro,c.chat.question,...c.chat.choices.flatMap(ch=>[ch.label,ch.reply]),c.chat.unsure])audit.push(Array.from(text).map((ch,i)=>readings[text][i]?`${ch}(${readings[text][i]})`:ch).join(''));}
+for(const c of story.chapters){audit.push(`# ${c.title}`);for(const text of [...(c.blocks?c.blocks.map(b=>b.text):c.paragraphs),c.chat.intro,c.chat.question,...c.chat.choices.flatMap(ch=>[ch.label,ch.reply]),c.chat.unsure])audit.push(Array.from(text).map((ch,i)=>readings[text][i]?`${ch}(${readings[text][i]})`:ch).join(''));}
 writeFileSync(path.join(root,'output','annotation-review.txt'),audit.join('\n\n'));
 console.log(`Built ${story.chapters.length} chapters, ${strings.size} annotated strings; ${story.chapters.flatMap(c=>c.paragraphs).join('').match(/\p{Script=Han}/gu).length} story characters.`);

@@ -1,4 +1,5 @@
-const KEY = 'shimajiro-novel:v1';
+const KEY = 'shimajiro-novel:v2';
+const LEGACY_KEY = 'shimajiro-novel:v1';
 const app = document.querySelector('#app');
 let story, ui, readings, state, saveTimer, scrollFrame, storageAvailable = true;
 const defaults = () => ({ chapter: 0, started: false, bopo: true, size: 0, positions: {}, choices: {}, finished: false });
@@ -16,16 +17,29 @@ function ruby(text) {
 function button(label, action, cls = '', extra = '') {
   return `<button type="button" class="${cls}" data-action="${action}" aria-label="${escape(label)}" ${extra}>${ruby(label)}</button>`;
 }
+function rich(text) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map(part=>part.startsWith('**')&&part.endsWith('**')?`<strong>${ruby(part.slice(2,-2))}</strong>`:ruby(part)).join('');
+}
+function bodyMarkup(c) {
+  let paragraph=0;
+  return (c.blocks||c.paragraphs.map(text=>({type:'paragraph',text}))).map((block,index)=>block.type==='heading'?`<h2 class="section-heading" id="section-${index}">${rich(block.text)}</h2>`:`<p id="paragraph-${paragraph++}">${rich(block.text)}</p>`).join('');
+}
 function loadState() {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) || 'null');
+    let v = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!v) {
+      const legacy=JSON.parse(localStorage.getItem(LEGACY_KEY)||'null');
+      // The five documents have different chapter boundaries. Keep preferences,
+      // but never apply the old edition's chapter, scroll position or responses.
+      if(legacy&&typeof legacy==='object')v={bopo:legacy.bopo,size:legacy.size};
+    }
     if (!v || typeof v !== 'object' || Array.isArray(v)) return defaults();
     const next = defaults();
-    next.chapter = Number.isInteger(v.chapter) && v.chapter >= 0 && v.chapter < 8 ? v.chapter : 0;
+    next.chapter = Number.isInteger(v.chapter) && v.chapter >= 0 && v.chapter < story.chapters.length ? v.chapter : 0;
     next.started = v.started === true; next.finished = v.finished === true;
     next.bopo = v.bopo !== false;
     next.size = [0, 1, 2].includes(v.size) ? v.size : 0;
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < story.chapters.length; i++) {
       if (Number.isFinite(v.positions?.[i]) && v.positions[i] >= 0) next.positions[i] = v.positions[i];
       if ([0,1,2,3].includes(v.choices?.[i])) next.choices[i] = v.choices[i];
     }
@@ -67,9 +81,9 @@ function home() {
   document.body.dataset.view = 'home';
   settings();
   app.innerHTML = `<div class="shell"><header class="masthead"><span class="wordmark">${ruby(ui.subtitle || story.subtitle)}</span><span class="book-number">STORYBOOK / 01</span></header>
-    <main><section class="cover" aria-labelledby="book-title"><div><p class="eyebrow">${ruby(ui.bookLabel)}</p><h1 id="book-title">${ruby('飛吧！')}<br><span class="latin">SUPER YA！</span></h1><p class="cover-copy">${ruby('一起飛進故事，也看看心裡的小風景。')}</p><div class="cover-actions">${button(state.started ? `${ui.resume}・${story.chapters[state.chapter].title}` : ui.start, 'start', 'primary')}${state.started ? button(ui.reread,'reread','text-button') : ''}</div></div><div class="cover-art">${art('flowers',true)}<p class="art-caption">A little journey, together.</p></div></section>
+    <main><section class="cover" aria-labelledby="book-title"><div><p class="eyebrow">${ruby(ui.bookLabel)}</p><h1 id="book-title">${ruby('飛吧！')}<br><span class="latin">SUPER YA！</span></h1><p class="cover-copy">${ruby('一起飛進故事，也看看心裡的小風景。')}</p><div class="cover-actions">${button(state.started ? `${ui.resume}・${story.chapters[state.chapter].title}` : ui.start, 'start', 'primary')}${state.started ? button(ui.reread,'reread','text-button') : ''}</div></div><figure class="cover-art character-cover"><img src="assets/shimajiro-friends.png" alt="巧虎和朋友們在草叢間，一起望向前方。" width="640" height="359" fetchpriority="high"><figcaption>${ruby(ui.pictureCaption)}</figcaption></figure></section>
     <section class="intro-guide" aria-label="巧虎的邀請"><span class="avatar" aria-hidden="true">🐯</span><div><span class="label">${ruby(ui.guideTag)}</span><p>${ruby(story.welcome)}</p></div></section>
-    <section aria-labelledby="contents-title"><div class="toc-heading"><h2 id="contents-title">${ruby(ui.toc)}</h2></div>${toc()}</section></main><footer class="fineprint">${escape(story.note)}<br>閱讀進度只留在目前瀏覽器。插圖為本書原創示意，非動畫畫面。<br>非官方延伸閱讀作品。</footer></div>`;
+    <section aria-labelledby="contents-title"><div class="toc-heading"><h2 id="contents-title">${ruby(ui.toc)}</h2></div>${toc()}</section></main><footer class="fineprint">${escape(story.note)}<br>閱讀進度只留在目前瀏覽器。封面圖片由使用者提供，章節插圖為示意。<br>非官方延伸閱讀作品。</footer></div>`;
   if (!storageAvailable) showStorageNotice();
 }
 function chatMarkup(c) {
@@ -80,10 +94,9 @@ function reader(index, restore = true, focus = true) {
   document.body.dataset.view = 'reader'; state.chapter = index; state.started = true; settings();
   const c = story.chapters[index];
   app.innerHTML = `<header class="reader-header"><div class="reader-bar">${button(ui.toc,'toc')}<span class="reader-brand">${ruby(story.subtitle)}</span><div class="tools">${button(`${ui.bopo}：${state.bopo?ui.on:ui.off}`,'bopo','',`id="bopo-toggle" aria-pressed="${state.bopo}"`)}${button(ui.back,'home','text-button')}</div></div>
-    <div class="reading-settings"><label>${ruby(ui.size)}</label><div class="size-buttons" role="group" aria-label="字的大小">${[ui.small,ui.medium,ui.large].map((v,i)=>button(v,'size','',`data-size="${i}" aria-pressed="${state.size===i}"`)).join('')}</div><span class="book-number" style="margin-left:auto">0${index+1} / 08</span></div><div class="progress-track" aria-hidden="true"><div class="progress-fill" style="width:${index/8*100}%"></div></div></header>
-    <main class="reader"><header class="chapter-heading"><p class="chapter-kicker">CHAPTER 0${index+1}</p><h1 tabindex="-1" id="chapter-title">${ruby(c.title)}</h1><div class="chapter-art">${art(c.scene)}</div><p class="story-role">${ruby(ui.storyTag)}</p></header><article class="prose" aria-labelledby="chapter-title">${c.paragraphs.map((p,i)=>`<p id="paragraph-${i}">${ruby(p)}</p>`).join('')}</article><div class="chapter-end" aria-hidden="true">✦ · ✦</div>${chatMarkup(c)}
-    ${index===7?`<section class="ending"><h2>${ruby(ui.endTitle)}</h2><p>${ruby(ui.endText)}</p></section>`:''}
-    <nav class="chapter-nav" aria-label="章節導覽">${button(ui.previous,'previous','',index===0?'disabled':'')}${button(index===7?ui.finish:ui.next,index===7?'finish':'next','primary')}</nav><p class="rest-note">${ruby(ui.rest)}</p></main><footer class="reader-footer">${escape(story.note)}</footer><dialog id="contents"><div class="dialog-top"><h2>${ruby(ui.toc)}</h2>${button(ui.close,'close-toc')}</div>${toc()}</dialog>`;
+    <div class="reading-settings"><label>${ruby(ui.size)}</label><div class="size-buttons" role="group" aria-label="字的大小">${[ui.small,ui.medium,ui.large].map((v,i)=>button(v,'size','',`data-size="${i}" aria-pressed="${state.size===i}"`)).join('')}</div><span class="book-number" style="margin-left:auto">0${index+1} / ${String(story.chapters.length).padStart(2,'0')}</span></div><div class="progress-track" aria-hidden="true"><div class="progress-fill" style="width:${index/story.chapters.length*100}%"></div></div></header>
+    <main class="reader"><header class="chapter-heading"><p class="chapter-kicker">CHAPTER 0${index+1}</p><h1 tabindex="-1" id="chapter-title">${ruby(c.title)}</h1><div class="chapter-art">${art(c.scene)}</div><p class="story-role">${ruby(ui.storyTag)}</p></header><article class="prose" aria-labelledby="chapter-title">${bodyMarkup(c)}</article><div class="chapter-end" aria-hidden="true">✦ · ✦</div>${chatMarkup(c)}
+    <nav class="chapter-nav" aria-label="章節導覽">${button(ui.previous,'previous','',index===0?'disabled':'')}${button(index===story.chapters.length-1?ui.finish:ui.next,index===story.chapters.length-1?'finish':'next','primary')}</nav><p class="rest-note">${ruby(ui.rest)}</p></main><footer class="reader-footer">${escape(story.note)}</footer><dialog id="contents"><div class="dialog-top"><h2>${ruby(ui.toc)}</h2>${button(ui.close,'close-toc')}</div>${toc()}</dialog>`;
   renderReply(false); save();
   if (!storageAvailable) showStorageNotice();
   requestAnimationFrame(() => {
@@ -104,11 +117,11 @@ function remember() {
   if (document.body.dataset.view==='reader') state.positions[state.chapter] = window.scrollY;
   save();
 }
-function go(index) { remember(); reader(Math.max(0,Math.min(7,index))); }
+function go(index) { remember(); reader(Math.max(0,Math.min(story.chapters.length-1,index))); }
 function updateProgress() {
   const fill = document.querySelector('.progress-fill'); if (!fill) return;
   const fraction = Math.min(1, window.scrollY / Math.max(1,document.documentElement.scrollHeight-innerHeight));
-  fill.style.width = ((state.chapter+fraction)/8*100)+'%';
+  fill.style.width = ((state.chapter+fraction)/story.chapters.length*100)+'%';
 }
 function resizeReading(action, value) {
   const anchor = [...document.querySelectorAll('.prose p,.chat,.ending')].find(el=>el.getBoundingClientRect().bottom>170);

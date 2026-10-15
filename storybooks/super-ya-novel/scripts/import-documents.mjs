@@ -1,0 +1,28 @@
+import {readFileSync,writeFileSync,readdirSync,mkdirSync,copyFileSync,existsSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const snapshot=path.join(root,'content/source');
+const source=process.argv[2]?path.resolve(process.argv[2]):snapshot;
+const files=readdirSync(source).filter(f=>/^0[1-5]_.+\.md$/.test(f)).sort();
+if(files.length!==5)throw new Error('Expected exactly the five supplied chapter documents.');
+mkdirSync(snapshot,{recursive:true});
+const companion=JSON.parse(readFileSync(path.join(root,'content/companion.json'),'utf8'));
+const scenes=['workshop','house','ocean','flowers','sunset'];
+const ids=['inventors','dollhouse','takeoff','meadow','grownups'];
+const chapters=files.map((file,index)=>{
+  const bytes=readFileSync(path.join(source,file));
+  const markdown=bytes.toString('utf8').replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').trim();
+  const header=markdown.match(/^(# [^\n]+)\n(## [^\n]+)\n\n([\s\S]*)$/);
+  if(!header)throw new Error(`Unexpected document layout: ${file}`);
+  const [,bookHeading,chapterHeading,bodyText]=header;
+  const body=bodyText.split(/\n\s*\n/);
+  if(!/^# /.test(bookHeading)||!/^## 第.+章：/.test(chapterHeading))throw new Error(`Unexpected chapter header: ${file}`);
+  const blocks=body.map(text=>text.startsWith('### ')?{type:'heading',text:text.slice(4)}:{type:'paragraph',text});
+  if(path.resolve(source)!==path.resolve(snapshot))copyFileSync(path.join(source,file),path.join(snapshot,file));
+  return {id:ids[index],title:chapterHeading.replace(/^## 第.+?章：/,''),scene:scenes[index],source:{file,sha256:createHash('sha256').update(bytes).digest('hex'),bookHeading,chapterHeading},blocks,paragraphs:blocks.filter(b=>b.type==='paragraph').map(b=>b.text),chat:companion[index]};
+});
+const story={title:'飛吧！SUPER YA！',subtitle:'巧虎陪你讀',edition:'five-documents-v2',note:'五章延伸閱讀故事。場景、對話與思考提問為延伸改寫，並非動畫逐字對白。',welcome:chapters[0].paragraphs[0].replace(/^「|」$/g,'')+' '+chapters[0].paragraphs[3].replace(/^「|」$/g,''),chapters};
+writeFileSync(path.join(root,'content/story.json'),JSON.stringify(story,null,2)+'\n');
+console.log(JSON.stringify({chapters:chapters.length,paragraphs:chapters.map(c=>c.paragraphs.length),characters:chapters.flatMap(c=>c.blocks.map(b=>b.text)).join('').match(/\p{Script=Han}/gu).length}));
