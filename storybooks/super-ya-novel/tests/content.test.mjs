@@ -2,19 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 const story = JSON.parse(readFileSync(new URL('../content/story.json', import.meta.url)));
-test('five complete source chapters and complete conversational branches', () => {
+test('five complete source chapters without added conversational branches', () => {
   assert.equal(story.chapters.length, 5);
   const count = story.chapters.flatMap(c => c.paragraphs).join('').match(/\p{Script=Han}/gu).length;
   assert.ok(count >= 14000 && count <= 16000, `actual length ${count}`);
   assert.equal(new Set(story.chapters.map(c => c.id)).size, 5);
   for (const c of story.chapters) {
     assert.ok(c.paragraphs.length >= 6);
-    assert.equal(c.chat.choices.length, 3);
-    assert.ok(c.chat.unsure.length > 15);
-    for (const b of c.chat.choices) assert.ok(b.label && b.reply.length > 25);
+    assert.equal(c.chat,undefined);
   }
 });
-test('reader delivers complete local app and accessible conversation region', () => {
+test('reader delivers complete local app and accessible reading controls', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
   assert.match(html, /lang="zh-Hant"/);
   assert.match(html, /app\.js/);
@@ -22,7 +20,7 @@ test('reader delivers complete local app and accessible conversation region', ()
   const js = readFileSync(new URL('../dist/app.js', import.meta.url), 'utf8');
   assert.match(js, /aria-pressed/);
   assert.match(js, /localStorage/);
-  assert.equal(JSON.parse(readFileSync(new URL('../dist/ui.json',import.meta.url))).unsure,'我還沒想好');
+  assert.equal(JSON.parse(readFileSync(new URL('../dist/ui.json',import.meta.url))).mapTitle,'一起回想這一章');
 });
 test('every Chinese character in delivered reading text has an aligned phonetic reading',()=>{
   const readings=JSON.parse(readFileSync(new URL('../dist/readings.json',import.meta.url)));

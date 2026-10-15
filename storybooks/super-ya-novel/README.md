@@ -2,7 +2,9 @@
 
 [私人閱讀網站](https://shimajiro-super-ya-reading.fxn-e-bg-5664.chatgpt.site)
 
-目前內容是使用者提供的五章 Markdown 全文，取代舊八章版本。五章正文有 642 個段落，連同小標題共 14,881 個中文字；不含注音、標點、英文與章末補充陪聊。保留原稿的第一人稱敘事、對話、提問、粗體及小標題。封面使用使用者提供的巧虎圖片，未修改原圖。
+目前內容是使用者提供的五章 Markdown 全文。正文有 642 個段落，連同小標題共 14,881 個中文字，不含注音、標點與英文。保留原稿的第一人稱敘事、對話、提問、粗體及小標題；已移除額外的章末選項陪聊。
+
+陪讀巧虎直接對孩子說話的段落採頭像、細直線與引用排版，搭配少量重點粗體。五章各有不同的動畫開場截圖，內文另有對應情節的畫面。章末可收合的故事地圖只顯示已讀事件，可點圖返回原段落；封面提供「上次讀到這裡」提醒。全文連續閱讀，沒有改成一句一張卡。
 
 ## 本機閱讀與建置
 
@@ -21,20 +23,23 @@ npm run dev
 
 - content/source/：五份使用者原始文件的完整副本，保留位元組內容。
 - scripts/import-documents.mjs：由這五份文件產生章節，不改寫、不摘要。`node scripts/import-documents.mjs` 可從副本重新匯入；另給資料夾參數則從該資料夾匯入。
-- content/story.json：章節、Markdown 區塊、來源雜湊與補充陪聊。文件中的提問保留在正文；原有章末選項功能另以五組補充陪聊保留。
-- content/companion.json：五組章末陪聊，共 20 個預寫回應（含「我還沒想好」），孩子可略過。
+- content/story.json：章節、原文 Markdown 區塊與來源雜湊。原稿內的提問全部保留。
+- content/presentation.json：逐章人工辨認的陪讀段落範圍、粗體詞句、配圖位置與故事地圖事件。這些設定不改寫原文。
+- content/image-sources.json：使用者影片的擷取秒數、頭像裁切範圍與來源說明。
 - content/ui.json：操作文字。
 - content/readings-overrides.json：臺灣字音、輕聲及多音字校訂。
 - content/reading-fixtures.json：歷史字音測試用詞。即使原稿換版後不再出現該詞，也保留驗證。
-- public/：網站程式、樣式與封面圖。
+- public/：網站程式、樣式、原封面、16 張本集截圖與真實巧虎頭像。影片不包含在網站裡。
 
 修改原稿後先 import，再 build。build 會以鎖定版本的 pinyin-pro 產生初稿，套用校訂並輸出正文與獨立注音資料。output/annotation-review.txt 是逐字校閱稿，不納入發布。
+
+重新擷取圖片：`node scripts/extract-stills.mjs <本集影片完整路徑> <ffmpeg執行檔完整路徑>`。圖片維持 16:9，不移除字幕；頭像另行裁切。延伸小說有補寫情節，配圖只呈現相同場景，不宣稱動畫演出了每個補寫細節。封面保持使用者提供的原圖。
 
 注音採本調標記，「一」「不」不另標口語變調。校訂參考教育部辭典，例如：[突然](https://dict.revised.moe.edu.tw/dictView.jsp?ID=54030&la=1&powerMode=0)、[可惜](https://dict.concised.moe.edu.tw/dictView.jsp?ID=17998&la=0&powerMode=0)、[心血](https://dict.concised.moe.edu.tw/dictView.jsp?ID=27647&powerMode=1&q=703)、[研究](https://dict.concised.moe.edu.tw/dictView.jsp?ID=41673&la=0&powerMode=0)。新增內容仍須重新校對。
 
 ## 閱讀紀錄
 
-章節、捲動位置、選項和閱讀設定只存在目前瀏覽器的 shimajiro-novel:v2，不會上傳。舊八章版的 v1 紀錄保留；第一次讀新版時只沿用注音與字級設定，章節、捲動位置和選項重新開始，避免不同章節邊界造成錯位。
+章節、段落定位、已讀地圖事件與閱讀設定只存在目前瀏覽器的 shimajiro-novel:v2，不會上傳。調整字級、注音與視窗尺寸時，以段落相對工具列的位置保持閱讀定位。五章舊版的章節、字級、注音及像素位置可沿用，接著會改用段落定位；舊選項不再載入。八章版 v1 只沿用字級與注音偏好，避免不同章節邊界造成錯位。儲存被封鎖時仍能讀完全書，地圖在本次開啟期間有效。
 
 ## 驗證
 
@@ -45,6 +50,6 @@ npx --yes --package @playwright/cli playwright-cli -s=novel open http://127.0.0.
 npx --yes --package @playwright/cli playwright-cli -s=novel run-code --filename tests/reader-flow.js
 ```
 
-驗證全文實際渲染、全部 20 個回應、目錄、字級、注音、進度恢復、儲存遭封鎖、版本切換，及 820×1180、1180×820、390×844 三種尺寸。截圖存於 output/playwright/。使用桌面 Chromium 模擬尺寸，未宣稱在實體 iPad Safari 測試。
+驗證全文實際渲染、陪讀角色區分、不同章節圖片、故事地圖解鎖與回跳、目錄、字級、注音、段落恢復、儲存封鎖、版本切換，及 820×1180、1180×820、390×844 三種尺寸。截圖存於 output/playwright/。使用桌面 Chromium 模擬尺寸，未宣稱在實體 iPad Safari 測試。
 
 本書是依動畫發展的非官方延伸閱讀作品，原稿中的補寫情節與對白並非動畫逐字稿。

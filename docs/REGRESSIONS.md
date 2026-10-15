@@ -338,3 +338,13 @@ Only important bugs that have occurred in the real app belong here.
 - Root cause: The reader previously assumed every book offered a guide, so image-only books exposed a button that would load missing content.
 - Intended behavior update: The user requested new books without guides on 2026-10-12 and confirmed uploading new source images on 2026-10-14. Guide coverage tests now apply to guide-enabled books; the original 18 books/244 guided pages remain required. New books 19–28 are explicitly image-only, not silently missing guides.
 - Regression test: `picturebooks/test/reading.spec.ts` (`image-only books hide the guide, turn pages and resume while existing guides remain available`), with all-book matching in `guide.spec.ts` and explicit release coverage in `guide-content.test.mjs`.
+
+## REG-043 — Novel reading position shifts when changing text size
+
+- Scope: Independent private Sites reader, maintained source backup in `storybooks/super-ya-novel/`.
+- Reproduction: Read the guide quotation around first-chapter blocks 37–38, leave only a sliver of the preceding paragraph below the toolbar, then choose「特大」or toggle phonetics.
+- Correct behavior: The readable paragraph keeps its screen position. Reopening resumes a text-block anchor, including after viewport changes; old five-chapter pixel positions remain a migration fallback.
+- Root cause: Choosing the first paragraph with any remaining pixels below the toolbar anchors the mostly hidden preceding paragraph; its new line wrapping pushes the paragraph actually being read down the page.
+- Fix: Ignore that trailing sliver and preserve the chosen block's offset relative to the compact toolbar. Store block anchors with chapter, map progress and preferences.
+- Intended behavior update: On 2026-10-15 the user explicitly approved removing supplementary chapter-end conversations. Original five-chapter prose and embedded questions remain exact; old choice/reply expectations are replaced with quotation, screenshots and spoiler-aware story-map checks.
+- Regression test: `storybooks/super-ya-novel/tests/reader-flow.js` — changing font keeps the current paragraph anchored; annotation toggle preserves the reading anchor; reopening resumes the exact saved text anchor; existing five-chapter pixel position remains a migration fallback. Run with the independent reader's local server on port 4178.

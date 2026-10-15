@@ -1,0 +1,37 @@
+{
+  "inventors": {
+    "hero":"welcome", "heroCaption":"奇妙屋前，特別兜風正要開始。",
+    "guideRanges":[[0,3],[37,39],[59,59],[76,76]],
+    "emphasis":{"37":["最擔心的地方"],"38":["同一顆球"],"59":["你想到了一個"]},
+    "pictures":[{"after":28,"image":"ball","caption":"同一項發明，讓兩位發明家有不同的想法。"}],
+    "events":[{"block":14,"image":"welcome","label":"期待特別兜風"},{"block":28,"image":"ball","label":"跳跳球登場"},{"block":58,"image":"ball","label":"兩種不同的想法"}]
+  },
+  "dollhouse": {
+    "hero":"dollhouse", "heroCaption":"娃娃屋旁，有人爭辯，也有人靜靜難過。",
+    "guideRanges":[[0,2],[26,28],[38,41],[74,76]],
+    "emphasis":{"26":["娃娃屋真正的主人"],"39":["就一定會和好嗎"],"76":["暫時忘記煩惱","真的把問題解決"]},
+    "pictures":[{"after":63,"image":"boarding","caption":"大家進入 SUPER YA，準備看看裡面。"}],
+    "events":[{"block":24,"image":"dollhouse","label":"娃娃屋壞掉了"},{"block":35,"image":"dollhouse","label":"婷婷想把它修好"},{"block":67,"image":"boarding","label":"一起參觀機器人"}]
+  },
+  "takeoff": {
+    "hero":"takeoff", "heroCaption":"SUPER YA 起飛了，意外的旅程開始了。",
+    "guideRanges":[[0,2],[34,37],[45,47],[49,50],[89,91],[94,94],[106,107],[121,122]],
+    "emphasis":{"36":["這兩種情況到底差在哪裡"],"49":["一部分照著計畫","另一部分卻出了意外"],"91":["慢慢變得安心"],"107":["如果是你"]},
+    "pictures":[{"after":30,"image":"call","caption":"巧虎透過通訊裝置，聯絡卡歐先生。"},{"after":86,"image":"fish","caption":"窗外出現魚群，大家看見海底的風景。"}],
+    "events":[{"block":19,"image":"takeoff","label":"突然出發，大家很緊張"},{"block":30,"image":"call","label":"聯絡卡歐先生"},{"block":86,"image":"fish","label":"看見海底的魚"},{"block":118,"image":"flowers","label":"前方出現花田"}]
+  },
+  "meadow": {
+    "hero":"flowers", "heroCaption":"一大片花田，等著大家一起發現。",
+    "guideRanges":[[0,3],[34,37],[39,39],[65,67],[99,102],[114,116],[124,125],[140,144]],
+    "emphasis":{"35":["也可能忘記某個小細節"],"67":["請珊珊幫忙"],"102":["你還想到別的地方嗎"],"115":["為什麼事情道歉"],"125":["也許不只一個原因"]},
+    "pictures":[{"after":62,"image":"wreaths","caption":"在花田裡，大家一起做花環。"},{"after":112,"image":"peace","caption":"朋友們說出心裡的話，重新靠近彼此。"}],
+    "events":[{"block":33,"image":"flowers","label":"抵達花田，報平安"},{"block":62,"image":"wreaths","label":"一起做花環"},{"block":112,"image":"peace","label":"說出心情，道歉和好"},{"block":139,"image":"peace","label":"一起想回家後的辦法"}]
+  },
+  "grownups": {
+    "hero":"return", "heroCaption":"熟悉的風景出現了，大家就要回家。",
+    "guideRanges":[[0,4],[38,39],[42,42],[71,73],[112,114],[145,149],[158,159],[162,162],[183,185],[187,189],[191,193],[195,197]],
+    "emphasis":{"39":["剛才說過的話"],"71":["不同的人"],"112":["從誰的角度開始講"],"148":["每個想法都一定沒有道理"],"158":["很會跟別人討論"],"192":["你自己有沒有發現什麼"]},
+    "pictures":[{"after":34,"image":"fixed","caption":"回到奇妙屋，婷婷發現娃娃屋修好了。"},{"after":103,"image":"argument","caption":"卡歐先生和吉吉大師，也有了爭執。"}],
+    "events":[{"block":34,"image":"fixed","label":"娃娃屋修好了"},{"block":70,"image":"waiting","label":"吉吉大師還要等三天"},{"block":103,"image":"argument","label":"大人也互相責怪"},{"block":173,"image":"children","label":"孩子們想起自己的經驗"}]
+  }
+}
