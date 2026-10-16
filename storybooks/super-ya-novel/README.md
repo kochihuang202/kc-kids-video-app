@@ -28,3 +28,5 @@ Node測試會產生不同篇數的測試作品於 `output/drafts/test-different-
 介面已用 Chromium 模擬 820×1180、1180×820、390×844 及最大字級。尚未用實體 iPad Safari 驗收。語音使用裝置可用的中文聲音，優先 zh-TW。
 
 正式發布僅使用本目錄 `wrangler.jsonc`，沿用獨立 Worker及D1；不更動影音站。遵循儲存庫 `docs/cloudflare-access-sop.md`，不得將測試資料匯入正式資料庫。
+
+2026-10-17介面更新：封面主操作統一、兩種目錄共用章節列、頂欄直接返回各自目錄；移除兒童頁製作聲明，答案鎖定仍保留清楚的正解文字標記。注音採用自託管 Han.css 3.3.0 的注音元件及字型；選型與授權見 [UI套件決策](docs/UI-DEPENDENCIES.md)。後續格式調整先研究現成方案。新增 polish／zhuyin／ipad 三個操作流程；WebKit觸控與高解析度直橫向檢查已通過，仍未做實體iPad Safari驗收。

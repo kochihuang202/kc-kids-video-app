@@ -1,4 +1,4 @@
-import {storage,preview,draftURL} from './storage.js?v=d57971c562d6';
+import {storage,preview,draftURL} from './storage.js?v=a30cccf97894';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const maps=new Set(['positions','anchors','readThrough','attempts','notes']);

@@ -63,6 +63,7 @@ export function annotate(text){
   }
   return result;
 }
+for(const story of Object.values(stories))for(const c of story.chapters)collect(c.title.replace(/^(第[一二三四五六七八九十]+篇|尾聲)｜/,''));
 const readings=Object.fromEntries([...strings].map(s=>[s,annotate(s)]));
 mkdirSync(distRoot,{recursive:true});
 cpSync(path.join(root,'public'),distRoot,{recursive:true});

@@ -1,9 +1,9 @@
-import {storage,preview,draftURL} from './storage.js?v=d57971c562d6';
-import {pageWordCount} from './text-stats.js?v=d57971c562d6';
-import {openPreferences} from './preferences.js?v=d57971c562d6';
-import {drawer} from './drawer.js?v=d57971c562d6';
-import {openProgress} from './cloud.js?v=d57971c562d6';
-import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=d57971c562d6';
+import {storage,preview,draftURL} from './storage.js?v=a30cccf97894';
+import {pageWordCount} from './text-stats.js?v=a30cccf97894';
+import {openPreferences} from './preferences.js?v=a30cccf97894';
+import {drawer} from './drawer.js?v=a30cccf97894';
+import {openProgress} from './cloud.js?v=a30cccf97894';
+import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=a30cccf97894';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSON}){
  const data=(await getJSON('practice.json'))[book.id],localKey='shimajiro-practice:'+book.id+':v1';
@@ -48,14 +48,14 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
   syncRoute();
   document.body.dataset.view='practice';document.body.classList.toggle('no-bopo',!p.bopo);document.documentElement.style.setProperty('--reader-size',[26,30,34][p.size]+'px');
   if(view==='home'){
-   app.innerHTML=nav()+`<main class="practice-shell"><p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(ui.practiceTitle)}</h1><p class="practice-intro">${ruby(ui.practiceWelcome)}</p><div class="scene-grid">${data.scenes.map((s,i)=>`<button type="button" data-p="scene" data-scene="${i}" class="scene-card" aria-label="${esc(s.title)}"><span class="chapter-num">${String(i+1).padStart(2,'0')}</span><h2>${ruby(s.title)}</h2><p>${ruby(s.subtitle)}</p><span>${count(s)} / ${s.questions.story.length}</span></button>`).join('')}</div>${b(ui.resumePractice,'resume','','primary')}<p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();return;
+   app.innerHTML=nav()+`<main class="practice-shell contents-page"><p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(ui.practiceTitle)}</h1><p class="practice-intro">${ruby(ui.practiceWelcome)}</p><section class="resume-panel"><div><span>${ruby(ui.resumeLabel)}</span><strong>${ruby(data.scenes[p.scene].title)}</strong></div>${b(ui.resumePractice,'resume','','primary')}</section><h2 class="contents-heading">${ruby('選擇單元')}</h2><div class="scene-grid">${data.scenes.map((s,i)=>`<button type="button" data-p="scene" data-scene="${i}" class="scene-card" aria-label="${esc(s.title)}"><span class="chapter-num">${String(i+1).padStart(2,'0')}</span><h2>${ruby(s.title)}</h2><p>${ruby(s.subtitle)}</p><span class="scene-status">${ruby(count(s)===s.questions.story.length?ui.completedPractice:ui.unreadPractice)}</span></button>`).join('')}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();return;
   }
   const s=data.scenes[p.scene],qs=questions(),pos=Math.min(p.positions[key()]||0,qs.length),id=key()+':'+pos,a=p.attempts[id]||{},q=qs[pos];
   let task='';
-  if(pos>=qs.length){task=`<h2>${ruby(ui.practiceEnd)}</h2><p>${ruby(s.reflection)}</p><label for="own-note">${ruby(ui.ownWords)}</label><textarea id="own-note" maxlength="1000" aria-label="用自己的話說">${esc(p.notes[key()]||'')}</textarea><p class="tool-note">${ruby(ui.noteNotice)}</p>${b(ui.revisit,'restart')}${b(ui.nextScene,'next-scene','','primary')}`;}
+  if(pos>=qs.length){task=`<h2>${ruby(ui.practiceEnd)}</h2><p>${ruby(s.reflection)}</p><label for="own-note">${ruby(ui.ownWords)}</label><textarea id="own-note" maxlength="1000" aria-label="用自己的話說">${esc(p.notes[key()]||'')}</textarea><p class="tool-note">${ruby(ui.noteNotice)}</p>${b(ui.revisit,'restart')}${b(p.scene===data.scenes.length-1?ui.backPracticeContents:ui.nextScene,'next-scene','','primary')}`;}
   else{
    const options=q.type==='choice'?q.options:passage();
-   task=`<p class="eyebrow">${ruby(q.skill)} · ${pos+1} / ${qs.length}</p><h2 class="question-title">${ruby(q.q)}</h2><div class="answer-options">${options.map((option,i)=>b(q.type==='choice'?option:`${i+1}．${option}`,'answer',`data-choice-index="${i}" ${done(a)?'disabled':''}`,`answer-choice ${a.selection===i?(a.correct?'correct':a.tries?'selected':''):''}`)).join('')}</div>`;
+   task=`<p class="eyebrow">${ruby(q.skill)} · ${pos+1} / ${qs.length}</p><h2 class="question-title">${ruby(q.q)}</h2><div class="answer-options">${options.map((option,i)=>`<button type="button" data-p="answer" data-choice-index="${i}" aria-label="${esc(option)}" ${done(a)?'disabled':''} class="answer-choice ${done(a)&&i===q.correct?'correct':a.selection===i&&a.tries?'selected':''}"><span class="answer-index" aria-hidden="true">${i+1}</span><span class="answer-text">${ruby(q.type==='choice'?option:`${i+1}．${option}`)}</span>${done(a)&&i===q.correct?`<span class="answer-state">${ruby(ui.correctAnswer)}</span>`:''}</button>`).join('')}</div>`;
    if(done(a))task+=`<div class="feedback good"><strong>${ruby(a.correct?(a.tries===1&&!a.hints?ui.foundAlone:ui.foundEvidence):ui.readExplanation)}</strong><p>${ruby(q.why)}</p><p>${ruby(ui.evidenceParagraph)} ${q.evidence.map(i=>i+1).join('、')}</p></div>`;
    else{
     if(a.tries)task+=`<p class="feedback">${ruby(ui.tryAgain)}</p>`;
@@ -64,9 +64,9 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
     if(a.hints>=3)task+=`<p class="hint-card">${ruby(ui.evidenceParagraph)} ${q.evidence.map(i=>i+1).join('、')}${b(ui.showEvidence,'evidence')}</p>`;
     if((a.hints||0)<3)task+=b(ui.hint,'hint');task+=b(ui.explanation,'reveal');
    }
-   task+=`<nav class="question-nav">${b(ui.previousQuestion,'prev',pos===0?'disabled':'')}${b(done(a)?ui.nextQuestion:ui.skipQuestion,'next','','primary')}</nav>`;
+   task+=`<nav class="question-nav">${b(ui.previousQuestion,'prev',pos===0?'disabled':'')}${b(done(a)?ui.nextQuestion:ui.skipQuestion,'next','',done(a)?'primary':'skip-question')}</nav>`;
   }
-  app.innerHTML=nav()+`<main class="practice-shell practice-reading"><div class="practice-top"><div><p class="eyebrow">${ruby(book.title)} · ${ruby(ui.practiceTitle)}</p><h1>${ruby(s.title)}</h1></div>${b(ui.allScenes,'home')}</div><p class="tool-note">${ruby(ui.readFirst)}</p><div class="practice-layout ${p.phase==='practice'?'with-questions':''}"><article class="practice-paper"><h2>${ruby(p.level==='story'?ui.storyPassage:ui.extraPassage)}</h2>${b(ui.speakPassage,'speak-all','', 'text-button')}<div class="practice-passage">${passage().map((text,i)=>`<div class="practice-paragraph" id="practice-para-${i}"><span class="para-number" aria-hidden="true">${i+1}</span><p class="practice-text">${rich(text,[],p.words)}</p><div class="paragraph-tools">${b(ui.listenParagraph,'speak-one',`data-paragraph="${i}"`,'text-button')}</div></div>`).join('')}</div>${p.phase==='read'?b(ui.beginPractice,'begin','','primary'):b(ui.readOnly,'read-only')}</article>${p.phase==='practice'?`<section class="practice-panel" aria-label="理解練習">${task}</section>`:''}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${pageWordCount(passage(),ui,ruby)}</main>`+prefs();
+  app.innerHTML=nav()+`<main class="practice-shell practice-reading"><div class="practice-top"><div><p class="eyebrow">${ruby(book.title)} · ${ruby(ui.practiceTitle)}</p><h1>${ruby(s.title)}</h1></div></div><p class="tool-note">${ruby(ui.readFirst)}</p><div class="practice-layout ${p.phase==='practice'?'with-questions':''}"><article class="practice-paper"><h2>${ruby(p.level==='story'?ui.storyPassage:ui.extraPassage)}</h2>${b(ui.speakPassage,'speak-all','', 'text-button')}<div class="practice-passage">${passage().map((text,i)=>`<div class="practice-paragraph" id="practice-para-${i}"><span class="para-number" aria-hidden="true">${i+1}</span><p class="practice-text">${rich(text,[],p.words)}</p><div class="paragraph-tools">${b(ui.listenParagraph,'speak-one',`data-paragraph="${i}"`,'text-button')}</div></div>`).join('')}</div>${p.phase==='read'?b(ui.beginPractice,'begin','','primary'):b(ui.readOnly,'read-only')}</article>${p.phase==='practice'?`<section class="practice-panel" aria-label="理解練習">${task}</section>`:''}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${pageWordCount(passage(),ui,ruby)}</main>`+prefs();
  }
  function change(action){
   stopSpeech();const first=[...document.querySelectorAll('.practice-paragraph')].find(n=>n.getBoundingClientRect().bottom>156),index=first?.id,top=first?.getBoundingClientRect().top,scroll=scrollY;
@@ -90,7 +90,7 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
   if(action==='home'){rememberReading();view='home';save();render();window.scrollTo(0,0);return;}
     if(action==='begin'||action==='read-only'){p.phase=action==='begin'?'practice':'read';save();render();document.querySelector('.practice-panel')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
   const qs=questions(),pos=Math.min(p.positions[key()]||0,qs.length),id=key()+':'+pos,q=qs[pos];
-  if(action==='next-scene'){p.scene=Math.min(data.scenes.length-1,p.scene+1);p.level='story';p.phase='read';save();render();window.scrollTo(0,0);return;}
+  if(action==='next-scene'){if(p.scene===data.scenes.length-1){rememberReading();view='home';save();render();window.scrollTo(0,0);return;}p.scene=Math.min(data.scenes.length-1,p.scene+1);p.level='story';p.phase='read';save();render();window.scrollTo(0,0);return;}
   if(action==='restart'){p.positions[key()]=0;save();render();return;}
   if(['next','prev'].includes(action)){p.positions[key()]=Math.max(0,Math.min(qs.length,pos+(action==='next'?1:-1)));save();render();document.querySelector('.practice-panel')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
   if(!q)return;const a=p.attempts[id]||(p.attempts[id]={tries:0,hints:0,correct:false,revealed:false});

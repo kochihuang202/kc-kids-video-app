@@ -17,7 +17,7 @@ async(sessionPage)=>{
   check(query().get('scene')==='2',book+' scene selection updates route');
   check(Number(await page.locator('[data-page-word-count]').getAttribute('data-page-word-count'))===await count('.practice-text'),book+' practice count excludes controls and questions');
   await page.locator('[data-p=begin]').click();await page.reload();await page.locator('.practice-panel').waitFor();check(true,book+' reload preserves exercise phase');
-  await page.locator('[data-p=home]').first().click();check(!query().has('scene'),book+' all scenes clears deep link');await page.reload();await page.locator('.scene-card').first().waitFor();
+  await page.locator('.mode-toc-link').click();check(!query().has('scene'),book+' all scenes clears deep link');await page.reload();await page.locator('.scene-card').first().waitFor();
   check(await page.locator('.practice-paper').count()===0,book+' reload stays list');
   await page.locator('.scene-card').nth(1).click();await page.goBack();await page.locator('.scene-card').first().waitFor();await page.goForward();await page.locator('.practice-paper').waitFor();check(query().get('scene')==='1',book+' back and forward follow active unit');
   await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('[data-action=start]').click();await page.locator('.prose').waitFor();check(query().get('chapter')==='1',book+' modes keep independent positions');

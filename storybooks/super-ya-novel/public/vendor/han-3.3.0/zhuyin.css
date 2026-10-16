@@ -1,0 +1,114 @@
+/* Han.css 3.3.0 zhuyin module, unmodified upstream rules; MIT, see LICENSE.md. */
+[zhuyin] h-zhuyin {
+  -moz-text-emphasis: none;
+  -webkit-text-emphasis: none;
+  text-emphasis: none;
+  font-style: normal;
+  font-weight: normal;
+  line-height: normal;
+  text-decoration: none;
+  text-indent: 0;
+  position: relative;
+  display: inline-block;
+  height: 1em;
+  width: .4em;
+  vertical-align: text-top;
+}
+[zhuyin] h-zhuyin > * {
+  -moz-transform: scale(.4);
+  -ms-transform: scale(.4);
+  -webkit-transform: scale(.4);
+  transform: scale(.4);
+  -moz-transform-origin: left top;
+  -ms-transform-origin: left top;
+  -webkit-transform-origin: left top;
+  transform-origin: left top;
+  display: inline-block;
+}
+[zhuyin] h-yin {
+  position: absolute;
+  left: 0;
+  height: 1em;
+  vertical-align: top;
+  line-height: 1;
+}
+[zhuyin] h-diao {
+  position: absolute;
+  bottom: 0;
+  right: -.9em;
+  line-height: 1;
+}
+[zhuyin] h-yin:empty,
+[zhuyin] h-diao:empty {
+  display: none;
+}
+[zhuyin] [length="0"] {
+  margin-right: 0;
+}
+[zhuyin] [length="0"] h-zhuyin {
+  display: none;
+}
+[zhuyin] [length="1"] h-yin {
+  top: .3em;
+}
+[zhuyin] [length="1"] h-diao {
+  bottom: 0;
+}
+[zhuyin] [length="2"] h-yin {
+  top: .05em;
+}
+[zhuyin] [length="2"] h-diao {
+  bottom: -.3em;
+}
+[zhuyin] [length="3"] h-yin {
+  top: -.05em;
+  line-height: .85;
+}
+[zhuyin] [length="3"] h-diao {
+  bottom: -.35em;
+}
+[zhuyin] [diao="˙"] h-diao {
+  top: 0;
+  right: auto;
+  bottom: auto;
+  left: .06em;
+}
+[zhuyin] [diao="˙"] [length="1"] h-diao {
+  top: .15em;
+}
+[zhuyin] [diao="˙"] [length="2"] h-diao {
+  top: -.05em;
+}
+[zhuyin] [diao="˙"] [length="3"] h-diao {
+  top: -.2em;
+}
+[zhuyin] [diao="˪"] h-diao,
+[zhuyin] [diao="˫"] h-diao {
+  -moz-transform: scale(.6);
+  -ms-transform: scale(.6);
+  -webkit-transform: scale(.6);
+  transform: scale(.6);
+  -moz-transform-origin: left top;
+  -ms-transform-origin: left top;
+  -webkit-transform-origin: left top;
+  transform-origin: left top;
+}
+[zhuyin] [diao^="ㆴ"] h-diao,
+[zhuyin] [diao^="ㆵ"] h-diao,
+[zhuyin] [diao^="ㆶ"] h-diao,
+[zhuyin] [diao^="ㆷ"] h-diao,
+[zhuyin] [diao="󳆴"] h-diao,
+[zhuyin] [diao="󳆵"] h-diao,
+[zhuyin] [diao="󳆶"] h-diao,
+[zhuyin] [diao="󳆷"] h-diao {
+  bottom: -.6em;
+  margin-right: .3em;
+}
+[zhuyin] {
+  margin-right: .2em;
+  display: inline-block;
+  line-height: 1.8;
+}
+
+@font-face{font-family:HanZhuyin;src:url("han.woff") format("woff");font-display:swap}
+h-zhuyin{font-family:HanZhuyin,"Microsoft JhengHei",sans-serif}

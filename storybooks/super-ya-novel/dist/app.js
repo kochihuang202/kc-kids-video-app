@@ -1,19 +1,18 @@
-import {storage,preview,draftURL} from './storage.js?v=d57971c562d6';
-import {parentGate,parentSession} from './parent-gate.js?v=d57971c562d6';
-import {pageWordCount} from './text-stats.js?v=d57971c562d6';
-import {openPreferences,preferenceValues} from './preferences.js?v=d57971c562d6';
-import {drawer} from './drawer.js?v=d57971c562d6';
-import {openProgress} from './cloud.js?v=d57971c562d6';
-import {wordRanges,showWord,speakParagraphs,stopSpeech} from './tools.js?v=d57971c562d6';
+import {storage,preview,draftURL} from './storage.js?v=a30cccf97894';
+import {parentGate,parentSession} from './parent-gate.js?v=a30cccf97894';
+import {pageWordCount} from './text-stats.js?v=a30cccf97894';
+import {openPreferences,preferenceValues} from './preferences.js?v=a30cccf97894';
+import {drawer} from './drawer.js?v=a30cccf97894';
+import {openProgress} from './cloud.js?v=a30cccf97894';
+import {wordRanges,showWord,speakParagraphs,stopSpeech} from './tools.js?v=a30cccf97894';
 const LEGACY_KEY='shimajiro-novel:v1',app=document.querySelector('#app');
-let KEY,library,selectedBook,story,ui,readings,state,glossary,cloud,preferencesStore,practiceResume=0,practiceStarted=false,saveTimer,scrollFrame,restoring=false,storageAvailable=true;
+let KEY,library,selectedBook,story,ui,readings,state,glossary,cloud,preferencesStore,practiceResume=0,practiceTitles=[],practiceStarted=false,saveTimer,scrollFrame,restoring=false,storageAvailable=true;
 const defaults=()=>({chapter:0,started:false,bopo:true,size:0,positions:{},anchors:{},readThrough:{},finished:false,words:true,rate:0.85});
 const escape=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function ruby(text,sounds=readings[text]){
   return Array.from(text).map((ch,i)=>{
     const sound=sounds?.[i];if(!sound)return escape(ch);
-    const mark=sound.match(/[ˊˇˋ˙]/)?.[0]||'',core=sound.replace(/[ˊˇˋ˙]/g,'');
-    return `<ruby aria-label="${escape(ch)}"><rb>${escape(ch)}</rb><rt aria-hidden="true"><span class="phonetic">${Array.from(core).map(s=>`<span>${s}</span>`).join('')}</span>${mark?`<span class="${mark==='˙'?'neutral':'tone'}">${mark}</span>`:''}</rt></ruby>`;
+    return `<ruby zhuyin aria-label="${escape(ch)}"><rb>${escape(ch)}</rb><rt aria-hidden="true">${window.Han.normalize.getZhuyinHTML(sound)}</rt></ruby>`;
   }).join('');
 }
 const button=(label,action,cls='',extra='')=>`<button type="button" class="${cls}" data-action="${action}" aria-label="${escape(label)}" ${extra}>${ruby(label)}</button>`;
@@ -64,7 +63,7 @@ function loadState(input){
 function save(){if(!selectedBook){preferencesStore?.update(state);return;}try{storage.setItem(KEY,JSON.stringify(state));}catch{storageAvailable=false;showStorageNotice();}cloud?.update(state);preferencesStore?.update(state);}
 function showStorageNotice(){if(!document.querySelector('#storage-note')){const n=document.createElement('p');n.id='storage-note';n.className='storage-note';n.setAttribute('role','status');n.innerHTML=ruby(ui.storage);app.prepend(n);}}
 function settings(){document.body.classList.toggle('no-bopo',!state.bopo);document.documentElement.style.setProperty('--reader-size',[26,30,34][state.size]+'px');}
-function toc(){return `<ol class="toc-list">${story.chapters.map((c,i)=>`<li><button type="button" data-action="chapter" data-chapter="${i}" aria-label="${escape(c.title)}" ${state.chapter===i&&state.started?'aria-current="page"':''}><span class="chapter-num" aria-hidden="true">0${i+1}</span><span class="toc-name">${ruby(c.title)}</span><span class="toc-arrow" aria-hidden="true">↗</span></button></li>`).join('')}</ol>`;}
+function toc(){return `<ol class="toc-list">${story.chapters.map((c,i)=>`<li><button type="button" data-action="chapter" data-chapter="${i}" aria-label="${escape(c.title)}" ${state.chapter===i&&state.started?'aria-current="page"':''}><span class="chapter-num" aria-hidden="true">0${i+1}</span><span class="toc-name">${ruby(c.title.replace(/^(第[一二三四五六七八九十]+篇|尾聲)｜/,''))}${state.chapter===i&&state.started?`<small class="current-reading">${ruby(ui.currentPart)}</small>`:''}</span><span class="toc-arrow" aria-hidden="true">↗</span></button></li>`).join('')}</ol>`;}
 function knownEvents(chapter){return story.chapters[chapter].presentation.events.filter(e=>e.block<=(state.readThrough[chapter]??-1));}
 function eventCards(events,chapter){return events.map(e=>`<li><button type="button" class="map-card ${e.image?'':'text-event'}" data-action="map-jump" data-chapter="${chapter}" data-block="${e.block}" aria-label="${escape(e.label)}">${e.image?`<img src="assets/episode/${escape(e.image)}.jpg" alt="" width="320" height="180" loading="lazy">`:''}<span>${ruby(e.label)}</span></button></li>`).join('');}
 function mapContents(chapter){const events=knownEvents(chapter);return events.length?`<ol class="map-events">${eventCards(events,chapter)}</ol><p class="map-note">${ruby(ui.mapHint)}</p>`:`<p class="map-note">${ruby(ui.mapEmpty)}</p>`;}
@@ -89,12 +88,12 @@ function syncWhisperRoute(chapter){
 }
 function home(){
  stopSpeech();document.body.dataset.view='home';syncWhisperRoute(null);settings();
- app.innerHTML=`<div class="shell"><header class="masthead"><span class="wordmark">${ruby(story.subtitle)}</span></header><main><section class="cover"><div><h1 id="book-title">${ruby(story.title)}</h1><p class="cover-copy">${ruby(selectedBook.subtitle)}</p><p>${ruby(selectedBook.detail)}</p></div><figure class="cover-art character-cover"><img src="${selectedBook.coverImage||'assets/shimajiro-friends.png'}" alt="${escape(selectedBook.imageAlt)}" width="640" height="359"></figure></section><div class="mode-choices"><section class="mode-card"><h2>${ruby(ui.practiceTitle)}</h2><p>${ruby(ui.practiceDescription)}</p><a class="primary" href="?book=${selectedBook.id}&mode=practice&scene=${practiceResume}" aria-label="${practiceStarted?'接著讀閱讀理解':'開始閱讀理解'}">${ruby(practiceStarted?'接著讀':'開始閱讀')}</a><a href="?book=${selectedBook.id}&mode=practice">${ruby('選擇單元')}</a></section><section class="mode-card"><h2>${ruby(ui.whisperTitle)}</h2><p>${ruby(ui.whisperDescription)}</p>${button(state.started?'接著讀':'開始閱讀','start','primary')}<a href="?book=${selectedBook.id}&mode=whisper">${ruby('選擇篇章')}</a></section></div></main><footer class="fineprint">${escape(story.note)}<br>依逐字稿改寫的非官方延伸閱讀作品。</footer></div>${preferences()}`;
+ app.innerHTML=`<div class="shell cover-shell"><header class="masthead"><span class="wordmark"><img src="assets/shimajiro-avatar.jpg" alt="" width="36" height="36">${ruby(ui.coverBrand)}</span><span class="book-number">${ruby(ui.coverInvitation)}</span></header><main><section class="cover"><div><p class="cover-label">${ruby(ui.coverInvitation)}</p><h1 id="book-title">${ruby(story.title)}</h1><p class="cover-copy">${ruby(selectedBook.subtitle)}</p></div><figure class="cover-art character-cover"><img src="${selectedBook.coverImage||'assets/shimajiro-friends.png'}" alt="${escape(selectedBook.imageAlt)}" width="640" height="359"></figure></section><div class="mode-choices"><section class="mode-card practice-mode"><p class="mode-kicker">${ruby(ui.practiceKicker)}</p><h2>${ruby(ui.practiceTitle)}</h2><p class="mode-description">${ruby(ui.practiceCardDescription)}</p><p class="resume-detail">${ruby(practiceStarted?ui.resumeLabel:ui.firstReading)}${practiceStarted?`<strong>${ruby(practiceTitles[practiceResume]||'')}</strong>`:''}</p><div class="mode-actions"><a class="primary mode-primary" href="?book=${selectedBook.id}&mode=practice&scene=${practiceResume}" aria-label="${practiceStarted?'接著讀閱讀理解':'開始閱讀理解'}">${ruby(practiceStarted?'接著讀':'開始閱讀')}</a><a class="mode-secondary" href="?book=${selectedBook.id}&mode=practice">${ruby('選擇單元')}</a></div></section><section class="mode-card whisper-mode"><p class="mode-kicker">${ruby(ui.whisperKicker)}</p><h2>${ruby(ui.whisperCardTitle)}</h2><p class="mode-description">${ruby(ui.whisperCardDescription)}</p><p class="resume-detail">${ruby(state.started?ui.resumeLabel:ui.firstReading)}${state.started?`<strong>${ruby(story.chapters[state.chapter].title)}</strong>`:''}</p><div class="mode-actions">${button(state.started?'接著讀':'開始閱讀','start','primary mode-primary')}<a class="mode-secondary" href="?book=${selectedBook.id}&mode=whisper">${ruby('選擇篇章')}</a></div></section></div></main></div>${preferences()}`;
  if(!storageAvailable)showStorageNotice();
 }
 function whisperContents(){
  stopSpeech();document.body.dataset.view='contents';settings();
- app.innerHTML=`<main class="shell"><p>${ruby(story.title)}</p><h1>${ruby(ui.whisperTitle)}</h1>${state.started?recap():''}<h2 id="contents-title">${ruby('選擇篇章')}</h2>${toc()}</main>${preferences()}`;
+ app.innerHTML=`<main class="shell contents-page"><p class="eyebrow">${ruby(story.title)}</p><h1>${ruby(ui.whisperCardTitle)}</h1><p class="contents-intro">${ruby(ui.partListIntro)}</p><section class="resume-panel"><div><span>${ruby(state.started?ui.resumeLabel:ui.firstReading)}</span><strong>${ruby(story.chapters[state.chapter].title)}</strong></div>${button(state.started?'接著讀':'開始閱讀','start','primary')}</section><h2 id="contents-title" class="contents-heading">${ruby('選擇篇章')}</h2>${toc()}${state.started?recap():''}</main>${preferences()}`;
 }
 function headerBottom(){return document.querySelector('.reader-header')?.getBoundingClientRect().bottom||0;}
 function visibleAnchor(){
@@ -110,7 +109,7 @@ function restoreAnchor(anchor,fallback=0){
 function reader(index,restore=true,focus=true,targetBlock=null){
   stopSpeech();
   restoring=true;clearTimeout(saveTimer);document.body.dataset.view='reader';state.chapter=index;state.started=true;syncWhisperRoute(index);settings();const c=story.chapters[index];
-  app.innerHTML=`<main class="reader"><header class="chapter-heading"><p class="reading-mode">${ruby(ui.whisperTitle)}</p><p class="chapter-kicker">${selectedBook.id==='kiki'?'PART':'CHAPTER'} ${String(index+1).padStart(2,'0')} / ${String(story.chapters.length).padStart(2,'0')}</p><h1 tabindex="-1" id="chapter-title">${ruby(c.title)}</h1>${c.presentation.hero?picture(c.presentation.hero,c.presentation.heroCaption,'chapter-art'):''}<p class="story-role">${ruby(ui.storyTag)}</p>${ui.guideHint?`<p class="guide-explainer">${ruby(ui.guideHint)}</p>`:''}</header><article class="prose" aria-labelledby="chapter-title">${bodyMarkup(c)}</article><div class="chapter-end" aria-hidden="true">✦ · ✦</div>${storyMap()}<nav class="chapter-nav" aria-label="章節導覽">${button(ui.previous,'previous','',index===0?'disabled':'')}${button(index===story.chapters.length-1?ui.finish:ui.next,index===story.chapters.length-1?'finish':'next','primary')}</nav><p class="rest-note">${ruby(ui.rest)}</p></main><footer class="reader-footer">${escape(story.note)}${pageWordCount(c.blocks.map(b=>b.text),ui,ruby)}</footer>${preferences()}<dialog id="contents"><div class="dialog-top"><h2>${ruby(ui.toc)}</h2>${button(ui.close,'close-toc')}</div>${toc()}</dialog>`;
+  app.innerHTML=`<main class="reader"><header class="chapter-heading"><p class="reading-mode">${ruby(ui.whisperTitle)}</p><p class="chapter-kicker">${selectedBook.id==='kiki'?'PART':'CHAPTER'} ${String(index+1).padStart(2,'0')} / ${String(story.chapters.length).padStart(2,'0')}</p><h1 tabindex="-1" id="chapter-title">${ruby(c.title)}</h1>${c.presentation.hero?picture(c.presentation.hero,c.presentation.heroCaption,'chapter-art'):''}<p class="story-role">${ruby(ui.storyTag)}</p>${ui.guideHint?`<p class="guide-explainer">${ruby(ui.guideHint)}</p>`:''}</header><article class="prose" aria-labelledby="chapter-title">${bodyMarkup(c)}</article><div class="chapter-end" aria-hidden="true">✦ · ✦</div>${storyMap()}<nav class="chapter-nav" aria-label="章節導覽"><a class="chapter-return" href="?book=${selectedBook.id}&mode=whisper">${ruby(ui.backWhisperContents)}</a>${button(ui.previous,'previous','',index===0?'disabled':'')}${button(index===story.chapters.length-1?ui.finish:ui.next,index===story.chapters.length-1?'finish':'next','primary')}</nav><p class="rest-note">${ruby(ui.rest)}</p></main><footer class="reader-footer">${pageWordCount(c.blocks.map(b=>b.text),ui,ruby)}</footer>${preferences()}<dialog id="contents"><div class="dialog-top"><h2>${ruby(ui.toc)}</h2>${button(ui.close,'close-toc')}</div>${toc()}</dialog>`;
   save();if(!storageAvailable)showStorageNotice();
   requestAnimationFrame(()=>{
     if(focus)document.querySelector('#chapter-title').focus({preventScroll:true});
@@ -197,16 +196,16 @@ try{
   if(selectedBook.ui)ui=await getJSON(selectedBook.ui);
   document.title=story.title+'｜'+story.subtitle;
   if(query.get('mode')==='practice'){
-   const {mountPractice}=await import('./practice.js?v=d57971c562d6');
+   const {mountPractice}=await import('./practice.js?v=a30cccf97894');
    await mountPractice({app,book:selectedBook,story,ui,ruby,rich,glossary,getJSON});
   }else{
    state=loadState();cloud=await openProgress(selectedBook.id,'whisper',state);preferencesStore=await openPreferences(cloud.value);state=loadState({...cloud.value,...preferencesStore.value});
    const chapter=Number(query.get('chapter'));
    const practiceData=(await getJSON('practice.json'))[selectedBook.id];let localPractice={};try{localPractice=JSON.parse(storage.getItem('shimajiro-practice:'+selectedBook.id+':v1')||'{}');}catch{}
-   const practiceCloud=await openProgress(selectedBook.id,'practice',localPractice);practiceResume=Math.max(0,Math.min(practiceData.scenes.length-1,practiceCloud.value.scene||0));practiceStarted=practiceCloud.value.scene!==undefined;
+   practiceTitles=practiceData.scenes.map(s=>s.title);const practiceCloud=await openProgress(selectedBook.id,'practice',localPractice);practiceResume=Math.max(0,Math.min(practiceData.scenes.length-1,practiceCloud.value.scene||0));practiceStarted=practiceCloud.value.scene!==undefined;
    if(query.get('mode')==='whisper'&&!query.has('chapter'))whisperContents();else if(query.has('chapter')&&Number.isInteger(chapter)&&chapter>=0&&chapter<story.chapters.length)reader(chapter,true);else home();
   }
  }else shelf();
 }catch{app.innerHTML='<p class="loading" role="alert">故事暫時沒有打開，請再試一次。<br><button type="button" id="retry">重新打開</button></p>';document.querySelector('#retry').addEventListener('click',()=>location.reload());}
 
-document.addEventListener('parent-unlocked',async()=>{stopSpeech(true);if(document.body.dataset.view==='reader')remember();const session=parentSession();const {mountParent}=await import('./parent.js?v=d57971c562d6');if(session.isActive())await mountParent({app,library,ui,ruby,getJSON,session});});
+document.addEventListener('parent-unlocked',async()=>{stopSpeech(true);if(document.body.dataset.view==='reader')remember();const session=parentSession();const {mountParent}=await import('./parent.js?v=a30cccf97894');if(session.isActive())await mountParent({app,library,ui,ruby,getJSON,session});});
