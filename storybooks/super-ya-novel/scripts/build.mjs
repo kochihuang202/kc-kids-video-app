@@ -8,7 +8,7 @@ let pinyin;
 try { ({pinyin} = require('pinyin-pro')); }
 catch { ({pinyin} = require(path.join(root,'.tools/node_modules/pinyin-pro'))); }
 const read = name => JSON.parse(readFileSync(path.join(root,'content',name),'utf8'));
-const story=read('story.json'),ui=read('ui.json'),overrides=read('readings-overrides.json');
+const story=read('story.json'),ui={...read('ui.json'),...read('learning-ui.json')},overrides=read('readings-overrides.json');
 const kiki=read('books/kiki/story.json'),library=read('library.json'),kikiUi={...ui,...read('books/kiki/ui.json')};
 const presentation=read('presentation.json');
 for(const c of story.chapters)c.presentation=presentation[c.id];
@@ -16,6 +16,8 @@ const strings = new Set();
 function collect(v){if(typeof v==='string'){if(/\p{Script=Han}/u.test(v)){strings.add(v);strings.add(v.replace(/\*\*/g,''));if(v.includes('**'))for(const part of v.split(/(\*\*[^*]+\*\*)/g)){const text=part.startsWith('**')?part.slice(2,-2):part;if(/\p{Script=Han}/u.test(text))strings.add(text);}}}else if(v&&typeof v==='object')Object.values(v).forEach(collect);}
 collect(story);collect(ui);collect(read('reading-fixtures.json'));
 collect(kiki);collect(kikiUi);collect(library);
+const practice=read('practice.json'),glossary=read('glossary.json');collect(practice);collect(glossary);collect(['聽這個詞','回去繼續讀']);
+for(const data of Object.values(practice))for(const scene of data.scenes)for(const level of ['story','extra'])for(const [i,text]of scene[level].entries()){strings.add(text.replace(/\*\*/g,''));strings.add(`${i+1}．${text}`);}
 for(const c of kiki.chapters)collect(`${kikiUi.resume}・${c.title}`);
 ['飛吧！','一起飛進故事，也看看心裡的小風景。',`${ui.bopo}：${ui.on}`,`${ui.bopo}：${ui.off}`,...story.chapters.map(c=>`${ui.resume}・${c.title}`)].forEach(s=>strings.add(s));
 const initials={b:'ㄅ',p:'ㄆ',m:'ㄇ',f:'ㄈ',d:'ㄉ',t:'ㄊ',n:'ㄋ',l:'ㄌ',g:'ㄍ',k:'ㄎ',h:'ㄏ',j:'ㄐ',q:'ㄑ',x:'ㄒ',zh:'ㄓ',ch:'ㄔ',sh:'ㄕ',r:'ㄖ',z:'ㄗ',c:'ㄘ',s:'ㄙ'};
@@ -55,6 +57,8 @@ mkdirSync(path.join(root,'dist/books/kiki'),{recursive:true});
 writeFileSync(path.join(root,'dist/library.json'),JSON.stringify(library));
 writeFileSync(path.join(root,'dist/books/kiki/story.json'),JSON.stringify(kiki));
 writeFileSync(path.join(root,'dist/books/kiki/ui.json'),JSON.stringify(kikiUi));
+writeFileSync(path.join(root,'dist/practice.json'),JSON.stringify(practice));
+writeFileSync(path.join(root,'dist/glossary.json'),JSON.stringify(glossary));
 mkdirSync(path.join(root,'output'),{recursive:true});
 const audit=[];
 for(const c of [...story.chapters,...kiki.chapters]){audit.push(`# ${c.title}`);for(const text of c.blocks.map(b=>b.text))audit.push(Array.from(text).map((ch,i)=>readings[text][i]?`${ch}(${readings[text][i]})`:ch).join(''));}

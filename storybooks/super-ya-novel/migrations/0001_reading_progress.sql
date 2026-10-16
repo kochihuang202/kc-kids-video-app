@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS reading_progress (
+ id TEXT PRIMARY KEY,
+ state TEXT NOT NULL DEFAULT '{}',
+ revision INTEGER NOT NULL DEFAULT 0,
+ updated_at TEXT NOT NULL
+);

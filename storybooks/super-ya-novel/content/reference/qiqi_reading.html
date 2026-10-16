@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f9f5ec">
+<title>琪琪被罵了｜閱讀理解小幫手</title>
+<style>
+:root{--bg:#f9f7f0;--paper:#fffef9;--ink:#263f39;--muted:#698079;--line:#dee6dd;--pine:#287258;--pine-dark:#1d5945;--light:#edf5ed;--shadow:0 10px 32px rgba(66,73,59,.055);--fsize:1;--warm:#fae3bf}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:17px;-webkit-font-smoothing:antialiased}button,input,textarea{font-family:inherit}button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #efb85f;outline-offset:3px}.hidden{display:none!important}a{color:var(--pine)}.muted{color:var(--muted)}.small{font-size:13px}.strong{font-weight:800}.nowrap{white-space:nowrap}
+.topbar{position:sticky;z-index:30;top:0;background:rgba(251,249,242,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(15px)}.topbar-inner{max-width:1310px;padding:11px 28px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:76px}.brand{display:flex;gap:13px;align-items:center;min-width:0}.brand-mark{width:45px;height:45px;background:#feeac9;box-shadow:inset 0 -3px 0 #f7d7a0;border-radius:17px;display:grid;place-items:center;font-size:26px;flex:none}.brand-text{min-width:0}.brand-title{font-size:18px;font-weight:900;letter-spacing:.025em;line-height:1.3}.brand-sub{font-size:11px;color:var(--muted);font-weight:750;margin-top:3px;letter-spacing:.07em}.header-controls{display:flex;gap:8px;align-items:center}.pill{font-size:14px;font-weight:800;color:#456a59;background:#fffdf8;border:1.5px solid #dbe5db;border-radius:16px;padding:10px 14px;min-height:45px}.pill:hover{border-color:#95bba5;background:#f4faf4}.pill.active{background:var(--pine);color:white;border-color:var(--pine)}.wide-icon{font-size:17px;margin-right:6px}.main{max-width:1310px;margin:auto;padding:25px 30px 75px}.home-hero{padding:40px 46px 44px;background:linear-gradient(125deg,#fff2d8 0%,#fffaf0 53%,#e9f2e8 100%);border-radius:32px;position:relative;overflow:hidden;border:1px solid #eee9dc;box-shadow:var(--shadow)}.home-hero:before{content:"";position:absolute;width:200px;height:200px;right:-44px;top:-55px;border:2px solid rgba(60,108,74,.14);border-radius:50%}.home-hero:after{content:"";position:absolute;width:120px;height:120px;right:56px;bottom:-55px;background:#fbe1b4;border-radius:50%;opacity:.5}.hero-badge{display:inline-block;border:1px solid #bed4bd;background:#ffffffa6;padding:7px 13px;border-radius:100px;font-size:13px;font-weight:850;color:#456e54;letter-spacing:.03em}.home-hero h1{margin:18px 0 12px;font-size:clamp(31px,4vw,46px);letter-spacing:-.02em;line-height:1.33;max-width:720px}.home-hero p{margin:0 0 26px;max-width:680px;font-size:17px;line-height:1.85;color:#537167}.hero-buttons{display:flex;gap:11px;flex-wrap:wrap;position:relative;z-index:1}.btn{background:#fffdf7;border:1.5px solid #d8e4d8;border-radius:17px;color:#35634f;font-size:16px;font-weight:850;min-height:51px;padding:10px 19px}.btn:hover{background:#f3faf3;border-color:#84b49c}.btn.main-btn{background:var(--pine);color:white;border-color:var(--pine);box-shadow:0 4px 0 #194e3d}.btn.main-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #194e3d}.btn.mini{padding:8px 12px;min-height:42px;font-size:13px;border-radius:12px}.btn.ghost{border-color:transparent;background:transparent;box-shadow:none}.btn:disabled{opacity:.5;cursor:not-allowed}.btn:active{transform:translateY(1px)}.tag{font-size:12px;background:#e7f0e8;color:#4d7762;padding:6px 11px;border-radius:99px;display:inline-block;font-weight:850}.tag.soft{background:#fff1d8;color:#986d38}.tag.quiet{background:#f1f2ef;color:#6c7f75}.section-head{margin:34px 2px 18px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}.section-head h2{font-size:23px;margin:0;letter-spacing:.01em}.section-head p{font-size:14px;color:var(--muted);margin:0}.scene-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.scene-card{background:var(--paper);border:1px solid #e4eade;box-shadow:var(--shadow);border-radius:24px;text-align:left;padding:19px 19px 17px;display:flex;flex-direction:column;gap:10px;min-height:200px;color:var(--ink)}.scene-card:hover{transform:translateY(-2px);border-color:#91baa2}.scene-card .card-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.icon-tile{background:var(--tile,#f3e2c5);border-radius:16px;width:55px;height:55px;font-size:28px;display:grid;place-items:center}.scene-card h3{margin:0;font-size:20px;line-height:1.4}.scene-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}.scene-card .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px;border-top:1px solid #edf0e9;font-size:13px;font-weight:800;color:#4f7a64}.tiny-track{height:6px;border-radius:99px;background:#e9eee7;overflow:hidden;width:90px}.tiny-track>span{background:#7caf94;height:100%;display:block;border-radius:99px}.home-bottom{margin-top:21px;padding:18px 21px;border-radius:19px;border:1px solid #e4e8db;background:#fffcf3;font-size:15px;line-height:1.9;color:#687f73}
+.read-top{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:20px}.reader-ident{display:flex;gap:14px;align-items:center}.reader-ident .icon-tile{width:64px;height:64px;font-size:31px}.reader-ident h1{font-size:clamp(22px,2.6vw,31px);margin:0 0 4px}.reader-ident p{font-size:14px;margin:0;color:var(--muted)}.reader-commands{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.level-tabs{background:#eaf0e7;border-radius:17px;padding:6px;display:inline-flex;gap:5px;margin-bottom:22px}.level-tabs button{background:transparent;border:none;border-radius:12px;min-height:46px;padding:9px 20px;color:#57796a;font-size:15px;font-weight:850}.level-tabs button.sel{background:white;color:#205b45;box-shadow:0 2px 12px rgba(70,93,73,.08)}.reading-grid{display:grid;grid-template-columns:1fr;gap:17px}.reading-grid.in-practice{grid-template-columns:minmax(0,1.22fr) minmax(360px,.84fr);align-items:start}.reading-paper{background:#fffefb;border-radius:27px;border:1px solid #e2e9df;box-shadow:var(--shadow);padding:29px clamp(20px,4vw,46px)}.reading-paper .eyebrow{letter-spacing:.05em;color:#638272;text-transform:uppercase;font-size:12px;font-weight:850;margin:0 0 12px}.reading-paper h2{margin:0 0 8px;font-size:25px;line-height:1.45}.reading-paper .opening{color:#71827a;font-size:14px;margin-bottom:22px;line-height:1.8}.passage{font-size:calc(23px * var(--fsize));line-height:1.91;letter-spacing:.015em;font-weight:520}.para{padding:13px 13px 13px 16px;border-radius:14px;position:relative;margin:0 0 9px;border-left:3px solid transparent;transition:background .15s}.para:hover{background:#fcfcf5}.para.speaking{background:#e8f2e6;border-left-color:#75a58c}.para.proof{background:#e9f4e9;border-left-color:#4d9370}.paragraph-inner{display:flex;align-items:flex-start;gap:12px}.para-num{color:#96aaa1;font-size:12px;font-weight:850;display:block;min-width:20px;padding-top:9px}.paragraph-text{flex:1;min-width:0;overflow-wrap:anywhere}.paragraph-actions{display:flex;justify-content:flex-end;gap:8px;margin:5px 4px -8px}.read-aloud{font-size:12px;font-weight:800;color:#759181;background:transparent;border:none;min-height:36px;padding:5px 8px}.read-aloud:hover{color:var(--pine);text-decoration:underline}.word-help{border:0;border-bottom:2px dotted #d0a75c;background:transparent;font-size:inherit;font-weight:inherit;color:inherit;padding:0;cursor:help;display:inline}.word-help:hover{background:#fff3d6}.reading-end{border-top:1px solid var(--line);margin-top:24px;padding-top:23px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.reading-end .left-notice{font-size:14px;max-width:430px;line-height:1.6;color:var(--muted)}.reader-layout-note{font-size:13px;color:#789086;margin:5px 0 18px}.practice-panel{background:#fffcf4;border:1px solid #e8e4d7;box-shadow:var(--shadow);border-radius:26px;padding:25px 23px;position:sticky;top:97px}.practice-eyebrow{font-size:13px;font-weight:850;color:#678574;letter-spacing:.05em}.practice-progress{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;gap:9px}.practice-progress h3{font-size:22px;margin:0}.practice-stepper{display:flex;gap:6px;margin:13px 0 20px}.step-dot{width:30px;height:7px;border-radius:99px;background:#e3e9df;flex:1}.step-dot.done{background:#8bb99b}.step-dot.current{background:#eeb76b}.question-skill{font-size:12px;letter-spacing:.06em;font-weight:850;color:#8b7045}.question{font-size:21px;font-weight:850;line-height:1.6;margin:10px 0 16px}.choices{display:grid;gap:10px}.answer-choice{border:1.5px solid #dbe5db;background:#fffefa;border-radius:16px;display:flex;align-items:center;gap:13px;font-size:18px;font-weight:700;text-align:left;line-height:1.5;padding:13px 15px;min-height:67px;color:#2d5946;transition:background .12s}.answer-choice:hover{background:#edf7ee;border-color:#a2c6b0}.answer-choice .choice-letter{width:32px;height:32px;flex:none;border-radius:11px;background:#edf4e9;display:grid;place-items:center;font-size:15px;font-weight:900;color:#537a63}.answer-choice.good{border-color:#6eaa83;background:#eaf6e9}.answer-choice.bad{border-color:#c8c5b6;background:#f9f6ed}.answer-choice:disabled{opacity:.72;cursor:not-allowed}.evidence-option{font-size:15px;font-weight:600;line-height:1.6;align-items:flex-start;min-height:0}.evidence-option .choice-letter{background:#f6edde;color:#927246}.feedback{border-radius:15px;background:#fff3dc;padding:13px 15px;color:#8f6940;font-size:15px;line-height:1.7;margin:15px 0 0}.feedback.good{background:#e6f3e7;color:#2d7156}.hint-card{margin-top:12px;border-radius:15px;border:1px solid #dfe6d9;background:#f4f9f1;color:#486d57;padding:15px;font-size:15px;line-height:1.8}.hint-card .hint-heading{font-size:12px;font-weight:900;margin-bottom:5px;color:#668877}.help-actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 7px}.nav-questions{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;margin-top:23px;border-top:1px solid #e5e6da;padding-top:17px}.under-note{font-size:13px;line-height:1.8;color:#789083}.complete-flag{padding:8px 0 2px;font-size:13px;color:#587e65;font-weight:850}.finished-icon{font-size:40px}.finished-title{font-size:24px;font-weight:900;margin:6px 0}.finished-text{font-size:16px;line-height:1.8;color:#61786c}.reflection{margin:16px 0;padding:18px;background:#f4f8ee;border-radius:18px;border:1px solid #dce5d6}.reflection h4{margin:0 0 8px;font-size:16px}.reflection p{font-size:15px;line-height:1.7;margin:0 0 13px}.reflection textarea{width:100%;min-height:112px;line-height:1.8;padding:12px 14px;border:1.5px solid #d1dfd4;border-radius:13px;background:white;font-size:17px;resize:vertical}.reflection-buttons{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}.explain-box{border-top:1px solid #cfe3d4;margin-top:14px;padding-top:12px;font-size:15px;line-height:1.85}.sentence-hint{font-size:14px;color:#6d8b7d}
+.panel-overlay{position:fixed;inset:0;display:flex;align-items:end;justify-content:center;background:#26362e66;z-index:90;padding:12px}.drawer{width:min(100%,630px);background:#fffdf6;padding:26px;border-radius:25px 25px 18px 18px;max-height:calc(100dvh - 30px);overflow:auto;box-shadow:0 12px 80px #15291b33}.drawer-top{display:flex;align-items:center;justify-content:space-between;gap:14px}.drawer h2{font-size:25px;margin:0 0 9px}.drawer p{font-size:17px;line-height:1.8;margin:4px 0 10px}.drawer .bopo{font-size:24px;letter-spacing:.18em;color:#587e65;font-weight:750;margin-top:10px}.drawer .meaning{border-radius:12px;background:#f2f5e9;padding:14px 17px;margin-top:17px}.overlay-close{min-width:48px;min-height:48px;background:white;border:1.5px solid #dee5db;border-radius:14px;font-size:18px;color:#45634f}
+.settings-grid{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.settings-section{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}.settings-section h3{font-size:16px;margin:0 0 10px}.setting-description{font-size:14px!important;color:var(--muted);margin:9px 0!important}.parent-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.adult-card{background:#fffdf8;border:1px solid #e3e9dd;border-radius:22px;padding:23px}.adult-card h2{font-size:22px;margin:0 0 13px}.adult-card p{font-size:15px;line-height:1.9;color:#526d60}.adult-card ol{padding-left:23px;color:#506c5e;font-size:15px;line-height:2}.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#edf5ec;padding:15px 8px;border-radius:15px;text-align:center}.stat strong{font-size:27px;display:block;color:#235b45}.stat span{font-size:12px;color:#5f7f6b;font-weight:700}.adult-table{width:100%;border-collapse:collapse}.adult-table th{text-align:left;border-bottom:1px solid #dbe4db;color:#667e72;font-size:13px;font-weight:850;padding:10px}.adult-table td{padding:11px 10px;border-bottom:1px solid #e9eee7;font-size:14px}.adult-table tr:last-child td{border-bottom:0}.adult-actions{display:flex;gap:8px;flex-wrap:wrap}.adult-card.wide{grid-column:1/-1}.file-upload{background:#edf5ed;border:1.5px solid #d9e7dc;padding:11px 12px;border-radius:13px;color:#456c52;max-width:100%;font-size:13px}.toast{position:fixed;z-index:110;bottom:26px;left:50%;transform:translateX(-50%);padding:13px 22px;background:#2d5944;color:white;border-radius:16px;box-shadow:0 8px 35px #203b276b;max-width:min(95%,590px);font-weight:750;font-size:14px;pointer-events:none;text-align:center}.skiplink{position:absolute;left:-9999px;top:0}.skiplink:focus{position:fixed;left:14px;top:8px;z-index:999;background:white;padding:10px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(min-width:1051px){.reading-grid.in-practice .reading-paper{padding:25px 29px}.reading-grid.in-practice .passage{font-size:calc(21px * var(--fsize))}}
+@media(max-width:1050px){.reading-grid.in-practice{grid-template-columns:1fr}.practice-panel{position:static}.scene-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.topbar-inner{padding:9px 14px;min-height:65px}.brand{gap:8px}.brand-mark{width:38px;height:38px;font-size:22px;border-radius:13px}.brand-title{font-size:15px}.brand-sub{font-size:10px}.header-controls .label-hide{display:none}.topbar .pill{padding:8px 10px;font-size:13px;min-height:40px}.main{padding:16px 12px 65px}.home-hero{padding:28px 21px 31px;border-radius:23px}.home-hero h1{font-size:29px}.home-hero p{font-size:15px}.scene-grid{grid-template-columns:1fr;gap:12px}.scene-card{min-height:168px;padding:17px}.section-head{align-items:flex-start;flex-direction:column;gap:5px;margin-top:26px}.reader-ident .icon-tile{width:50px;height:50px;font-size:24px}.reader-ident h1{font-size:22px}.reader-top{gap:12px}.reader-commands{width:100%}.level-tabs{display:flex;width:100%}.level-tabs button{flex:1;padding:8px 9px;font-size:14px}.reading-paper{padding:22px 13px;border-radius:20px}.reading-paper h2{font-size:21px;padding:0 10px}.reading-paper .eyebrow,.reading-paper .opening{padding:0 10px}.passage{font-size:calc(20px * var(--fsize));line-height:1.86}.para{padding:10px 6px;margin-bottom:7px}.paragraph-inner{gap:4px}.para-num{min-width:21px}.practice-panel{border-radius:22px;padding:23px 17px}.practice-progress h3{font-size:19px}.question{font-size:20px}.answer-choice{font-size:17px}.parent-layout{grid-template-columns:1fr}.adult-card.wide{grid-column:auto}.stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.stat strong{font-size:21px}.read-top{gap:11px}.drawer{padding:22px 17px}.home-bottom{padding:15px;font-size:14px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a href="#main" class="skiplink">跳到閱讀內容</a>
+<header class="topbar"><div class="topbar-inner"><div class="brand"><span class="brand-mark" aria-hidden="true">📖</span><div class="brand-text"><div class="brand-title">琪琪被罵了 · 閱讀理解</div><div class="brand-sub">慢慢讀 · 找線索 · 想明白</div></div></div><div class="header-controls"><button class="pill" id="header-home" title="所有情境">⌂ <span class="label-hide">選情境</span></button><button class="pill" id="header-tools" title="閱讀設定">⚙ <span class="label-hide">閱讀設定</span></button><button class="pill" id="header-adults">給大人</button></div></div></header>
+<main id="main" class="main" aria-live="polite"></main>
+<div id="modal" class="hidden"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const BOOK={
+  "title": "琪琪被罵了｜閱讀理解小幫手",
+  "version": "1.0",
+  "source": "《琪琪被罵了》巧虎的時光悄悄話九篇正式稿（2026-10）",
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "打破花瓶以後",
+      "longTitle": "第一篇｜打破花瓶以後",
+      "subtitle": "我不是故意的",
+      "icon": "🏺",
+      "color": "#F5DDB7",
+      "storyTitle": "那一天",
+      "story": [
+        "那天我玩得太高興，一不小心，把媽媽很珍惜的花瓶打破了。",
+        "我看到花瓶碎在地上，心裡就已經很難過。爸爸知道以後，板著臉提醒我：「巧虎！玩遊戲的時候，一定要注意周圍！」",
+        "我知道爸爸說得有道理。可是我還是覺得委屈。我又不是故意打破的，為什麼他不能好好說呢？",
+        "後來我把這件事告訴琪琪和桃樂比。他們聽我說完，也想起自己被爸爸媽媽責備的經驗。那時候我們只覺得：唉，被罵真不好受。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "我當時一直在心裡說：「我又不是故意的！」這句話是真的。我沒有想把媽媽的花瓶弄壞，更沒有打算惹爸爸生氣。我只顧著玩，根本沒看見旁邊還有東西。",
+        "可是有一天我突然想到：花瓶不會因為我說了「不是故意的」，就自己變回原來的樣子呀。",
+        "媽媽還是少了一個很喜歡的花瓶。地上還是有碎片，要小心清理。這些事情，並沒有因為我不是故意的，就全部不見。",
+        "所以，我現在覺得，「不是故意」和「沒有事情需要處理」，好像是兩回事。",
+        "如果我不小心撞倒桃樂比的東西，他問我怎麼回事，我當然可以告訴他：「對不起，我沒有看見。」可是說完以後，我還是可以幫忙把東西撿起來，看看有沒有壞掉。不能只說一句「我又不是故意的」，就轉身去玩吧？"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "巧虎那天不小心弄壞了什麼？",
+            "options": [
+              "爸爸的玩具",
+              "媽媽珍惜的花瓶",
+              "桃樂比的書"
+            ],
+            "correct": 1,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "找一找第一段，巧虎玩得太高興時發生了什麼？",
+              "注意「媽媽很珍惜」後面接著哪一樣東西。"
+            ],
+            "why": "第一段寫到，他不小心把媽媽很珍惜的花瓶打破了。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最能讓我們知道：巧虎雖然知道爸爸有道理，心裡還是覺得委屈？",
+            "correct": 2,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "找找文章裡「可是」這個轉折。",
+              "那一段同時提到「有道理」和「委屈」。"
+            ],
+            "why": "第三段直接寫出巧虎同時明白提醒、又感到委屈。"
+          },
+          {
+            "type": "choice",
+            "skill": "讀懂人物心情",
+            "q": "巧虎為什麼會覺得委屈？",
+            "options": [
+              "因為自己不是故意的，又覺得爸爸說話太兇",
+              "因為媽媽把花瓶送人了",
+              "因為朋友不陪他玩"
+            ],
+            "correct": 0,
+            "evidence": [
+              1,
+              2
+            ],
+            "hints": [
+              "想一想：巧虎說了「我又不是故意的」以後，還說了什麼？",
+              "回看第三段，他希望爸爸用什麼方式說話？"
+            ],
+            "why": "巧虎知道爸爸提醒得有道理，但他不是故意打破花瓶，也希望爸爸能好好說。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "理解一段話的重點",
+            "q": "這段短文想說：「不是故意的」代表什麼？",
+            "options": [
+              "什麼責任都沒有",
+              "沒有故意，卻仍可能需要處理後果",
+              "花瓶就能恢復原狀"
+            ],
+            "correct": 1,
+            "evidence": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "hints": [
+              "想想花瓶壞掉後，還有沒有事情要處理？",
+              "找找「花瓶不會自己變回原來的樣子」附近的句子。"
+            ],
+            "why": "這段把「不是故意」與「還需要處理的事情」分開看。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段提出：即使不是故意，也還能幫忙把事情處理好？",
+            "correct": 4,
+            "evidence": [
+              4
+            ],
+            "hints": [
+              "找找巧虎提到桃樂比東西的例子。",
+              "那段有「幫忙把東西撿起來」的動作。"
+            ],
+            "why": "第五段用碰倒桃樂比東西的例子，說明仍能採取行動。"
+          }
+        ]
+      },
+      "reflection": "用自己的話說：巧虎為什麼又難過，又覺得爸爸的提醒有道理？"
+    },
+    {
+      "id": "s2",
+      "title": "梅婆婆說的話",
+      "longTitle": "第二篇｜梅婆婆說的話，真的都對嗎？",
+      "subtitle": "一句話，兩種心情",
+      "icon": "💬",
+      "color": "#DCECD7",
+      "storyTitle": "那一天",
+      "story": [
+        "我正在為爸爸責備我的事情難過，梅婆婆剛好聽見了。",
+        "她告訴我們，爸爸媽媽有時候會責備孩子，是希望孩子知道哪裡做錯了，以後不要再犯一樣的錯。她還說，經常被責備，就表示爸爸媽媽很重視我們。",
+        "我聽完心情好多了。可是琪琪卻低下頭。她說爸爸從來沒有罵過她，難道這代表爸爸不重視她嗎？",
+        "梅婆婆說，沒有被爸爸媽媽罵當然是再好不過了。可是她還有東西要買，匆匆離開了。琪琪的煩惱卻沒有跟著消失。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "梅婆婆原本是在跟一個剛被爸爸責備的孩子說話。那個孩子是我。可旁邊還站著琪琪，一個從來沒有被爸爸責備過的孩子。",
+        "我聽見「被罵也可能是因為被重視」，心裡想：「原來爸爸不一定是討厭我。」",
+        "琪琪聽見同一句話，心裡卻想：「如果要被罵才表示被重視，那我怎麼辦？」",
+        "我們聽見的話一樣，想到的卻是自己正在擔心的事情。",
+        "我以前還覺得琪琪怎麼這麼奇怪，明明她爸爸很溫柔，為什麼還要難過？現在我反而覺得，她不是突然想找麻煩。她是真的把梅婆婆的話聽進去了，才開始擔心。",
+        "那是不是就全怪琪琪聽錯了呢？我覺得也不能這麼說。",
+        "梅婆婆可能沒想到，站在旁邊的琪琪會這樣理解。琪琪也還不知道，梅婆婆想說的，也許不是「不罵就不重視」。兩個人沒有把話講清楚，就這樣錯過了。"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "梅婆婆為什麼走過來說話？",
+            "options": [
+              "因為巧虎心情難過",
+              "因為她要教琪琪種花",
+              "因為足球不見了"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "故事一開始，誰心情不好？",
+              "看看第一段，梅婆婆剛好聽見了什麼。"
+            ],
+            "why": "梅婆婆是聽見巧虎因為被責備而難過，才過來安慰。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段清楚寫到：琪琪因為梅婆婆的話，開始擔心爸爸不重視自己？",
+            "correct": 2,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "找琪琪聽完話後的反應。",
+              "文章裡有「琪琪卻低下頭」的句子。"
+            ],
+            "why": "第三段記下琪琪的反應，也寫出她擔心的問題。"
+          },
+          {
+            "type": "choice",
+            "skill": "比較不同反應",
+            "q": "同一句話說完以後，巧虎和琪琪的心情有什麼不同？",
+            "options": [
+              "兩個人都更生氣",
+              "巧虎比較安心，琪琪反而擔心",
+              "琪琪很開心，巧虎很傷心"
+            ],
+            "correct": 1,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "兩個人的反應寫在同一段。",
+              "留意「我聽完心情好多了。可是琪琪……」。"
+            ],
+            "why": "第三段寫出兩人不同的心情：巧虎被安慰，琪琪卻擔心。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "抓住主要想法",
+            "q": "這篇「想法短文」最想說的是什麼？",
+            "options": [
+              "同一句話，兩人可能從各自的擔心聽出不同意思",
+              "梅婆婆不應該跟孩子說話",
+              "琪琪從沒聽過爸爸說話"
+            ],
+            "correct": 0,
+            "evidence": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "hints": [
+              "看看巧虎聽完想到了什麼，琪琪又想到了什麼。",
+              "留意「我們聽見的話一樣，想到的卻是……」。"
+            ],
+            "why": "原文將巧虎的安心和琪琪的擔心並列，說明聽者的經驗會影響理解。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最直接把這個發現用一句話說清楚？",
+            "correct": 3,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "先找「聽見的話」這幾個字。",
+              "那一段說「想到的卻是自己正在擔心的事情」。"
+            ],
+            "why": "第四段直接概括：同一句話，兩人想到的是自己正在擔心的事。"
+          }
+        ]
+      },
+      "reflection": "用自己的話說：琪琪為什麼會把梅婆婆的話聽成另一種意思？"
+    },
+    {
+      "id": "s3",
+      "title": "琪琪的奇怪計畫",
+      "longTitle": "第三篇｜琪琪的奇怪計畫",
+      "subtitle": "琪琪為什麼想挨罵",
+      "icon": "💭",
+      "color": "#F4DCE4",
+      "storyTitle": "那一天",
+      "story": [
+        "梅婆婆走了以後，琪琪還是悶悶不樂。桃樂比安慰她，說她的爸爸一定很重視她。可是琪琪始終放不下心。",
+        "後來我們竟然聊起：要不要做一件可能會被爸爸罵的事情？這樣一來，就能看看琪琪的爸爸會不會責備她。",
+        "琪琪聽了，決定認真試試看。我們先想到，她可以去幫爸爸整理花草。",
+        "現在想起來，我真有點想笑。明明我們是想讓琪琪安心，最後竟然一起研究怎麼讓她挨罵！"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "可是我後來越想越不對勁。琪琪真正想知道的，不是爸爸會不會罵人。她想知道的，是自己在爸爸心裡重不重要。",
+        "這兩件事聽起來有點像，卻不是同一件事。",
+        "她很想知道爸爸重不重視她。可是她決定先做一件可能讓爸爸生氣的事情，等爸爸罵了她，再把這當成答案。",
+        "我現在想問當時的琪琪：「如果爸爸沒有罵你，你就一定知道他不重視你了嗎？」",
+        "我猜她會很認真地說：「可是梅婆婆就是那樣說的呀！」",
+        "問題就在這裡。她已經先相信「重視孩子的爸爸會罵孩子」，所以一心想聽見爸爸責備。等爸爸沒有照她希望的那樣做，她可能也很難注意到其他事情。",
+        "那麼，爸爸如果沒罵她，她就什麼都不知道嗎？她以前不是一直說爸爸很溫柔嗎？那些相處的日子，難道突然就不算數了？我越想越覺得，她只願意聽一種答案：爸爸一定要罵她。可爸爸心裡怎麼想，真的只能靠這一句責備看出來嗎？"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "琪琪想用什麼方式，看看爸爸會不會責備她？",
+            "options": [
+              "去問鄰居",
+              "做一件可能被罵的事",
+              "每天寫日記"
+            ],
+            "correct": 1,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "朋友們想到的是「做一件……的事情」。",
+              "回到第二段，看看「要不要」後面接什麼計畫。"
+            ],
+            "why": "琪琪想做一件可能被罵的事，觀察爸爸會不會責備。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段可以證明：即使朋友安慰琪琪，她仍然不放心？",
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "琪琪聽完桃樂比的安慰後，心情有改變嗎？",
+              "第一段有「始終放不下心」。"
+            ],
+            "why": "第一段明確寫到，琪琪聽完安慰仍然悶悶不樂。"
+          },
+          {
+            "type": "choice",
+            "skill": "發現反差",
+            "q": "巧虎回頭看這個計畫，覺得哪裡奇怪？",
+            "options": [
+              "朋友明明想讓琪琪安心，卻一起研究怎麼讓她被罵",
+              "琪琪完全不想見爸爸",
+              "大家根本不認識琪琪"
+            ],
+            "correct": 0,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "最後一段巧虎說「明明……最後竟然……」。",
+              "試著把這個前後反差讀出來。"
+            ],
+            "why": "他們本來想讓琪琪放心，卻想出一個可能讓她挨罵的辦法。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "讀懂真正的意思",
+            "q": "短文說琪琪真正想知道的是什麼？",
+            "options": [
+              "爸爸在不在乎她",
+              "爸爸會不會畫畫",
+              "爸爸喜不喜歡足球"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "看短文第一段：「不是……而是……」。",
+              "「她真正想知道的」後面就是答案。"
+            ],
+            "why": "巧虎指出，琪琪不是想知道爸爸會不會罵人，而是想知道自己重不重要。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段把琪琪用來找答案的方法說得最明白？",
+            "correct": 2,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "琪琪想「先做一件」什麼事情？",
+              "找那句「等爸爸罵了她，再把這當成答案」。"
+            ],
+            "why": "第三段寫出琪琪準備用挨罵來確認自己是否受到重視。"
+          }
+        ]
+      },
+      "reflection": "用自己的話說：琪琪想得到的答案，和她選擇的方法有什麼不一樣？"
+    },
+    {
+      "id": "s4",
+      "title": "折斷的花",
+      "longTitle": "第四篇｜折斷的花，爸爸先看哪裡？",
+      "subtitle": "爸爸先關心什麼",
+      "icon": "🌷",
+      "color": "#E9DFD9",
+      "storyTitle": "那一天",
+      "story": [
+        "琪琪去幫爸爸整理花草，爸爸很高興，還教她把枯掉的葉子輕輕拿掉。",
+        "沒想到，琪琪一個不小心，碰斷了一朵花。我和桃樂比都緊張起來，以為她終於要被責備了。",
+        "爸爸走過來，卻先查看琪琪的手有沒有被花刺扎到。他還覺得讓琪琪做可能碰到花刺的工作有點危險。確定她沒受傷以後，他把折下來的花重新放好，還謝謝琪琪願意幫忙。",
+        "琪琪垂下耳朵，覺得自己的計畫又失敗了。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "後來我才發現，那時候的我一直盯著爸爸的臉，看他什麼時候會變兇，卻差點沒注意到他的手。",
+        "爸爸一走過來，先伸手檢查的是琪琪的手。",
+        "花就在地上，他當然看見了。可是他好像更急著知道琪琪有沒有被刺到。直到確定她沒有受傷，才鬆了一口氣。",
+        "我以前沒發現，一個人先做什麼，原來也能讓我們知道，他當下可能在擔心什麼。",
+        "不過，這樣是不是代表爸爸一點都不在乎那朵花呢？",
+        "我覺得也不能這麼說。",
+        "爸爸正在整理那些花，還教琪琪怎麼照顧，想必很用心。一朵好好的花突然折斷，他可能也會覺得可惜。只是當他走過來時，琪琪的手有沒有受傷，好像是更急著要確認的事。",
+        "你看，兩件事情可以都很重要，卻不一定要先處理同一件。"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "花折斷以後，琪琪的爸爸先做什麼？",
+            "options": [
+              "先看看琪琪的手有沒有受傷",
+              "先責備桃樂比",
+              "先把所有花丟掉"
+            ],
+            "correct": 0,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "爸爸先看的是琪琪身上的哪個地方？",
+              "第三段有「卻先查看琪琪的手」。"
+            ],
+            "why": "爸爸先確認琪琪的手有沒有被花刺扎到。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最清楚說花折斷是「不小心」，不是琪琪故意折斷？",
+            "correct": 1,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "找找「一個不小心」出現在哪段。",
+              "第二段接著寫「碰斷了一朵花」。"
+            ],
+            "why": "第二段寫出這是一場意外，不能把它說成琪琪故意折花。"
+          },
+          {
+            "type": "choice",
+            "skill": "讀懂人物預期",
+            "q": "巧虎和桃樂比當時為什麼緊張？",
+            "options": [
+              "以為琪琪會被爸爸責備",
+              "擔心下雨",
+              "因為不想幫忙"
+            ],
+            "correct": 0,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "他們一看見花折斷，就猜接下來會發生什麼。",
+              "第二段有「以為她終於要……」的說法。"
+            ],
+            "why": "兩人以為琪琪終於會因為折斷花而被責備。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "轉換觀察重點",
+            "q": "巧虎後來發現，自己起初忽略了什麼？",
+            "options": [
+              "爸爸伸手查看琪琪有沒有受傷",
+              "花原本是什麼顏色",
+              "桃樂比站在哪裡"
+            ],
+            "correct": 0,
+            "evidence": [
+              0,
+              1
+            ],
+            "hints": [
+              "巧虎說，自己一直盯著爸爸的臉，卻沒注意到……",
+              "找找爸爸「先伸手檢查」什麼。"
+            ],
+            "why": "短文指出巧虎只顧猜爸爸何時生氣，差點沒看見爸爸先關心琪琪的手。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最直接說明：兩件事都重要，也可能先處理更急的那一件？",
+            "correct": 7,
+            "evidence": [
+              7
+            ],
+            "hints": [
+              "想找「先後」的意思，不是要找人物名字。",
+              "有一段說「兩件事情可以都很重要」。"
+            ],
+            "why": "最後一段明確點出：重要的事不一定同時處理，要看當下先顧什麼。"
+          }
+        ]
+      },
+      "reflection": "請說說看：爸爸做了哪個動作，讓巧虎重新注意到一件事？"
+    },
+    {
+      "id": "s5",
+      "title": "爸爸想珍藏的泥巴畫",
+      "longTitle": "第五篇｜爸爸竟然想珍藏泥巴畫",
+      "subtitle": "原來反應會不一樣",
+      "icon": "🎨",
+      "color": "#EEE3B9",
+      "storyTitle": "那一天",
+      "story": [
+        "琪琪在花園裡沒被罵，我就想起自己以前做過的糗事：我曾經在媽媽很珍惜的包包上亂畫，結果被她狠狠責備。",
+        "琪琪聽了，又想到一個新辦法。她拿泥巴在一件東西上畫了圖。我和桃樂比都以為，爸爸看見一定會生氣。",
+        "爸爸看見泥巴，確實吃了一驚。可是他仔細看看琪琪畫的東西，竟然稱讚她畫得很好，還說要好好珍藏！",
+        "這次換我們三個大吃一驚。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "後來我發現，我好像犯了一個錯誤。我把「我媽媽會生氣」，直接當成「每個爸爸媽媽都會生氣」。可是我媽媽和琪琪爸爸，本來就是不同的人呀。",
+        "媽媽很珍惜她的包包。她可能想保持它原本的樣子，不希望我在上面留下一道又一道的痕跡。",
+        "琪琪爸爸看到的卻是琪琪畫出來的圖。他可能覺得那些線條很有趣，也可能很驚喜，原來琪琪還會這樣畫畫。",
+        "你看，他們看到的事情不太一樣，心裡想到的事情也可能不一樣。",
+        "不過，我不想因為這樣，就說我媽媽太愛生氣，琪琪爸爸才是最好的。那對媽媽不公平。",
+        "她有很喜歡、很想保護的東西，這又有什麼不對呢？換成是我，如果有人沒問過我，就在我很珍惜的東西上亂畫，我也可能難過呀。即使那個人覺得自己畫得很漂亮，我也不一定會高興。",
+        "而琪琪的爸爸喜歡她這次的畫，這也是真的。他不用因為我媽媽不喜歡包包被畫，就跟著說「不准畫」。"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "巧虎以前在哪個東西上亂畫，結果被媽媽責備？",
+            "options": [
+              "媽媽珍惜的包包",
+              "爸爸的帽子",
+              "琪琪的課本"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "這是巧虎「以前做過的糗事」。",
+              "答案就在第一段的後半句。"
+            ],
+            "why": "巧虎說自己曾在媽媽很珍惜的包包上亂畫，結果被責備。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最清楚寫出：爸爸不但沒有生氣，還稱讚琪琪的畫？",
+            "correct": 2,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "爸爸看見泥巴後，接下來怎麼說？",
+              "第三段有「稱讚她畫得很好」。"
+            ],
+            "why": "第三段寫到爸爸稱讚畫作，還說要珍藏。"
+          },
+          {
+            "type": "choice",
+            "skill": "讀懂意料之外",
+            "q": "什麼事讓巧虎、琪琪、桃樂比都吃了一驚？",
+            "options": [
+              "爸爸竟然喜歡琪琪的泥巴畫",
+              "琪琪突然不會說話",
+              "畫突然自己消失"
+            ],
+            "correct": 0,
+            "evidence": [
+              1,
+              2,
+              3
+            ],
+            "hints": [
+              "先想想朋友們原本預料爸爸會有什麼反應。",
+              "結果第三段爸爸說要把作品怎麼樣？"
+            ],
+            "why": "大家本以為爸爸會生氣，爸爸卻稱讚作品、想珍藏。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "比較不同觀點",
+            "q": "巧虎在這段短文裡發現自己先前想錯了什麼？",
+            "options": [
+              "把媽媽會生氣當成每個家長都會生氣",
+              "以為琪琪不認識爸爸",
+              "以為包包是花做的"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "短文第一段寫「我好像犯了一個錯誤」。",
+              "找找「我媽媽會生氣」被當成哪一句話。"
+            ],
+            "why": "巧虎發現不同人對物品與塗鴉的想法可能不同。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段支持「一個人可能很珍惜物品原本的樣子」這個想法？",
+            "correct": 1,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "想一想媽媽希望包包保持什麼樣子。",
+              "找「保持它原本的樣子」。"
+            ],
+            "why": "第二段指出巧虎媽媽可能希望包包保持原本的模樣。"
+          }
+        ]
+      },
+      "reflection": "說說看：巧虎為什麼不能只憑自己的經驗，就猜到琪琪爸爸的反應？"
+    },
+    {
+      "id": "s6",
+      "title": "滿身泥巴",
+      "longTitle": "第六篇｜衣服髒了，就一定做錯了嗎？",
+      "subtitle": "琪琪明明不喜歡",
+      "icon": "🌱",
+      "color": "#D5E9D2",
+      "storyTitle": "那一天",
+      "story": [
+        "琪琪已經試了兩次，爸爸都沒有責備她。桃樂比又出了一個主意：把衣服弄得全是泥巴，爸爸總該生氣了吧？",
+        "琪琪平常很愛漂亮，一想到衣服會沾滿泥土，就覺得討厭。可是她還是試了。",
+        "爸爸看見她滿身泥巴，先是吃了一驚，接著竟然笑著說，孩子就是要有精神地玩，還鼓勵她盡情玩耍。",
+        "琪琪又失望了。不過，這次我們也開始覺得：為了被罵，故意做這麼多事情，好像真的有點奇怪。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "當時她大概會回答：「因為爸爸這次一定會罵我呀！」",
+        "我知道她想得到一個答案，可是我開始覺得，為了這個答案，她已經做了不少自己根本不想做的事情。",
+        "你知道嗎？我覺得喜歡一件事，和想得到一個結果，有時候會混在一起。",
+        "琪琪不是突然愛上玩泥巴，也不是覺得滿身泥巴特別好看。她只是想讓爸爸生氣，所以願意做一件自己不喜歡的事。",
+        "如果她只是偶爾想試試玩泥巴的感覺，那很好呀。以前不喜歡的事情，有時候試過以後，可能會發現其實也滿有趣的。",
+        "但那天不太一樣。她明明一直皺眉，心裡只在等爸爸的反應。",
+        "我現在覺得，當我們很想完成一件事情，最好也偶爾問問自己：「我現在做的，真的是我願意做的事嗎？還是只因為我太想得到後面的結果？」"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "琪琪平常對衣服是什麼態度？",
+            "options": [
+              "她很愛漂亮，不喜歡衣服沾滿泥巴",
+              "她一直想把所有衣服丟掉",
+              "她每天都故意穿髒衣服"
+            ],
+            "correct": 0,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "留意第二段對琪琪平常喜好的描述。",
+              "找找「很愛漂亮」以及「覺得討厭」。"
+            ],
+            "why": "琪琪很在意外表，卻為了計畫做了自己不喜歡的事。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最能證明：爸爸沒有責備琪琪，反而鼓勵她盡情玩？",
+            "correct": 2,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "爸爸看見全身泥巴，後來笑了嗎？",
+              "第三段有「還鼓勵她盡情玩耍」。"
+            ],
+            "why": "第三段記錄爸爸的反應：鼓勵她玩耍，沒有責備。"
+          },
+          {
+            "type": "choice",
+            "skill": "讀懂行為原因",
+            "q": "琪琪明明討厭弄髒衣服，為什麼還是試了？",
+            "options": [
+              "想讓爸爸生氣、責備自己",
+              "因為爸爸指定她一定要玩泥巴",
+              "因為她想學種花"
+            ],
+            "correct": 0,
+            "evidence": [
+              0,
+              1
+            ],
+            "hints": [
+              "她已經試了幾次，為什麼繼續想新辦法？",
+              "第一段提到「爸爸總該生氣了吧」。"
+            ],
+            "why": "琪琪仍然想讓爸爸責備，所以連不喜歡的泥巴也願意試。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "分辨目的與喜好",
+            "q": "這段短文說，琪琪做自己不喜歡的事，是為了什麼？",
+            "options": [
+              "為了得到爸爸責備的結果",
+              "因為她突然愛上泥巴",
+              "為了讓巧虎拿冠軍"
+            ],
+            "correct": 0,
+            "evidence": [
+              1,
+              2,
+              3
+            ],
+            "hints": [
+              "讀讀巧虎問「為什麼還要繼續」之後的話。",
+              "短文裡有「她只是想讓爸爸生氣」。"
+            ],
+            "why": "這裡區分「喜歡泥巴」和「為了得到某個結果而碰泥巴」。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最直接說明：「琪琪不是突然喜歡泥巴」？",
+            "correct": 3,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "找找短文裡的「不是突然……」。",
+              "那段還說她願意做一件自己不喜歡的事。"
+            ],
+            "why": "第四段直接說明她沒有突然愛上泥巴，而是想讓爸爸生氣。"
+          }
+        ]
+      },
+      "reflection": "用自己的話說：琪琪這次做的事，和她平常喜歡的事情哪裡不同？"
+    },
+    {
+      "id": "s7",
+      "title": "馬路邊的呼喊",
+      "longTitle": "第七篇｜馬路邊的那一聲「琪琪！」",
+      "subtitle": "這次真的太危險",
+      "icon": "⚽",
+      "color": "#D8E9E8",
+      "storyTitle": "那一天",
+      "story": [
+        "後來我們不再想怎麼挨罵，決定一起踢足球。琪琪跑得很起勁，大家也玩得很開心。",
+        "沒想到，足球突然滾向馬路。琪琪急著追球，一下子衝了出去。",
+        "琪琪的爸爸看見，立刻大聲叫住她。他非常嚴肅地提醒琪琪，過馬路一定要先看清楚左右有沒有車，不能只顧著追球。",
+        "琪琪道歉以後，爸爸又擔心自己剛才聲音太大，向她道歉，還問她有沒有受傷。",
+        "我還記得，那聲「琪琪！」真的把我嚇了一大跳。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "爸爸明明認為琪琪衝上馬路很危險，為什麼還要跟她說對不起呢？",
+        "一開始我差點以為，爸爸一說對不起，就表示剛才不該提醒琪琪。",
+        "可是仔細想，好像不是這樣。",
+        "爸爸可以認為「衝向馬路是危險的」，同時也認為「我剛才的聲音太大，可能嚇到你了」。他不需要把其中一件事改成錯的，才能承認另一件事。",
+        "琪琪也一樣。她可以知道自己不該突然追球衝上馬路，也可以覺得爸爸剛才真的好兇、心裡很害怕。",
+        "這些感覺都可以說出來，不必假裝沒有。",
+        "你想想，要是琪琪因為爸爸道歉，就說「那我下次還是可以衝出去」，一定不對吧？爸爸道歉的不是「提醒安全」這件事，而是自己剛剛可能太大聲。",
+        "可如果爸爸說「反正你做得危險，所以不管我怎麼罵都沒有關係」，我也覺得怪怪的。琪琪需要學會注意安全，爸爸也能留意自己怎麼說話。兩個人都可以把事情做得更好。"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "還原事情順序",
+            "q": "下面哪一個順序符合文章？",
+            "options": [
+              "踢球 → 球滾向馬路 → 琪琪追球 → 爸爸提醒",
+              "爸爸先道歉 → 琪琪去找足球 → 大家開始踢球",
+              "琪琪故意求挨罵 → 爸爸送花 → 球滾向馬路"
+            ],
+            "correct": 0,
+            "evidence": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "hints": [
+              "先讀第一、二段，再看爸爸何時出現。",
+              "注意「後來我們……踢足球」「沒想到，足球突然……」。"
+            ],
+            "why": "故事先是大家踢球，接著球滾向馬路、琪琪追出去，爸爸才立刻提醒。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最直接寫出：琪琪衝向馬路是因為急著追球？",
+            "correct": 1,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "找球滾去哪裡、琪琪接著做了什麼。",
+              "第二段只有兩句，是很重要的線索。"
+            ],
+            "why": "第二段寫明足球滾向馬路，琪琪急著追球衝出去。"
+          },
+          {
+            "type": "choice",
+            "skill": "區分兩件事情",
+            "q": "爸爸後來為什麼向琪琪道歉？",
+            "options": [
+              "因為覺得自己剛才聲音太大",
+              "因為責備了足球",
+              "因為不該提醒交通安全"
+            ],
+            "correct": 0,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "看爸爸道歉之前，文章提到他的哪個地方。",
+              "第四段有「擔心自己剛才聲音太大」。"
+            ],
+            "why": "爸爸認為交通安全需要提醒，同時也在意剛剛的聲音是否太大。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "分辨兩個判斷",
+            "q": "短文為什麼說，爸爸道歉不代表剛才不該提醒危險？",
+            "options": [
+              "提醒危險和說話太大聲可以分開看",
+              "因為琪琪本來就想被罵",
+              "因為爸爸忘記要道歉"
+            ],
+            "correct": 0,
+            "evidence": [
+              2,
+              3,
+              4
+            ],
+            "hints": [
+              "爸爸說對不起，是對哪一件事？",
+              "找找「他不需要把其中一件事改成錯的」那一句。"
+            ],
+            "why": "爸爸可以堅持提醒危險是必要的，同時為自己的音量道歉。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最清楚把「安全提醒」和「聲音太大」兩件事放在一起比較？",
+            "correct": 3,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "找有兩個引號句子的那一段。",
+              "那段開頭是「爸爸可以認為……」。"
+            ],
+            "why": "第四段把這兩個判斷並列，是本文的關鍵句。"
+          }
+        ]
+      },
+      "reflection": "用自己的話說：爸爸這次提醒琪琪，和他後來道歉，為什麼不矛盾？"
+    },
+    {
+      "id": "s8",
+      "title": "宇宙第一重要",
+      "longTitle": "第八篇｜宇宙第一重要的寶貝",
+      "subtitle": "琪琪最想聽的答案",
+      "icon": "💛",
+      "color": "#F3DCE2",
+      "storyTitle": "那一天",
+      "story": [
+        "琪琪的爸爸剛剛因為她衝向馬路而嚴厲提醒她，接著又因為自己聲音太大，向她道歉。",
+        "沒想到，琪琪抬起頭，問爸爸：「你剛剛是不是罵我了？」",
+        "爸爸承認以後，她竟然開心地笑了！",
+        "我和桃樂比趕快向叔叔解釋，琪琪一直以為，爸爸如果從來不責備她，就表示不夠重視她。",
+        "琪琪終於直接問爸爸，是不是真的很重視自己。爸爸立刻回答，她不只是世界第一重要，還是宇宙第一重要的寶貝！"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "可是我現在回頭看，突然想問一件事：琪琪真正想聽的，是爸爸責備她，還是爸爸親口說自己很愛她呢？",
+        "這兩件事，我以前差點當成一樣的事。",
+        "琪琪一開始說她想被爸爸罵，我們就跟著想要怎麼辦。可是當她真的站在爸爸面前，最重要的一句話卻不是「你剛才罵得真大聲」。",
+        "她問的是：「爸爸，你真的很重視我，對不對？」",
+        "啊，原來她一直想確定的，是這個呀。",
+        "我想，她可能有點不好意思直接問爸爸。也可能因為太相信梅婆婆說的話，覺得一定要先被罵，才能問出答案。",
+        "這些只是我的猜想。我只知道，那天她最後終於把自己擔心的事情說出來了。"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "琪琪聽見爸爸承認自己責備她以後，怎麼反應？",
+            "options": [
+              "竟然開心地笑了",
+              "馬上跑去睡覺",
+              "立刻哭了起來"
+            ],
+            "correct": 0,
+            "evidence": [
+              2
+            ],
+            "hints": [
+              "爸爸回答以後，琪琪做了什麼？",
+              "第三段非常短：「她竟然……」。"
+            ],
+            "why": "琪琪因為終於聽到爸爸責備，竟然高興得笑了。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段說明了：琪琪一直以為沒被爸爸責備就是不受重視？",
+            "correct": 3,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "找朋友向爸爸解釋琪琪心事的那段。",
+              "第四段有「琪琪一直以為」。"
+            ],
+            "why": "第四段明確交代了琪琪為什麼一直想被責備。"
+          },
+          {
+            "type": "choice",
+            "skill": "讀懂人物需求",
+            "q": "琪琪最後親口問爸爸的是什麼？",
+            "options": [
+              "爸爸是不是真的很重視自己",
+              "爸爸今天想吃什麼",
+              "爸爸能不能讓她永遠玩泥巴"
+            ],
+            "correct": 0,
+            "evidence": [
+              4
+            ],
+            "hints": [
+              "問題在最後一段。",
+              "留意「琪琪終於直接問爸爸」。"
+            ],
+            "why": "她真正問出口的是自己在爸爸心裡是否重要。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "比較兩種期待",
+            "q": "巧虎讀了這件事，分清楚了哪兩種不同的期待？",
+            "options": [
+              "想被責備，以及想聽見爸爸說自己很愛她",
+              "想學畫畫，以及想學踢球",
+              "想要禮物，以及想吃點心"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "短文第一段的問句同時說了兩個願望。",
+              "找「真正想聽的，是……還是……」。"
+            ],
+            "why": "巧虎在比較「聽到責備」與「親耳聽見爸爸說愛自己」。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段最直接寫出琪琪真正問出口的問題？",
+            "correct": 3,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "找琪琪向爸爸說出的那句問話。",
+              "第四段只有一句琪琪的直接問話。"
+            ],
+            "why": "第四段保留琪琪真正問出口的問題，是理解她需求的線索。"
+          }
+        ]
+      },
+      "reflection": "說說看：琪琪最後真正想讓爸爸回答的問題是什麼？"
+    },
+    {
+      "id": "s9",
+      "title": "回家以前",
+      "longTitle": "尾聲｜回家以前",
+      "subtitle": "一句熟悉的玩笑",
+      "icon": "🏡",
+      "color": "#F6E9D1",
+      "storyTitle": "那一天",
+      "story": [
+        "天色漸漸晚了，梅婆婆買完東西，正好又遇見我們。看見琪琪已經不再悶悶不樂，她也放心了，提醒我們趁天還沒黑，趕快回家。",
+        "桃樂比說，要是在外面玩得太晚，回家可能又要被媽媽罵了。",
+        "這句話讓我們都笑了起來。"
+      ],
+      "extraTitle": "讀懂巧虎的想法",
+      "extra": [
+        "真有趣，故事一開始，我聽見「被罵」就覺得委屈；琪琪聽見「沒被罵」，反而覺得難過。到了要回家的時候，桃樂比又說起會被媽媽罵，我們竟然全笑了。",
+        "我想，那是因為我們知道他是在開玩笑，也知道該回家了。",
+        "不過，笑過以後，我還是會記得那天琪琪認真問爸爸的樣子。",
+        "原來一個人心裡藏著的問題，有時候別人真的不知道。聽見一句話，也可能和說話的人想的不一樣。",
+        "下次我再聽見什麼想不通的話，我想先多問一句。要是朋友有心事，我也想先聽聽他究竟在擔心什麼。"
+      ],
+      "questions": {
+        "story": [
+          {
+            "type": "choice",
+            "skill": "找明確訊息",
+            "q": "梅婆婆回來以後，提醒大家什麼？",
+            "options": [
+              "趁天還沒黑趕快回家",
+              "再去買花",
+              "把泥巴畫撕掉"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "第一段最後半句寫了提醒內容。",
+              "找找「趁天還沒黑」。"
+            ],
+            "why": "梅婆婆提醒孩子們趁天還亮時回家。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段寫了桃樂比說「太晚回家可能會被媽媽罵」？",
+            "correct": 1,
+            "evidence": [
+              1
+            ],
+            "hints": [
+              "先看看誰說了最後那句有趣的話。",
+              "第二段開頭有桃樂比的名字。"
+            ],
+            "why": "第二段記錄桃樂比對太晚回家的玩笑。"
+          },
+          {
+            "type": "choice",
+            "skill": "讀懂前後指代",
+            "q": "最後一段的「這句話」指的是哪一句？",
+            "options": [
+              "桃樂比說太晚回家可能被媽媽罵",
+              "爸爸說琪琪是宇宙第一",
+              "巧虎說花瓶碎了"
+            ],
+            "correct": 0,
+            "evidence": [
+              1,
+              2
+            ],
+            "hints": [
+              "「這句話」通常指前一段剛出現的話。",
+              "往上一段找桃樂比說的那句話。"
+            ],
+            "why": "這句話承接桃樂比對回家太晚可能被責備的玩笑。"
+          }
+        ],
+        "extra": [
+          {
+            "type": "choice",
+            "skill": "比較前後",
+            "q": "這段短文主要提醒我們什麼？",
+            "options": [
+              "同樣聽見「被罵」，不同時候大家可能有不同感受",
+              "只要被罵就應該大笑",
+              "所有人都害怕梅婆婆"
+            ],
+            "correct": 0,
+            "evidence": [
+              0
+            ],
+            "hints": [
+              "看看故事開始與結束時，誰聽見「被罵」有不同心情。",
+              "第一段把巧虎、琪琪與桃樂比放在一起比較。"
+            ],
+            "why": "短文指出，同樣的詞放在不同情境，孩子的感受可能不同。"
+          },
+          {
+            "type": "evidence",
+            "skill": "找原文線索",
+            "q": "哪一段說巧虎下次遇到想不通的話，想先多問一句？",
+            "correct": 3,
+            "evidence": [
+              3
+            ],
+            "hints": [
+              "找找「下次我再聽見……」。",
+              "第四段還提到要先聽朋友在擔心什麼。"
+            ],
+            "why": "第四段寫出巧虎往後想怎麼做。"
+          }
+        ]
+      },
+      "reflection": "試著說說看：為什麼同一句「被罵」，在故事前後讓大家有不同心情？"
+    }
+  ]
+};
+const STORAGE_KEY='qiqi_reading_scaffold_v1';
+const TOTAL=BOOK.scenes.reduce((n,s)=>n+s.questions.story.length+s.questions.extra.length,0);
+const GLOSSARY={
+'珍惜':['ㄓㄣ ㄒㄧˊ','很重視一件東西或一段關係，會想好好愛護。'],
+'責備':['ㄗㄜˊ ㄅㄟˋ','指出別人做得不對的地方，通常語氣比較嚴厲。'],
+'周圍':['ㄓㄡ ㄨㄟˊ','身邊、四周的地方。'],
+'委屈':['ㄨㄟˇ ㄑㄩ','覺得自己被誤解，或心裡有點難過、不舒服。'],
+'安慰':['ㄢ ㄨㄟˋ','別人難過時，說話或做事讓他心裡舒服一點。'],
+'經常':['ㄐㄧㄥ ㄔㄤˊ','常常發生，不是只有一次。'],
+'重視':['ㄓㄨㄥˋ ㄕˋ','覺得這個人或這件事很重要，願意認真看待。'],
+'煩惱':['ㄈㄢˊ ㄋㄠˇ','心裡有事情放心不下，一直在想。'],
+'悶悶不樂':['ㄇㄣˋ ㄇㄣˋ ㄅㄨˊ ㄌㄜˋ','心情不太好，也開心不起來。'],
+'始終':['ㄕˇ ㄓㄨㄥ','從頭到尾一直是這樣。'],
+'枯掉':['ㄎㄨ ㄉㄧㄠˋ','植物失去水分和生氣，慢慢乾掉。'],
+'花刺':['ㄏㄨㄚ ㄘˋ','有些花莖上尖尖的小刺。'],
+'緊張':['ㄐㄧㄣˇ ㄓㄤ','因為擔心或期待，心裡繃得緊緊的。'],
+'珍藏':['ㄓㄣ ㄘㄤˊ','因為很喜歡或覺得重要，而特別保存起來。'],
+'泥巴':['ㄋㄧˊ ㄅㄚ','土碰到水後，變得濕濕軟軟的樣子。'],
+'稱讚':['ㄔㄥ ㄗㄢˋ','說出別人做得好的地方。'],
+'嚴肅':['ㄧㄢˊ ㄙㄨˋ','態度認真，不是在開玩笑。'],
+'嚴厲':['ㄧㄢˊ ㄌㄧˋ','說話或要求很嚴格，讓人感覺比較強烈。'],
+'道歉':['ㄉㄠˋ ㄑㄧㄢˋ','知道自己做得不合適，向別人說對不起。'],
+'確認':['ㄑㄩㄝˋ ㄖㄣˋ','再弄清楚一件事是不是真的。'],
+'困惑':['ㄎㄨㄣˋ ㄏㄨㄛˋ','有事情想不明白，覺得不太清楚。'],
+'意外':['ㄧˋ ㄨㄞˋ','沒有預想到卻發生的事情。'],
+'反應':['ㄈㄢˇ ㄧㄥˋ','遇到事情時表現出的動作、表情或話語。'],
+'好意':['ㄏㄠˇ ㄧˋ','想幫助別人、對別人好的心意。'],
+'弄清楚':['ㄋㄨㄥˋ ㄑㄧㄥ ㄔㄨˇ','把本來不明白的事搞明白。'],
+'提醒':['ㄊㄧˊ ㄒㄧㄥˇ','告訴別人要注意或記得一件事。'],
+'原來':['ㄩㄢˊ ㄌㄞˊ','發現事情跟先前想的不太一樣時常用的詞。'],
+'期望':['ㄑㄧˊ ㄨㄤˋ','心裡希望一件事能夠發生。'],
+'不小心':['ㄅㄨˋ ㄒㄧㄠˇ ㄒㄧㄣ','沒有注意到而做錯或碰到事情。'],
+'關心':['ㄍㄨㄢ ㄒㄧㄣ','在意別人的情況，希望對方過得好。'],
+'很有道理':['ㄏㄣˇ ㄧㄡˇ ㄉㄠˋ ㄌㄧˇ','說法有可以理解、可以支持的理由。'],
+'宇宙':['ㄩˇ ㄓㄡˋ','所有星星、星球和廣大的空間。'],
+'理解':['ㄌㄧˇ ㄐㄧㄝˇ','知道一句話或一件事是什麼意思。'],
+'推測':['ㄊㄨㄟ ㄘㄜˋ','根據看到的線索，猜想可能發生的事。']};
+const TERMS=Object.keys(GLOSSARY).sort((a,b)=>b.length-a.length);
+const base={view:'home',scene:0,level:'story',phase:'read',position:{},attempts:{},notes:{},settings:{scale:1,terms:true},lastScene:0};
+let st={...base};
+let ephemeral={};
+let voices=[];let speechBatch=0;let toastTimer=null;let loadedStorage=true;
+try{const obj=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(obj&&typeof obj==='object')st=hydrate(obj)}catch(e){loadedStorage=false}
+function hydrate(x){const n={...base,...x};n.position=x.position&&typeof x.position==='object'&&!Array.isArray(x.position)?x.position:{};n.attempts=x.attempts&&typeof x.attempts==='object'&&!Array.isArray(x.attempts)?x.attempts:{};n.notes=x.notes&&typeof x.notes==='object'&&!Array.isArray(x.notes)?x.notes:{};n.settings={...base.settings,...(x.settings||{})};n.scene=Math.max(0,Math.min(8,Number(n.scene)||0));n.lastScene=Math.max(0,Math.min(8,Number(n.lastScene)||0));if(!['story','extra'].includes(n.level))n.level='story';if(!['read','practice'].includes(n.phase))n.phase='read';return n}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...st,view:'home'}));loadedStorage=true}catch(e){loadedStorage=false}}
+const eHtml=(s)=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const el=document.getElementById('main');
+const modal=document.getElementById('modal');
+function wordMarkup(raw){const t=String(raw);if(!st.settings.terms)return eHtml(t);const rx=new RegExp(TERMS.map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');let out='',start=0,m;while((m=rx.exec(t))){out+=eHtml(t.slice(start,m.index));const k=m[0];out+=`<button class="word-help" type="button" data-word="${eHtml(k)}" title="點一下看看這個詞語">${eHtml(k)}</button>`;start=m.index+k.length}return out+eHtml(t.slice(start))}
+function key(){return `${BOOK.scenes[st.scene].id}:${st.level}`}
+function qid(idx){return key()+':q'+idx}
+function currentScene(){return BOOK.scenes[st.scene]}
+function passage(){return currentScene()[st.level]}
+function questions(){return currentScene().questions[st.level]}
+function getPos(){return Math.max(0,Math.min(questions().length,Number(st.position[key()]||0)))}
+function attempt(id){if(!st.attempts[id])st.attempts[id]={tries:0,hints:0,correct:false,revealed:false,wrong:false,selection:null};return st.attempts[id]}
+function recordDone(a){return Boolean(a&&(a.correct||a.revealed))}
+function counts(s){const total=s.questions.story.length+s.questions.extra.length;let done=0,alone=0;for(const k of ['story','extra'])for(let i=0;i<s.questions[k].length;i++){const a=st.attempts[`${s.id}:${k}:q${i}`];if(recordDone(a))done++;if(a?.correct&&a.tries===1&&a.hints===0)alone++}return {total,done,alone}}
+function tally(){let done=0,alone=0,withHelp=0,explained=0;for(const s of BOOK.scenes){for(const kind of ['story','extra']){s.questions[kind].forEach((q,i)=>{const a=st.attempts[`${s.id}:${kind}:q${i}`];if(recordDone(a)){done++;if(a.correct&&a.tries===1&&a.hints===0)alone++;else if(a.revealed)explained++;else withHelp++}})}}return {done,alone,withHelp,explained}}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add('hidden'),2900)}
+function gotoHome(){stopSpeech();st.view='home';st.phase='read';save();render();topScroll()}
+function openScene(i,level='story',phase='read'){stopSpeech();st.scene=i;st.lastScene=i;st.level=level;st.phase=phase;st.view='reader';ephemeral={};save();render();topScroll()}
+function topScroll(){window.scrollTo({top:0,behavior:'instant'})}
+function home(){const stat=tally();const cards=BOOK.scenes.map((s,i)=>{const c=counts(s);const pct=Math.round(c.done/c.total*100);return `<button class="scene-card" style="--tile:${s.color}" data-open="${i}"><span class="card-row"><span class="icon-tile" aria-hidden="true">${s.icon}</span><span class="tag ${c.done===c.total?'':'quiet'}">${c.done===c.total?'讀過了':c.done?`已完成 ${c.done}/${c.total}`:'可以開始'}</span></span><h3>${i+1<9?`第${i+1}篇｜`:''}${eHtml(s.title)}</h3><p>${eHtml(s.subtitle)}</p><span class="card-foot"><span class="tiny-track"><span style="width:${pct}%"></span></span><span>${c.done===0?'開始閱讀':c.done===c.total?'重新看看':'接著閱讀'} →</span></span></button>`}).join('');return `<section class="home-hero"><span class="hero-badge">給小一孩子的閱讀理解練習</span><h1>跟著巧虎，<br>慢慢把故事讀明白。</h1><p>不是比誰答得快，也不是一直猜答案。先自己讀，遇到不明白的地方，就回到文章找線索。需要幫忙時，再一點一點打開提示。</p><div class="hero-buttons"><button class="btn main-btn" data-resume>📖 ${stat.done?'繼續上次的閱讀':'從第一篇開始'}</button><button class="btn" data-adults>給一起閱讀的大人</button></div></section><div class="section-head"><h2>選一個故事情境</h2><p>9 篇 · 故事理解與進階短文可分開練習 · 已完成 ${stat.done}/${TOTAL} 題</p></div><section class="scene-grid" aria-label="故事情境">${cards}</section><div class="home-bottom"><strong>閱讀小約定：</strong>答不出來可以回頭找文章；不知道就試著按「小提示」；真的想不通也可以看看說明。這裡不幫孩子的想法打分數，只看他有沒有逐漸學會找線索。${loadedStorage?'':'<br><strong>提醒：</strong>目前瀏覽器可能無法自動儲存進度，請到「給大人」下載備份。'}</div>`}
+function paraHtml(text,index){return `<div class="para" id="para-${index}" data-para="${index}"><div class="paragraph-inner"><span class="para-num">${String(index+1).padStart(2,'0')}</span><div class="paragraph-text">${wordMarkup(text)}</div></div><div class="paragraph-actions"><button class="read-aloud" data-tts="${index}" title="聽這一段文章">🔊 聽這段</button></div></div>`}
+function paperView(scene){const ps=passage();const isIdea=st.level==='extra';return `<article class="reading-paper" aria-label="閱讀原文"><div class="eyebrow">${isIdea?'02 · 進階想法閱讀':'01 · 故事閱讀'}</div><h2>${isIdea?'讀懂巧虎怎麼說':'那一天發生了什麼？'}</h2><p class="opening">${isIdea?'以下摘自〈巧虎的時光悄悄話〉，本區只練習讀懂短文在說什麼，不必同意巧虎的每個想法。':'下方使用正式故事原稿，保留原有敘述。你可以先自己讀，再開始練習。'} 　<button class="btn mini ghost" data-speakall>🔊 朗讀全文</button></p><div class="passage" id="reading-text">${ps.map(paraHtml).join('')}</div><div class="reading-end"><div class="left-notice">碰到有虛線的詞語，可以點一下看注音和意思。也可以按每段旁邊的「聽這段」。</div>${st.phase==='read'?`<button class="btn main-btn" data-begin>我讀好了，開始練習 →</button>`:`<button class="btn" data-readonly>先專心閱讀</button>`}</div></article>`}
+function renderChoices(q,a,idx){if(q.type==='choice'){return `<div class="choices">${q.options.map((o,i)=>{const chosen=a?.selection===i;return `<button class="answer-choice ${a?.correct&&chosen?'good':(!a?.correct&&chosen&&a?.wrong?'bad':'')}" data-pick="${i}" ${recordDone(a)?'disabled':''}><span class="choice-letter">${'ABC'[i]}</span><span>${eHtml(o)}</span></button>`}).join('')}</div>`}return `<p class="sentence-hint">找一找原文。可以先看段落編號，再點選最有力的一段證據。</p><div class="choices">${passage().map((p,i)=>{const chosen=a?.selection===i;return `<button class="answer-choice evidence-option ${a?.correct&&chosen?'good':(!a?.correct&&chosen&&a?.wrong?'bad':'')}" data-pick="${i}" ${recordDone(a)?'disabled':''}><span class="choice-letter">${i+1}</span><span>${eHtml(p.length>73?p.slice(0,73)+'……':p)}</span></button>`}).join('')}</div>`}
+function practiceView(){const qs=questions();const idx=getPos(),total=qs.length;const dots=qs.map((q,i)=>{let a=st.attempts[qid(i)];return `<span class="step-dot ${recordDone(a)?'done':''} ${idx===i?'current':''}"></span>`}).join('');if(idx>=total){let note=st.notes[key()]||'';return `<aside class="practice-panel" aria-label="理解練習"><span class="practice-eyebrow">這一段的練習</span><div class="practice-stepper">${dots}</div><div class="finished-icon">🌿</div><div class="finished-title">這一段先讀到這裡</div><p class="finished-text">你可以重新看看原文，也可以把自己讀懂的意思說一說。這不是考試，不需要寫出跟巧虎一模一樣的話。</p><div class="reflection"><h4>✏️ 試著用自己的話說</h4><p>${eHtml(currentScene().reflection)}</p><textarea id="ownNote" maxlength="1000" aria-label="用自己的話說" placeholder="寫一句也可以，或用 iPad 鍵盤的麥克風說出來……">${eHtml(note)}</textarea><div class="reflection-buttons"><button class="btn mini" data-save-note>留下我的想法</button></div><div class="under-note">自由表達不會自動評分；可以跟大人一起討論不同的說法。</div></div><div class="nav-questions"><button class="btn mini" data-prev>← 回上一題</button><button class="btn mini ghost" data-restart>再練這段 ↻</button><button class="btn main-btn" ${st.level==='extra'?'data-next-scene':'data-next-level'}>${st.level==='extra'?'下一個故事 →':'挑戰想法短文 →'}</button></div></aside>`}
+const q=qs[idx];const a=st.attempts[qid(idx)]||null;const done=recordDone(a);let feedback='';if(done){const independent=a.correct&&a.tries===1&&a.hints===0;feedback=`<div class="feedback good"><strong>${a.correct?(independent?'你自己找到了！':'你找到有根據的答案了！'):'你已經看過說明了。'}</strong><div class="explain-box">${eHtml(q.why)}<br><span class="under-note">文章線索：第 ${q.evidence.map(i=>i+1).join('、')} 段。</span></div></div>`}else if(a?.wrong){feedback='<div class="feedback">這個答案和文章最直接的線索還不太一樣。別急，回原文看看，也可以打開提示，再試一次。</div>'}
+const h=a?.hints||0;const hints=[];if(h>=1)hints.push(`<div class="hint-card"><div class="hint-heading">第一個小提示</div>${eHtml(q.hints[0])}</div>`);if(h>=2)hints.push(`<div class="hint-card"><div class="hint-heading">再多一點線索</div>${eHtml(q.hints[1])}</div>`);if(h>=3)hints.push(`<div class="hint-card"><div class="hint-heading">回文章找找</div>可以先看原文的第 ${q.evidence.map(i=>i+1).join('、')} 段。<button class="btn mini ghost" data-jump-evidence>帶我看看這段 ↗</button></div>`);
+const stepBtn=!done?`<div class="help-actions">${h<3?`<button class="btn mini" data-hint>${h===0?'給我一點小提示':h===1?'再多一點提示':'幫我找文章線索'}</button>`:''}<button class="btn mini ghost" data-reveal>我想先看說明</button></div>`:'';
+return `<aside class="practice-panel" aria-label="理解練習"><div class="practice-eyebrow">${st.level==='story'?'故事理解':'想法短文'} · 第 ${idx+1} / ${total} 題</div><div class="practice-progress"><h3>慢慢找到答案</h3><span class="tag quiet">${eHtml(q.skill)}</span></div><div class="practice-stepper">${dots}</div><div class="question-skill">先自己想想，再找文章的線索</div><div class="question">${eHtml(q.q)}</div>${renderChoices(q,a,idx)}${feedback}${hints.join('')}${stepBtn}<div class="nav-questions"><button class="btn mini" data-prev ${idx===0?'disabled':''}>← 上一題</button><button class="btn ${done?'main-btn':''}" data-next>${done?'下一題 →':'先往下一題 →'}</button></div><div class="under-note" style="margin-top:13px">不一定要第一次就答對。想不通時，練習回到文章找根據。</div></aside>`}
+function reader(){const s=currentScene();const c=counts(s);return `<div class="read-top"><div class="reader-ident"><span class="icon-tile" style="--tile:${s.color}" aria-hidden="true">${s.icon}</span><div><h1>${st.scene+1<9?'第'+(st.scene+1)+'篇｜':''}${eHtml(s.title)}</h1><p>${eHtml(s.subtitle)} · 這個情境已完成 ${c.done}/${c.total} 個理解任務</p></div></div><div class="reader-commands"><button class="btn mini" data-home>← 回全部情境</button><button class="btn mini" data-speech-stop>■ 停止朗讀</button></div></div><div class="level-tabs" role="tablist" aria-label="閱讀難度"><button role="tab" aria-selected="${st.level==='story'}" class="${st.level==='story'?'sel':''}" data-level="story">① 故事閱讀 <small>3 題</small></button><button role="tab" aria-selected="${st.level==='extra'}" class="${st.level==='extra'?'sel':''}" data-level="extra">② 想法短文 <small>2 題</small></button></div><div class="reader-layout-note">${st.phase==='read'?'先看原文就好，讀完再開始練習。': '可以回頭找左邊／上方的文章，答案應該找得到線索。'}</div><div class="reading-grid ${st.phase==='practice'?'in-practice':''}">${paperView(s)}${st.phase==='practice'?practiceView():''}</div>`}
+function parentView(){const stats=tally();const rows=BOOK.scenes.map(s=>{const c=counts(s);return `<tr><td>${eHtml(s.title)}</td><td>${c.done}/${c.total}</td><td>${c.alone}</td></tr>`}).join('');return `<div class="read-top"><div class="reader-ident"><span class="icon-tile" style="--tile:#e6efe0">🧭</span><div><h1>給一起閱讀的大人</h1><p>看看孩子需要什麼協助，不把分數當成閱讀能力的全部</p></div></div><button class="btn" data-home>← 回到閱讀</button></div><div class="parent-layout"><section class="adult-card"><h2>孩子目前的閱讀足跡</h2><div class="stat-grid"><div class="stat"><strong>${stats.done}</strong><span>已讀懂／看過說明</span></div><div class="stat"><strong>${stats.alone}</strong><span>第一次自行找到</span></div><div class="stat"><strong>${stats.withHelp+stats.explained}</strong><span>提示或說明協助</span></div></div><p>共 ${TOTAL} 個選擇或找證據任務。這些數字只是幫家長發現「哪些地方需要再陪一下」，不是能力排名，也不是學習成績單。</p></section><section class="adult-card"><h2>怎麼陪讀更有效？</h2><ol><li>每天挑一個情境，先讓孩子自己讀，別急著解釋。</li><li>孩子不懂時先問「哪一句讓你這樣想？」再使用第一個提示。</li><li>答錯時陪他回原文找線索，不必快速告訴答案。</li><li>自由回答可以有不同表達；大人多聽，少急著糾正。</li><li>先會自己讀懂，再逐步減少提示。深度的價值討論留給另一份「時光悄悄話」。</li></ol></section><section class="adult-card wide"><h2>各篇進度</h2><table class="adult-table"><thead><tr><th>故事情境</th><th>完成任務</th><th>自行找到</th></tr></thead><tbody>${rows}</tbody></table></section><section class="adult-card"><h2>資料備份</h2><p>練習紀錄與孩子打下的文字，預設只存在這個瀏覽器。換裝置、清除 Safari 網站資料或某些直接開檔方式，可能無法保留紀錄。可自行下載備份，再匯入另一台裝置。</p><div class="adult-actions"><button class="btn" data-export>⬇ 下載進度備份</button><label class="btn" for="fileImport">⬆ 匯入進度備份</label><input id="fileImport" class="sr-only" type="file" accept="application/json,.json"></div></section><section class="adult-card"><h2>關於本系統</h2><p>故事文字取自先前完成的《琪琪被罵了》正式稿。「那一天」保留原段落；進階短文則取自「巧虎的時光悄悄話」之連續原文段落。</p><p>題目與提示是事先撰寫、根據文章自動檢查的練習，不是 AI 語意評分。自由輸入內容不打分。瀏覽器語音是裝置提供的朗讀，並非原動畫配音。</p><button class="btn mini" data-reset>清除本機練習紀錄</button></section></div>`}
+function render(){document.documentElement.style.setProperty('--fsize',Math.min(1.3,Math.max(.86,Number(st.settings.scale)||1)));el.innerHTML=st.view==='home'?home():st.view==='reader'?reader():parentView();document.getElementById('header-home').setAttribute('aria-pressed',String(st.view==='home'));save()}
+function renderKeep(){const y=window.scrollY;render();window.scrollTo(0,y)}
+function scrollPractice(){let target=document.querySelector('.practice-panel');if(target)target.scrollIntoView({block:'start',behavior:'smooth'})}
+function answerPick(i){const idx=getPos(),q=questions()[idx],id=qid(idx),a=attempt(id);if(recordDone(a))return;a.tries+=1;a.selection=i;const good=(i===q.correct);if(good){a.correct=true;a.wrong=false;toast(a.tries===1&&a.hints===0?'你找到文章的線索了！':'你慢慢找到有根據的答案了！')}else{a.wrong=true;toast('再看看文章的線索，還可以試一次。')}save();renderKeep();if(good&&q.evidence.length){document.querySelectorAll('.para.proof').forEach(x=>x.classList.remove('proof'));const p=document.getElementById('para-'+q.evidence[0]);p?.classList.add('proof')}}
+function nextQuestion(){const n=getPos();st.position[key()]=Math.min(questions().length,n+1);save();renderKeep();scrollPractice()}
+function prevQuestion(){const n=getPos();if(n>0)st.position[key()]=n-1;save();renderKeep();scrollPractice()}
+function showHint(){const a=attempt(qid(getPos()));a.hints=Math.min(3,a.hints+1);save();renderKeep()}
+function reveal(){const a=attempt(qid(getPos()));a.revealed=true;save();renderKeep();toast('可以看看說明，再回到文章對一對。')}
+function jumpEvidence(){const idx=getPos(),q=questions()[idx];q.evidence.forEach(k=>document.getElementById('para-'+k)?.classList.add('proof'));document.getElementById('para-'+q.evidence[0])?.scrollIntoView({behavior:'smooth',block:'center'})}
+function showModal(inner){modal.innerHTML=`<div class="panel-overlay" id="overlayBackdrop"><div class="drawer" role="dialog" aria-modal="true" aria-label="閱讀輔助">${inner}</div></div>`;modal.classList.remove('hidden');document.getElementById('modal-close')?.focus()}
+function closeModal(){modal.classList.add('hidden');modal.innerHTML=''}
+function wordModal(w){const item=GLOSSARY[w];if(!item)return;showModal(`<div class="drawer-top"><h2>${eHtml(w)}</h2><button class="overlay-close" id="modal-close" aria-label="關閉">✕</button></div><div class="bopo">${eHtml(item[0])}</div><div class="meaning"><p>${eHtml(item[1])}</p></div><p class="setting-description">這裡是詞語求助。看懂意思以後，可以再讀一次原文。</p><button class="btn mini" data-speakword="${eHtml(w)}">🔊 聽這個詞</button>`)}
+function settingsModal(){showModal(`<div class="drawer-top"><h2>閱讀小工具</h2><button class="overlay-close" id="modal-close" aria-label="關閉">✕</button></div><p>可以調整字體大小、開關難字提示。這些工具只在需要時使用。</p><div class="settings-section"><h3>文字大小</h3><div class="settings-grid"><button class="btn mini" data-font="-.1">Ａ－</button><span class="tag quiet">目前 ${Math.round((st.settings.scale||1)*100)}%</span><button class="btn mini" data-font="+.1">Ａ＋</button><button class="btn mini ghost" data-font="reset">恢復大小</button></div></div><div class="settings-section"><h3>詞語求助</h3><div class="settings-grid"><button class="btn mini ${st.settings.terms?'main-btn':''}" data-terms>${st.settings.terms?'✓ 點詞語可以看注音與意思':'○ 開啟詞語提示'}</button></div><p class="setting-description">本版針對比較可能卡住的詞語提供台灣注音。這不是全文自動標注注音，以免多音字判讀錯誤。</p></div><div class="settings-section"><h3>語音朗讀</h3><p class="setting-description">使用裝置內建的中文語音；不是原動畫角色的聲音。能否朗讀取決於 iPad / 瀏覽器是否提供可用語音。文字會標出正在讀的段落，但不保證逐字高亮。</p><button class="btn mini" data-speech-stop>停止朗讀</button></div>`)}
+function stopSpeech(){speechBatch++;try{window.speechSynthesis?.cancel()}catch(e){}document.querySelectorAll('.para.speaking').forEach(x=>x.classList.remove('speaking'))}
+function loadVoices(){if(!('speechSynthesis'in window))return;voices=window.speechSynthesis.getVoices()||[]}
+if('speechSynthesis'in window){loadVoices();window.speechSynthesis.onvoiceschanged=loadVoices}
+function speak(text,ix){if(!('speechSynthesis'in window)){toast('這個瀏覽器目前不支援語音朗讀。');return false}stopSpeech();let id=speechBatch;const u=new SpeechSynthesisUtterance(text);u.lang='zh-TW';u.rate=.84;u.pitch=1;const zhTW=voices.find(v=>/zh[-_]TW/i.test(v.lang)),zh=voices.find(v=>/^zh/i.test(v.lang));if(zhTW)u.voice=zhTW;else if(zh)u.voice=zh;u.onstart=()=>{if(id!==speechBatch)return;if(ix!==undefined)document.getElementById('para-'+ix)?.classList.add('speaking')};u.onend=()=>{if(id!==speechBatch)return;document.querySelectorAll('.para.speaking').forEach(x=>x.classList.remove('speaking'))};u.onerror=()=>{document.querySelectorAll('.para.speaking').forEach(x=>x.classList.remove('speaking'));toast('目前無法使用裝置語音，可以先自己閱讀。')};try{window.speechSynthesis.speak(u);return true}catch(e){toast('目前無法使用語音朗讀。');return false}}
+function speakAll(){if(!('speechSynthesis'in window)){toast('這個瀏覽器目前不支援語音。');return}stopSpeech();const id=speechBatch;let i=0;function run(){if(id!==speechBatch||i>=passage().length)return;const j=i++;const u=new SpeechSynthesisUtterance(passage()[j]);u.lang='zh-TW';u.rate=.84;const zhTW=voices.find(v=>/zh[-_]TW/i.test(v.lang)),zh=voices.find(v=>/^zh/i.test(v.lang));if(zhTW)u.voice=zhTW;else if(zh)u.voice=zh;u.onstart=()=>{if(id===speechBatch)document.getElementById('para-'+j)?.classList.add('speaking')};u.onend=()=>{document.getElementById('para-'+j)?.classList.remove('speaking');run()};u.onerror=()=>{document.getElementById('para-'+j)?.classList.remove('speaking')};window.speechSynthesis.speak(u)}try{run()}catch(e){toast('裝置目前無法朗讀文章。')}}
+function saveNote(){const v=document.getElementById('ownNote')?.value||'';st.notes[key()]=v.trim();save();toast('這段話已留在本機閱讀紀錄。')}
+function exportBackup(){const content=JSON.stringify({app:'qiqi-reading-v1',exportedAt:new Date().toISOString(),progress:{scene:st.scene,lastScene:st.lastScene,level:st.level,position:st.position,attempts:st.attempts,notes:st.notes,settings:st.settings}},null,2);const blob=new Blob([content],{type:'application/json;charset=utf-8'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='琪琪被罵了_閱讀理解進度備份.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+async function importBackup(file){if(!file)return;if(file.size>1000000){toast('檔案太大，請使用本系統匯出的備份。');return}try{const x=JSON.parse(await file.text());if(x.app!=='qiqi-reading-v1'||!x.progress||typeof x.progress!=='object')throw Error('format');if(!confirm('要使用這份備份取代本機目前的閱讀進度嗎？'))return;st=hydrate({...x.progress,view:'home',phase:'read'});save();render();topScroll();toast('已匯入備份進度。')}catch(e){toast('無法讀取備份，請選擇本系統匯出的 JSON 檔案。')}}
+function resetData(){if(confirm('確定清除這台裝置的練習進度與孩子留下的文字嗎？這個動作不能還原，建議先備份。')){st=hydrate({...base,view:'home'});save();render();topScroll();toast('已清除本機紀錄。')}}
+// Delegated controls work after re-render, and keep the HTML file fully offline.
+document.addEventListener('click',(ev)=>{const b=ev.target.closest('button');if(!b){if(ev.target.id==='overlayBackdrop')closeModal();return}if(b.id==='header-home'||b.dataset.home!==undefined){gotoHome();return}if(b.id==='header-tools'){settingsModal();return}if(b.id==='header-adults'||b.dataset.adults!==undefined){stopSpeech();st.view='parent';save();render();topScroll();return}if(b.id==='modal-close'){closeModal();return}if(b.dataset.open!==undefined){const i=Number(b.dataset.open);const s=BOOK.scenes[i];openScene(i,'story',counts(s).done?'practice':'read');return}if(b.dataset.resume!==undefined){openScene(st.lastScene||0,st.level||'story',st.lastScene||tally().done?'practice':'read');return}if(b.dataset.level){stopSpeech();st.level=b.dataset.level;st.phase='read';save();render();topScroll();return}if(b.dataset.begin!==undefined){st.phase='practice';save();render();scrollPractice();return}if(b.dataset.readonly!==undefined){st.phase='read';save();render();topScroll();return}if(b.dataset.pick!==undefined){answerPick(Number(b.dataset.pick));return}if(b.dataset.hint!==undefined){showHint();return}if(b.dataset.reveal!==undefined){reveal();return}if(b.dataset.jumpEvidence!==undefined){jumpEvidence();return}if(b.dataset.next!==undefined){nextQuestion();return}if(b.dataset.prev!==undefined){prevQuestion();return}if(b.dataset.nextLevel!==undefined){st.level='extra';st.phase='read';save();render();topScroll();return}if(b.dataset.nextScene!==undefined){openScene((st.scene+1)%BOOK.scenes.length,'story');return}if(b.dataset.saveNote!==undefined){saveNote();return}if(b.dataset.restart!==undefined){if(confirm('要重新練習這段的題目嗎？這段的答題紀錄會重新開始，你自己寫的想法會保留。')){const ks=key();questions().forEach((q,i)=>delete st.attempts[ks+':q'+i]);st.position[ks]=0;save();renderKeep();scrollPractice()}return}if(b.dataset.tts!==undefined){speak(passage()[+b.dataset.tts],+b.dataset.tts);return}if(b.dataset.speakall!==undefined){speakAll();return}if(b.dataset.speakword){speak(b.dataset.speakword);return}if(b.dataset.speechStop!==undefined){stopSpeech();toast('朗讀已停止。');return}if(b.dataset.word){wordModal(b.dataset.word);return}if(b.dataset.font!==undefined){const x=b.dataset.font;st.settings.scale=x==='reset'?1:Math.max(.86,Math.min(1.3,Math.round((st.settings.scale+Number(x))*100)/100));save();settingsModal();renderKeep();return}if(b.dataset.terms!==undefined){st.settings.terms=!st.settings.terms;save();settingsModal();renderKeep();return}if(b.dataset.export!==undefined){exportBackup();return}if(b.dataset.reset!==undefined){resetData();return}});
+document.addEventListener('change',ev=>{if(ev.target.id==='fileImport')importBackup(ev.target.files?.[0])});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape')closeModal()});
+render();
+</script>
+</body>
+</html>

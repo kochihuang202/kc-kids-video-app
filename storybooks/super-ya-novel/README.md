@@ -1,10 +1,35 @@
+# 2026-10-16：閱讀理解與完整悄悄話
+
+兩篇每篇各有兩個入口。閱讀理解採用選讀段落、分層提示、原文線索與作答回饋；時光悄悄話保留完整原稿，不被練習摘錄取代。
+
+- 琪琪 45 題由使用者參考 HTML 匯入；SUPER YA 25 題依原稿編寫。58 個人工整理詞條提供臺灣注音、簡明詞義及裝置朗讀。兩模式都可查詞。
+- 字體參考原 HTML 的系統黑體、適當字重與段距。固定閱讀設定包含字級、注音、詞語標記、語速、朗讀與停止；段落亦可單獨聽讀。
+- 裝置語音優先 zh-TW，再使用可用的中文語音；實際音色、速度、發音取決於裝置，沒有模仿角色聲音。
+- 同一孩子共用雲端進度，沒有帳號或身分辨認。家長入口 `?view=parent` 分開顯示閱讀位置、作答、提示、重試、看解說與自由筆記，不把翻頁當成理解。
+- D1 `shimajiro-reading-progress` 為獨立資料庫。API 不含登入；知道網址的人可查看或操作這份共用紀錄，適用目前的家庭共用方式。
+- 離線時在本機暫存，重新連線再同步；伺服器確認前不刪除待送資料。若連本機儲存也被封鎖，仍可閱讀，離線重開的待送紀錄無法保證留存。沒有下載備份／匯入按鈕。
+
+新增來源與維護：`content/reference/qiqi_reading.html` 是原參考副本，匯入工具只解析資料，不執行其中程式。`content/practice.json`、`content/glossary.json`、`content/learning-ui.json` 與獨立 `readings.json` 可分別校訂。執行 `node scripts/import-practice.mjs` 重建題庫，再執行 build。
+
+本機完整功能需從儲存庫根目錄啟動 Wrangler（純靜態伺服器只供離線閱讀）：
+
+```powershell
+.\node_modules\.bin\wrangler.cmd d1 migrations apply shimajiro-reading-progress --local --config storybooks/super-ya-novel/wrangler.jsonc
+.\node_modules\.bin\wrangler.cmd dev --local --port 4178 --compatibility-date 2026-09-04 --config storybooks/super-ya-novel/wrangler.jsonc
+```
+
+本機相容日期覆寫是為現有 Wrangler 4.127.1 的 workerd；正式設定獨立保留。首次正式部署前，先依根目錄 Cloudflare SOP 備份並套用本專案 migrations；切勿把本機測試資料匯入正式資料庫。部署用既有 Worker 設定，無須更動影片站。
+
+新增瀏覽器測試 `tests/learning-flow.js` 與 `tests/cloud-recovery-flow.js` 只能在本機測試資料庫執行，會寫入作答與筆記資料；不要對正式兒童紀錄執行。原 reader/library/settings 流程繼續維護。
+
+---
 # 巧虎陪你讀：兩篇故事書架
 
 閱讀時，右下角固定的「閱讀設定」按鈕統一收納字級與注音開關。捲動後按鈕仍在原位；可用「完成設定」、點空白處或 Esc 收起。目錄與回到封面維持導覽功能。
 
 [Cloudflare 閱讀書架](https://shimajiro-reading.ji3cp31p4.workers.dev/)
 
-Cloudflare 版直接連結：[SUPER YA](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=super-ya)、[琪琪被罵了](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=kiki)。以獨立 Worker `shimajiro-reading` 提供靜態 dist/，不綁定原影片站的 D1、R2 或路由。網址可直接開啟，未加登入；原私人 Sites 保留。不同網域的瀏覽器閱讀紀錄不會自動轉移。
+Cloudflare 版直接連結：[SUPER YA](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=super-ya)、[琪琪被罵了](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=kiki)。以獨立 Worker `shimajiro-reading` 提供網站與進度 API，另建專用 D1；不使用原影片站的 D1、R2 或路由。網址可直接開啟，未加登入；原私人 Sites 保留。不同網域的瀏覽器閱讀紀錄不會自動轉移。
 
 後續部署於儲存庫根目錄執行：`node_modules/.bin/wrangler.cmd deploy --config storybooks/super-ya-novel/wrangler.jsonc`。部署前執行本書 Node 測試及需要的閱讀回歸檢查；先依 docs/cloudflare-access-sop.md 確認既有登入。部署設定參考 [Cloudflare 靜態資產文件](https://developers.cloudflare.com/workers/static-assets/binding/)。
 
@@ -54,9 +79,9 @@ npm run dev
 
 注音採本調標記，「一」「不」不另標口語變調。校訂參考教育部辭典，例如：[突然](https://dict.revised.moe.edu.tw/dictView.jsp?ID=54030&la=1&powerMode=0)、[可惜](https://dict.concised.moe.edu.tw/dictView.jsp?ID=17998&la=0&powerMode=0)、[心血](https://dict.concised.moe.edu.tw/dictView.jsp?ID=27647&powerMode=1&q=703)、[研究](https://dict.concised.moe.edu.tw/dictView.jsp?ID=41673&la=0&powerMode=0)。新增內容仍須重新校對。
 
-## 閱讀紀錄
+## 舊版閱讀紀錄（目前另有雲端同步）
 
-章節、段落定位、已讀地圖事件與閱讀設定只存在目前瀏覽器的 shimajiro-novel:v2，不會上傳。調整字級、注音與視窗尺寸時，以段落相對工具列的位置保持閱讀定位。五章舊版的章節、字級、注音及像素位置可沿用，接著會改用段落定位；舊選項不再載入。八章版 v1 只沿用字級與注音偏好，避免不同章節邊界造成錯位。儲存被封鎖時仍能讀完全書，地圖在本次開啟期間有效。
+舊版章節、段落定位、已讀地圖事件與閱讀設定存在目前瀏覽器；新版以雲端為主，保留本機快取與待同步佇列。調整字級、注音與視窗尺寸時，以段落相對工具列的位置保持閱讀定位。五章舊版的章節、字級、注音及像素位置可沿用，接著會改用段落定位；舊選項不再載入。八章版 v1 只沿用字級與注音偏好，避免不同章節邊界造成錯位。儲存被封鎖時仍能讀完全書，地圖在本次開啟期間有效。
 
 ## 驗證
 

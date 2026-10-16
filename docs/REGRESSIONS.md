@@ -350,3 +350,13 @@ Only important bugs that have occurred in the real app belong here.
 - Regression test: `storybooks/super-ya-novel/tests/reader-flow.js` — changing font keeps the current paragraph anchored; annotation toggle preserves the reading anchor; reopening resumes the exact saved text anchor; existing five-chapter pixel position remains a migration fallback. Run with the independent reader's local server on port 4178.
 - 2026-10-16 intended entry-point update: The user explicitly requested retaining both stories with links. The root URL now opens a two-book shelf; this historical reader flow opens `?book=super-ya` and retains all 103 expectations. `tests/library-flow.js` additionally verifies separate per-book positions/preferences, exact Kiki source rendering, cross-book links and storage-blocked reading.
 - 2026-10-16 settings UI update: The user requested one fixed button containing all settings. Font size and phonetics now share the bottom-right disclosure. Historical flows open that disclosure before adjusting phonetics; every original reading-position and persistence expectation remains. `tests/settings-flow.js` additionally covers fixed positioning, both settings inside the panel, keyboard/focus dismissal and viewport bounds.
+
+## REG-044 — Reading progress disappears when reloading during upload
+
+- Scope: `storybooks/super-ya-novel/public/cloud.js`, independent Cloudflare reader.
+- Reproduction: Change font size, hold the save request before acknowledgement, reload, then reconnect.
+- Correct behavior: Pending progress stays durable until the server acknowledges it. Reload overlays pending changes on the cloud snapshot; reconnect eventually saves them.
+- Root cause: Clearing the local queue when starting a request discarded its only durable copy before the server confirmed the write.
+- Fix: Persist in-flight patches together with newer pending changes until acknowledgement.
+- Regression test: `storybooks/super-ya-novel/tests/cloud-recovery-flow.js` (4 checks, local Worker/D1 only).
+- Intended behavior update: On 2026-10-16 the user requested one child's shared cloud progress and parental review, with separate comprehension and complete whispers modes. Existing source text, reading anchors and independent per-book settings remain covered by REG-043 flows.
