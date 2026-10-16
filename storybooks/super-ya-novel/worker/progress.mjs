@@ -3,9 +3,10 @@ const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
 const bad=()=>{throw new Error('進度格式不正確');};
 export function sanitizePatch(input,book,mode){
- if(!books[book]||!['whisper','practice'].includes(mode)||!plain(input))bad();
+ const shared=book==='reading'&&mode==='settings';
+ if((!shared&&(!books[book]||!['whisper','practice'].includes(mode)))||!plain(input))bad();
  const out={},count=books[book];
- const allowed=mode==='whisper'?['chapter','started','bopo','size','positions','anchors','readThrough','finished','words','rate']:['scene','level','phase','positions','attempts','notes','size','bopo','words','rate'];
+ const allowed=shared?['size','bopo','words','rate']:mode==='whisper'?['chapter','started','bopo','size','positions','anchors','readThrough','finished','words','rate']:['scene','level','phase','positions','attempts','notes','size','bopo','words','rate'];
  for(const [key,value]of Object.entries(input)){
   if(!allowed.includes(key))bad();
   if(['chapter','scene'].includes(key)){if(!integer(value,0,count-1))bad();out[key]=value;}
@@ -62,7 +63,7 @@ export default {
     const {results}=await env.PROGRESS.prepare('SELECT id, state, revision, updated_at FROM reading_progress ORDER BY id').all();
     return json({documents:Object.fromEntries(results.map(r=>[r.id,{state:JSON.parse(r.state),revision:r.revision,updatedAt:r.updated_at}]))});
    }
-   const match=url.pathname.match(/^\/api\/progress\/(super-ya|kiki)\/(whisper|practice)$/);
+   const match=url.pathname.match(/^\/api\/progress\/(super-ya|kiki|reading)\/(whisper|practice|settings)$/);
    if(request.method!=='POST'||!match)return json({error:'找不到這個功能'},404);
    const origin=request.headers.get('Origin');
    if((origin&&origin!==url.origin)||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'請從閱讀網站操作'},403);

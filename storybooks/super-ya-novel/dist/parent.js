@@ -1,7 +1,7 @@
 import {cloudSnapshot} from './cloud.js';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountParent({app,library,ui,ruby,getJSON}){
- document.body.dataset.view='parent';document.body.classList.remove('no-bopo');document.title='父母查看進度｜巧虎陪你讀';
+ document.body.dataset.view='parent';document.title='父母查看進度｜巧虎陪你讀';
  const practice=await getJSON('practice.json'),stories=Object.fromEntries(await Promise.all(library.books.map(async b=>[b.id,await getJSON(b.data)])));
  app.innerHTML=`<div class="shell"><header class="masthead"><span class="wordmark">${ruby(ui.parent)}</span><a href="./">${ruby(library.shelf)}</a></header><main class="parent-main"><h1>${ruby(ui.parentHeading)}</h1><p>${ruby(ui.parentNotice)}</p><div class="parent-actions"><button id="refresh-progress" type="button">${ruby(ui.refreshProgress)}</button><span id="parent-sync" role="status">${ruby(ui.connecting)}</span></div><div id="parent-progress"></div></main></div>`;
  let loading=false;

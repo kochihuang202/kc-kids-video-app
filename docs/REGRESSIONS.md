@@ -360,3 +360,12 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Persist in-flight patches together with newer pending changes until acknowledgement.
 - Regression test: `storybooks/super-ya-novel/tests/cloud-recovery-flow.js` (4 checks, local Worker/D1 only).
 - Intended behavior update: On 2026-10-16 the user requested one child's shared cloud progress and parental review, with separate comprehension and complete whispers modes. Existing source text, reading anchors and independent per-book settings remain covered by REG-043 flows.
+
+## REG-045 — Settings disappear on episode entry and phonetics reset across modes
+
+- Reproduction: Open `?book=kiki` before starting; the old fixed settings control is absent. Turn phonetics off in whispers, then navigate to comprehension or another episode; its separate saved/default preference turns phonetics back on.
+- Correct behavior: Episode entry and both reading modes expose the same left tools drawer. Font, phonetics, vocabulary hints and voice rate are one shared cloud preference; reading location and question history remain separate.
+- Root cause: The settings markup was mounted only inside the whisper reader, and each book/mode independently owned display preferences.
+- Fix: Reuse the drawer markup and a dedicated `reading:settings` document with a durable pending queue. Seed the first shared value from the current mode's existing cloud/local preferences. Both modes show direct switches that preserve the matching chapter/scene.
+- Intended behavior update: On 2026-10-16 the user explicitly requested a left drawer containing progress/settings/navigation, keeping phonetics off while changing pages, using the whispers reading layout for comprehension, and direct switching between modes. Library flow expectations now share display preferences while preserving every original per-book position/content assertion. Modal drawer flows dismiss the drawer before using background navigation.
+- Tests: `tests/settings-entry-flow.js`, `tests/drawer-flow.js`, `tests/shared-settings-flow.js`, `tests/mode-switch-flow.js` under `storybooks/super-ya-novel/`; existing settings/reader/library/learning flows remain in use.

@@ -46,5 +46,5 @@ export async function openProgress(book,mode,initial){
  if(Object.keys(pending).length)timer=setTimeout(flush,0);
  window.addEventListener('online',flush);window.addEventListener('pagehide',flush);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)flush();});
- return {value,update,flush,get status(){return status;}};
+ return {value,update,flush,get hasDocument(){return initialized;},get status(){return status;}};
 }

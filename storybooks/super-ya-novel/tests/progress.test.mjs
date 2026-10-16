@@ -14,3 +14,10 @@ test('cloud input is bounded, mode-specific and cannot inject arbitrary object k
  assert.throws(()=>sanitizePatch(JSON.parse('{"__proto__":{"bad":true}}'),'kiki','whisper'));
  assert.deepEqual(sanitizePatch({chapter:8,bopo:false,anchors:{8:null}},'kiki','whisper'),{chapter:8,bopo:false,anchors:{8:null}});
 });
+
+test('one shared settings document accepts only reader preferences across books and modes',()=>{
+ assert.deepEqual(sanitizePatch({bopo:false,size:2,words:false,rate:0.6},'reading','settings'),{bopo:false,size:2,words:false,rate:0.6});
+ assert.throws(()=>sanitizePatch({chapter:1},'reading','settings'));
+ assert.throws(()=>sanitizePatch({bopo:false},'kiki','settings'));
+ assert.throws(()=>sanitizePatch({bopo:false},'reading','practice'));
+});
