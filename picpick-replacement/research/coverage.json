@@ -1,0 +1,91 @@
+{
+  "target": "PicPick 7.4.1.0",
+  "target_sha256": "0306717b6cbdd90abf58f7e2d7f936c6d260571d72ed74bee34ea297b957b789",
+  "artifact_directory": "picpick-research/native-analysis",
+  "scope": {
+    "application_classes": 42,
+    "application_published_methods": 680,
+    "dfm_resources": 124,
+    "dfm_events": 1951,
+    "events_linked_to_owning_method": 1947,
+    "drawing_classes": 19,
+    "drawing_unique_override_procedures": 99
+  },
+  "evidence": [
+    {
+      "file": "application-class-map.json",
+      "bytes": 95960,
+      "sha256": "70f54383446f41d8b27f249d6358a68aeed2b65fa2cc5469c309567ca8f67521"
+    },
+    {
+      "file": "full-application-roots.tsv",
+      "bytes": 29819,
+      "sha256": "54c1fb2a597d6a4fc2ed281587d874bb23b3920601ad00527ee005a37e200cea"
+    },
+    {
+      "file": "feature-methods-decompiled.txt",
+      "bytes": 347716,
+      "sha256": "4e704567865fe4028c40a27ca7724f77f538b690b2380c51461258e0d39ea5c5"
+    },
+    {
+      "file": "full-application-decompiled.txt",
+      "bytes": 647634,
+      "sha256": "ae5c8571a12319bf4a3882652add2518e8f0a4e7ada39c1f27d3cb9a25db2fb5"
+    },
+    {
+      "file": "ui-owned-event-map.json",
+      "bytes": 1409388,
+      "sha256": "0d32071832c89cb96cb89d39d2ff58cd156002970d06ab4bb4ed937ecbf5971b"
+    },
+    {
+      "file": "drawing-object-method-map.json",
+      "bytes": 16053,
+      "sha256": "dbe2ce1ff536749d5a47ea372323d8542890402092ebb7a00b77303f755e12b6"
+    },
+    {
+      "file": "drawing-objects-decompiled.txt",
+      "bytes": 243736,
+      "sha256": "bae8e213706a1d3c1e2d7f6f0ba1ca0c3a692418661b2273bad83e39b24d7777"
+    },
+    {
+      "file": "deep-scroll.txt",
+      "bytes": 45693,
+      "sha256": "296fc5a1a0c9abbc26c8e6d3b405b51efb6a3a9c3f33e2253c48597ab268ec0c"
+    },
+    {
+      "file": "scroll-exact-assembly.txt",
+      "bytes": 44581,
+      "sha256": "a92e706eb6804cca67aa33a214c072265ff1706dab5f522885b16f44a513097d"
+    },
+    {
+      "file": "comparison-formula-assembly.txt",
+      "bytes": 24930,
+      "sha256": "1076800641942d5b0fde35d09257938ff81362f548bc381f7f4abc3fb364b83a"
+    },
+    {
+      "file": "exact-core-helpers.txt",
+      "bytes": 54133,
+      "sha256": "4495e515783ca82c53d23836dc9b2550497248320e5a2db5b90a626c0b058d30"
+    },
+    {
+      "file": "final-input-editor.txt",
+      "bytes": 82362,
+      "sha256": "60960dec1df64fe51fdfe92c524bceb2a65bcae163db20dce2ff0faed3c89fa3"
+    },
+    {
+      "file": "comparison-runtime-weights.json",
+      "bytes": 337,
+      "sha256": "163a51abf353e021d4617faa04fb738b756ad2142a49d083acbc1a3b36b0035c"
+    },
+    {
+      "file": "scroll-reconstruction-replay.json",
+      "bytes": 1402,
+      "sha256": "1277eed2e991c8982cb96970db4b026d31e596aba067ec2a254571a9d9c16343"
+    }
+  ],
+  "limits": [
+    "Static decompilation is not original source and contains Delphi control-flow/type recovery warnings.",
+    "Local-only replay reconstructs the prior viewport from an accumulated image.",
+    "No new replacement executable was published in this research checkpoint."
+  ]
+}
