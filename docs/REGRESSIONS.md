@@ -430,6 +430,13 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-057 — Captured images are not automatically available in the clipboard
+
+- Scope: `picpick-replacement/AppSettings.cs`, `CaptureCompletion.cs`, `WorkbenchForm.cs`.
+- Requested behavior, 2026-10-17: Add an optional capture-to-clipboard setting. It defaults on for new and existing settings, persists opt-out, and applies to both region capture and the complete scrolling result. Ordinary editing/import/paste does not automatically replace the clipboard.
+- Fix: Add the general-settings checkbox and route both successful capture branches through shared completion: save PNG, open its document, then copy the full saved bitmap using the existing PNG/bitmap clipboard writer. Clipboard errors only affect the completion status; the saved image stays open and editable. Cancelled selection never enters completion, and saving failure does not copy incomplete output.
+- Tests: `picpick-replacement/tests/Program.cs` covers missing/legacy settings, opt-out round trip, the actual settings checkbox save handler, standard/long bitmap completion, exact pixels and alpha, disabled copying, clipboard contention retaining a saved editable document, and failed saving not opening/copying an incomplete capture. All historical capture, scroll, editor and canvas flows remain required.
+
 ## REG-053 — Reading navigation labels and URLs disagree with the displayed page
 
 - Scope: `storybooks/super-ya-novel/public/app.js`, `practice.js`, `drawer.js`.

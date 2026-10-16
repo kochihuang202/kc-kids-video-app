@@ -4,7 +4,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 ## 執行
 
-可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.0)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.0/CaptureWorkbench.exe)。
+可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.1)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.1/CaptureWorkbench.exe)。
 
 執行 `artifacts/release/CaptureWorkbench.exe`。獨立發行版內含 .NET 執行環境，不需要安裝 SDK。
 
@@ -15,6 +15,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 - 框選：拖曳需要的範圍，放開即擷取。
 - 捲動：切換「捲動擷取」，框選可捲動的內容區域，程式自動捲動。**按 Esc 在需要的位置正常結束；連續確認畫面不再前進後也會自動結束。** 不需要捲到最底才算完成。
 - 每次擷取加入獨立 Tab，標題只顯示時間。綠點表示已保存，紅點表示修改中或尚未保存。捲動中保留綠色範圍框，框線在擷取矩形外側。
+- 「選項 → 程式設定 → 一般」可設定「截圖後自動複製到剪貼簿」，預設開啟，舊設定也沿用此預設。一般與捲動截圖完成後會複製完整圖片，可直接 Ctrl+V 貼上；取消勾選後不會替換剪貼簿。編輯、開檔及拖入圖片不觸發自動複製。剪貼簿複製失敗時，已保存的圖片與分頁仍保留，狀態列提示可按 Ctrl+C 重試。
 - `Ctrl+W` 關閉分頁，圖片仍保留。關閉分頁或整個程式時自動保存，下次啟動空白，不重開所有舊分頁。
 
 ## 編輯與保存

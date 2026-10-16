@@ -201,14 +201,15 @@ public sealed class WorkbenchForm : Form
             if (!overlay.IsScrolling) {
                 var v = SystemInformation.VirtualScreen; var r = overlay.SelectedRegion;
                 using var image = background.Clone(new Rectangle(r.Left - v.Left, r.Top - v.Top, r.Width, r.Height), PixelFormat.Format32bppArgb);
-                AddTab(store.Create(image));
+                SetStatus(CaptureCompletion.Complete(image, store, settings, AddTab, ClipboardImages.Write));
             } else {
                 captureCancellation = new CancellationTokenSource(); tray.Text = "正在捲動擷取 · Esc 結束";
                 ScrollResult result;
                 using (var frame = new ScrollCaptureFrame(overlay.SelectedRegion)) { frame.Show(); result = await ScrollCapture.RunAsync(overlay.SelectedRegion, store.Root, captureCancellation.Token, text => tray.Text = text.Length > 60 ? text[..60] : text, new DesktopScrollSurface(overlay.TargetWindow)); }
-                using (result.Image) AddTab(store.Create(result.Image));
+                string completion;
+                using (result.Image) completion = CaptureCompletion.Complete(result.Image, store, settings, AddTab, ClipboardImages.Write);
                 File.WriteAllText(Path.Combine(result.RecoveryPath, "completed"), result.Message);
-                SetStatus(result.Message);
+                SetStatus(result.Message + " · " + completion);
                 if (result.NeedsReview) MessageBox.Show(result.Message + "\n\n恢復資料：" + result.RecoveryPath, "請檢查擷取結果", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         } catch (Exception error) { MessageBox.Show(error.Message, "擷取未完成", MessageBoxButtons.OK, MessageBoxIcon.Error); }

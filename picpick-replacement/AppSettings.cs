@@ -19,6 +19,7 @@ public sealed record AppSettings
     public string OutputFolder { get; init; } = DocumentStore.DefaultRoot;
     public ShortcutBinding Shortcut { get; init; } = new();
     public bool StartWithWindows { get; init; }
+    public bool CopyCaptureToClipboard { get; init; } = true;
     public static AppSettings Load(string path) {
         if (!File.Exists(path)) return new();
         var settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? throw new InvalidDataException("設定檔無法讀取");
@@ -37,7 +38,8 @@ internal sealed class SettingsForm : Form
         var pages = new TabControl { Dock = DockStyle.Top, Height = 318, Padding = new Point(20, 8) };
         var outputPage = new TabPage("自動保存"); var shortcutPage = new TabPage("快捷鍵"); var generalPage = new TabPage("一般"); pages.TabPages.AddRange([outputPage, shortcutPage, generalPage]);
         var startup = new CheckBox { Text = "登入 Windows 時自動執行", Checked = current.StartWithWindows, Left = 22, Top = 30, Width = 420, AccessibleName = "開機自動執行" };
-        generalPage.Controls.AddRange([startup, new Label { Text = "自動啟動時收在右下角通知區，擷取快捷鍵仍可使用。\n\n關閉分頁或程式時自動保存；下次啟動不重開舊分頁。", Left = 22, Top = 80, Width = 540, Height = 120, ForeColor = Color.FromArgb(78, 92, 112) }]);
+        var copyCapture = new CheckBox { Text = "截圖後自動複製到剪貼簿", Checked = current.CopyCaptureToClipboard, Left = 22, Top = 76, Width = 420, AccessibleName = "截圖後自動複製到剪貼簿" };
+        generalPage.Controls.AddRange([startup, copyCapture, new Label { Text = "一般與捲動截圖完成後皆可直接貼上，編輯時不自動複製。\n\n自動啟動時收在右下角通知區，擷取快捷鍵仍可使用。\n\n關閉分頁或程式時自動保存；下次啟動不重開舊分頁。", Left = 22, Top = 122, Width = 540, Height = 144, ForeColor = Color.FromArgb(78, 92, 112) }]);
         var folderLabel = new Label { Text = "輸出資料夾", Left = 22, Top = 24, AutoSize = true };
         var folder = new TextBox { Text = current.OutputFolder, Left = 22, Top = 56, Width = 450, AccessibleName = "輸出資料夾路徑" };
         var browse = new Button { Text = "瀏覽…", Left = 480, Top = 54, Width = 92, Height = 32 };
@@ -55,7 +57,7 @@ internal sealed class SettingsForm : Form
         var save = new Button { Text = "確定", Left = 388, Top = 336, Width = 96, Height = 34 };
         var cancel = new Button { Text = "取消", DialogResult = DialogResult.Cancel, Left = 498, Top = 336, Width = 96, Height = 34 };
         save.Click += (_, _) => {
-            try { var candidate = current with { OutputFolder = Path.GetFullPath(folder.Text.Trim()), Shortcut = shortcut, StartWithWindows = startup.Checked }; var error = apply(candidate); if (error != null) { MessageBox.Show(this, error, "設定尚未套用", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; } DialogResult = DialogResult.OK; }
+            try { var candidate = current with { OutputFolder = Path.GetFullPath(folder.Text.Trim()), Shortcut = shortcut, StartWithWindows = startup.Checked, CopyCaptureToClipboard = copyCapture.Checked }; var error = apply(candidate); if (error != null) { MessageBox.Show(this, error, "設定尚未套用", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; } DialogResult = DialogResult.OK; }
             catch (Exception error) { MessageBox.Show(this, error.Message, "設定尚未套用", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         };
         Controls.AddRange([pages, save, cancel]); AcceptButton = save; CancelButton = cancel;

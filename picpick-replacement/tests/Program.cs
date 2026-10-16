@@ -194,5 +194,51 @@ Test("closing saves edits and clears the open-document list", () => {
 Test("startup command quotes the executable and opens in the notification area", () => {
     Check(StartupRegistration.CommandFor(@"C:\Apps With Spaces\CaptureWorkbench.exe") == "\"C:\\Apps With Spaces\\CaptureWorkbench.exe\" --tray", "Startup command breaks paths containing spaces");
 });
+Test("capture clipboard preference defaults on for existing settings and remembers opt-out", () => {
+    string path = Path.Combine(Path.GetTempPath(), "CaptureWorkbench-clipboard-settings-" + Guid.NewGuid().ToString("N"), "settings.json");
+    var defaults = AppSettings.Load(path);
+    using (var json = System.Text.Json.JsonDocument.Parse(System.Text.Json.JsonSerializer.Serialize(defaults))) Check(json.RootElement.TryGetProperty("CopyCaptureToClipboard", out var copy) && copy.GetBoolean(), "Capture clipboard setting is missing or not enabled by default");
+    Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, "{}");
+    AppSettings.Load(path).Save(path);
+    using (var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path))) Check(json.RootElement.GetProperty("CopyCaptureToClipboard").GetBoolean(), "Existing settings did not receive the enabled default");
+    var disabled = System.Text.Json.JsonSerializer.Deserialize<AppSettings>("{\"CopyCaptureToClipboard\":false}")!; disabled.Save(path);
+    AppSettings.Load(path).Save(path);
+    using (var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path))) Check(!json.RootElement.GetProperty("CopyCaptureToClipboard").GetBoolean(), "Explicitly disabled clipboard preference did not survive restart");
+});
+Test("capture completion copies full saved pixels only when enabled and clipboard failures retain the saved tab", () => {
+    string root = Path.Combine(Path.GetTempPath(), "CaptureWorkbench-autocopy-" + Guid.NewGuid().ToString("N")); var store = new DocumentStore(root);
+    foreach (var size in new[] { new Size(120, 80), new Size(120, 1400) }) {
+        using var image = NewCanvasForm.CreateImage(size.Width, size.Height, Color.Transparent); image.SetPixel(size.Width - 1, size.Height - 1, Color.Red);
+        ImageDocument? opened = null; int copies = 0;
+        string result = CaptureCompletion.Complete(image, store, new(), doc => opened = doc, pixels => {
+            copies++; Check(opened != null && File.Exists(opened.OutputPath), "Copy ran before the capture was saved and opened");
+            Check(pixels.Size == size && pixels.GetPixel(size.Width - 1, size.Height - 1).ToArgb() == Color.Red.ToArgb() && pixels.GetPixel(0, 0).A == 0, "Auto-copy lost full capture dimensions, pixels or transparency");
+        });
+        using (opened) { Check(copies == 1 && result.Contains("複製到剪貼簿") && opened?.Pending == false, "Successful capture was not saved and copied exactly once"); }
+    }
+    using var small = NewCanvasForm.CreateImage(40, 30, Color.Blue); ImageDocument? retained = null; int disabledCopies = 0;
+    CaptureCompletion.Complete(small, store, new() { CopyCaptureToClipboard = false }, doc => retained = doc, _ => disabledCopies++);
+    using (retained) { Check(disabledCopies == 0 && retained != null && File.Exists(retained.OutputPath), "Disabling auto-copy must preserve the clipboard and still save/open the capture"); }
+    retained = null;
+    string failed = CaptureCompletion.Complete(small, store, new(), doc => retained = doc, _ => throw new System.Runtime.InteropServices.ExternalException("clipboard busy"));
+    using (retained) {
+        Check(retained != null && !retained.Pending && File.Exists(retained.OutputPath) && failed.Contains("剪貼簿複製未完成"), "Clipboard failure lost the saved capture or reported capture failure");
+        using var edit = new Bitmap(retained!.Image); edit.SetPixel(0, 0, Color.Lime); retained.Commit(edit); Check(retained.Pending, "Capture cannot still be edited after a clipboard failure");
+    }
+    string blocked = Path.Combine(root, "blocked"); File.WriteAllText(blocked, "not a directory"); int failedCopies = 0, failedOpens = 0; bool saveFailed = false;
+    try { CaptureCompletion.Complete(small, new DocumentStore(blocked), new(), _ => failedOpens++, _ => failedCopies++); } catch (IOException) { saveFailed = true; }
+    Check(saveFailed && failedCopies == 0 && failedOpens == 0, "Failed capture save must not replace the clipboard or create an incomplete tab");
+});
+Test("settings checkbox saves the capture clipboard preference", () => CanvasUserFlows.RunSta(() => {
+    AppSettings? applied = null;
+    var type = typeof(AppSettings).Assembly.GetType("CaptureWorkbench.SettingsForm")!;
+    using var form = (Form)Activator.CreateInstance(type, [new AppSettings(), "test", new Func<AppSettings, string?>(settings => { applied = settings; return null; }), false])!;
+    var tabs = form.Controls.OfType<TabControl>().Single(); var general = tabs.TabPages.Cast<TabPage>().Single(page => page.Text == "一般");
+    var checkbox = general.Controls.OfType<CheckBox>().Single(control => control.AccessibleName == "截圖後自動複製到剪貼簿");
+    Check(checkbox.Checked, "Auto-copy checkbox is not enabled by default"); checkbox.Checked = false;
+    var save = form.Controls.OfType<Button>().Single(button => button.Text == "確定");
+    typeof(Button).GetMethod("OnClick", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(save, [EventArgs.Empty]);
+    Check(applied?.CopyCaptureToClipboard == false && form.DialogResult == DialogResult.OK, "Settings dialog did not apply the checkbox value");
+}));
 Console.WriteLine($"{testCount - failures.Count}/{testCount} checks passed");
 return failures.Count == 0 ? 0 : 1;
