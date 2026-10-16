@@ -1,5 +1,9 @@
 # 格式與排版先查現成方案
 
+## 2026-10-17 設定抽屜精簡
+
+查核 [MDN details 原生揭露元件](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details)。本次只刪除抽屜中重複的閱讀工具／進度／目錄，不改動已驗證的原生 details/summary 開關、焦點及背景遮罩；不增加套件或新授權。沿用 Han.css 3.3.0 注音，標題統一為「閱讀設定」。以 Chromium 窄畫面與 WebKit 平板流程驗證保留功能。
+
 使用者於 2026-10-17 要求：每次格式調整先上網查相應套件或標準，檢查授權、維護與裝置支援；有適用方案時優先採用，不以反覆猜測 CSS 代替現成排版規則。
 
 ## 本次查核及採用

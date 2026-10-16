@@ -4,7 +4,7 @@ async(sessionPage)=>{
  const check=(v,m)=>{if(!v)throw Error(m);checks.push(m);};
  await page.goto('http://127.0.0.1:4178/?book=kiki');await page.locator('.mode-card').first().waitFor();
  await page.locator('.preferences summary').click();
- check(await page.locator('.drawer-nav').isVisible(),'entry has a left drawer with progress and navigation');
+ check(await page.locator('.drawer-nav,.drawer-progress').count()===0,'settings excludes the retired tools/progress/navigation sections');
  const r=await page.locator('.reading-settings').boundingBox();check(r.x===0,'drawer opens from left edge');
  await page.getByRole('button',{name:'注音：開',exact:true}).click();await page.getByRole('button',{name:'特大',exact:true}).click();
  await page.keyboard.press('Escape');await page.locator('.mode-card a[href$="mode=practice"]').click();await page.locator('.scene-card').first().waitFor();

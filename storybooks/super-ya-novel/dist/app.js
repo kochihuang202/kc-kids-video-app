@@ -1,10 +1,10 @@
-import {storage,preview,draftURL} from './storage.js?v=a30cccf97894';
-import {parentGate,parentSession} from './parent-gate.js?v=a30cccf97894';
-import {pageWordCount} from './text-stats.js?v=a30cccf97894';
-import {openPreferences,preferenceValues} from './preferences.js?v=a30cccf97894';
-import {drawer} from './drawer.js?v=a30cccf97894';
-import {openProgress} from './cloud.js?v=a30cccf97894';
-import {wordRanges,showWord,speakParagraphs,stopSpeech} from './tools.js?v=a30cccf97894';
+import {storage,preview,draftURL} from './storage.js?v=f61edb3476df';
+import {parentGate,parentSession} from './parent-gate.js?v=f61edb3476df';
+import {pageWordCount} from './text-stats.js?v=f61edb3476df';
+import {openPreferences,preferenceValues} from './preferences.js?v=f61edb3476df';
+import {drawer} from './drawer.js?v=f61edb3476df';
+import {openProgress} from './cloud.js?v=f61edb3476df';
+import {wordRanges,showWord,speakParagraphs,stopSpeech} from './tools.js?v=f61edb3476df';
 const LEGACY_KEY='shimajiro-novel:v1',app=document.querySelector('#app');
 let KEY,library,selectedBook,story,ui,readings,state,glossary,cloud,preferencesStore,practiceResume=0,practiceTitles=[],practiceStarted=false,saveTimer,scrollFrame,restoring=false,storageAvailable=true;
 const defaults=()=>({chapter:0,started:false,bopo:true,size:0,positions:{},anchors:{},readThrough:{},finished:false,words:true,rate:0.85});
@@ -78,8 +78,8 @@ function shelf(){
  app.innerHTML='<div class="shell"><header class="masthead"><span class="wordmark">'+ruby(library.title)+'</span><span class="book-number">STORYBOOKS / 02</span></header><main class="bookshelf"><h1>'+ruby(library.invitation)+'</h1><p class="shelf-note">'+ruby(library.saved)+'</p><div class="book-grid">'+library.books.map(b=>'<a class="book-card" href="?book='+b.id+'" aria-label="'+escape(b.title)+'"><img src="'+escape(b.image)+'" alt="'+escape(b.imageAlt)+'" width="960" height="540"><div><p class="book-number">0'+Number(b.number)+'</p><h2>'+ruby(b.title)+'</h2><p>'+ruby(b.subtitle)+'</p><p class="shelf-note">'+ruby(b.detail)+'</p><span class="book-open">'+ruby(library.open)+' ↗</span></div></a>').join('')+'</div></main></div>'+shelfPreferences();
 }
 function preferenceControls(){return `${button(`${ui.bopo}：${state.bopo?ui.on:ui.off}`,'bopo','',`id="bopo-toggle" aria-pressed="${state.bopo}"`)}<span>${ruby(ui.size)}</span><div class="size-buttons" role="group" aria-label="字的大小">${[ui.small,ui.medium,ui.large].map((v,i)=>button(v,'size','',`data-size="${i}" aria-pressed="${state.size===i}"`)).join('')}</div><button type="button" data-action="words" aria-label="詞語提示" aria-pressed="${state.words}">${ruby(ui.words)}</button><div class="speech-controls">${button(ui.speakChapter,'speak-chapter','',document.body.dataset.view==='reader'?'':'disabled')}${button(ui.stopSpeech,'speech-stop')}<div class="rate-buttons" role="group" aria-label="朗讀速度">${[[0.6,ui.slow],[0.85,ui.normal],[1,ui.fast]].map(([rate,label])=>button(label,'rate','',`data-rate="${rate}" aria-pressed="${state.rate===rate}"`)).join('')} </div><p class="tool-note">${ruby(ui.voiceNotice)}</p></div><p class="sync-note" data-sync-status>${escape(cloud?.status||preferencesStore?.status||ui.connecting)}</p>${button(ui.doneSettings,'close-settings','primary')}`;}
-function shelfPreferences(){return drawer({ui,ruby,close:'data-action="close-settings"',progress:`<p>${ruby(library.saved)}</p>`,links:'',controls:preferenceControls()});}
-function preferences(){return drawer({ui,ruby,close:'data-action="close-settings"',progress:`<p>${ruby(state.started?story.chapters[state.chapter].title:ui.notStarted)}</p><p class="tool-note">${ruby(ui.readingNotUnderstanding)}</p>`,links:`${document.body.dataset.view==='home'?'':`<span class="drawer-current">${ruby(ui.whisperTitle)}</span><a href="?book=${selectedBook.id}&mode=whisper">${ruby('選擇篇章')}</a>${button(ui.toc,'toc')}${toc()}`}`,controls:preferenceControls()});}
+function shelfPreferences(){return drawer({ui,ruby,close:'data-action="close-settings"',controls:preferenceControls()});}
+function preferences(){return shelfPreferences();}
 let restoringRoute=false;
 function syncWhisperRoute(chapter){
  if(restoringRoute)return;
@@ -196,7 +196,7 @@ try{
   if(selectedBook.ui)ui=await getJSON(selectedBook.ui);
   document.title=story.title+'｜'+story.subtitle;
   if(query.get('mode')==='practice'){
-   const {mountPractice}=await import('./practice.js?v=a30cccf97894');
+   const {mountPractice}=await import('./practice.js?v=f61edb3476df');
    await mountPractice({app,book:selectedBook,story,ui,ruby,rich,glossary,getJSON});
   }else{
    state=loadState();cloud=await openProgress(selectedBook.id,'whisper',state);preferencesStore=await openPreferences(cloud.value);state=loadState({...cloud.value,...preferencesStore.value});
@@ -208,4 +208,4 @@ try{
  }else shelf();
 }catch{app.innerHTML='<p class="loading" role="alert">故事暫時沒有打開，請再試一次。<br><button type="button" id="retry">重新打開</button></p>';document.querySelector('#retry').addEventListener('click',()=>location.reload());}
 
-document.addEventListener('parent-unlocked',async()=>{stopSpeech(true);if(document.body.dataset.view==='reader')remember();const session=parentSession();const {mountParent}=await import('./parent.js?v=a30cccf97894');if(session.isActive())await mountParent({app,library,ui,ruby,getJSON,session});});
+document.addEventListener('parent-unlocked',async()=>{stopSpeech(true);if(document.body.dataset.view==='reader')remember();const session=parentSession();const {mountParent}=await import('./parent.js?v=f61edb3476df');if(session.isActive())await mountParent({app,library,ui,ruby,getJSON,session});});

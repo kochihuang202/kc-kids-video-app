@@ -41,8 +41,8 @@ async(sessionPage)=>{
  await page.getByRole('button',{name:'讀完了，回到封面',exact:true}).click();
  await page.goto('http://127.0.0.1:4178/?book=kiki&mode=whisper');await page.locator('.resume-map').waitFor();check(await page.locator('.resume-map').count()===1,'Kiki has its own resume recap in its mode contents');await page.goto('http://127.0.0.1:4178/?book=kiki');
  await page.locator('[data-action=start]').click();await wait();
- await page.locator('.preferences summary').click();await page.getByRole('button',{name:'故事目錄',exact:true}).click();
- await page.getByRole('dialog').getByRole('button',{name:story.chapters[3].title,exact:true}).click();await wait();
+ await page.locator('.mode-toc-link').click();
+ await page.locator('.toc-list').getByRole('button',{name:story.chapters[3].title,exact:true}).click();await wait();
  await page.locator('[data-block="10"]').evaluate(el=>scrollTo(0,scrollY+el.getBoundingClientRect().top-130));await wait();
  await page.locator('.preferences summary').click();await page.getByRole('button',{name:'特大',exact:true}).click();await wait();await page.keyboard.press('Escape');
  if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();await page.getByRole('button',{name:'注音：開',exact:true}).click();await wait();

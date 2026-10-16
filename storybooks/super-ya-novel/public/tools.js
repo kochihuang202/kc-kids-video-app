@@ -1,11 +1,11 @@
 let batch=0,utterance;
 const speakStatus=message=>{let el=document.querySelector('#speech-status');if(!el){el=document.createElement('p');el.id='speech-status';el.className='speech-status';el.setAttribute('role','status');document.body.append(el);}el.textContent=message;if(message.includes('正在')){const button=document.createElement('button');button.type='button';button.textContent='停止朗讀';button.onclick=()=>stopSpeech(true);el.append(button);}};
-export function stopSpeech(announce=false){batch++;window.speechSynthesis?.cancel();utterance=null;document.querySelectorAll('.speaking').forEach(n=>n.classList.remove('speaking'));if(announce)speakStatus('朗讀已停止');}
+export function stopSpeech(announce=false){batch++;window.speechSynthesis?.cancel();utterance=null;document.querySelector('#speech-status')?.remove();document.querySelectorAll('.speaking').forEach(n=>n.classList.remove('speaking'));if(announce)speakStatus('朗讀已停止');}
 export function speakParagraphs(items,rate=0.85){
  stopSpeech();if(!('speechSynthesis'in window)||!('SpeechSynthesisUtterance'in window)){speakStatus('這個裝置目前沒有可用的語音朗讀，仍可照常閱讀。');return;}
  const id=batch;let index=0;
  const next=()=>{
-  if(id!==batch||index>=items.length){if(id===batch)speakStatus('這一段朗讀完成');return;}
+  if(id!==batch||index>=items.length){if(id===batch){utterance=null;document.querySelector('#speech-status')?.remove();}return;}
   const item=items[index++],u=new SpeechSynthesisUtterance(item.text.replace(/\*\*/g,''));utterance=u;u.lang='zh-TW';u.rate=rate;u.pitch=1;
   const voices=window.speechSynthesis.getVoices(),voice=voices.find(v=>/^zh[-_]TW$/i.test(v.lang))||voices.find(v=>/^zh/i.test(v.lang));if(voice)u.voice=voice;
   u.onstart=()=>{if(id!==batch)return;speakStatus('正在使用裝置語音朗讀');if(item.element){item.element.classList.add('speaking');const r=item.element.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight)item.element.scrollIntoView({block:'center',behavior:'smooth'});}};

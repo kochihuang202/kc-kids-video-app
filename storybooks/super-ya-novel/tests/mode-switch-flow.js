@@ -6,7 +6,8 @@ async(sessionPage)=>{
  await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('.mode-card a[href*="scene="]').click();await page.locator('.practice-paper').waitFor();
  check(new URL(page.url()).searchParams.get('scene')==='0','practice starts at independent first unit');
  await page.getByRole('button',{name:'我讀好了，開始練習',exact:true}).click();
- const paper=await page.locator('.practice-paper').boundingBox(),questions=await page.locator('.practice-panel').boundingBox();
+ // Measure both boxes in the same frame while the native smooth scroll runs.
+ const [paper,questions]=await page.evaluate(()=>['.practice-paper','.practice-panel'].map(selector=>document.querySelector(selector).getBoundingClientRect().toJSON()));
  check(questions.y>=paper.y+paper.height,'questions follow continuous story instead of side-by-side columns');
  check(paper.width<=850,'comprehension uses the storybook reading width');
  check(await page.locator('.mode-switch,.level-tabs').count()===0,'reader has no mode cards or legacy tabs');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'output/playwright/mode-practice.png'});

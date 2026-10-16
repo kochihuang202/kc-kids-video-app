@@ -71,8 +71,8 @@ async (sessionPage) => {
     await atBlock(37);await page.screenshot({path:`output/playwright/reader-${label}-large.png`});
   }
   await page.setViewportSize({width:820,height:1180});await settle();
-  await openSettings();await page.getByRole('button',{name:'故事目錄',exact:true}).click();
-  await page.getByRole('dialog').getByRole('button',{name:story.chapters[3].title,exact:true}).click();await settle();
+  await page.locator('.mode-toc-link').click();
+  await page.locator('.toc-list').getByRole('button',{name:story.chapters[3].title,exact:true}).click();await settle();
   check(await plain(page.locator('#chapter-title'))===story.chapters[3].title,'table of contents opens a selected chapter');
   check(await page.locator('#story-map .map-card').count()===4,'read map progress persists after switching chapters');
   await atBlock(67);
