@@ -7,6 +7,7 @@ async(sessionPage)=>{
  await page.addInitScript(()=>{if(!localStorage.getItem('shimajiro-novel:v2'))localStorage.setItem('shimajiro-novel:v2',JSON.stringify({chapter:2,started:true,bopo:true,size:1,positions:{2:2500}}));});
  await page.goto('http://127.0.0.1:4178/');await page.locator('.bookshelf').waitFor();
  check(await page.locator('.book-card').count()===2,'shelf offers both books');
+ await page.locator('.book-card img').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
  check(await page.locator('.book-card').evaluateAll(nodes=>nodes.every(n=>n.href.includes('?book=')&&n.querySelector('img').complete)),'both book links and cover images work');
  for(const [width,height,label]of [[820,1180,'portrait'],[1180,820,'landscape'],[390,844,'mobile']]){
   await page.setViewportSize({width,height});await wait();check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),label+' shelf has no horizontal overflow');
@@ -69,7 +70,7 @@ async(sessionPage)=>{
  }
  await page.reload();await page.locator('[data-action="start"]').click();await wait();
  check(await plain(page.locator('#chapter-title'))===story.chapters[3].title,'direct Kiki link reload preserves independent resume');
- await page.goto('http://127.0.0.1:4178/?book=unknown');check(await page.locator('.book-card').count()===2,'unknown book link safely returns to shelf');
+ await page.goto('http://127.0.0.1:4178/?book=unknown');await page.locator('.bookshelf').waitFor();check(await page.locator('.book-card').count()===2,'unknown book link safely returns to shelf');
  const blockedContext=await browser.newContext({viewport:{width:820,height:1180}}),blocked=await blockedContext.newPage();
  await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Denied','SecurityError');}}));
  await blocked.goto('http://127.0.0.1:4178/');await blocked.locator('.book-card[href="?book=kiki"]').click();await blocked.locator('[data-action="start"]').click();

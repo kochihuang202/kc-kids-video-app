@@ -1,5 +1,11 @@
 # 巧虎陪你讀：兩篇故事書架
 
+[Cloudflare 閱讀書架](https://shimajiro-reading.ji3cp31p4.workers.dev/)
+
+Cloudflare 版直接連結：[SUPER YA](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=super-ya)、[琪琪被罵了](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=kiki)。以獨立 Worker `shimajiro-reading` 提供靜態 dist/，不綁定原影片站的 D1、R2 或路由。網址可直接開啟，未加登入；原私人 Sites 保留。不同網域的瀏覽器閱讀紀錄不會自動轉移。
+
+後續部署於儲存庫根目錄執行：`node_modules/.bin/wrangler.cmd deploy --config storybooks/super-ya-novel/wrangler.jsonc`。部署前執行本書 Node 測試及需要的閱讀回歸檢查；先依 docs/cloudflare-access-sop.md 確認既有登入。部署設定參考 [Cloudflare 靜態資產文件](https://developers.cloudflare.com/workers/static-assets/binding/)。
+
 [私人閱讀網站](https://shimajiro-super-ya-reading.fxn-e-bg-5664.chatgpt.site)
 
 2026-10-16：依使用者最後指示，保留原故事並新增第二篇，入口改為兩本書的書架。也能直接連結：
