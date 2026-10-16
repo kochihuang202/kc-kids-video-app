@@ -177,6 +177,8 @@ Test("normal editor flow: centered numbers, direct dragging, paste, resize, sele
 Test("large pasted image keeps original pixels inside an unchanged smaller canvas", CanvasUserFlows.LargePasteKeepsPixels);
 Test("floating large paste moves outside, merges to fixed bounds and canvas drag preserves pixels", CanvasUserFlows.PasteMergeAndResizeCanvas);
 Test("new blank canvas uses clipboard dimensions independently of clipboard content", CanvasUserFlows.ClipboardCanvasSize);
+Test("all eight canvas handles grow and crop from their own edges without scaling, with undo and cancel", CanvasUserFlows.CanvasAllEdges);
+Test("Explorer file drop inserts multiple original-size editable images into the current canvas", CanvasUserFlows.ExplorerImageDrop);
 Test("closing saves edits and clears the open-document list", () => {
     var root = Path.Combine(Path.GetTempPath(), "CaptureWorkbench-close-" + Guid.NewGuid().ToString("N"));
     var store = new DocumentStore(root); using var blank = NewCanvasForm.CreateImage(80, 60, Color.White); using var doc = store.Create(blank);

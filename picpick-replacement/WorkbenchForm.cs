@@ -95,6 +95,7 @@ public sealed class WorkbenchForm : Form
         var footer = new StatusStrip(); footer.Items.Add(status); footer.Items.Add(new ToolStripStatusLabel("● 已保存") { ForeColor = Color.SeaGreen }); footer.Items.Add(new ToolStripStatusLabel("● 修改中／未保存") { ForeColor = Color.Firebrick });
         var workspace = new Panel { Dock = DockStyle.Fill };
         workspace.Controls.Add(tabs); workspace.Controls.Add(welcome); welcome.BringToFront();
+        foreach (var target in new Control[] { this, workspace, tabs, welcome }) ImageFileDrop.Attach(target, DropImages, () => !capturing);
         tabs.SelectedIndexChanged += (_, _) => { UpdateTools(); SetStatus(SaveStatus()); };
         tabs.DrawItem += (_, e) => {
             if (e.Index < 0 || e.Index >= tabs.TabCount) return;
@@ -232,6 +233,11 @@ public sealed class WorkbenchForm : Form
     void DrainOpenRequests() { while (pendingFiles.TryDequeue(out var file)) Safe(() => Import(file)); }
     void OpenImages() { using var dialog = new OpenFileDialog { Filter = "圖片|*.png;*.jpg;*.jpeg;*.bmp;*.gif|所有檔案|*.*", Multiselect = true }; if (dialog.ShowDialog(this) == DialogResult.OK) foreach (var file in dialog.FileNames) Safe(() => Import(file)); }
     void Import(string path) { using var source = new Bitmap(path); AddTab(store.Create(source)); }
+    void DropImages(string[] paths) {
+        if (capturing) return; var destination = Canvas;
+        string result = ImageFileDrop.Import(paths, image => { if (destination != null) destination.InsertImage(image); else { AddTab(store.Create(image)); Fit(); } });
+        SetStatus(result);
+    }
     void PasteNew() { using var image = ClipboardImages.Read(); if (image != null) { AddTab(store.Create(image)); Fit(); SetStatus("已從剪貼簿新增同尺寸圖片"); } }
     void Paste() { if (Canvas == null) { PasteNew(); return; } using var image = ClipboardImages.Read(); if (image != null) Canvas.InsertImage(image); else SetStatus("剪貼簿中沒有圖片"); }
     void PasteFile() { if (Canvas == null) { OpenImages(); return; } using var dialog = new OpenFileDialog { Title = "貼上到目前圖片", Filter = "圖片|*.png;*.jpg;*.jpeg;*.bmp;*.gif" }; if (dialog.ShowDialog(this) == DialogResult.OK) { using var image = new Bitmap(dialog.FileName); Canvas.InsertImage(image); } }

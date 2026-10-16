@@ -22,7 +22,7 @@ public sealed class ImageCanvas : ScrollableControl
     PointF start, current;
     bool drawing, dragging, moved, hoverInside, resizingCanvas;
     int canvasHandle = -1;
-    Size canvasStartSize, canvasPreviewSize;
+    Rectangle canvasStartBounds, canvasPreviewBounds;
     RectangleF workBounds;
     int resizeHandle = -1;
     PointF hover;
@@ -34,7 +34,7 @@ public sealed class ImageCanvas : ScrollableControl
     {
         Document = document; Dock = DockStyle.Fill; AutoScroll = true; DoubleBuffered = true;
         BackColor = Color.FromArgb(222, 228, 236); Cursor = Cursors.Cross;
-        AccessibleName = "圖片編輯畫布"; TabStop = true; RefreshDocument();
+        AccessibleName = "圖片編輯畫布"; TabStop = true; AllowDrop = true; RefreshDocument();
     }
     PointF SurfaceOrigin => new(AutoScrollPosition.X + 20 - workBounds.Left * Zoom, AutoScrollPosition.Y + 20 - workBounds.Top * Zoom);
     public void RefreshDocument() {
@@ -61,18 +61,17 @@ public sealed class ImageCanvas : ScrollableControl
         base.OnPaint(e); var g = e.Graphics;
         g.TranslateTransform(SurfaceOrigin.X, SurfaceOrigin.Y); g.ScaleTransform(Zoom, Zoom);
         g.InterpolationMode = Zoom == 1 ? InterpolationMode.NearestNeighbor : InterpolationMode.HighQualityBicubic;
-        var outputSize = resizingCanvas ? canvasPreviewSize : Document.Image.Size;
-        var output = new Rectangle(Point.Empty, outputSize);
+        var output = resizingCanvas ? canvasPreviewBounds : new Rectangle(Point.Empty, Document.Image.Size);
         using (var tile = new Bitmap(16, 16)) { using (var checker = Graphics.FromImage(tile)) { checker.Clear(Color.White); checker.FillRectangle(Brushes.Gainsboro, 0, 0, 8, 8); checker.FillRectangle(Brushes.Gainsboro, 8, 8, 8, 8); } using var brush = new TextureBrush(tile); g.FillRectangle(brush, output); }
         g.DrawImage(Document.BaseImage, new Rectangle(Point.Empty, Document.BaseImage.Size));
         foreach (var mark in Document.Marks) AnnotationRenderer.Draw(g, dragging && preview?.Id == mark.Id ? preview : mark);
         if (drawing && !dragging && !resizingCanvas && Tool is not (EditTool.Select or EditTool.Crop or EditTool.Mosaic)) AnnotationRenderer.Draw(g, NewMark());
-        using (var outside = new Region(workBounds)) { outside.Exclude(output); using var dim = new SolidBrush(Color.FromArgb(120, BackColor)); g.FillRegion(dim, outside); }
+        using (var outside = new Region(RectangleF.Union(workBounds, output))) { outside.Exclude(output); using var dim = new SolidBrush(Color.FromArgb(120, BackColor)); g.FillRegion(dim, outside); }
         using (var border = new Pen(Color.FromArgb(42, 98, 145), 1 / Zoom)) {
-            g.DrawRectangle(border, 0, 0, outputSize.Width, outputSize.Height);
-            foreach (var point in CanvasHandles(outputSize)) { var handle = new RectangleF(point.X - 4 / Zoom, point.Y - 4 / Zoom, 8 / Zoom, 8 / Zoom); g.FillRectangle(Brushes.White, handle); g.DrawRectangle(border, handle.X, handle.Y, handle.Width, handle.Height); }
+            g.DrawRectangle(border, output);
+            foreach (var point in CanvasHandles(output)) { var handle = new RectangleF(point.X - 4 / Zoom, point.Y - 4 / Zoom, 8 / Zoom, 8 / Zoom); g.FillRectangle(Brushes.White, handle); g.DrawRectangle(border, handle.X, handle.Y, handle.Width, handle.Height); }
             using var font = new Font("Microsoft JhengHei UI", 10 / Zoom, GraphicsUnit.Pixel); using var brush = new SolidBrush(border.Color);
-            g.DrawString($"畫布 {outputSize.Width} × {outputSize.Height}", font, brush, 0, outputSize.Height + 24 / Zoom);
+            g.DrawString($"畫布 {output.Width} × {output.Height}", font, brush, output.Left, output.Bottom + 24 / Zoom);
         }
         using var selectionPen = new Pen(Color.DodgerBlue, 1 / Zoom) { DashStyle = DashStyle.Dash };
         if (!Selection.IsEmpty) g.DrawRectangle(selectionPen, Selection);
@@ -85,8 +84,9 @@ public sealed class ImageCanvas : ScrollableControl
         }
     }
     static PointF[] Handles(RectangleF b) => [new(b.Left, b.Top), new(b.Left + b.Width / 2, b.Top), new(b.Right, b.Top), new(b.Right, b.Top + b.Height / 2), new(b.Right, b.Bottom), new(b.Left + b.Width / 2, b.Bottom), new(b.Left, b.Bottom), new(b.Left, b.Top + b.Height / 2)];
-    PointF[] CanvasHandles(Size size) => [new(size.Width + 12 / Zoom, size.Height / 2f), new(size.Width / 2f, size.Height + 12 / Zoom), new(size.Width + 12 / Zoom, size.Height + 12 / Zoom)];
-    int HitCanvasHandle(PointF point) => Array.FindIndex(CanvasHandles(Document.Image.Size), p => Math.Abs(point.X - p.X) <= 6 / Zoom && Math.Abs(point.Y - p.Y) <= 6 / Zoom);
+    PointF[] CanvasHandles(RectangleF bounds) { bounds.Inflate(12 / Zoom, 12 / Zoom); return Handles(bounds); }
+    int HitCanvasHandle(PointF point) => Array.FindIndex(CanvasHandles(new RectangleF(PointF.Empty, Document.Image.Size)), p => Math.Abs(point.X - p.X) <= 6 / Zoom && Math.Abs(point.Y - p.Y) <= 6 / Zoom);
+    static Cursor CanvasCursor(int handle) => handle switch { 0 or 4 => Cursors.SizeNWSE, 2 or 6 => Cursors.SizeNESW, 1 or 5 => Cursors.SizeNS, 3 or 7 => Cursors.SizeWE, _ => Cursors.Cross };
     PointF[] SelectionHandles(ImageMark mark) { if (mark.Kind is EditTool.Line or EditTool.Arrow) return [new(mark.X1, mark.Y1), new(mark.X2, mark.Y2)]; var bounds = mark.Bounds; bounds.Inflate(4 / Zoom, 4 / Zoom); return Handles(bounds); }
     ImageMark StampAt(PointF point) => Stamp.CreateMark(point.X - Stamp.Width / 2f, point.Y - Stamp.Height / 2f, Ink) with { Text = Stamp.IsNumber ? NextStampNumber.ToString() : Stamp.Name };
     ImageMark? Hit(PointF point) => Document.Marks.Reverse().FirstOrDefault(m => {
@@ -102,7 +102,7 @@ public sealed class ImageCanvas : ScrollableControl
         base.OnMouseDown(e); if (e.Button != MouseButtons.Left) return; Focus();
         start = current = ImagePoint(e.Location); Selection = Rectangle.Empty; moved = false;
         canvasHandle = HitCanvasHandle(start);
-        if (canvasHandle >= 0) { resizingCanvas = drawing = true; dragging = false; preview = null; canvasStartSize = canvasPreviewSize = Document.Image.Size; Capture = true; Invalidate(); return; }
+        if (canvasHandle >= 0) { resizingCanvas = drawing = true; dragging = false; preview = null; canvasStartBounds = canvasPreviewBounds = new Rectangle(Point.Empty, Document.Image.Size); Capture = true; Invalidate(); return; }
         resizeHandle = -1;
         if (Tool is not (EditTool.Crop or EditTool.Mosaic) && (ModifierKeys & Keys.Control) == 0) {
             if (SelectedMark is { } selected) { var handles = SelectionHandles(selected); resizeHandle = Array.FindIndex(handles, p => Math.Abs(p.X - start.X) <= 7 / Zoom && Math.Abs(p.Y - start.Y) <= 7 / Zoom); }
@@ -125,13 +125,17 @@ public sealed class ImageCanvas : ScrollableControl
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e); bool previousHover = hoverInside; hover = ImagePoint(e.Location); hoverInside = new RectangleF(PointF.Empty, Document.Image.Size).Contains(hover);
-        if (!drawing) { if ((hoverInside || previousHover) && Tool == EditTool.Stamp) Invalidate(); int handle = HitCanvasHandle(hover); Cursor = handle == 0 ? Cursors.SizeWE : handle == 1 ? Cursors.SizeNS : handle == 2 ? Cursors.SizeNWSE : Hit(hover) != null ? Cursors.SizeAll : Cursors.Cross; return; } current = ImagePoint(e.Location);
+        if (!drawing) { if ((hoverInside || previousHover) && Tool == EditTool.Stamp) Invalidate(); int handle = HitCanvasHandle(hover); Cursor = handle >= 0 ? CanvasCursor(handle) : Hit(hover) != null ? Cursors.SizeAll : Cursors.Cross; return; } current = ImagePoint(e.Location);
         bool firstMove = !moved; moved |= Math.Abs(current.X - start.X) + Math.Abs(current.Y - start.Y) > 1;
         if (resizingCanvas) {
-            int w = canvasHandle == 1 ? canvasStartSize.Width : Math.Clamp((int)Math.Round(canvasStartSize.Width + current.X - start.X), 1, 100000);
-            int h = canvasHandle == 0 ? canvasStartSize.Height : Math.Clamp((int)Math.Round(canvasStartSize.Height + current.Y - start.Y), 1, 100000);
-            if ((long)w * h <= 100_000_000) canvasPreviewSize = new Size(w, h);
-            Changed?.Invoke($"畫布預覽 {canvasPreviewSize.Width} × {canvasPreviewSize.Height} · 放開確認，Esc 取消"); Invalidate(); return;
+            int dx = (int)Math.Round(current.X - start.X), dy = (int)Math.Round(current.Y - start.Y);
+            int left = canvasStartBounds.Left, top = canvasStartBounds.Top, right = canvasStartBounds.Right, bottom = canvasStartBounds.Bottom;
+            if (canvasHandle is 0 or 6 or 7) left = Math.Clamp(left + dx, right - 100000, right - 1);
+            if (canvasHandle is 2 or 3 or 4) right = Math.Clamp(right + dx, left + 1, left + 100000);
+            if (canvasHandle is 0 or 1 or 2) top = Math.Clamp(top + dy, bottom - 100000, bottom - 1);
+            if (canvasHandle is 4 or 5 or 6) bottom = Math.Clamp(bottom + dy, top + 1, top + 100000);
+            if ((long)(right - left) * (bottom - top) <= 100_000_000) canvasPreviewBounds = Rectangle.FromLTRB(left, top, right, bottom);
+            Changed?.Invoke($"畫布預覽 {canvasPreviewBounds.Width} × {canvasPreviewBounds.Height} · 放開確認，Esc 取消"); Invalidate(); return;
         }
         if (dragging && SelectedMark is { } mark) {
             if (resizeHandle < 0) preview = mark.Kind == EditTool.Image ? mark.Move(MathF.Round(current.X - start.X), MathF.Round(current.Y - start.Y)) : mark.Move(current.X - start.X, current.Y - start.Y);
@@ -143,7 +147,7 @@ public sealed class ImageCanvas : ScrollableControl
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e); if (!drawing || e.Button != MouseButtons.Left) return; current = ImagePoint(e.Location); drawing = false; Capture = false;
-        if (resizingCanvas) { resizingCanvas = false; canvasHandle = -1; if (canvasPreviewSize != canvasStartSize) ResizeCanvas(canvasPreviewSize.Width, canvasPreviewSize.Height); else Invalidate(); return; }
+        if (resizingCanvas) { resizingCanvas = false; canvasHandle = -1; if (canvasPreviewBounds != canvasStartBounds) ResizeCanvasBounds(canvasPreviewBounds); else Invalidate(); return; }
         if (dragging) { var mark = preview; preview = null; dragging = false; resizeHandle = -1; if (moved && mark != null) Save(() => Document.CommitMarks(Document.Marks.Select(m => m.Id == mark.Id ? mark : m))); else Changed?.Invoke("已選取標註"); Invalidate(); return; }
         if (Tool == EditTool.Select) { Selection = Rect; Invalidate(); return; }
         if (Rect.Width < 2 && Rect.Height < 2) { Changed?.Invoke("已取消修改"); Invalidate(); return; }
@@ -172,6 +176,13 @@ public sealed class ImageCanvas : ScrollableControl
     public void DeleteSelected() { if (SelectedMark is not { } mark) return; selectedId = null; Save(() => Document.CommitMarks(Document.Marks.Where(m => m.Id != mark.Id))); }
     public void CancelDrawing() { drawing = dragging = resizingCanvas = false; resizeHandle = canvasHandle = -1; preview = null; Capture = false; Invalidate(); Changed?.Invoke("已取消修改"); }
     protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); hoverInside = false; Invalidate(); }
+    protected override void OnDragEnter(DragEventArgs e) { base.OnDragEnter(e); ImageFileDrop.SetEffect(e); }
+    protected override void OnDragOver(DragEventArgs e) { base.OnDragOver(e); ImageFileDrop.SetEffect(e); }
+    protected override void OnDragDrop(DragEventArgs e) {
+        base.OnDragDrop(e); ImageFileDrop.SetEffect(e);
+        if (e.Effect == DragDropEffects.Copy) { string result = ImageFileDrop.Import(ImageFileDrop.Files(e.Data), InsertDroppedImage); Changed?.Invoke(result); }
+    }
+    void InsertDroppedImage(Bitmap image) => InsertImage(image);
     ImageMark ResizeMark(ImageMark mark, float dx, float dy) {
         if (mark.Kind is EditTool.Line or EditTool.Arrow) return resizeHandle == 0 ? mark with { X1 = mark.X1 + dx, Y1 = mark.Y1 + dy } : mark with { X2 = mark.X2 + dx, Y2 = mark.Y2 + dy };
         var b = mark.Bounds; float l = b.Left, t = b.Top, r = b.Right, bottom = b.Bottom;
@@ -199,12 +210,13 @@ public sealed class ImageCanvas : ScrollableControl
         Save(() => Document.Commit(Document.Image));
         if (Document.Marks.Count == 0) { selectedId = null; Selection = Rectangle.Empty; SelectionChanged?.Invoke(); Changed?.Invoke("已合併到畫布，框外內容已捨棄 · Ctrl＋Z 可復原"); }
     }
-    public void ResizeCanvas(int width, int height, Color? background = null) {
+    public void ResizeCanvas(int width, int height, Color? background = null) => ResizeCanvasBounds(new Rectangle(0, 0, width, height), background);
+    void ResizeCanvasBounds(Rectangle bounds, Color? background = null) {
         var color = background ?? CanvasBackground;
-        using var next = NewCanvasForm.CreateImage(width, height, color);
-        using (var g = Graphics.FromImage(next)) { g.CompositingMode = CompositingMode.SourceCopy; g.DrawImageUnscaled(Document.BaseImage, 0, 0); }
-        if (Save(() => { Document.CommitDocument(next, Document.Marks); Document.State.CanvasBackgroundArgb = color.ToArgb(); })) {
-            Selection = Rectangle.Empty; Changed?.Invoke($"畫布已調整為 {width} × {height}，圖片像素未縮放 · Ctrl＋S 保存");
+        using var next = NewCanvasForm.CreateImage(bounds.Width, bounds.Height, color);
+        using (var g = Graphics.FromImage(next)) { g.CompositingMode = CompositingMode.SourceCopy; g.DrawImageUnscaled(Document.BaseImage, -bounds.X, -bounds.Y); }
+        if (Save(() => { Document.CommitDocument(next, Document.Marks.Select(m => m.Move(-bounds.X, -bounds.Y))); Document.State.CanvasBackgroundArgb = color.ToArgb(); })) {
+            Selection = Rectangle.Empty; Changed?.Invoke($"畫布已調整為 {bounds.Width} × {bounds.Height}，圖片像素未縮放 · Ctrl＋S 保存");
         }
     }
     public void ResizeTo(int width, int height) {

@@ -413,3 +413,19 @@ Only important bugs that have occurred in the real app belong here.
 - Intended behavior clarification, 2026-10-16: The user explicitly rejected automatic canvas enlargement. New blank documents may instead use clipboard dimensions, or clipboard content may directly create a matching-size document. These are distinct from pasting into an existing document; REG-048 direct object editing remains required.
 - Fix: Remove insertion fit scaling, retain integer pixel placement, include floating objects in the scrollable workspace, and add Merge plus separate outer canvas handles and size dialog. Default the new-image dialog to clipboard dimensions with separate blank/content actions.
 - Tests: `picpick-replacement/tests/CanvasUserFlows.cs`: `LargePasteKeepsPixels`, `PasteMergeAndResizeCanvas`, `ClipboardCanvasSize`, plus the existing complete editor flow. The merge flow verifies saved dimensions and an exact one-pixel red stripe after negative-position dragging, merge/undo, transparent expansion, outer-handle drag and shrink. Desktop Ctrl+C/V, merge, save, canvas drag and both new-document choices are recorded in `tests/UI-VERIFICATION.md`.
+
+## REG-051 — Canvas cannot be resized from the left or top
+
+- Scope: `picpick-replacement/ImageCanvas.cs`.
+- Reproduction: Try dragging the left, top or top-left outer frame. Only right, bottom and bottom-right controls existed; resizing always anchored the top-left origin.
+- Intended behavior update, 2026-10-16: The user explicitly requested left/top resizing. Dragging any of eight handles grows/crops from that edge, with the opposite edge fixed during preview. Numeric canvas sizing continues to anchor top-left.
+- Fix: Track a preview rectangle instead of only width/height, add all eight directional handles/cursors, and translate the background and floating objects together when the output origin changes. Pixel dimensions are never resampled; merge retains its existing bounds-clipping behavior.
+- Tests: `CanvasUserFlows.CanvasAllEdges` drives all eight handles at 100% and 50%, growing and shrinking (32 cases), then checks output dimensions, exact one-pixel lines, floating object positions, saved dimensions, a single undo step, undo restoration and cancelled-drag stability. Existing REG-048/050 editor and paste/merge flows remain required.
+
+## REG-052 — Explorer image files cannot be dropped into the editor
+
+- Scope: `picpick-replacement/ImageFileDrop.cs`, `ImageCanvas.cs`, `WorkbenchForm.cs`.
+- Reproduction: Drag PNG files from Explorer to an existing image or the empty workspace; the old controls did not register a file-drop target.
+- Correct behavior: Copy supported images into the current canvas as original-size editable objects; leave its output bounds unchanged. With no document, create a matching-size document for each image. Multiple image files are supported and unrelated file types are ignored.
+- Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
+- Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
