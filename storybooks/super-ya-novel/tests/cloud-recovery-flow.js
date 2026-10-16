@@ -8,7 +8,7 @@ async(sessionPage)=>{
  await page.waitForTimeout(950);
  check(!!held,'a real save request is held before acknowledgement');
  check(await page.evaluate(()=>JSON.parse(localStorage.getItem('reading-pending:kiki:whisper')).size===0),'in-flight changes remain durable until server acknowledgement');
- await page.reload();await page.locator('[data-action="start"]').click();await page.waitForTimeout(300);
+ await page.reload();await page.locator('.prose').waitFor();await page.waitForTimeout(300);
  check(await page.locator('[data-size="0"]').getAttribute('aria-pressed')==='true','reload restores pending settings instead of stale cloud settings');
  try{await held.abort();}catch{}
  await page.unroute('**/api/progress/**');await page.evaluate(()=>dispatchEvent(new Event('online')));

@@ -14,7 +14,7 @@ document.addEventListener('keydown',event=>{
   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
  }
 });
-export function modeSwitch({book,ui,ruby,current,chapter}){
- const reading=Number.isInteger(chapter),whisper=`?book=${book.id}${reading?'&chapter='+chapter:''}`,practice=`?book=${book.id}&mode=practice${reading?'&scene='+chapter:''}`;
+export function modeSwitch({book,ui,ruby,current,chapter,resumeChapter}){
+ const reading=Number.isInteger(chapter),whisper=`?book=${book.id}${reading?'&chapter='+chapter:current==='practice'&&Number.isInteger(resumeChapter)?'&chapter='+resumeChapter:''}`,practice=`?book=${book.id}&mode=practice${reading?'&scene='+chapter:''}`;
  return `<nav class="mode-choices mode-switch" aria-label="${ui.switchMode}"><a class="mode-card" href="${practice}" ${current==='practice'?'aria-current="page"':''}><strong>${ruby(ui.practiceTitle)}</strong><span>${ruby(ui.practiceDescription)}</span></a><a class="mode-card" href="${whisper}" ${current==='whisper'?'aria-current="page"':''}><strong>${ruby(ui.whisperTitle)}</strong><span>${ruby(ui.whisperDescription)}</span></a></nav>`;
 }

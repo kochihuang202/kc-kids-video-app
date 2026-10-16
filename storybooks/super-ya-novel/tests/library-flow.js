@@ -68,7 +68,7 @@ async(sessionPage)=>{
   check(!await page.locator('.prose ruby').evaluateAll(nodes=>nodes.some(n=>{const r=n.getBoundingClientRect();return r.width>0&&(r.left<0||r.right>innerWidth+1);})),label+' Kiki annotations remain inside viewport');
   await page.screenshot({path:'output/playwright/kiki-'+label+'.png'});
  }
- await page.reload();await page.locator('[data-action="start"]').click();await wait();
+ await page.reload();await page.locator('.prose').waitFor();await wait();
  check(await plain(page.locator('#chapter-title'))===story.chapters[3].title,'direct Kiki link reload preserves independent resume');
  await page.goto('http://127.0.0.1:4178/?book=unknown');await page.locator('.bookshelf').waitFor();check(await page.locator('.book-card').count()===2,'unknown book link safely returns to shelf');
  const blockedContext=await browser.newContext({viewport:{width:820,height:1180}}),blocked=await blockedContext.newPage();

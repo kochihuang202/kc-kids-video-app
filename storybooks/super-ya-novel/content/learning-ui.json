@@ -10,7 +10,7 @@
   "practiceDescription": "讀故事、找線索，再試試理解練習。",
   "whisperTitle": "時光悄悄話・把書讀厚",
   "whisperDescription": "保留完整內容，和巧虎發現更多細節。",
-  "modeHome": "回到這集故事",
+  "modeHome": "回到封面",
   "practiceWelcome": "先讀原文，再慢慢找答案。不明白時可以查詞、聽讀，或看看提示。",
   "resumePractice": "接著上次的練習",
   "storyLevel": "故事閱讀",
@@ -71,5 +71,8 @@
   "backShelf": "回到書架",
   "switchMode": "切換閱讀方式",
   "closeTools": "關閉閱讀工具",
-  "whisperShort": "悄悄話"
+  "whisperShort": "悄悄話",
+  "pageWordCount": "此頁字數",
+  "characterUnit": "字",
+  "wordCountHint": "只計正文文字與數字，不含標點、注音及操作文字。"
 }

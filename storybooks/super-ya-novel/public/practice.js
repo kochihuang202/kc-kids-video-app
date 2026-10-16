@@ -1,3 +1,4 @@
+import {pageWordCount} from './text-stats.js';
 import {openPreferences} from './preferences.js';
 import {drawer,modeSwitch} from './drawer.js';
 import {openProgress} from './cloud.js';
@@ -9,18 +10,33 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
  let local={};try{local=JSON.parse(localStorage.getItem(localKey)||'{}');}catch{}
  const cloud=await openProgress(book.id,'practice',{...base,...local}),preferencesStore=await openPreferences(cloud.value);let p={...base,...cloud.value,...preferencesStore.value},view='home';
  p.scene=Number.isInteger(p.scene)&&p.scene>=0&&p.scene<data.scenes.length?p.scene:0;
- const targetScene=new URLSearchParams(location.search).get('scene');if(targetScene!==null&&/^\d+$/.test(targetScene)&&Number(targetScene)<data.scenes.length){p.scene=Number(targetScene);p.level='story';p.phase='read';view='reader';}
+ let routeReady=false,restoringRoute=false;
+ function applyRoute(phase){
+  const q=new URLSearchParams(location.search),target=q.get('scene');
+  if(target!==null&&/^\d+$/.test(target)&&Number(target)<data.scenes.length){
+   const level=q.get('level')==='extra'?'extra':'story',same=p.scene===Number(target)&&p.level===level;
+   p.scene=Number(target);p.level=level;p.phase=['read','practice'].includes(phase)?phase:same?p.phase:'read';view='reader';
+  }else view='home';
+ }
+ function syncRoute(){
+  const url='?book='+book.id+'&mode=practice'+(view==='reader'?'&scene='+p.scene+(p.level==='extra'?'&level=extra':''):'');
+  const snapshot={practice:{phase:p.phase}};
+  if(location.search===url||!routeReady||restoringRoute)history.replaceState(snapshot,'',url);else history.pushState(snapshot,'',url);
+  routeReady=true;
+ }
+ applyRoute();
  const key=()=>data.scenes[p.scene].id+':'+p.level,questions=()=>data.scenes[p.scene].questions[p.level],passage=()=>data.scenes[p.scene][p.level];
  const done=a=>a?.correct===true||a?.revealed===true;
  const count=scene=>Object.entries(scene.questions).reduce((n,[level,qs])=>n+qs.filter((q,i)=>done(p.attempts[scene.id+':'+level+':'+i])).length,0);
  const b=(text,action,extra='',cls='')=>`<button type="button" data-p="${action}" ${extra} class="${cls}" aria-label="${esc(text)}">${ruby(text)}</button>`;
  const save=()=>{try{localStorage.setItem(localKey,JSON.stringify(p));}catch{}cloud.update(p);preferencesStore.update(p);};
  function prefs(){return drawer({ui,ruby,close:'data-p="close-settings"',progress:`<p>${ruby(data.scenes[p.scene].title)}</p><p>${ruby(ui.completedTasks)} ${count(data.scenes[p.scene])} / 5</p>`,links:`<a href="./">${ruby(ui.backShelf)}</a><a href="?book=${book.id}">${ruby(ui.modeHome)}</a><a href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.whisperTitle)}</a>${b(ui.allScenes,'home')}<a href="?view=parent">${ruby(ui.parent)}</a>`,controls:`${b(`${ui.bopo}：${p.bopo?ui.on:ui.off}`,'bopo',`aria-pressed="${p.bopo}"`)}<span>${ruby(ui.size)}</span><div class="size-buttons">${[ui.small,ui.medium,ui.large].map((v,i)=>b(v,'size',`data-size="${i}" aria-pressed="${i===p.size}"`)).join('')}</div>${b(ui.words,'words',`aria-pressed="${p.words}"`)}${b(ui.speakPassage,'speak-all',view==='reader'?'':'disabled')}${b(ui.stopSpeech,'stop')}<div class="rate-buttons">${[[0.6,ui.slow],[0.85,ui.normal],[1,ui.fast]].map(([v,label])=>b(label,'rate',`data-rate="${v}" aria-pressed="${p.rate===v}"`)).join('')}</div><p class="tool-note">${ruby(ui.voiceNotice)}</p><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${b(ui.doneSettings,'close-settings','','primary')}`});}
- function nav(){return `<header class="reader-header"><nav class="reader-bar"><a href="?book=${book.id}">${ruby(ui.modeHome)}</a><span class="reader-brand">${ruby(ui.practiceTitle)}</span><a class="whisper-shortcut" href="?book=${book.id}${view==='reader'?'&chapter='+p.scene:''}">${ruby(ui.whisperShort)}</a></nav></header>`;}
+ function nav(){return `<header class="reader-header"><nav class="reader-bar"><a href="?book=${book.id}">${ruby(ui.modeHome)}</a><span class="reader-brand">${ruby(ui.practiceTitle)}</span><a class="whisper-shortcut" href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.whisperShort)}</a></nav></header>`;}
  function render(){
+  syncRoute();
   document.body.dataset.view='practice';document.body.classList.toggle('no-bopo',!p.bopo);document.documentElement.style.setProperty('--reader-size',[26,30,34][p.size]+'px');
   if(view==='home'){
-   app.innerHTML=nav()+`<main class="practice-shell">${modeSwitch({book,ui,ruby,current:"practice"})}<p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(ui.practiceTitle)}</h1><p class="practice-intro">${ruby(ui.practiceWelcome)}</p><div class="scene-grid">${data.scenes.map((s,i)=>`<button type="button" data-p="scene" data-scene="${i}" class="scene-card" aria-label="${esc(s.title)}"><span class="chapter-num">${String(i+1).padStart(2,'0')}</span><h2>${ruby(s.title)}</h2><p>${ruby(s.subtitle)}</p><span>${count(s)} / ${s.questions.story.length+s.questions.extra.length}</span></button>`).join('')}</div>${b(ui.resumePractice,'resume','','primary')}<p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();return;
+   app.innerHTML=nav()+`<main class="practice-shell">${modeSwitch({book,ui,ruby,current:"practice",resumeChapter:p.scene})}<p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(ui.practiceTitle)}</h1><p class="practice-intro">${ruby(ui.practiceWelcome)}</p><div class="scene-grid">${data.scenes.map((s,i)=>`<button type="button" data-p="scene" data-scene="${i}" class="scene-card" aria-label="${esc(s.title)}"><span class="chapter-num">${String(i+1).padStart(2,'0')}</span><h2>${ruby(s.title)}</h2><p>${ruby(s.subtitle)}</p><span>${count(s)} / ${s.questions.story.length+s.questions.extra.length}</span></button>`).join('')}</div>${b(ui.resumePractice,'resume','','primary')}<p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();return;
   }
   const s=data.scenes[p.scene],qs=questions(),pos=Math.min(p.positions[key()]||0,qs.length),id=key()+':'+pos,a=p.attempts[id]||{},q=qs[pos];
   let task='';
@@ -38,7 +54,7 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
    }
    task+=`<nav class="question-nav">${b(ui.previousQuestion,'prev',pos===0?'disabled':'')}${b(done(a)?ui.nextQuestion:ui.skipQuestion,'next','','primary')}</nav>`;
   }
-  app.innerHTML=nav()+`<main class="practice-shell practice-reading">${modeSwitch({book,ui,ruby,current:"practice",chapter:p.scene})}<div class="practice-top"><div><p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(s.title)}</h1></div>${b(ui.allScenes,'home')}</div><nav class="level-tabs" aria-label="閱讀練習類別">${b(ui.storyLevel,'story',`aria-pressed="${p.level==='story'}"`)}${b(ui.extraLevel,'extra',`aria-pressed="${p.level==='extra'}"`)}</nav><p class="tool-note">${ruby(p.level==='extra'?ui.excerptNotice:ui.readFirst)}</p><div class="practice-layout ${p.phase==='practice'?'with-questions':''}"><article class="practice-paper"><h2>${ruby(p.level==='story'?ui.storyPassage:ui.extraPassage)}</h2>${b(ui.speakPassage,'speak-all','', 'text-button')}<div class="practice-passage">${passage().map((text,i)=>`<div class="practice-paragraph" id="practice-para-${i}"><span class="para-number" aria-hidden="true">${i+1}</span><p class="practice-text">${rich(text,[],p.words)}</p><div class="paragraph-tools">${b(ui.listenParagraph,'speak-one',`data-paragraph="${i}"`,'text-button')}</div></div>`).join('')}</div>${p.phase==='read'?b(ui.beginPractice,'begin','','primary'):b(ui.readOnly,'read-only')}<a class="full-whisper" href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.fullWhisper)}</a></article>${p.phase==='practice'?`<section class="practice-panel" aria-label="理解練習">${task}</section>`:''}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();
+  app.innerHTML=nav()+`<main class="practice-shell practice-reading">${modeSwitch({book,ui,ruby,current:"practice",chapter:p.scene})}<div class="practice-top"><div><p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(s.title)}</h1></div>${b(ui.allScenes,'home')}</div><nav class="level-tabs" aria-label="閱讀練習類別">${b(ui.storyLevel,'story',`aria-pressed="${p.level==='story'}"`)}${b(ui.extraLevel,'extra',`aria-pressed="${p.level==='extra'}"`)}</nav><p class="tool-note">${ruby(p.level==='extra'?ui.excerptNotice:ui.readFirst)}</p><div class="practice-layout ${p.phase==='practice'?'with-questions':''}"><article class="practice-paper"><h2>${ruby(p.level==='story'?ui.storyPassage:ui.extraPassage)}</h2>${b(ui.speakPassage,'speak-all','', 'text-button')}<div class="practice-passage">${passage().map((text,i)=>`<div class="practice-paragraph" id="practice-para-${i}"><span class="para-number" aria-hidden="true">${i+1}</span><p class="practice-text">${rich(text,[],p.words)}</p><div class="paragraph-tools">${b(ui.listenParagraph,'speak-one',`data-paragraph="${i}"`,'text-button')}</div></div>`).join('')}</div>${p.phase==='read'?b(ui.beginPractice,'begin','','primary'):b(ui.readOnly,'read-only')}<a class="full-whisper" href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.fullWhisper)}</a></article>${p.phase==='practice'?`<section class="practice-panel" aria-label="理解練習">${task}</section>`:''}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${pageWordCount(passage(),ui,ruby)}</main>`+prefs();
  }
  function change(action){
   stopSpeech();const first=[...document.querySelectorAll('.practice-paragraph')].find(n=>n.getBoundingClientRect().bottom>100),index=first?.id,top=first?.getBoundingClientRect().top,scroll=scrollY;
@@ -75,5 +91,9 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
  });
  app.addEventListener('input',event=>{if(event.target.id==='own-note'){p.notes[key()]=event.target.value.slice(0,1000);save();}});
  app.addEventListener('keydown',event=>{const term=event.target.closest('[data-word]');if(term&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();showWord(term.dataset.word,glossary,ruby,p.rate);}});
+ window.addEventListener('popstate',event=>{
+  const q=new URLSearchParams(location.search);if(q.get('book')!==book.id||q.get('mode')!=='practice')return;
+  stopSpeech();restoringRoute=true;applyRoute(event.state?.practice?.phase);save();render();restoringRoute=false;window.scrollTo(0,0);
+ });
  render();
 }

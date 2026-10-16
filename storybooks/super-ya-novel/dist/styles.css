@@ -195,3 +195,5 @@ body[data-view="reader"] .preferences summary,body[data-view="practice"]:has(.pr
 .reader>.mode-switch,.practice-reading>.mode-switch{display:none}
 .whisper-shortcut{font-size:14px;line-height:1.8}
 @media(max-width:600px){body[data-view="practice"]:has(.practice-reading) .reader-bar>a{font-size:12px;line-height:1.8}}
+.page-word-count{font-size:14px;color:var(--muted);text-align:center;line-height:2;margin:30px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+.drawer-nav .drawer-current{font-size:16px;line-height:1.9;padding:9px 12px;border:1px solid var(--green);border-radius:9px;background:#edf2e8;color:var(--green);font-weight:700}

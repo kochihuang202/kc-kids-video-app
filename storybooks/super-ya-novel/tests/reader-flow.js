@@ -81,7 +81,7 @@ async (sessionPage) => {
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v2')));
   check(saved.chapter===3&&saved.anchors[3]&&saved.size===2&&saved.bopo,'chapter, text anchor, map progress and settings saved');
   const anchorBefore=await page.locator(`[data-block="${saved.anchors[3].block}"]`).evaluate(el=>el.getBoundingClientRect().top);
-  await page.reload();await page.getByRole('button',{name:'接著讀・'+story.chapters[3].title,exact:true}).click();await settle();
+  await page.reload();await page.locator('.prose').waitFor();await settle();
   const anchorAfter=await page.locator(`[data-block="${saved.anchors[3].block}"]`).evaluate(el=>el.getBoundingClientRect().top);
   check(Math.abs(anchorAfter-anchorBefore)<8,'reopening resumes the exact saved text anchor');
   check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','font setting survives reopening');
