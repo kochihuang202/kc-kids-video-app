@@ -6,7 +6,7 @@ async (sessionPage) => {
   const plain=locator=>locator.evaluate(el=>{const clone=el.cloneNode(true);clone.querySelectorAll('rt').forEach(n=>n.remove());return clone.textContent;});
   const settle=()=>page.waitForTimeout(280);
   const atBlock=async index=>{await page.locator(`.source-block[data-block="${index}"]`).evaluate(el=>window.scrollTo(0,scrollY+el.getBoundingClientRect().top-130));await settle();};
-  const openSettings=async()=>{if(!await page.locator('.preferences').getAttribute('open'))await page.locator('.preferences summary').click();};
+  const openSettings=async()=>{if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();};
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:4178/?book=super-ya');
   check(await page.locator('.character-cover img').evaluate(img=>img.complete&&img.naturalWidth===640),'supplied cover picture still loads');
@@ -61,10 +61,10 @@ async (sessionPage) => {
   check(Math.abs(await page.locator('[data-block="38"]').evaluate(el=>el.getBoundingClientRect().top)-before)<6,'changing font keeps the current paragraph anchored');
   check(await page.locator('.prose').evaluate(el=>getComputedStyle(el).fontSize)==='34px','largest reading font applied');
   await page.keyboard.press('Escape');
-  await page.getByRole('button',{name:'注音：開',exact:true}).click();await settle();
+  if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();await page.getByRole('button',{name:'注音：開',exact:true}).click();await settle();
   check(await page.locator('.prose rt').first().isHidden(),'phonetics can be hidden');
   check(Math.abs(await page.locator('[data-block="38"]').evaluate(el=>el.getBoundingClientRect().top)-before)<6,'annotation toggle preserves the reading anchor');
-  await page.getByRole('button',{name:'注音：關',exact:true}).click();await settle();
+  if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();await page.getByRole('button',{name:'注音：關',exact:true}).click();await settle();await page.keyboard.press('Escape');
   for(const [width,height,label]of [[820,1180,'portrait'],[1180,820,'landscape'],[390,844,'mobile']]){
     await page.setViewportSize({width,height});await settle();
     check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${label} has no horizontal overflow at largest font`);

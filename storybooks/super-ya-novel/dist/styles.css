@@ -88,3 +88,16 @@ ruby rt{font-size:max(9px,.37em)}
   .map-events{grid-template-columns:1fr;gap:20px}
   .map-card span{font-size:18px}
 }
+/* One viewport-fixed disclosure contains every reading preference. */
+body[data-view="reader"]{padding-bottom:100px}
+.preferences{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));z-index:30}
+.preferences summary{background:var(--green);color:#fffdf8;border-color:var(--green);padding:12px 18px;font-size:16px;box-shadow:0 3px 14px #343d3720;min-height:52px}
+.preferences summary rt{color:#fff6dc}
+.preferences[open] summary{background:#34583f}
+.preferences .reading-settings{top:auto;bottom:calc(100% + 12px);right:0;width:320px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 125px);overflow:auto;gap:14px;padding:22px;font-size:16px}
+.preferences #bopo-toggle{width:100%;font-size:17px;min-height:50px}
+.preferences .reading-settings>span{font-size:16px;color:var(--muted)}
+.preferences .reading-settings>.primary{font-size:16px;width:100%}
+.preferences .short-label{display:none}
+.preferences .long-label{display:inline}
+@media(max-width:600px){.preferences{right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom))}.preferences summary{font-size:14px;padding:10px 14px}.preferences .reading-settings{right:0;padding:18px}}

@@ -45,7 +45,7 @@ async(sessionPage)=>{
  await page.getByRole('dialog').getByRole('button',{name:story.chapters[3].title,exact:true}).click();await wait();
  await page.locator('[data-block="10"]').evaluate(el=>scrollTo(0,scrollY+el.getBoundingClientRect().top-130));await wait();
  await page.locator('.preferences summary').click();await page.getByRole('button',{name:'特大',exact:true}).click();await wait();await page.keyboard.press('Escape');
- await page.getByRole('button',{name:'注音：開',exact:true}).click();await wait();
+ if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();await page.getByRole('button',{name:'注音：開',exact:true}).click();await wait();
  await page.getByRole('button',{name:'回到封面',exact:true}).click();
  const stored=await page.evaluate(()=>localStorage.getItem('shimajiro-novel:kiki:v1'));
  await page.locator('.book-links a[href="?book=super-ya"]').click();
@@ -61,7 +61,7 @@ async(sessionPage)=>{
  check(await page.locator('#bopo-toggle').getAttribute('aria-pressed')==='false','Kiki independently restores hidden phonetics');
  const saved=JSON.parse(stored),a=saved.anchors[3];
  check(await page.locator(`[data-block="${a.block}"]`).evaluate((el,offset)=>Math.abs(el.getBoundingClientRect().top-document.querySelector('.reader-header').getBoundingClientRect().bottom-offset)<8,a.offset),'Kiki restores the saved paragraph anchor');
- await page.getByRole('button',{name:'注音：關',exact:true}).click();await wait();
+ if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();await page.getByRole('button',{name:'注音：關',exact:true}).click();await wait();await page.keyboard.press('Escape');
  for(const [width,height,label]of [[820,1180,'portrait'],[1180,820,'landscape'],[390,844,'mobile']]){
   await page.setViewportSize({width,height});await wait();
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),label+' Kiki largest font has no horizontal overflow');

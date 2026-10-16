@@ -1,5 +1,7 @@
 # 巧虎陪你讀：兩篇故事書架
 
+閱讀時，右下角固定的「閱讀設定」按鈕統一收納字級與注音開關。捲動後按鈕仍在原位；可用「完成設定」、點空白處或 Esc 收起。目錄與回到封面維持導覽功能。
+
 [Cloudflare 閱讀書架](https://shimajiro-reading.ji3cp31p4.workers.dev/)
 
 Cloudflare 版直接連結：[SUPER YA](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=super-ya)、[琪琪被罵了](https://shimajiro-reading.ji3cp31p4.workers.dev/?book=kiki)。以獨立 Worker `shimajiro-reading` 提供靜態 dist/，不綁定原影片站的 D1、R2 或路由。網址可直接開啟，未加登入；原私人 Sites 保留。不同網域的瀏覽器閱讀紀錄不會自動轉移。
