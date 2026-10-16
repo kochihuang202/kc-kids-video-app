@@ -369,3 +369,12 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Reuse the drawer markup and a dedicated `reading:settings` document with a durable pending queue. Seed the first shared value from the current mode's existing cloud/local preferences. Both modes show direct switches that preserve the matching chapter/scene.
 - Intended behavior update: On 2026-10-16 the user explicitly requested a left drawer containing progress/settings/navigation, keeping phonetics off while changing pages, using the whispers reading layout for comprehension, and direct switching between modes. Library flow expectations now share display preferences while preserving every original per-book position/content assertion. Modal drawer flows dismiss the drawer before using background navigation.
 - Tests: `tests/settings-entry-flow.js`, `tests/drawer-flow.js`, `tests/shared-settings-flow.js`, `tests/mode-switch-flow.js` under `storybooks/super-ya-novel/`; existing settings/reader/library/learning flows remain in use.
+
+## REG-046 — Root bookshelf lacks tools and duplicate toolbars distract from reading
+
+- Reproduction: Open the actual entry URL `/` instead of an episode URL; no settings control is present. Episode-only coverage missed the root route.
+- Correct behavior: Root shelf, episode entry and both reading modes share the tools drawer and global preferences. Root actions update only shared settings; existing per-book progress is preserved.
+- Root cause: `shelf()` did not mount the shared drawer, and the settings handler assumed a selected book.
+- Fix: Reuse a single controls renderer on the shelf and episode pages; guard shelf saves so they cannot create an undefined book key or write chapter progress.
+- Intended behavior update: The user requested top placement and less interference with reading on 2026-10-16. Entries use a labeled top button; reading uses a 48px menu in the existing navigation row, without an extra toolbar or large mode cards. Header and drawer links preserve corresponding mode switches.
+- Tests: `storybooks/super-ya-novel/tests/shelf-settings-flow.js` (root route, 30 checks, touch viewport simulation at 820x1180, 1180x820 and 390x844); `tests/mode-switch-flow.js` checks quiet reading layout and mode navigation. Existing settings/reader/library flows preserve their behavior checks.

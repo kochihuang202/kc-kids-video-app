@@ -6,5 +6,5 @@ export function preferenceValues(v={}){
 export async function openPreferences(fallback={}){
  let local;try{local=JSON.parse(localStorage.getItem(key)||'null');}catch{}
  const cloud=await openProgress('reading','settings',preferenceValues(local||fallback));let value=preferenceValues(cloud.value);if(local||cloud.hasDocument||Object.keys(fallback).length)try{localStorage.setItem(key,JSON.stringify(value));}catch{}
- return {get value(){return {...value};},update(v){const next=preferenceValues(v);if(JSON.stringify(next)===JSON.stringify(value))return;value=next;try{localStorage.setItem(key,JSON.stringify(value));}catch{}cloud.update(value);},flush:cloud.flush};
+ return {get value(){return {...value};},update(v){const next=preferenceValues(v);if(JSON.stringify(next)===JSON.stringify(value))return;value=next;try{localStorage.setItem(key,JSON.stringify(value));}catch{}cloud.update(value);},get status(){return cloud.status;},flush:cloud.flush};
 }

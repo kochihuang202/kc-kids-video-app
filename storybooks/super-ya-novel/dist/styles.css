@@ -179,3 +179,19 @@ button[aria-pressed="true"]{border-color:var(--green)}
 .mode-switch{margin-bottom:32px}.reader>.mode-switch{margin-bottom:38px}.reader>.mode-switch .mode-card{padding:14px}.reader>.mode-switch .mode-card>strong{font-size:18px}.reader>.mode-switch .mode-card>span{font-size:14px}
 .practice-shell.practice-reading{max-width:898px;padding:34px 24px 110px}.practice-reading .practice-layout,.practice-reading .practice-layout.with-questions{display:block}.practice-reading .practice-paper{padding:48px 58px 35px;border-radius:9px;box-shadow:0 5px 30px #655b3510}.practice-reading .practice-panel{position:static;max-height:none;overflow:visible;margin-top:28px;padding:32px}.practice-reading .practice-paragraph{padding-left:0}.practice-reading .para-number{position:static;display:block;margin:0 0 5px;color:var(--muted);font-size:13px}.practice-text{text-align:justify;letter-spacing:.025em}.practice-text .word-help{white-space:normal}
 @media(max-width:600px){.practice-shell.practice-reading{padding:24px 14px 100px}.practice-reading .practice-paper{padding:30px 23px}.practice-reading .practice-panel{padding:24px 20px}.reader>.mode-switch{gap:10px}.reader>.mode-switch .mode-card>span{display:none}}
+/* One visible top tool entry is shared by the root shelf and both readers. */
+.reading-tools-bar{position:fixed;inset:0 0 auto;height:76px;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 2px 8px #343d370a;z-index:25}
+body:has(.preferences){padding-top:76px}body:has(.preferences) .reader-header{top:76px}
+.preferences{top:max(12px,env(safe-area-inset-top));bottom:auto;left:max(16px,env(safe-area-inset-left))}
+body[data-view="library"]{padding-bottom:36px}
+@media(max-width:600px){.preferences{top:max(12px,env(safe-area-inset-top));bottom:auto;left:max(14px,env(safe-area-inset-left))}}
+/* In the story, reuse the existing navigation row instead of adding a toolbar. */
+body[data-view="reader"],body[data-view="practice"]:has(.practice-reading){padding-top:0}
+body[data-view="reader"] .reading-tools-bar,body[data-view="practice"]:has(.practice-reading) .reading-tools-bar{display:none}
+body[data-view="reader"] .reader-header,body[data-view="practice"]:has(.practice-reading) .reader-header{top:0}
+body[data-view="reader"] .reader-bar,body[data-view="practice"]:has(.practice-reading) .reader-bar{padding-left:82px}
+body[data-view="reader"] .preferences .drawer-trigger-label,body[data-view="practice"]:has(.practice-reading) .preferences .drawer-trigger-label{display:none}
+body[data-view="reader"] .preferences summary,body[data-view="practice"]:has(.practice-reading) .preferences summary{width:48px;min-height:48px;height:48px;padding:7px;display:grid;place-items:center;font-size:23px;border-radius:12px}
+.reader>.mode-switch,.practice-reading>.mode-switch{display:none}
+.whisper-shortcut{font-size:14px;line-height:1.8}
+@media(max-width:600px){body[data-view="practice"]:has(.practice-reading) .reader-bar>a{font-size:12px;line-height:1.8}}
