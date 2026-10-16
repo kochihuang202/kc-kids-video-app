@@ -16,33 +16,41 @@ public static class Stitching
         finally { normalized.UnlockBits(data); }
     }
 
-    // Compare moving content inside the region, excluding most fixed top/bottom UI.
-    // Search in physical pixels; never infer displacement from the wheel delta.
+    // Recovered PicPick 7.4.1: 0x01566b6c / 0x01567c88 / 0x009e047c.
+    // First search a 50px strip, then compare weighted brightness in a half-height block.
+    // Matching is revalidated each step; we do not blindly reuse a previous estimated offset.
     public static Alignment FindOffset(Bitmap previous, Bitmap next, int preferredOffset)
     {
         if (previous.Size != next.Size) return new(0, 0, 255);
         var a = Pixels(previous); var b = Pixels(next); int w = previous.Width, h = previous.Height;
-        double Difference(int shift, bool interior)
-        {
-            int start = interior ? Math.Max(12, h / 6) : 4;
-            int end = Math.Min(h - shift - 5, interior ? h * 4 / 5 : h - 4);
-            if (end - start < 24) return 255;
-            double sum = 0; int samples = 0;
-            for (int y = start; y < end; y += Math.Max(1, (end - start) / 32))
-                for (int x = w / 5; x < w * 4 / 5; x += Math.Max(1, w / 25))
-                { int p = ((y + shift) * w + x) * 4, q = (y * w + x) * 4; for (int c = 0; c < 3; c++) sum += Math.Abs(a[p + c] - b[q + c]); samples += 3; }
-            return samples == 0 ? 255 : sum / samples;
+        if (a.AsSpan().SequenceEqual(b)) return new(0, 1, 0);
+        if (w <= 100 || h <= 100) return new(0, 0, 255);
+        int bandTop = h - 100, bandHeight = 50, width = w - 100;
+        for (int shift = 0; shift <= Math.Min(300, bandTop); shift++) {
+            bool equal = true;
+            for (int y = 0; y < bandHeight && equal; y++) {
+                int p = ((bandTop + y) * w + 50) * 4, q = ((bandTop + y - shift) * w + 50) * 4;
+                equal = a.AsSpan(p, width * 4).SequenceEqual(b.AsSpan(q, width * 4));
+            }
+            if (equal) return new(shift, 1, 0);
         }
-        if (Difference(0, false) < .8) return new(0, 1, 0);
-        int limit = Math.Max(1, h * 2 / 3), best = 0; double error = double.MaxValue;
-        // Every offset is examined so small and irregular wheel steps cannot be skipped.
-        for (int shift = 1; shift <= limit; shift++)
-        {
-            double candidate = Difference(shift, true);
-            if (candidate < error - .02 || (Math.Abs(candidate - error) < .02 && preferredOffset > 0 && Math.Abs(shift - preferredOffset) < Math.Abs(best - preferredOffset)))
-            { error = candidate; best = shift; }
+        var grayA = Brightness(a); var grayB = Brightness(b);
+        int start = h / 2, rows = h / 2, best = 0; long bestDifference = long.MaxValue;
+        for (int shift = 0; shift <= Math.Min(300, start); shift++) {
+            long difference = 0;
+            for (int y = 0; y < rows; y++) for (int x = 50; x < w - 50; x++)
+                difference += Math.Abs(grayA[(start + y) * w + x] - grayB[(start + y - shift) * w + x]);
+            if (difference < bestDifference) { bestDifference = difference; best = shift; }
+            if (difference == 0) break;
         }
-        return new(best, Math.Clamp(1 - error / 80, 0, 1), error);
+        double error = bestDifference / (double)(width * rows);
+        return new(best, Math.Clamp(1 - error / 255, 0, 1), error);
+    }
+
+    static byte[] Brightness(byte[] pixels) {
+        var result = new byte[pixels.Length / 4];
+        for (int i = 0; i < result.Length; i++) result[i] = (byte)((21 * pixels[i * 4 + 2] + 71 * pixels[i * 4 + 1] + 8 * pixels[i * 4]) / 100);
+        return result;
     }
 
     public static int FixedFooter(Bitmap a, Bitmap b)

@@ -11,6 +11,7 @@ internal sealed class CaptureOverlay : Form
     bool dragging;
     bool scrolling;
     public Rectangle SelectedRegion { get; private set; }
+    public nint TargetWindow { get; private set; }
     public bool IsScrolling => scrolling;
     public CaptureOverlay(Bitmap background, bool scrollMode)
     {
@@ -18,7 +19,9 @@ internal sealed class CaptureOverlay : Form
         AutoScaleMode = AutoScaleMode.None; FormBorderStyle = FormBorderStyle.None;
         Bounds = SystemInformation.VirtualScreen; StartPosition = FormStartPosition.Manual;
         DoubleBuffered = true; TopMost = true; KeyPreview = true; Cursor = Cursors.Cross;
-        ShowInTaskbar = false; AccessibleName = "截圖選取區域";
+        // Keep the active selection dialog discoverable to accessibility tools
+        // and Alt+Tab while the editor itself is hidden in the notification area.
+        ShowInTaskbar = true; AccessibleName = "截圖選取區域";
         toolbar = new FlowLayoutPanel { AutoSize = true, Height = 52, BackColor = Color.FromArgb(248, 250, 253), Padding = new Padding(8), FlowDirection = FlowDirection.LeftToRight, WrapContents = false };
         var region = new Button { Text = "框選擷取", AutoSize = true, Height = 32, FlatStyle = FlatStyle.Flat };
         var scroll = new Button { Text = "捲動擷取", AutoSize = true, Height = 32, FlatStyle = FlatStyle.Flat };
@@ -39,6 +42,7 @@ internal sealed class CaptureOverlay : Form
         if (selection.Width < 32 || selection.Height < 32) { selection = Rectangle.Empty; Invalidate(); return; }
         if (scrolling && (selection.Width < 120 || selection.Height < 180)) { selection = Rectangle.Empty; Text = "捲動範圍至少需要 120 × 180 像素，請重新框選"; Invalidate(); return; }
         SelectedRegion = new Rectangle(selection.X + Left, selection.Y + Top, selection.Width, selection.Height);
+        TargetWindow = Native.WindowBelow(Handle, new Point(SelectedRegion.Left + SelectedRegion.Width / 2, SelectedRegion.Top + SelectedRegion.Height / 2));
         DialogResult = DialogResult.OK; Close();
     }
     protected override void OnPaint(PaintEventArgs e)

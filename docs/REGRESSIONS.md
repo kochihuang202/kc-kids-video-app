@@ -378,3 +378,29 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Reuse a single controls renderer on the shelf and episode pages; guard shelf saves so they cannot create an undefined book key or write chapter progress.
 - Intended behavior update: The user requested top placement and less interference with reading on 2026-10-16. Entries use a labeled top button; reading uses a 48px menu in the existing navigation row, without an extra toolbar or large mode cards. Header and drawer links preserve corresponding mode switches.
 - Tests: `storybooks/super-ya-novel/tests/shelf-settings-flow.js` (root route, 30 checks, touch viewport simulation at 820x1180, 1180x820 and 390x844); `tests/mode-switch-flow.js` checks quiet reading layout and mode navigation. Existing settings/reader/library flows preserve their behavior checks.
+
+## REG-047 — Scroll capture stops on changing thumbnails despite valid scrolling content
+
+- Scope: `picpick-replacement/Stitching.cs`, `ScrollCapture.cs`, `Native.cs`.
+- Reproduction: Capture scrolling video suggestions; a thumbnail changes between frames and the old RGB-wide score rejects a real 100px displacement.
+- Correct behavior: Match unchanged content with an exact strip, then the recovered PicPick brightness comparison; append the measured displacement, retain accepted pixels on Esc and confirm the bottom across repeated unchanged frames.
+- Evidence: Local 539×720 failure replay selects 100px at 0.9158805912 using the recovered formula. Standard scroll input and wheel fallback are retained; each displacement is revalidated and low-confidence results stop with recovery data.
+- Tests: `picpick-replacement/tests/Program.cs` (changing-thumbnail replay through the complete scroll coordinator, Esc/bottom and unrelated-frame rejection); `research/test_scroll_model.py`. The optional `--replay <local-recovery-directory>` check uses local user images without committing them.
+- Desktop target regression: Resolve the selected window before closing the overlay, since modal close can reactivate a different application. The hollow green frame is outside the capture rectangle. User confirmed long capture OK on 2026-10-16; broad cross-application equivalence remains unproven.
+
+## REG-048 — Drawing tools only add objects and paste opens an unwanted document
+
+- Scope: `picpick-replacement/ImageCanvas.cs`, `Annotations.cs`, `WorkbenchForm.cs`.
+- Reproduction: Place a stamp or rectangle, then try to drag it without choosing Select; the old handler adds another object. Ctrl+V always opens a new tab.
+- Correct behavior: Existing objects and handles take priority over creating another object. New objects are immediately selected, number stamps are centered and increment only when placed, and blank space remains available for the next stamp. Paste creates a selected image object in the current document, with independent movement and proportional corner resize.
+- Fix: Separate persistent objects from the bitmap background, retain per-document history, use geometric hit tests and eight handles (two endpoints for lines/arrows), and distinguish paste-in-document from explicit paste-to-new-tab.
+- Tests: `picpick-replacement/tests/CanvasUserFlows.cs` runs number placement → direct drag → next number → rectangle drag → image paste → image move/resize → arrow endpoint → select all → save/close. `tests/Program.cs` covers object persistence, per-tab isolation and saving failures. Desktop Ctrl+A/C/V/S and drag/resize checks are recorded in `tests/UI-VERIFICATION.md`.
+- Intended behavior updates, 2026-10-16: User explicitly changed autosave from every edit to capture-only during editing, then added automatic final save on closing and a fresh workspace at startup. Historical edit/undo tests now require no disk writes until explicit save; close tests require final pixels to be saved and `Open=false`. This is a requested change, not a weakened expectation for broken behavior.
+
+## REG-049 — Minimizing to the notification area loses the capture shortcut
+
+- Scope: `picpick-replacement/WorkbenchForm.cs`.
+- Reproduction: Hide the editor while changing ShowInTaskbar, then use the registered capture shortcut; no selection overlay appears.
+- Root cause: Changing ShowInTaskbar recreates HWND and discards the hotkey registered to the old handle.
+- Fix: Hide the existing window without changing ShowInTaskbar; restore that window from NotifyIcon or the single-instance open channel. Share one custom icon between the executable, window and notification area.
+- Regression flow: `picpick-replacement/tests/UI-VERIFICATION.md`: minimize → Ctrl+Alt+2 from another app → top mode strip → switch region/scroll. The selection dialog remains discoverable by accessibility tools. Windows login startup uses a quoted executable plus `--tray`, with its command checked by `tests/Program.cs`.
