@@ -4,6 +4,8 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 ## 執行
 
+可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.0)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.0/CaptureWorkbench.exe)。
+
 執行 `artifacts/release/CaptureWorkbench.exe`。獨立發行版內含 .NET 執行環境，不需要安裝 SDK。
 
 先前的 `artifacts/v2` 與本輪測試的 `artifacts/v3` 同步到相同版本；以 `release` 為主要入口。
