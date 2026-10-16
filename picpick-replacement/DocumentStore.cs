@@ -17,6 +17,7 @@ public sealed class DocumentState
     public float Zoom { get; set; } = 1;
     public string SavedVersion { get; set; } = "";
     public int NextStampNumber { get; set; } = 1;
+    public int CanvasBackgroundArgb { get; set; } = Color.White.ToArgb();
 }
 
 public sealed class DocumentStore(string root)
@@ -27,7 +28,7 @@ public sealed class DocumentStore(string root)
     readonly HashSet<string> allocatedPaths = new(StringComparer.OrdinalIgnoreCase);
     public ImageDocument Create(Bitmap image, bool saveImmediately = true)
     {
-        var state = new DocumentState(); state.Title = state.Created.ToString("HH:mm:ss");
+        var state = new DocumentState { CanvasBackgroundArgb = image.GetPixel(0, 0).A == 0 ? Color.Transparent.ToArgb() : Color.White.ToArgb() }; state.Title = state.Created.ToString("HH:mm:ss");
         var outputFolder = Path.Combine(OutputRoot, state.Created.ToString("yyyy-MM-dd"));
         state.OutputDirectory = Path.GetFullPath(outputFolder);
         Directory.CreateDirectory(outputFolder);

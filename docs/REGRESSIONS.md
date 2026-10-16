@@ -404,3 +404,12 @@ Only important bugs that have occurred in the real app belong here.
 - Root cause: Changing ShowInTaskbar recreates HWND and discards the hotkey registered to the old handle.
 - Fix: Hide the existing window without changing ShowInTaskbar; restore that window from NotifyIcon or the single-instance open channel. Share one custom icon between the executable, window and notification area.
 - Regression flow: `picpick-replacement/tests/UI-VERIFICATION.md`: minimize → Ctrl+Alt+2 from another app → top mode strip → switch region/scroll. The selection dialog remains discoverable by accessibility tools. Windows login startup uses a quoted executable plus `--tray`, with its command checked by `tests/Program.cs`.
+
+## REG-050 — Pasting a large image into a small canvas silently loses resolution
+
+- Scope: `picpick-replacement/ImageCanvas.cs`, `WorkbenchForm.cs`, `NewCanvasForm.cs`, `CanvasSizeForm.cs`.
+- Reproduction: Paste an 800×600 image into a 200×150 document. The previous insertion calculation shrank the floating object to 160×120, even though its encoded source retained 800×600 pixels.
+- Correct behavior: Paste preserves original pixel dimensions, leaves the existing output canvas unchanged, and allows the floating image to move outside its bounds. Merge keeps only pixels within that canvas; undo restores the complete movable object. Canvas resize adds/crops space without resampling; image scaling remains a separate command.
+- Intended behavior clarification, 2026-10-16: The user explicitly rejected automatic canvas enlargement. New blank documents may instead use clipboard dimensions, or clipboard content may directly create a matching-size document. These are distinct from pasting into an existing document; REG-048 direct object editing remains required.
+- Fix: Remove insertion fit scaling, retain integer pixel placement, include floating objects in the scrollable workspace, and add Merge plus separate outer canvas handles and size dialog. Default the new-image dialog to clipboard dimensions with separate blank/content actions.
+- Tests: `picpick-replacement/tests/CanvasUserFlows.cs`: `LargePasteKeepsPixels`, `PasteMergeAndResizeCanvas`, `ClipboardCanvasSize`, plus the existing complete editor flow. The merge flow verifies saved dimensions and an exact one-pixel red stripe after negative-position dragging, merge/undo, transparent expansion, outer-handle drag and shrink. Desktop Ctrl+C/V, merge, save, canvas drag and both new-document choices are recorded in `tests/UI-VERIFICATION.md`.

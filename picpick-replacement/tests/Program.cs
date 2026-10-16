@@ -174,6 +174,9 @@ Test("bottom detection retries unchanged frames and resets after delayed progres
     Check(detector.Observe(new Alignment(0, 1, 0)), "Never finished at bottom");
 });
 Test("normal editor flow: centered numbers, direct dragging, paste, resize, select all and close", CanvasUserFlows.Run);
+Test("large pasted image keeps original pixels inside an unchanged smaller canvas", CanvasUserFlows.LargePasteKeepsPixels);
+Test("floating large paste moves outside, merges to fixed bounds and canvas drag preserves pixels", CanvasUserFlows.PasteMergeAndResizeCanvas);
+Test("new blank canvas uses clipboard dimensions independently of clipboard content", CanvasUserFlows.ClipboardCanvasSize);
 Test("closing saves edits and clears the open-document list", () => {
     var root = Path.Combine(Path.GetTempPath(), "CaptureWorkbench-close-" + Guid.NewGuid().ToString("N"));
     var store = new DocumentStore(root); using var blank = NewCanvasForm.CreateImage(80, 60, Color.White); using var doc = store.Create(blank);

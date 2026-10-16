@@ -14,6 +14,7 @@ public sealed class WorkbenchForm : Form
     readonly NotifyIcon tray;
     readonly ToolStripButton shortcutButton = new("快捷鍵：註冊中");
     readonly ToolStripButton colorButton = new("顏色");
+    readonly ToolStripButton mergeButton = new("合併") { Enabled = false, ToolTipText = "合併浮動圖片與標註到畫布，只保留框內內容；Ctrl＋Enter，Ctrl＋Z 可復原" };
     readonly ToolStripComboBox width = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 45, AutoSize = false };
     readonly ToolStripTextBox nextNumber = new() { Width = 48, AutoSize = false, Visible = false, AccessibleName = "下一個圖章編號", Text = "1" };
     readonly ToolStripTextBox currentNumber = new() { Width = 48, AutoSize = false, Visible = false, Enabled = false, AccessibleName = "目前圖章編號" };
@@ -44,7 +45,7 @@ public sealed class WorkbenchForm : Form
         var file = new ToolStripMenuItem("檔案");
         file.DropDownItems.Add("新增空白圖片…  Ctrl＋N", null, (_, _) => Safe(NewImage));
         file.DropDownItems.Add("開啟圖片…", null, (_, _) => OpenImages());
-        file.DropDownItems.Add("貼上成新分頁", null, (_, _) => PasteNew());
+        file.DropDownItems.Add("從剪貼簿新增圖片  Ctrl＋Shift＋V", null, (_, _) => Safe(PasteNew));
         file.DropDownItems.Add("貼上到目前圖片  Ctrl＋V", null, (_, _) => Safe(Paste));
         file.DropDownItems.Add("從檔案貼上…", null, (_, _) => Safe(PasteFile));
         file.DropDownItems.Add("另存圖片…", null, (_, _) => Export());
@@ -57,7 +58,9 @@ public sealed class WorkbenchForm : Form
         void Action(string title, Action action) => actions.Items.Add(new ToolStripButton(title, null, (_, _) => Safe(action)));
         actions.Items.Add(new ToolStripButton("開始擷取", null, async (_, _) => await StartCapture(false)));
         actions.Items.Add(new ToolStripButton("捲動擷取", null, async (_, _) => await StartCapture(true)));
-        actions.Items.Add(new ToolStripSeparator()); Action("新增", NewImage); Action("開啟", OpenImages); Action("貼上", Paste); Action("複製", Copy); Action("保存", SaveCurrent); Action("另存", Export);
+        actions.Items.Add(new ToolStripSeparator()); Action("新增", NewImage); Action("開啟", OpenImages); Action("貼上", Paste);
+        mergeButton.Click += (_, _) => Safe(MergeObjects); actions.Items.Add(mergeButton);
+        Action("複製", Copy); Action("保存", SaveCurrent); Action("另存", Export);
         Action("輸出資料夾…", () => ShowSettings(false));
         Action("開啟資料夾", () => { Directory.CreateDirectory(store.OutputRoot); Process.Start(new ProcessStartInfo(store.OutputRoot) { UseShellExecute = true }); });
         shortcutButton.Click += (_, _) => ShowSettings(true); actions.Items.Add(shortcutButton);
@@ -83,7 +86,7 @@ public sealed class WorkbenchForm : Form
         View("重做", () => { Canvas?.Document.Redo(); Canvas?.RefreshDocument(); SetStatus(SaveStatus("已重做")); });
         view.Items.Add(new ToolStripSeparator());
         View("縮小", () => Canvas?.SetZoom(Canvas.Zoom / 1.2f)); View("100%", () => Canvas?.SetZoom(1)); View("放大", () => Canvas?.SetZoom(Canvas.Zoom * 1.2f));
-        View("符合視窗", Fit); View("旋轉 90°", () => Canvas?.Rotate90()); View("調整尺寸", ResizeImage);
+        View("符合視窗", Fit); View("旋轉 90°", () => Canvas?.Rotate90()); View("畫布大小", ResizeCanvasSize); View("縮放圖片", ResizeImage);
         View("關閉分頁", CloseTab);
         view.Items.Add(new ToolStripSeparator()); view.Items.Add(currentNumberLabel); view.Items.Add(currentNumber); view.Items.Add(nextNumberLabel); view.Items.Add(nextNumber);
         nextNumber.KeyDown += (_, e) => { if (e.KeyCode != Keys.Enter) return; e.SuppressKeyPress = true; ApplyNumberFields(); Canvas?.Focus(); };
@@ -152,7 +155,7 @@ public sealed class WorkbenchForm : Form
         void RestoreShortcut() { activeShortcut = previous; hotkeyRegistered = wasRegistered && previous != null && Native.RegisterHotKey(Handle, 42, previous.Modifiers, (uint)previous.Key); RefreshShortcutLabel(); }
     }
     protected override void WndProc(ref Message m) { if (m.Msg == 0x312 && m.WParam == 42 && !capturing) { _ = StartCapture(false); return; } base.WndProc(ref m); }
-    void SetStatus(string message) { status.Text = Canvas == null ? message : $"{message}   ·   {Canvas.Document.Image.Width} × {Canvas.Document.Image.Height}   ·   {Canvas.Document.OutputPath}"; tabs.Invalidate(); UpdateNumberFields(); }
+    void SetStatus(string message) { status.Text = Canvas == null ? message : $"{message}   ·   {Canvas.Document.Image.Width} × {Canvas.Document.Image.Height}   ·   {Canvas.Document.OutputPath}"; tabs.Invalidate(); mergeButton.Enabled = Canvas?.Document.Marks.Count > 0; UpdateNumberFields(); }
     void UpdateNumberFields() { bool visible = Canvas != null && (tool == EditTool.Stamp || Canvas.SelectedMark is { Kind: EditTool.Stamp } selected && selected.StampSymbol.StartsWith("number")); currentNumber.Visible = nextNumber.Visible = currentNumberLabel.Visible = nextNumberLabel.Visible = visible; if (!nextNumber.Focused) nextNumber.Text = (Canvas?.NextStampNumber ?? 1).ToString(); currentNumber.Enabled = Canvas?.SelectedMark is { Kind: EditTool.Stamp } mark && mark.StampSymbol.StartsWith("number"); if (!currentNumber.Focused) currentNumber.Text = currentNumber.Enabled ? Canvas!.SelectedMark!.Text : ""; }
     void ApplyNumberFields() {
         if (Canvas == null) return;
@@ -164,6 +167,7 @@ public sealed class WorkbenchForm : Form
     }
     string SaveStatus(string prefix = "") => (prefix.Length > 0 ? prefix + " · " : "") + (Canvas?.Document.Pending == true ? "尚未保存 · Ctrl＋S 保存" : "已保存");
     void SaveCurrent() { if (Canvas == null) return; ApplyNumberFields(); Canvas.Document.SavePending(); SetStatus("已保存"); }
+    void MergeObjects() { ApplyNumberFields(); Canvas?.Merge(); }
     // Hide already removes the taskbar button. Toggling ShowInTaskbar here
     // recreates HWND and silently loses its registered global hotkey.
     void MinimizeToTray() { if (capturing) return; Hide(); }
@@ -228,10 +232,15 @@ public sealed class WorkbenchForm : Form
     void DrainOpenRequests() { while (pendingFiles.TryDequeue(out var file)) Safe(() => Import(file)); }
     void OpenImages() { using var dialog = new OpenFileDialog { Filter = "圖片|*.png;*.jpg;*.jpeg;*.bmp;*.gif|所有檔案|*.*", Multiselect = true }; if (dialog.ShowDialog(this) == DialogResult.OK) foreach (var file in dialog.FileNames) Safe(() => Import(file)); }
     void Import(string path) { using var source = new Bitmap(path); AddTab(store.Create(source)); }
-    void PasteNew() { using var image = ClipboardImages.Read(); if (image != null) AddTab(store.Create(image)); }
+    void PasteNew() { using var image = ClipboardImages.Read(); if (image != null) { AddTab(store.Create(image)); Fit(); SetStatus("已從剪貼簿新增同尺寸圖片"); } }
     void Paste() { if (Canvas == null) { PasteNew(); return; } using var image = ClipboardImages.Read(); if (image != null) Canvas.InsertImage(image); else SetStatus("剪貼簿中沒有圖片"); }
     void PasteFile() { if (Canvas == null) { OpenImages(); return; } using var dialog = new OpenFileDialog { Title = "貼上到目前圖片", Filter = "圖片|*.png;*.jpg;*.jpeg;*.bmp;*.gif" }; if (dialog.ShowDialog(this) == DialogResult.OK) { using var image = new Bitmap(dialog.FileName); Canvas.InsertImage(image); } }
-    void NewImage() { using var dialog = new NewCanvasForm(); if (dialog.ShowDialog(this) != DialogResult.OK) return; using var image = NewCanvasForm.CreateImage(dialog.ImageSize.Width, dialog.ImageSize.Height, dialog.BackgroundColor); AddTab(store.Create(image, saveImmediately: false)); Fit(); SetStatus("已建立空白圖片 · Ctrl＋S 保存"); }
+    void NewImage() {
+        using var clipboard = ClipboardImages.Read(); using var dialog = new NewCanvasForm(clipboard?.Size);
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        if (dialog.UseClipboardContent && clipboard != null) { AddTab(store.Create(clipboard)); Fit(); SetStatus("已從剪貼簿新增同尺寸圖片"); }
+        else { using var image = NewCanvasForm.CreateImage(dialog.ImageSize.Width, dialog.ImageSize.Height, dialog.BackgroundColor); AddTab(store.Create(image, saveImmediately: false)); Fit(); SetStatus("已建立空白圖片 · Ctrl＋S 保存"); }
+    }
     void Copy() { if (Canvas == null) return; if (!Canvas.Selection.IsEmpty) { using var part = Canvas.Document.Image.Clone(Canvas.Selection, PixelFormat.Format32bppArgb); ClipboardImages.Write(part); } else if (Canvas.SelectedMark is { } mark) { var bounds = Rectangle.Ceiling(mark.Bounds); bounds.Inflate((int)Math.Ceiling(mark.Stroke * 6 + 2), (int)Math.Ceiling(mark.Stroke * 6 + 2)); using var image = new Bitmap(Math.Max(1, bounds.Width), Math.Max(1, bounds.Height), PixelFormat.Format32bppArgb); using (var g = Graphics.FromImage(image)) { g.TranslateTransform(-bounds.Left, -bounds.Top); AnnotationRenderer.Draw(g, mark); } ClipboardImages.Write(image); } else ClipboardImages.Write(Canvas.Document.Image); SetStatus("已複製到剪貼簿"); }
     void Export()
     {
@@ -248,7 +257,7 @@ public sealed class WorkbenchForm : Form
         canvas.Document.CloseAndSave(); tabs.TabPages.Remove(page); page.Dispose(); canvas.Document.Dispose();
         welcome.Visible = tabs.TabCount == 0; SetStatus("已關閉分頁，圖片仍保存在輸出資料夾");
     }
-    void Fit() { if (Canvas == null) return; Canvas.SetZoom(Math.Min(1, Math.Min((Canvas.ClientSize.Width - 40f) / Canvas.Document.Image.Width, (Canvas.ClientSize.Height - 40f) / Canvas.Document.Image.Height))); }
+    void Fit() { if (Canvas == null) return; Canvas.SetZoom(Math.Min(1, Math.Min((Canvas.ClientSize.Width - 64f) / Canvas.Document.Image.Width, (Canvas.ClientSize.Height - 72f) / Canvas.Document.Image.Height))); }
     void ResizeImage()
     {
         if (Canvas == null) return;
@@ -257,11 +266,13 @@ public sealed class WorkbenchForm : Form
         if (parts.Length != 2 || !int.TryParse(parts[0], out int w) || !int.TryParse(parts[1], out int h) || w < 1 || h < 1 || (long)w * h > 100_000_000) throw new InvalidOperationException("請輸入有效尺寸，總像素不得超過一億。");
         Canvas.ResizeTo(w, h); SetStatus(SaveStatus("尺寸已調整"));
     }
+    void ResizeCanvasSize() { if (Canvas == null) return; using var dialog = new CanvasSizeForm(Canvas.Document.Image.Size, Canvas.CanvasBackground); if (dialog.ShowDialog(this) != DialogResult.OK) return; Canvas.ResizeCanvas(dialog.CanvasSize.Width, dialog.CanvasSize.Height, dialog.ExpansionBackground); }
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
         if ((currentNumber.Focused || nextNumber.Focused) && keyData is (Keys.Control | Keys.A) or (Keys.Control | Keys.C) or (Keys.Control | Keys.V) or (Keys.Control | Keys.Z) or (Keys.Control | Keys.Y)) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData) {
             case Keys.Control | Keys.A: Canvas?.SelectAll(); return true;
+            case Keys.Control | Keys.Enter: Safe(MergeObjects); return true;
             case Keys.Control | Keys.N: Safe(NewImage); return true;
             case Keys.Control | Keys.O: Safe(OpenImages); return true;
             case Keys.Control | Keys.V: Safe(Paste); return true;
