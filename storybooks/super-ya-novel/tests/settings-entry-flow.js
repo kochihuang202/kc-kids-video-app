@@ -13,7 +13,8 @@ async(sessionPage)=>{
   await page.getByRole('button',{name:'完成設定',exact:true}).click();await page.locator('[data-action="start"]').click();
   check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true',book+' reader inherits entry font choice');
   check(await page.locator('.prose [data-word]').count()===0,book+' reader inherits word choice');
-  await page.locator('[data-action="home"]').click();check(await page.locator('.preferences summary').isVisible(),book+' settings survives return to cover');
+  await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('#book-title').waitFor();check(await page.locator('.preferences summary').isVisible(),book+' settings survives return to cover');
  }
  await context.close();return {passed:checks.length,checks};
 }
+

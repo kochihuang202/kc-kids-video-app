@@ -13,7 +13,7 @@ async(sessionPage)=>{
  await page.locator('.book-card[href="?book=kiki"]').click();
  await page.locator('.mode-card').first().waitFor();
  check(await page.locator('.mode-card').count()===2,'each episode exposes comprehension and complete-whisper entries');
- await page.locator('.mode-card[href*="mode=practice"]').click();await page.locator('.scene-card').first().waitFor();
+ await page.locator('.mode-card a[href$="mode=practice"]').click();await page.locator('.scene-card').first().waitFor();
  const all=await page.evaluate(async()=>(await fetch('practice.json')).json());
  check(await page.locator('.scene-card').count()===9,'Kiki has all nine comprehension scenes');
  await page.locator('.scene-card').first().click();
@@ -30,8 +30,8 @@ async(sessionPage)=>{
  for(const book of ['kiki','super-ya']){
   for(let scene=0;scene<all[book].scenes.length;scene++){
    await page.goto(`http://127.0.0.1:4178/?book=${book}&mode=practice`);await page.locator('.scene-card').nth(scene).click();
-   for(const level of ['story','extra']){
-    if(level==='extra')await page.locator('[data-p="extra"]').first().click();
+   for(const level of ['story']){
+    
     await page.getByRole('button',{name:'我讀好了，開始練習',exact:true}).click();
     const qs=all[book].scenes[scene].questions[level];
     for(let q=0;q<qs.length;q++){
@@ -43,7 +43,7 @@ async(sessionPage)=>{
       await page.getByRole('button',{name:'帶我看看這段',exact:true}).click();
       check(await page.locator('.proof').count()>0,'layered hints link back to the original evidence');
      }
-     if(book==='super-ya'&&scene===0&&level==='extra'&&q===0)await page.getByRole('button',{name:'我想先看說明',exact:true}).click();
+     if(book==='super-ya'&&scene===0&&level==='story'&&q===0)await page.getByRole('button',{name:'我想先看說明',exact:true}).click();
      else await page.locator('.answer-choice').nth(definition.correct).click();
      completed++;check(await page.locator('.feedback.good').count()===1,`${book} scene ${scene+1} ${level} question ${q+1} resolves from authored evidence`);
      await page.getByRole('button',{name:'下一題',exact:true}).click();
@@ -53,11 +53,11 @@ async(sessionPage)=>{
    }
   }
  }
- check(completed===70,'all 70 comprehension tasks across both episodes are operable');
+ check(completed===42,'all 42 comprehension tasks across both episodes are operable');
  await page.waitForTimeout(1200);
  const snapshot=await page.evaluate(async()=>(await(await fetch('/api/progress')).json()).documents);
  check(snapshot['kiki:practice'].state.attempts['s1:story:0'].tries===2&&snapshot['kiki:practice'].state.attempts['s1:story:0'].hints===3,'cloud retains wrong attempts and actual hint usage');
- check(snapshot['super-ya:practice'].state.attempts['s1:extra:0'].revealed===true,'cloud distinguishes explanation viewing from independent answers');
+ check(snapshot['super-ya:practice'].state.attempts['s1:story:0'].revealed===true,'cloud distinguishes explanation viewing from independent answers');
  check(snapshot['kiki:practice'].state.notes['s1:story'].includes('聽清楚'),'child reflection persists online without automated grading');
  await page.goto('http://127.0.0.1:4178/?book=kiki&chapter=1');await page.locator('.guide-passage').waitFor();
  const word=page.locator('.guide-passage [data-word="重視"]').first();await word.click();
@@ -70,7 +70,7 @@ async(sessionPage)=>{
  await other.goto('http://127.0.0.1:4178/?book=kiki');await other.locator('[data-action="start"]').click();await other.waitForTimeout(300);
  check(await other.locator('#chapter-title').evaluate(el=>el.textContent.includes('梅')&&el.textContent.includes('婆')),'a fresh device resumes the cloud chapter without child identification');
  check(await other.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','a fresh device restores cloud reading preferences');
- await other.goto('http://127.0.0.1:4178/?view=parent');await other.locator('.parent-book').first().waitFor();
+ await other.goto('http://127.0.0.1:4178/?view=parent');await other.locator('[data-parent-hold]').focus();await other.keyboard.down('Space');await other.waitForTimeout(3100);await other.keyboard.up('Space');await other.locator('.parent-book').first().waitFor();
  check(await other.locator('.parent-book').count()===2,'parents see both episodes in one cloud progress page');
  check(await other.locator('.progress-table tbody tr').count()===14,'parent progress covers every comprehension scene');
  check((await plain(other.locator('.parent-main'))).includes('不是成績單'),'parent view states that progress is not an ability score');

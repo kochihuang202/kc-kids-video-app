@@ -1,0 +1,89 @@
+{
+  "original": "original.md",
+  "sha256": "169c2b49b9dea7d45598d6d235333e43d7638e7a46555d378ae53f68da5383b8",
+  "priority": "逐字稿優先；摘要僅供定位。",
+  "events": [
+    {
+      "time": "00:00:14–00:01:26",
+      "event": "巧虎回顧花瓶與爸爸的提醒",
+      "status": "明示",
+      "turningPoint": false,
+      "expectation": "想玩遊戲",
+      "result": "不小心打破花瓶，受到提醒"
+    },
+    {
+      "time": "00:01:30–00:02:31",
+      "event": "梅婆婆解釋責備，琪琪擔心爸爸不重視自己",
+      "status": "明示；梅婆婆對爸爸想法的說法仍是她的解釋",
+      "turningPoint": true,
+      "expectation": "巧虎想明白爸爸的用意",
+      "result": "琪琪從同一句話得出另一個擔心"
+    },
+    {
+      "time": "00:02:33–00:03:20",
+      "event": "朋友試著想出會被責備的事情",
+      "status": "明示",
+      "turningPoint": true,
+      "expectation": "琪琪想藉被責備確認重視",
+      "result": "開始幫忙拔枯葉"
+    },
+    {
+      "time": "00:03:24–00:04:12",
+      "event": "花折斷，爸爸先關心琪琪的手",
+      "status": "折花的不小心依原稿及核定延伸稿，不推定為故意",
+      "turningPoint": true,
+      "expectation": "朋友猜會被責備",
+      "result": "爸爸關心受傷並感謝幫忙"
+    },
+    {
+      "time": "00:04:14–00:04:52",
+      "event": "琪琪嘗試泥巴畫畫，爸爸稱讚並說要珍藏",
+      "status": "畫在哪件物品不明；巧虎以前在包上畫是另一件事",
+      "turningPoint": false,
+      "expectation": "以為爸爸會生氣",
+      "result": "得到稱讚"
+    },
+    {
+      "time": "00:04:54–00:05:34",
+      "event": "弄髒衣服仍未被責備",
+      "status": "明示",
+      "turningPoint": false,
+      "expectation": "想體驗被爸爸責備",
+      "result": "爸爸鼓勵盡情玩"
+    },
+    {
+      "time": "00:05:40–00:06:36",
+      "event": "踢球後追球衝向馬路，爸爸提醒安全並為太大聲道歉",
+      "status": "明示；不是求挨罵的第四個計畫",
+      "turningPoint": true,
+      "expectation": "一起踢球",
+      "result": "危險發生，爸爸急忙提醒"
+    },
+    {
+      "time": "00:06:46–00:07:34",
+      "event": "琪琪直接詢問，爸爸明確說重視她",
+      "status": "明示",
+      "turningPoint": true,
+      "expectation": "想確認自己重要",
+      "result": "得到爸爸親口回應"
+    },
+    {
+      "time": "00:07:40–00:07:51",
+      "event": "梅婆婆回來，朋友準備回家",
+      "status": "明示；結束於預告之前",
+      "turningPoint": false,
+      "expectation": "事情暫告一段落",
+      "result": "提醒天黑前回家"
+    }
+  ],
+  "uncertainties": [
+    "泥巴畫畫的物品無法由逐字稿確認，保留「一件東西」。",
+    "不把梅婆婆的概括說法當作普遍事實，也不推定所有人的內心。"
+  ],
+  "editorial": {
+    "sourceReview": "保留琪琪完整稿；27題以各單元短文為答案依據，不新增題目或改動歷史題號。",
+    "phoneticReview": "延用已校訂語境字音規則；本次新增導覽文字逐字檢查，完整稿未改字。",
+    "glossaryReview": "沿用既有臺灣注音與兒童詞義；不新增未核對詞條。",
+    "unresolvedCritical": []
+  }
+}

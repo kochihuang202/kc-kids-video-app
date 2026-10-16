@@ -1,46 +1,58 @@
-import {pageWordCount} from './text-stats.js';
-import {openPreferences} from './preferences.js';
-import {drawer,modeSwitch} from './drawer.js';
-import {openProgress} from './cloud.js';
-import {showWord,speakParagraphs,stopSpeech} from './tools.js';
+import {storage,preview,draftURL} from './storage.js?v=d57971c562d6';
+import {pageWordCount} from './text-stats.js?v=d57971c562d6';
+import {openPreferences} from './preferences.js?v=d57971c562d6';
+import {drawer} from './drawer.js?v=d57971c562d6';
+import {openProgress} from './cloud.js?v=d57971c562d6';
+import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=d57971c562d6';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSON}){
  const data=(await getJSON('practice.json'))[book.id],localKey='shimajiro-practice:'+book.id+':v1';
- const base={scene:0,level:'story',phase:'read',positions:{},attempts:{},notes:{},size:0,bopo:true,words:true,rate:0.85};
- let local={};try{local=JSON.parse(localStorage.getItem(localKey)||'{}');}catch{}
+ const base={scene:0,level:'story',phase:'read',positions:{},anchors:{},attempts:{},notes:{},size:0,bopo:true,words:true,rate:0.85};
+ let local={};try{local=JSON.parse(storage.getItem(localKey)||'{}');}catch{}
  const cloud=await openProgress(book.id,'practice',{...base,...local}),preferencesStore=await openPreferences(cloud.value);let p={...base,...cloud.value,...preferencesStore.value},view='home';
+ p.level='story';
  p.scene=Number.isInteger(p.scene)&&p.scene>=0&&p.scene<data.scenes.length?p.scene:0;
- let routeReady=false,restoringRoute=false;
+ let routeReady=false,restoringRoute=false,scrollTimer,restoringScroll=false;
+ function rememberReading(){
+  if(view!=='reader'||restoringScroll||document.body.dataset.view!=='practice')return;
+  const header=document.querySelector('.child-header')?.getBoundingClientRect().bottom||76;
+  const nodes=[...document.querySelectorAll('.practice-paragraph')],el=nodes.find(n=>n.getBoundingClientRect().bottom>header+80);
+  if(el){p.anchors[p.scene]={block:nodes.indexOf(el),offset:el.getBoundingClientRect().top-header};save();}
+ }
+ function restoreReading(){
+  const anchor=p.anchors[p.scene],el=anchor&&document.getElementById('practice-para-'+anchor.block);restoringScroll=true;
+  requestAnimationFrame(()=>{if(el)window.scrollTo({top:scrollY+el.getBoundingClientRect().top-76-anchor.offset,behavior:'instant'});restoringScroll=false;});
+ }
  function applyRoute(phase){
   const q=new URLSearchParams(location.search),target=q.get('scene');
   if(target!==null&&/^\d+$/.test(target)&&Number(target)<data.scenes.length){
-   const level=q.get('level')==='extra'?'extra':'story',same=p.scene===Number(target)&&p.level===level;
+   const level='story',same=p.scene===Number(target)&&p.level===level;
    p.scene=Number(target);p.level=level;p.phase=['read','practice'].includes(phase)?phase:same?p.phase:'read';view='reader';
   }else view='home';
  }
  function syncRoute(){
   const url='?book='+book.id+'&mode=practice'+(view==='reader'?'&scene='+p.scene+(p.level==='extra'?'&level=extra':''):'');
   const snapshot={practice:{phase:p.phase}};
-  if(location.search===url||!routeReady||restoringRoute)history.replaceState(snapshot,'',url);else history.pushState(snapshot,'',url);
+  if(location.search===draftURL(url).replace(/^\//,'')||!routeReady||restoringRoute)history.replaceState(snapshot,'',draftURL(url));else history.pushState(snapshot,'',draftURL(url));
   routeReady=true;
  }
  applyRoute();
  const key=()=>data.scenes[p.scene].id+':'+p.level,questions=()=>data.scenes[p.scene].questions[p.level],passage=()=>data.scenes[p.scene][p.level];
  const done=a=>a?.correct===true||a?.revealed===true;
- const count=scene=>Object.entries(scene.questions).reduce((n,[level,qs])=>n+qs.filter((q,i)=>done(p.attempts[scene.id+':'+level+':'+i])).length,0);
+ const count=scene=>scene.questions.story.filter((q,i)=>done(p.attempts[scene.id+':story:'+i])).length;
  const b=(text,action,extra='',cls='')=>`<button type="button" data-p="${action}" ${extra} class="${cls}" aria-label="${esc(text)}">${ruby(text)}</button>`;
- const save=()=>{try{localStorage.setItem(localKey,JSON.stringify(p));}catch{}cloud.update(p);preferencesStore.update(p);};
- function prefs(){return drawer({ui,ruby,close:'data-p="close-settings"',progress:`<p>${ruby(data.scenes[p.scene].title)}</p><p>${ruby(ui.completedTasks)} ${count(data.scenes[p.scene])} / 5</p>`,links:`<a href="./">${ruby(ui.backShelf)}</a><a href="?book=${book.id}">${ruby(ui.modeHome)}</a><a href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.whisperTitle)}</a>${b(ui.allScenes,'home')}<a href="?view=parent">${ruby(ui.parent)}</a>`,controls:`${b(`${ui.bopo}：${p.bopo?ui.on:ui.off}`,'bopo',`aria-pressed="${p.bopo}"`)}<span>${ruby(ui.size)}</span><div class="size-buttons">${[ui.small,ui.medium,ui.large].map((v,i)=>b(v,'size',`data-size="${i}" aria-pressed="${i===p.size}"`)).join('')}</div>${b(ui.words,'words',`aria-pressed="${p.words}"`)}${b(ui.speakPassage,'speak-all',view==='reader'?'':'disabled')}${b(ui.stopSpeech,'stop')}<div class="rate-buttons">${[[0.6,ui.slow],[0.85,ui.normal],[1,ui.fast]].map(([v,label])=>b(label,'rate',`data-rate="${v}" aria-pressed="${p.rate===v}"`)).join('')}</div><p class="tool-note">${ruby(ui.voiceNotice)}</p><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${b(ui.doneSettings,'close-settings','','primary')}`});}
- function nav(){return `<header class="reader-header"><nav class="reader-bar"><a href="?book=${book.id}">${ruby(ui.modeHome)}</a><span class="reader-brand">${ruby(ui.practiceTitle)}</span><a class="whisper-shortcut" href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.whisperShort)}</a></nav></header>`;}
+ const save=()=>{try{storage.setItem(localKey,JSON.stringify(p));}catch{}cloud.update(p);preferencesStore.update(p);};
+ function prefs(){return drawer({ui,ruby,close:'data-p="close-settings"',progress:`<p>${ruby(data.scenes[p.scene].title)}</p><p>${ruby(ui.completedTasks)} ${count(data.scenes[p.scene])} / ${data.scenes[p.scene].questions.story.length}</p>`,links:`<span class="drawer-current">${ruby(ui.practiceTitle)}</span>${b(ui.allScenes,'home')}`,controls:`${b(`${ui.bopo}：${p.bopo?ui.on:ui.off}`,'bopo',`aria-pressed="${p.bopo}"`)}<span>${ruby(ui.size)}</span><div class="size-buttons">${[ui.small,ui.medium,ui.large].map((v,i)=>b(v,'size',`data-size="${i}" aria-pressed="${i===p.size}"`)).join('')}</div>${b(ui.words,'words',`aria-pressed="${p.words}"`)}${b(ui.speakPassage,'speak-all',view==='reader'?'':'disabled')}${b(ui.stopSpeech,'stop')}<div class="rate-buttons">${[[0.6,ui.slow],[0.85,ui.normal],[1,ui.fast]].map(([v,label])=>b(label,'rate',`data-rate="${v}" aria-pressed="${p.rate===v}"`)).join('')}</div><p class="tool-note">${ruby(ui.voiceNotice)}</p><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${b(ui.doneSettings,'close-settings','','primary')}`});}
+ function nav(){return '';}
  function render(){
   syncRoute();
   document.body.dataset.view='practice';document.body.classList.toggle('no-bopo',!p.bopo);document.documentElement.style.setProperty('--reader-size',[26,30,34][p.size]+'px');
   if(view==='home'){
-   app.innerHTML=nav()+`<main class="practice-shell">${modeSwitch({book,ui,ruby,current:"practice",resumeChapter:p.scene})}<p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(ui.practiceTitle)}</h1><p class="practice-intro">${ruby(ui.practiceWelcome)}</p><div class="scene-grid">${data.scenes.map((s,i)=>`<button type="button" data-p="scene" data-scene="${i}" class="scene-card" aria-label="${esc(s.title)}"><span class="chapter-num">${String(i+1).padStart(2,'0')}</span><h2>${ruby(s.title)}</h2><p>${ruby(s.subtitle)}</p><span>${count(s)} / ${s.questions.story.length+s.questions.extra.length}</span></button>`).join('')}</div>${b(ui.resumePractice,'resume','','primary')}<p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();return;
+   app.innerHTML=nav()+`<main class="practice-shell"><p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(ui.practiceTitle)}</h1><p class="practice-intro">${ruby(ui.practiceWelcome)}</p><div class="scene-grid">${data.scenes.map((s,i)=>`<button type="button" data-p="scene" data-scene="${i}" class="scene-card" aria-label="${esc(s.title)}"><span class="chapter-num">${String(i+1).padStart(2,'0')}</span><h2>${ruby(s.title)}</h2><p>${ruby(s.subtitle)}</p><span>${count(s)} / ${s.questions.story.length}</span></button>`).join('')}</div>${b(ui.resumePractice,'resume','','primary')}<p class="sync-note" data-sync-status>${esc(cloud.status)}</p></main>`+prefs();return;
   }
   const s=data.scenes[p.scene],qs=questions(),pos=Math.min(p.positions[key()]||0,qs.length),id=key()+':'+pos,a=p.attempts[id]||{},q=qs[pos];
   let task='';
-  if(pos>=qs.length){task=`<h2>${ruby(ui.practiceEnd)}</h2><p>${ruby(s.reflection)}</p><label for="own-note">${ruby(ui.ownWords)}</label><textarea id="own-note" maxlength="1000" aria-label="用自己的話說">${esc(p.notes[key()]||'')}</textarea><p class="tool-note">${ruby(ui.noteNotice)}</p>${b(ui.revisit,'restart')}${p.level==='story'?b(ui.tryExtra,'extra','','primary'):b(ui.nextScene,'next-scene','','primary')}`;}
+  if(pos>=qs.length){task=`<h2>${ruby(ui.practiceEnd)}</h2><p>${ruby(s.reflection)}</p><label for="own-note">${ruby(ui.ownWords)}</label><textarea id="own-note" maxlength="1000" aria-label="用自己的話說">${esc(p.notes[key()]||'')}</textarea><p class="tool-note">${ruby(ui.noteNotice)}</p>${b(ui.revisit,'restart')}${b(ui.nextScene,'next-scene','','primary')}`;}
   else{
    const options=q.type==='choice'?q.options:passage();
    task=`<p class="eyebrow">${ruby(q.skill)} · ${pos+1} / ${qs.length}</p><h2 class="question-title">${ruby(q.q)}</h2><div class="answer-options">${options.map((option,i)=>b(q.type==='choice'?option:`${i+1}．${option}`,'answer',`data-choice-index="${i}" ${done(a)?'disabled':''}`,`answer-choice ${a.selection===i?(a.correct?'correct':a.tries?'selected':''):''}`)).join('')}</div>`;
@@ -54,10 +66,10 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
    }
    task+=`<nav class="question-nav">${b(ui.previousQuestion,'prev',pos===0?'disabled':'')}${b(done(a)?ui.nextQuestion:ui.skipQuestion,'next','','primary')}</nav>`;
   }
-  app.innerHTML=nav()+`<main class="practice-shell practice-reading">${modeSwitch({book,ui,ruby,current:"practice",chapter:p.scene})}<div class="practice-top"><div><p class="eyebrow">${ruby(book.title)}</p><h1>${ruby(s.title)}</h1></div>${b(ui.allScenes,'home')}</div><nav class="level-tabs" aria-label="閱讀練習類別">${b(ui.storyLevel,'story',`aria-pressed="${p.level==='story'}"`)}${b(ui.extraLevel,'extra',`aria-pressed="${p.level==='extra'}"`)}</nav><p class="tool-note">${ruby(p.level==='extra'?ui.excerptNotice:ui.readFirst)}</p><div class="practice-layout ${p.phase==='practice'?'with-questions':''}"><article class="practice-paper"><h2>${ruby(p.level==='story'?ui.storyPassage:ui.extraPassage)}</h2>${b(ui.speakPassage,'speak-all','', 'text-button')}<div class="practice-passage">${passage().map((text,i)=>`<div class="practice-paragraph" id="practice-para-${i}"><span class="para-number" aria-hidden="true">${i+1}</span><p class="practice-text">${rich(text,[],p.words)}</p><div class="paragraph-tools">${b(ui.listenParagraph,'speak-one',`data-paragraph="${i}"`,'text-button')}</div></div>`).join('')}</div>${p.phase==='read'?b(ui.beginPractice,'begin','','primary'):b(ui.readOnly,'read-only')}<a class="full-whisper" href="?book=${book.id}&chapter=${p.scene}">${ruby(ui.fullWhisper)}</a></article>${p.phase==='practice'?`<section class="practice-panel" aria-label="理解練習">${task}</section>`:''}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${pageWordCount(passage(),ui,ruby)}</main>`+prefs();
+  app.innerHTML=nav()+`<main class="practice-shell practice-reading"><div class="practice-top"><div><p class="eyebrow">${ruby(book.title)} · ${ruby(ui.practiceTitle)}</p><h1>${ruby(s.title)}</h1></div>${b(ui.allScenes,'home')}</div><p class="tool-note">${ruby(ui.readFirst)}</p><div class="practice-layout ${p.phase==='practice'?'with-questions':''}"><article class="practice-paper"><h2>${ruby(p.level==='story'?ui.storyPassage:ui.extraPassage)}</h2>${b(ui.speakPassage,'speak-all','', 'text-button')}<div class="practice-passage">${passage().map((text,i)=>`<div class="practice-paragraph" id="practice-para-${i}"><span class="para-number" aria-hidden="true">${i+1}</span><p class="practice-text">${rich(text,[],p.words)}</p><div class="paragraph-tools">${b(ui.listenParagraph,'speak-one',`data-paragraph="${i}"`,'text-button')}</div></div>`).join('')}</div>${p.phase==='read'?b(ui.beginPractice,'begin','','primary'):b(ui.readOnly,'read-only')}</article>${p.phase==='practice'?`<section class="practice-panel" aria-label="理解練習">${task}</section>`:''}</div><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${pageWordCount(passage(),ui,ruby)}</main>`+prefs();
  }
  function change(action){
-  stopSpeech();const first=[...document.querySelectorAll('.practice-paragraph')].find(n=>n.getBoundingClientRect().bottom>100),index=first?.id,top=first?.getBoundingClientRect().top,scroll=scrollY;
+  stopSpeech();const first=[...document.querySelectorAll('.practice-paragraph')].find(n=>n.getBoundingClientRect().bottom>156),index=first?.id,top=first?.getBoundingClientRect().top,scroll=scrollY;
   action();save();render();requestAnimationFrame(()=>{const el=index&&document.getElementById(index);if(el)window.scrollBy({top:el.getBoundingClientRect().top-top,behavior:'instant'});else window.scrollTo(0,scroll);});
  }
  app.addEventListener('click',event=>{
@@ -74,10 +86,9 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
    if(wasOpen)document.querySelector('.preferences').setAttribute('open','');return;
   }
   stopSpeech();
-  if(action==='scene'||action==='resume'){if(action==='scene'){p.scene=+el.dataset.scene;p.level='story';p.phase='read';}view='reader';save();render();window.scrollTo(0,0);return;}
-  if(action==='home'){view='home';save();render();window.scrollTo(0,0);return;}
-  if(['story','extra'].includes(action)){p.level=action;p.phase='read';save();render();window.scrollTo(0,0);return;}
-  if(action==='begin'||action==='read-only'){p.phase=action==='begin'?'practice':'read';save();render();document.querySelector('.practice-panel')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
+  if(action==='scene'||action==='resume'){rememberReading();if(action==='scene'){p.scene=+el.dataset.scene;p.level='story';p.phase='read';}view='reader';save();render();window.scrollTo(0,0);restoreReading();return;}
+  if(action==='home'){rememberReading();view='home';save();render();window.scrollTo(0,0);return;}
+    if(action==='begin'||action==='read-only'){p.phase=action==='begin'?'practice':'read';save();render();document.querySelector('.practice-panel')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
   const qs=questions(),pos=Math.min(p.positions[key()]||0,qs.length),id=key()+':'+pos,q=qs[pos];
   if(action==='next-scene'){p.scene=Math.min(data.scenes.length-1,p.scene+1);p.level='story';p.phase='read';save();render();window.scrollTo(0,0);return;}
   if(action==='restart'){p.positions[key()]=0;save();render();return;}
@@ -92,8 +103,11 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
  app.addEventListener('input',event=>{if(event.target.id==='own-note'){p.notes[key()]=event.target.value.slice(0,1000);save();}});
  app.addEventListener('keydown',event=>{const term=event.target.closest('[data-word]');if(term&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();showWord(term.dataset.word,glossary,ruby,p.rate);}});
  window.addEventListener('popstate',event=>{
-  const q=new URLSearchParams(location.search);if(q.get('book')!==book.id||q.get('mode')!=='practice')return;
-  stopSpeech();restoringRoute=true;applyRoute(event.state?.practice?.phase);save();render();restoringRoute=false;window.scrollTo(0,0);
+  const q=new URLSearchParams(location.search);if(q.get('book')!==book.id||q.get('mode')!=='practice'){location.reload();return;}
+  stopSpeech();rememberReading();restoringRoute=true;applyRoute(event.state?.practice?.phase);save();render();restoringRoute=false;window.scrollTo(0,0);if(view==='reader')restoreReading();
  });
- render();
+ window.addEventListener('scroll',()=>{clearTimeout(scrollTimer);scrollTimer=setTimeout(rememberReading,180);},{passive:true});
+ window.addEventListener('pagehide',rememberReading);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)rememberReading();});
+ render();if(view==='reader')restoreReading();
 }

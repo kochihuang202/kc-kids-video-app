@@ -1,16 +1,19 @@
+import {storage,preview,draftURL} from './storage.js?v=d57971c562d6';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const maps=new Set(['positions','anchors','readThrough','attempts','notes']);
 function overlay(a,b){const next={...a};for(const [k,v]of Object.entries(b)){if(maps.has(k))next[k]={...(next[k]||{}),...v};else next[k]=v;}return next;}
 export async function cloudSnapshot(){
+ if(preview)return {documents:{}};
  const r=await fetch('/api/progress',{cache:'no-store',signal:AbortSignal.timeout(5000)});
  if(!r.ok)throw new Error('雲端暫時無法連線');return r.json();
 }
 export async function openProgress(book,mode,initial){
+ if(preview){let value=clone(initial);return {get value(){return clone(value);},hasDocument:false,status:'內容預覽，不寫入正式進度',update(next){value=clone(next);},async flush(){}};}
  const queueKey=`reading-pending:${book}:${mode}`;let pending={},inflight=null,last=clone(initial),timer,busy=false,status='正在連線';
- try{pending=JSON.parse(localStorage.getItem(queueKey)||'{}');if(!pending||typeof pending!=='object'||Array.isArray(pending))pending={};}catch{pending={};}
+ try{pending=JSON.parse(storage.getItem(queueKey)||'{}');if(!pending||typeof pending!=='object'||Array.isArray(pending))pending={};}catch{pending={};}
  function announce(message){status=message;document.querySelectorAll('[data-sync-status]').forEach(el=>{el.textContent=status;});}
- function persist(){try{localStorage.setItem(queueKey,JSON.stringify(overlay(inflight||{},pending)));}catch{/* Memory still works with disabled storage. */}}
+ function persist(){try{storage.setItem(queueKey,JSON.stringify(overlay(inflight||{},pending)));}catch{/* Memory still works with disabled storage. */}}
  let value=clone(initial),initialized=false;
  try{
   const data=await cloudSnapshot(),doc=data.documents?.[book+':'+mode];

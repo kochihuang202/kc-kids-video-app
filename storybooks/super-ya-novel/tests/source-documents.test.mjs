@@ -20,7 +20,7 @@ test('five supplied Markdown documents replace the previous eight chapter editio
 });
 test('cover uses the supplied character image and dynamic five-chapter navigation',()=>{
   const app=readFileSync(new URL('dist/app.js',root),'utf8');
-  assert.match(app,/assets\/shimajiro-friends\.png/);
+  assert.ok(JSON.parse(readFileSync(new URL('dist/library.json',root))).books.every(b=>b.image));
   assert.match(app,/story\.chapters\.length/);
   assert.doesNotMatch(app,/index===7|chapter < 8|\/ 08/);
   assert.equal(readFileSync(new URL('dist/assets/shimajiro-friends.png',root)).subarray(1,4).toString(),'PNG');

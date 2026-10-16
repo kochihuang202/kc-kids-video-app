@@ -197,3 +197,19 @@ body[data-view="reader"] .preferences summary,body[data-view="practice"]:has(.pr
 @media(max-width:600px){body[data-view="practice"]:has(.practice-reading) .reader-bar>a{font-size:12px;line-height:1.8}}
 .page-word-count{font-size:14px;color:var(--muted);text-align:center;line-height:2;margin:30px 0 0;padding-top:14px;border-top:1px solid var(--line)}
 .drawer-nav .drawer-current{font-size:16px;line-height:1.9;padding:9px 12px;border:1px solid var(--green);border-radius:9px;background:#edf2e8;color:var(--green);font-weight:700}
+
+/* One navigation row, identical at every child route and viewport orientation. */
+body:has(.child-header),body[data-view="reader"]:has(.child-header),body[data-view="practice"]:has(.child-header){padding-top:76px}
+body:has(.preferences) .child-header{position:fixed;inset:0 0 auto;height:76px;z-index:25;background:var(--bg);border-bottom:1px solid var(--line)}
+.child-nav{height:76px;max-width:1100px;margin:auto;display:grid;grid-template-columns:112px 1fr 1fr;align-items:center;gap:12px;padding:0 20px}
+.child-header{width:100vw}
+.child-nav>a,.child-nav>span:not(.settings-slot){font-size:16px;line-height:1.9;justify-self:center;white-space:nowrap}
+.child-nav [aria-current]{color:var(--muted);text-decoration:none}
+body:has(.child-header) .preferences{position:fixed;top:13px;left:max(20px,calc((100vw - 1100px)/2 + 20px));z-index:30}
+body:has(.child-header) .preferences summary,body[data-view="reader"] .preferences summary,body[data-view="practice"] .preferences summary{display:flex;align-items:center;justify-content:center;width:108px;min-height:50px;height:50px;padding:5px 8px;font-size:16px;border-radius:12px;line-height:1.9;white-space:nowrap}
+body:has(.child-header) .preferences .drawer-trigger-label{display:inline}
+body:has(.child-header) .preferences[open]>summary{visibility:hidden}
+.reading-mode{font-size:16px;color:var(--green);line-height:2}
+.mode-card>a,.mode-card>button{display:inline-block;margin:12px 15px 0 0;line-height:2;font-size:18px}.mode-card h2{font-size:23px}.mode-card p{font-size:18px;line-height:2}
+.parent-entry{border-top:1px solid var(--line);padding-top:24px;margin-top:30px!important}.parent-entry button{touch-action:none;user-select:none;-webkit-touch-callout:none;background:linear-gradient(to right,#e5ecd9 var(--hold,0%),var(--paper) 0);transition:background 3s linear;width:100%}.parent-entry p{font-size:14px;line-height:1.8}.parent-gate{max-width:520px;margin:70px auto;padding:25px;line-height:2}.parent-gate a{display:block;margin-top:30px}.legacy-records{line-height:2;margin-top:24px}
+@media(max-width:600px){.child-nav{grid-template-columns:86px 1fr 1fr;gap:6px;padding:0 12px}.child-nav>a,.child-nav>span:not(.settings-slot){font-size:14px}body:has(.child-header) .preferences{left:12px}body:has(.child-header) .preferences summary{width:84px;font-size:14px}.mode-card{min-width:0}.reading-settings{overflow-y:auto}}

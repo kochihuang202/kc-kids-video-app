@@ -9,8 +9,8 @@ async(sessionPage)=>{
   await page.setViewportSize({width,height});await page.evaluate(()=>scrollTo(0,0));const before=await page.locator('.preferences summary').boundingBox();await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const after=await page.locator('.preferences summary').boundingBox();
   check(Math.abs(before.y-after.y)<2&&before.y<24,label+' entry button remains fixed at the top');await page.locator('.preferences summary').click();
   const r=await page.locator('.reading-settings').boundingBox();check(r.x===0&&r.y===0&&r.width<width&&r.height<=height,label+' drawer is bounded at left edge');
-  check(await page.locator('.drawer-nav a[href="?view=parent"]').isVisible(),label+' parent progress is in drawer');
-  check(await page.locator('.drawer-nav a[href="?book=kiki"]').isVisible(),label+' story navigation is in drawer');
+  check(await page.locator('[data-parent-hold]').count()===1,label+' parent progress is in drawer');
+  check(await page.locator('.child-nav a[href="/"]').count()===1,label+' story navigation is in drawer');
   await page.screenshot({path:'output/playwright/root-drawer-'+label+'.png'});
   await page.getByRole('button',{name:'完成設定',exact:true}).scrollIntoViewIfNeeded();check(await page.getByRole('button',{name:'完成設定',exact:true}).isVisible(),label+' drawer scroll reaches final control');await page.getByRole('button',{name:'完成設定',exact:true}).click();
   check(await page.locator('.preferences').getAttribute('open')===null,label+' done closes drawer');
@@ -20,5 +20,5 @@ async(sessionPage)=>{
  check(writes.length>0&&writes.every(key=>key==='reading:settings'),'root saves shared preferences without writing book progress');check(documents['kiki:whisper'].state.chapter===3&&documents['super-ya:whisper'].state.chapter===2,'root preference changes preserve both reading locations');
  await page.locator('.book-card[href="?book=kiki"]').click();await page.locator('#book-title').waitFor();
  check(await page.locator('body').evaluate(el=>el.classList.contains('no-bopo')),'story keeps phonetics turned off at root');check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','story inherits root font setting');check(await page.locator('[data-action="words"]').getAttribute('aria-pressed')==='false','story inherits root vocabulary setting');check(await page.locator('[data-rate="0.6"]').getAttribute('aria-pressed')==='true','story inherits root speech rate');
- await page.locator('.book-links a[href="./"]').first().click();await page.locator('.bookshelf').waitFor();check(await page.locator('.preferences summary').isVisible(),'returning to root preserves tool entry');check(errors.length===0,'root settings flow has no uncaught errors');await context.close();return {passed:checks.length,checks};
+ await page.locator('.child-nav a[href="/"]').first().click();await page.locator('.bookshelf').waitFor();check(await page.locator('.preferences summary').isVisible(),'returning to root preserves tool entry');check(errors.length===0,'root settings flow has no uncaught errors');await context.close();return {passed:checks.length,checks};
 }

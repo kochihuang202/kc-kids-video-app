@@ -1,0 +1,9 @@
+{
+  "book": {"id":"episode-id", "title":"新一集名稱", "number":"03", "subtitle":"這集的邀請", "detail":"簡介", "data":"books/episode-id/story.json", "image":"assets/shimajiro-friends.png", "imageAlt":"巧虎和朋友", "storageKey":"shimajiro-novel:episode-id:v1"},
+  "source": {"original":"./原始逐字稿.md", "events":[{"time":"00:00:00", "event":"待填入具體事件", "quote":"原話", "status":"明示", "turningPoint":false, "expectation":"人物期待", "result":"實際結果"}], "uncertainties":[]},
+  "editorial": {"sourceReview":"填入實際核對範圍、依據、思考主軸及各篇字數", "phoneticReview":"填入逐篇多音字與輕聲人工核對結果", "glossaryReview":"填入詞義與臺灣讀音核對結果", "unresolvedCritical":[]},
+  "manuscript":"填入完整核定悄悄話 Markdown；此模板不能直接上架。",
+  "story":{"title":"新一集名稱", "subtitle":"巧虎的時光悄悄話", "welcome":"邀請", "note":"依逐字稿改寫的非官方延伸閱讀作品。", "chapters":[]},
+  "practice":{"title":"新一集名稱", "scenes":[]},
+  "ui":{}, "glossary":{}, "readings":{"characters":{},"phrases":{}}
+}

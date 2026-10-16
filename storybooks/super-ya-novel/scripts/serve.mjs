@@ -2,7 +2,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-const root=fileURLToPath(new URL('../dist/',import.meta.url));
+const root=path.resolve(process.env.READER_DIST||fileURLToPath(new URL('../dist/',import.meta.url)))+path.sep;
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8'};
 const port=Number(process.env.PORT)||4178;
 http.createServer(async(req,res)=>{

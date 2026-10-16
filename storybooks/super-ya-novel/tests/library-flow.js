@@ -15,7 +15,7 @@ async(sessionPage)=>{
  }
  await page.setViewportSize({width:820,height:1180});
  await page.locator('.book-card[href="?book=kiki"]').focus();await page.keyboard.press('Enter');
- await page.getByRole('button',{name:'一起讀故事',exact:true}).click();await wait();
+ await page.locator('[data-action="start"]').click();await wait();
  const story=await page.evaluate(async()=>(await fetch('books/kiki/story.json')).json());
  check(story.chapters.length===9,'new book includes eight situations and the epilogue');
  check(await plain(page.locator('#chapter-title'))===story.chapters[0].title,'new book starts at its own first situation');
@@ -39,22 +39,22 @@ async(sessionPage)=>{
   check(await page.locator('#story-map .map-card').count()===c.presentation.events.length,`Kiki part ${i+1} complete recap is available`);
  }
  await page.getByRole('button',{name:'讀完了，回到封面',exact:true}).click();
- check(await page.locator('.resume-map').count()===1,'Kiki has its own resume recap');
- await page.getByRole('button',{name:'接著讀・'+story.chapters[8].title,exact:true}).click();await wait();
- await page.getByRole('button',{name:'故事目錄',exact:true}).click();
+ await page.goto('http://127.0.0.1:4178/?book=kiki&mode=whisper');await page.locator('.resume-map').waitFor();check(await page.locator('.resume-map').count()===1,'Kiki has its own resume recap in its mode contents');await page.goto('http://127.0.0.1:4178/?book=kiki');
+ await page.locator('[data-action=start]').click();await wait();
+ await page.locator('.preferences summary').click();await page.getByRole('button',{name:'故事目錄',exact:true}).click();
  await page.getByRole('dialog').getByRole('button',{name:story.chapters[3].title,exact:true}).click();await wait();
  await page.locator('[data-block="10"]').evaluate(el=>scrollTo(0,scrollY+el.getBoundingClientRect().top-130));await wait();
  await page.locator('.preferences summary').click();await page.getByRole('button',{name:'特大',exact:true}).click();await wait();await page.keyboard.press('Escape');
  if(await page.locator('.preferences').getAttribute('open')===null)await page.locator('.preferences summary').click();await page.getByRole('button',{name:'注音：開',exact:true}).click();await wait();
- await page.keyboard.press('Escape');await page.getByRole('button',{name:'回到封面',exact:true}).click();
+ await page.keyboard.press('Escape');await page.locator('.child-nav a[aria-label="回到封面"]').click();
  const stored=await page.evaluate(()=>localStorage.getItem('shimajiro-novel:kiki:v1'));
- await page.locator('.book-links a[href="?book=super-ya"]').click();
+ await page.goto('http://127.0.0.1:4178/');await page.locator('.book-card[href="?book=super-ya"]').click();
  await page.locator('[data-action="start"]').click();await wait();
  check(await page.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v2')).chapter===2),'switching back preserves the original SUPER YA chapter');
  check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','SUPER YA shares the latest reading font size');
  check(await page.locator('#bopo-toggle').getAttribute('aria-pressed')==='false','SUPER YA shares the latest annotation preference');
  check(await page.evaluate(()=>localStorage.getItem('shimajiro-novel:kiki:v1'))===stored,'reading SUPER YA does not mutate Kiki saved progress');
- await page.getByRole('button',{name:'回到封面',exact:true}).click();await page.locator('.book-links a[href="?book=kiki"]').click();
+ await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.goto('http://127.0.0.1:4178/');await page.locator('.book-card[href="?book=kiki"]').click();
  await page.locator('[data-action="start"]').click();await wait();
  check(await plain(page.locator('#chapter-title'))===story.chapters[3].title,'switching back to Kiki resumes the correct situation');
  check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','Kiki restores the shared largest font');
@@ -77,7 +77,8 @@ async(sessionPage)=>{
  check(await blocked.locator('#storage-note').isVisible(),'Kiki remains available when storage is blocked');
  for(let i=0;i<8;i++)await blocked.getByRole('button',{name:'繼續下一篇',exact:true}).click();
  await blocked.getByRole('button',{name:'讀完了，回到封面',exact:true}).click();
- check(await blocked.getByRole('button',{name:'從第一篇重讀',exact:true}).isVisible(),'all nine Kiki parts work without storage');
+ check(await blocked.locator('[data-action=start]').isVisible(),'all nine Kiki parts work without storage');
  await blockedContext.close();check(errors.length===0,'no unhandled errors in the two-book flow');await context.close();
  return {passed:checks.length,checks};
 }
+

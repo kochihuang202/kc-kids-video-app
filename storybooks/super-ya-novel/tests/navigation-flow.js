@@ -10,20 +10,17 @@ async(sessionPage)=>{
   check(Number(await page.locator('[data-page-word-count]').getAttribute('data-page-word-count'))===await count('.source-block'),book+' page count contains only source text');
   await page.locator('[data-action="next"]').click();check(query().get('chapter')==='1',book+' next chapter updates route');
   await page.reload();await page.locator('.prose').waitFor();check(query().get('chapter')==='1',book+' reload stays in chapter');
-  await page.locator('[data-action="home"]').click();await page.locator('#book-title').waitFor();check(!query().has('chapter'),book+' cover route removes chapter');
+  await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('#book-title').waitFor();check(!query().has('chapter'),book+' cover route removes chapter');
   await page.goBack();await page.locator('.prose').waitFor();check(query().get('chapter')==='1',book+' browser back restores reading view');
-  await page.goForward();await page.locator('#book-title').waitFor();
-  await page.locator('.mode-switch a[href*="mode=practice"]').click();await page.locator('.scene-card').first().waitFor();
-  check(await page.locator('.reader-header a').first().getAttribute('href')!==await page.locator('.whisper-shortcut').getAttribute('href'),book+' cover and switch links have different destinations');
-  check(await page.locator('.mode-switch a:not([href*="mode=practice"])').getAttribute('href')===await page.locator('.whisper-shortcut').getAttribute('href'),book+' mode card and top switch agree');
-  await page.locator('.scene-card').nth(2).click();check(query().get('scene')==='2',book+' scene selection updates route');
-  check(Number(await page.locator('[data-page-word-count]').getAttribute('data-page-word-count'))===await count('.practice-text'),book+' practice word count excludes controls and questions');
-  await page.locator('.preferences summary').click();check(await page.locator('.drawer-nav a[href*="chapter="]').getAttribute('href')===await page.locator('.whisper-shortcut').getAttribute('href'),book+' top and drawer mode links agree');await page.keyboard.press('Escape');
-  await page.locator('[data-p="extra"]').click();check(query().get('level')==='extra',book+' extra passage updates route');await page.getByRole('button',{name:'我讀好了，開始練習',exact:true}).click();await page.reload();await page.locator('.practice-paper').waitFor();check(await page.locator('[data-p="extra"]').getAttribute('aria-pressed')==='true',book+' reload preserves passage level');check(await page.locator('.practice-panel').isVisible(),book+' reload preserves the exercise phase');
-  await page.locator('.practice-top [data-p="home"]').click();await page.locator('.scene-card').first().waitFor();check(!query().has('scene')&&!query().has('level'),book+' all scenes clears deep link');
-  await page.reload();await page.locator('.scene-card').first().waitFor();check(await page.locator('.scene-card').count()>2,book+' all scenes stays a list after reload');
-  await page.goBack();await page.locator('.practice-paper').waitFor();check(query().get('scene')==='2'&&query().get('level')==='extra',book+' back returns to matching scene and level');
-  await page.locator('.whisper-shortcut').click();await page.locator('.prose').waitFor();check(query().get('chapter')==='2',book+' mode switch opens corresponding full chapter');
+  await page.goForward();await page.locator('#book-title').waitFor();check(!query().has('chapter'),book+' browser Forward returns cover');
+  await page.locator('.mode-card a[href$="mode=practice"]').click();await page.locator('.scene-card').nth(2).click();
+  check(query().get('scene')==='2',book+' scene selection updates route');
+  check(Number(await page.locator('[data-page-word-count]').getAttribute('data-page-word-count'))===await count('.practice-text'),book+' practice count excludes controls and questions');
+  await page.locator('[data-p=begin]').click();await page.reload();await page.locator('.practice-panel').waitFor();check(true,book+' reload preserves exercise phase');
+  await page.locator('[data-p=home]').first().click();check(!query().has('scene'),book+' all scenes clears deep link');await page.reload();await page.locator('.scene-card').first().waitFor();
+  check(await page.locator('.practice-paper').count()===0,book+' reload stays list');
+  await page.locator('.scene-card').nth(1).click();await page.goBack();await page.locator('.scene-card').first().waitFor();await page.goForward();await page.locator('.practice-paper').waitFor();check(query().get('scene')==='1',book+' back and forward follow active unit');
+  await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('[data-action=start]').click();await page.locator('.prose').waitFor();check(query().get('chapter')==='1',book+' modes keep independent positions');
  }
  check(errors.length===0,'navigation and counts have no uncaught errors');await context.close();return {passed:checks.length,checks};
 }

@@ -21,3 +21,11 @@ test('one shared settings document accepts only reader preferences across books 
  assert.throws(()=>sanitizePatch({bopo:false},'kiki','settings'));
  assert.throws(()=>sanitizePatch({bopo:false},'reading','practice'));
 });
+test('cloud validates independently sized modes without rejecting the longer mode',()=>{
+ const catalog={sample:{whisper:2,practice:3,scenes:[1,2,3].map((_,i)=>({id:'s'+(i+1),questions:3}))}};
+ assert.deepEqual(sanitizePatch({scene:2,anchors:{2:{block:1,offset:80}}},'sample','practice',catalog),{scene:2,anchors:{2:{block:1,offset:80}}});
+ assert.throws(()=>sanitizePatch({chapter:2},'sample','whisper',catalog));
+ assert.throws(()=>sanitizePatch({scene:3},'sample','practice',catalog));
+ assert.doesNotThrow(()=>sanitizePatch({attempts:{'s3:story:2':{tries:1}}},'sample','practice',catalog));
+ assert.doesNotThrow(()=>sanitizePatch({attempts:{'s1:extra:1':{tries:2,revealed:true}}},'sample','practice',catalog));
+});

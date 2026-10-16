@@ -19,7 +19,7 @@ test('reader delivers complete local app and accessible reading controls', () =>
   assert.ok(existsSync(new URL('../dist/readings.json', import.meta.url)));
   const js = readFileSync(new URL('../dist/app.js', import.meta.url), 'utf8');
   assert.match(js, /aria-pressed/);
-  assert.match(js, /localStorage/);
+  assert.match(readFileSync(new URL('../dist/storage.js',import.meta.url),'utf8'), /localStorage/);
   assert.equal(JSON.parse(readFileSync(new URL('../dist/ui.json',import.meta.url))).mapTitle,'一起回想這一章');
 });
 test('every Chinese character in delivered reading text has an aligned phonetic reading',()=>{

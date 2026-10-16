@@ -1,12 +1,12 @@
-const books={'super-ya':5,kiki:9};
+import {books,release} from './generated.mjs';
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
 const bad=()=>{throw new Error('進度格式不正確');};
-export function sanitizePatch(input,book,mode){
+export function sanitizePatch(input,book,mode,catalog=books){
  const shared=book==='reading'&&mode==='settings';
- if((!shared&&(!books[book]||!['whisper','practice'].includes(mode)))||!plain(input))bad();
- const out={},count=books[book];
- const allowed=shared?['size','bopo','words','rate']:mode==='whisper'?['chapter','started','bopo','size','positions','anchors','readThrough','finished','words','rate']:['scene','level','phase','positions','attempts','notes','size','bopo','words','rate'];
+ if((!shared&&(!Object.hasOwn(catalog,book)||!['whisper','practice'].includes(mode)))||!plain(input))bad();
+ const out={},count=catalog[book]?.[mode];
+ const allowed=shared?['size','bopo','words','rate']:mode==='whisper'?['chapter','started','bopo','size','positions','anchors','readThrough','finished','words','rate']:['scene','level','phase','positions','anchors','attempts','notes','size','bopo','words','rate'];
  for(const [key,value]of Object.entries(input)){
   if(!allowed.includes(key))bad();
   if(['chapter','scene'].includes(key)){if(!integer(value,0,count-1))bad();out[key]=value;}
@@ -18,12 +18,12 @@ export function sanitizePatch(input,book,mode){
   else{
    if(!plain(value)||Object.keys(value).length>100)bad();const map={};
    for(const [k,v]of Object.entries(value)){
-    if(['anchors','readThrough','positions'].includes(key)&&mode==='whisper'){
+    if(key==='anchors'||(['readThrough','positions'].includes(key)&&mode==='whisper')){
      if(!/^\d+$/.test(k)||!integer(+k,0,count-1))bad();
      if(key==='anchors'){if(v===null){map[k]=null;continue;}if(!plain(v)||!integer(v.block,0,999)||!Number.isFinite(v.offset)||Math.abs(v.offset)>10000)bad();map[k]={block:v.block,offset:v.offset};}
      else{if(!Number.isFinite(v)||v<0||v>1000000)bad();map[k]=v;}
     }else if(key==='attempts'){
-     const match=k.match(/^s(\d+):(story|extra):(\d+)$/);if(!match||!integer(+match[1],1,count)||!integer(+match[3],0,match[2]==='story'?2:1)||!plain(v))bad();
+     const match=k.match(/^s(\d+):(story|extra):(\d+)$/);if(!match||!integer(+match[1],1,count)||!integer(+match[3],0,match[2]==='story'?catalog[book].scenes[+match[1]-1].questions-1:1)||!plain(v))bad();
      if(!integer(v.tries??0,0,999)||!integer(v.hints??0,0,3))bad();
      if(v.selection!==undefined&&!integer(v.selection,0,50))bad();
      map[k]={tries:v.tries??0,hints:v.hints??0,correct:v.correct===true,revealed:v.revealed===true,selection:v.selection??0};
@@ -56,14 +56,14 @@ const json=(v,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'no-
 export default {
  async fetch(request,env){
   const url=new URL(request.url);if(!url.pathname.startsWith('/api/'))return env.ASSETS.fetch(request);
-  if(url.pathname==='/api/health')return json({ok:true,cloud:!!env.PROGRESS});
+  if(url.pathname==='/api/health')return json({ok:true,cloud:!!env.PROGRESS,version:release.id});
   if(!env.PROGRESS)return json({error:'雲端進度暫時無法使用'},503);
   try{
    if(request.method==='GET'&&url.pathname==='/api/progress'){
     const {results}=await env.PROGRESS.prepare('SELECT id, state, revision, updated_at FROM reading_progress ORDER BY id').all();
     return json({documents:Object.fromEntries(results.map(r=>[r.id,{state:JSON.parse(r.state),revision:r.revision,updatedAt:r.updated_at}]))});
    }
-   const match=url.pathname.match(/^\/api\/progress\/(super-ya|kiki|reading)\/(whisper|practice|settings)$/);
+   const match=url.pathname.match(/^\/api\/progress\/([a-z][a-z0-9-]{1,47})\/(whisper|practice|settings)$/);
    if(request.method!=='POST'||!match)return json({error:'找不到這個功能'},404);
    const origin=request.headers.get('Origin');
    if((origin&&origin!==url.origin)||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'請從閱讀網站操作'},403);
