@@ -1,5 +1,5 @@
-const KEY='shimajiro-novel:v2',LEGACY_KEY='shimajiro-novel:v1',app=document.querySelector('#app');
-let story,ui,readings,state,saveTimer,scrollFrame,restoring=false,storageAvailable=true;
+const LEGACY_KEY='shimajiro-novel:v1',app=document.querySelector('#app');
+let KEY,library,selectedBook,story,ui,readings,state,saveTimer,scrollFrame,restoring=false,storageAvailable=true;
 const defaults=()=>({chapter:0,started:false,bopo:true,size:0,positions:{},anchors:{},readThrough:{},finished:false});
 const escape=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function ruby(text,sounds=readings[text]){
@@ -40,7 +40,7 @@ function bodyMarkup(c){
 function loadState(){
   try{
     let v=JSON.parse(localStorage.getItem(KEY)||'null');
-    if(!v){const old=JSON.parse(localStorage.getItem(LEGACY_KEY)||'null');if(old&&typeof old==='object')v={bopo:old.bopo,size:old.size};}
+    if(!v&&selectedBook.id==='super-ya'){const old=JSON.parse(localStorage.getItem(LEGACY_KEY)||'null');if(old&&typeof old==='object')v={bopo:old.bopo,size:old.size};}
     const next=defaults();if(!v||typeof v!=='object'||Array.isArray(v))return next;
     next.chapter=Number.isInteger(v.chapter)&&v.chapter>=0&&v.chapter<story.chapters.length?v.chapter:0;
     next.started=v.started===true;next.finished=v.finished===true;next.bopo=v.bopo!==false;next.size=[0,1,2].includes(v.size)?v.size:0;
@@ -56,7 +56,7 @@ function showStorageNotice(){if(!document.querySelector('#storage-note')){const 
 function settings(){document.body.classList.toggle('no-bopo',!state.bopo);document.documentElement.style.setProperty('--reader-size',[26,30,34][state.size]+'px');}
 function toc(){return `<ol class="toc-list">${story.chapters.map((c,i)=>`<li><button type="button" data-action="chapter" data-chapter="${i}" aria-label="${escape(c.title)}" ${state.chapter===i&&state.started?'aria-current="page"':''}><span class="chapter-num" aria-hidden="true">0${i+1}</span><span class="toc-name">${ruby(c.title)}</span><span class="toc-arrow" aria-hidden="true">↗</span></button></li>`).join('')}</ol>`;}
 function knownEvents(chapter){return story.chapters[chapter].presentation.events.filter(e=>e.block<=(state.readThrough[chapter]??-1));}
-function eventCards(events,chapter){return events.map(e=>`<li><button type="button" class="map-card" data-action="map-jump" data-chapter="${chapter}" data-block="${e.block}" aria-label="${escape(e.label)}"><img src="assets/episode/${escape(e.image)}.jpg" alt="" width="320" height="180" loading="lazy"><span>${ruby(e.label)}</span></button></li>`).join('');}
+function eventCards(events,chapter){return events.map(e=>`<li><button type="button" class="map-card ${e.image?'':'text-event'}" data-action="map-jump" data-chapter="${chapter}" data-block="${e.block}" aria-label="${escape(e.label)}">${e.image?`<img src="assets/episode/${escape(e.image)}.jpg" alt="" width="320" height="180" loading="lazy">`:''}<span>${ruby(e.label)}</span></button></li>`).join('');}
 function mapContents(chapter){const events=knownEvents(chapter);return events.length?`<ol class="map-events">${eventCards(events,chapter)}</ol><p class="map-note">${ruby(ui.mapHint)}</p>`:`<p class="map-note">${ruby(ui.mapEmpty)}</p>`;}
 function storyMap(){return `<details class="story-map" id="story-map"><summary>${ruby(ui.mapTitle)}</summary><div id="map-content">${mapContents(state.chapter)}</div></details>`;}
 function recap(){
@@ -64,9 +64,14 @@ function recap(){
   if(chapter===undefined)return '';
   return `<details class="story-map resume-map"><summary>${ruby(ui.recap)}</summary><p class="map-note">${ruby(story.chapters[chapter].title)}</p><ol class="map-events">${eventCards(knownEvents(chapter).slice(-3),chapter)}</ol></details>`;
 }
+function bookLinks(){return '<nav class="book-links" aria-label="故事書連結"><a href="./">'+ruby(library.shelf)+'</a>'+library.books.filter(b=>b.id!==selectedBook.id).map(b=>'<a href="?book='+b.id+'">'+ruby(b.title)+'</a>').join('')+'</nav>';}
+function shelf(){
+ document.body.dataset.view='library';document.title=library.title+'｜故事書架';document.body.classList.remove('no-bopo');
+ app.innerHTML='<div class="shell"><header class="masthead"><span class="wordmark">'+ruby(library.title)+'</span><span class="book-number">STORYBOOKS / 02</span></header><main class="bookshelf"><h1>'+ruby(library.invitation)+'</h1><p class="shelf-note">'+ruby(library.saved)+'</p><div class="book-grid">'+library.books.map(b=>'<a class="book-card" href="?book='+b.id+'" aria-label="'+escape(b.title)+'"><img src="'+escape(b.image)+'" alt="'+escape(b.imageAlt)+'" width="960" height="540"><div><p class="book-number">0'+Number(b.number)+'</p><h2>'+ruby(b.title)+'</h2><p>'+ruby(b.subtitle)+'</p><p class="shelf-note">'+ruby(b.detail)+'</p><span class="book-open">'+ruby(library.open)+' ↗</span></div></a>').join('')+'</div></main></div>';
+}
 function home(){
   document.body.dataset.view='home';settings();
-  app.innerHTML=`<div class="shell"><header class="masthead"><span class="wordmark">${ruby(story.subtitle)}</span><span class="book-number">STORYBOOK / 01</span></header><main><section class="cover" aria-labelledby="book-title"><div><p class="eyebrow">${ruby(ui.bookLabel)}</p><h1 id="book-title">${ruby('飛吧！')}<br><span class="latin">SUPER YA！</span></h1><p class="cover-copy">${ruby('一起飛進故事，也看看心裡的小風景。')}</p><div class="cover-actions">${button(state.started?`${ui.resume}・${story.chapters[state.chapter].title}`:ui.start,'start','primary')}${state.started?button(ui.reread,'reread','text-button'):''}</div></div><figure class="cover-art character-cover"><img src="assets/shimajiro-friends.png" alt="巧虎和朋友們在草叢間，一起望向前方。" width="640" height="359" fetchpriority="high"><figcaption>${ruby(ui.pictureCaption)}</figcaption></figure></section>${state.started?recap():''}<section class="intro-guide" aria-label="巧虎的邀請">${avatar()}<div><span class="label">${ruby(ui.guideTag)}</span><p>${ruby(story.welcome)}</p></div></section><section aria-labelledby="contents-title"><div class="toc-heading"><h2 id="contents-title">${ruby(ui.toc)}</h2></div>${toc()}</section></main><footer class="fineprint">${escape(story.note)}<br>閱讀進度只留在目前瀏覽器。封面由使用者提供；內頁畫面擷取自使用者提供的本集影片。<br>非官方延伸閱讀作品。</footer></div>`;
+  app.innerHTML=`<div class="shell"><header class="masthead"><span class="wordmark">${ruby(story.subtitle)}</span><span class="book-number">STORYBOOK / ${selectedBook.number}</span></header>${bookLinks()}<main><section class="cover" aria-labelledby="book-title"><div><p class="eyebrow">${ruby(ui.bookLabel)}</p><h1 id="book-title">${selectedBook.id==='super-ya'?ruby('飛吧！')+'<br><span class="latin">SUPER YA！</span>':ruby(story.title)}</h1><p class="cover-copy">${ruby(selectedBook.subtitle)}</p><div class="cover-actions">${button(state.started?`${ui.resume}・${story.chapters[state.chapter].title}`:ui.start,'start','primary')}${state.started?button(ui.reread,'reread','text-button'):''}</div></div><figure class="cover-art character-cover"><img src="assets/shimajiro-friends.png" alt="巧虎和朋友們在草叢間，一起望向前方。" width="640" height="359" fetchpriority="high"><figcaption>${ruby(ui.pictureCaption)}</figcaption></figure></section>${state.started?recap():''}<section class="intro-guide" aria-label="巧虎的邀請">${avatar()}<div><span class="label">${ruby(ui.guideTag)}</span><p>${ruby(story.welcome)}</p></div></section><section aria-labelledby="contents-title"><div class="toc-heading"><h2 id="contents-title">${ruby(ui.toc)}</h2></div>${toc()}</section></main><footer class="fineprint">${escape(story.note)}<br>閱讀進度只留在目前瀏覽器。${selectedBook.id==='super-ya'?'封面由使用者提供；內頁畫面擷取自使用者提供的本集影片。':'封面為使用者提供的角色圖片；本篇以完整原稿閱讀為主。'}<br>非官方延伸閱讀作品。</footer></div>`;
   if(!storageAvailable)showStorageNotice();
 }
 function headerBottom(){return document.querySelector('.reader-header')?.getBoundingClientRect().bottom||0;}
@@ -82,7 +87,7 @@ function restoreAnchor(anchor,fallback=0){
 }
 function reader(index,restore=true,focus=true,targetBlock=null){
   restoring=true;clearTimeout(saveTimer);document.body.dataset.view='reader';state.chapter=index;state.started=true;settings();const c=story.chapters[index];
-  app.innerHTML=`<header class="reader-header"><div class="reader-bar">${control(ui.toc,ui.compactToc,'toc')}<span class="reader-brand">${ruby(story.subtitle)}</span><div class="tools"><details class="preferences"><summary aria-label="${escape(ui.settings)}"><span class="long-label">${ruby(ui.settings)}</span><span class="short-label">${ruby(ui.compactSettings)}</span></summary><div class="reading-settings"><span>${ruby(ui.size)}</span><div class="size-buttons" role="group" aria-label="字的大小">${[ui.small,ui.medium,ui.large].map((v,i)=>button(v,'size','',`data-size="${i}" aria-pressed="${state.size===i}"`)).join('')}</div></div></details>${button(`${ui.bopo}：${state.bopo?ui.on:ui.off}`,'bopo','',`id="bopo-toggle" aria-pressed="${state.bopo}"`)}${control(ui.back,ui.compactBack,'home','text-button')}</div></div><div class="progress-track" aria-hidden="true"><div class="progress-fill"></div></div></header><main class="reader"><header class="chapter-heading"><p class="chapter-kicker">CHAPTER 0${index+1} / 05</p><h1 tabindex="-1" id="chapter-title">${ruby(c.title)}</h1>${picture(c.presentation.hero,c.presentation.heroCaption,'chapter-art')}<p class="story-role">${ruby(ui.storyTag)}</p><p class="guide-explainer">${ruby(ui.guideHint)}</p></header><article class="prose" aria-labelledby="chapter-title">${bodyMarkup(c)}</article><div class="chapter-end" aria-hidden="true">✦ · ✦</div>${storyMap()}<nav class="chapter-nav" aria-label="章節導覽">${button(ui.previous,'previous','',index===0?'disabled':'')}${button(index===story.chapters.length-1?ui.finish:ui.next,index===story.chapters.length-1?'finish':'next','primary')}</nav><p class="rest-note">${ruby(ui.rest)}</p></main><footer class="reader-footer">${escape(story.note)}</footer><dialog id="contents"><div class="dialog-top"><h2>${ruby(ui.toc)}</h2>${button(ui.close,'close-toc')}</div>${toc()}</dialog>`;
+  app.innerHTML=`<header class="reader-header"><div class="reader-bar">${control(ui.toc,ui.compactToc,'toc')}<span class="reader-brand">${ruby(story.subtitle)}</span><div class="tools"><details class="preferences"><summary aria-label="${escape(ui.settings)}"><span class="long-label">${ruby(ui.settings)}</span><span class="short-label">${ruby(ui.compactSettings)}</span></summary><div class="reading-settings"><span>${ruby(ui.size)}</span><div class="size-buttons" role="group" aria-label="字的大小">${[ui.small,ui.medium,ui.large].map((v,i)=>button(v,'size','',`data-size="${i}" aria-pressed="${state.size===i}"`)).join('')}</div></div></details>${button(`${ui.bopo}：${state.bopo?ui.on:ui.off}`,'bopo','',`id="bopo-toggle" aria-pressed="${state.bopo}"`)}${control(ui.back,ui.compactBack,'home','text-button')}</div></div><div class="progress-track" aria-hidden="true"><div class="progress-fill"></div></div></header><main class="reader"><header class="chapter-heading"><p class="chapter-kicker">${selectedBook.id==='kiki'?'PART':'CHAPTER'} ${String(index+1).padStart(2,'0')} / ${String(story.chapters.length).padStart(2,'0')}</p><h1 tabindex="-1" id="chapter-title">${ruby(c.title)}</h1>${c.presentation.hero?picture(c.presentation.hero,c.presentation.heroCaption,'chapter-art'):''}<p class="story-role">${ruby(ui.storyTag)}</p><p class="guide-explainer">${ruby(ui.guideHint)}</p></header><article class="prose" aria-labelledby="chapter-title">${bodyMarkup(c)}</article><div class="chapter-end" aria-hidden="true">✦ · ✦</div>${storyMap()}<nav class="chapter-nav" aria-label="章節導覽">${button(ui.previous,'previous','',index===0?'disabled':'')}${button(index===story.chapters.length-1?ui.finish:ui.next,index===story.chapters.length-1?'finish':'next','primary')}</nav><p class="rest-note">${ruby(ui.rest)}</p></main><footer class="reader-footer">${escape(story.note)}${bookLinks()}</footer><dialog id="contents"><div class="dialog-top"><h2>${ruby(ui.toc)}</h2>${button(ui.close,'close-toc')}</div>${toc()}</dialog>`;
   save();if(!storageAvailable)showStorageNotice();
   requestAnimationFrame(()=>{
     if(focus)document.querySelector('#chapter-title').focus({preventScroll:true});
@@ -137,7 +142,14 @@ window.addEventListener('resize',()=>{
 });
 window.addEventListener('pagehide',()=>{if(state)remember();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)remember();});
+async function getJSON(path){const r=await fetch(path,{cache:'no-cache'});if(!r.ok)throw new Error(path);return r.json();}
 try{
-  [story,ui,readings]=await Promise.all(['story.json','ui.json','readings.json'].map(async path=>{const r=await fetch(path,{cache:'no-cache'});if(!r.ok)throw new Error(path);return r.json();}));
-  state=loadState();if('scrollRestoration'in history)history.scrollRestoration='manual';home();
+ [library,ui,readings]=await Promise.all(['library.json','ui.json','readings.json'].map(getJSON));
+ selectedBook=library.books.find(b=>b.id===new URLSearchParams(location.search).get('book'));
+ if('scrollRestoration'in history)history.scrollRestoration='manual';
+ if(selectedBook){
+  KEY=selectedBook.storageKey;story=await getJSON(selectedBook.data);
+  if(selectedBook.id==='kiki')ui=await getJSON('books/kiki/ui.json');
+  document.title=story.title+'｜'+story.subtitle;state=loadState();home();
+ }else shelf();
 }catch{app.innerHTML='<p class="loading" role="alert">故事暫時沒有打開，請再試一次。<br><button type="button" id="retry">重新打開</button></p>';document.querySelector('#retry').addEventListener('click',()=>location.reload());}

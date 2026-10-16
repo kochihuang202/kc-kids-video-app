@@ -1,0 +1,11 @@
+{
+  "title":"巧虎陪你讀",
+  "invitation":"今天，想和巧虎一起讀哪個故事？",
+  "shelf":"回到書架",
+  "open":"打開這個故事",
+  "saved":"每個故事都會記住你讀到的地方。",
+  "books":[
+    {"id":"super-ya","number":"01","title":"飛吧！SUPER YA！","subtitle":"一次意外的旅行，發現朋友的心情。","detail":"五章冒險故事","image":"assets/episode/welcome.jpg","imageAlt":"SUPER YA 和巧虎、發明家們。","data":"story.json","storageKey":"shimajiro-novel:v2"},
+    {"id":"kiki","number":"02","title":"琪琪被罵了","subtitle":"回到那一天，和巧虎一起重新想想。","detail":"八個情境與尾聲","image":"assets/shimajiro-friends.png","imageAlt":"琪琪、巧虎和朋友們。","data":"books/kiki/story.json","storageKey":"shimajiro-novel:kiki:v1"}
+  ]
+}

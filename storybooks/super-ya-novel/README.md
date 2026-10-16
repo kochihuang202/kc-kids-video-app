@@ -1,8 +1,17 @@
-# 巧虎陪你讀：飛吧！SUPER YA！
+# 巧虎陪你讀：兩篇故事書架
 
 [私人閱讀網站](https://shimajiro-super-ya-reading.fxn-e-bg-5664.chatgpt.site)
 
-目前內容是使用者提供的五章 Markdown 全文。正文有 642 個段落，連同小標題共 14,881 個中文字，不含注音、標點與英文。保留原稿的第一人稱敘事、對話、提問、粗體及小標題；已移除額外的章末選項陪聊。
+2026-10-16：依使用者最後指示，保留原故事並新增第二篇，入口改為兩本書的書架。也能直接連結：
+
+- [飛吧！SUPER YA！](https://shimajiro-super-ya-reading.fxn-e-bg-5664.chatgpt.site/?book=super-ya)：原五章全文、圖片與回想地圖。
+- [琪琪被罵了](https://shimajiro-super-ya-reading.fxn-e-bg-5664.chatgpt.site/?book=kiki)：完整八篇情境與尾聲，共 282 個段落，約 1.1 萬中文字。「那一天」保留為故事段落，「巧虎的時光悄悄話」以引用區呈現。保留所有原文及粗體，沒有新增選項陪聊。
+
+兩篇的封面與頁尾都有書架和另一篇的連結。原書沿用 shimajiro-novel:v2，新增書獨立使用 shimajiro-novel:kiki:v1，章節、段落、已讀事件、字級與注音均不互相覆蓋。沒有提供新篇的影片，因此新篇以角色封面和文字閱讀為主，沒有挪用 SUPER YA 的劇情圖片。
+
+新增內容來源保存於 content/books/kiki/source.md，連同位元組雜湊與逐段重組測試。執行 `node scripts/import-kiki.mjs` 可由副本重建；給完整 Markdown 路徑則重新匯入新稿。content/library.json 管理入口及儲存鍵；content/books/kiki/ui.json 為此書的操作文字。原五章的來源、匯入工具與校訂流程仍保留。
+
+原《SUPER YA》內容是使用者提供的五章 Markdown 全文。正文有 642 個段落，連同小標題共 14,881 個中文字，不含注音、標點與英文。保留原稿的第一人稱敘事、對話、提問、粗體及小標題；已移除額外的章末選項陪聊。
 
 陪讀巧虎直接對孩子說話的段落採頭像、細直線與引用排版，搭配少量重點粗體。五章各有不同的動畫開場截圖，內文另有對應情節的畫面。章末可收合的故事地圖只顯示已讀事件，可點圖返回原段落；封面提供「上次讀到這裡」提醒。全文連續閱讀，沒有改成一句一張卡。
 
@@ -48,8 +57,11 @@ npm run dev
 ```powershell
 npx --yes --package @playwright/cli playwright-cli -s=novel open http://127.0.0.1:4178 --headed
 npx --yes --package @playwright/cli playwright-cli -s=novel run-code --filename tests/reader-flow.js
+npx --yes --package @playwright/cli playwright-cli -s=novel run-code --filename tests/library-flow.js
 ```
 
 驗證全文實際渲染、陪讀角色區分、不同章節圖片、故事地圖解鎖與回跳、目錄、字級、注音、段落恢復、儲存封鎖、版本切換，及 820×1180、1180×820、390×844 三種尺寸。截圖存於 output/playwright/。使用桌面 Chromium 模擬尺寸，未宣稱在實體 iPad Safari 測試。
 
 本書是依動畫發展的非官方延伸閱讀作品，原稿中的補寫情節與對白並非動畫逐字稿。
+
+新篇注音另校訂「當然得／總得／就得」「教她」「那只花瓶」「著急」等語境；「扎到」與「珍藏」參考教育部辭典：[扎](https://dict.revised.moe.edu.tw/dictView.jsp?ID=7644&la=0&powerMode=0)、[珍藏](https://dict.concised.moe.edu.tw/dictView.jsp?ID=29944&la=0&powerMode=0)。新增字音測試涵蓋這些詞語。

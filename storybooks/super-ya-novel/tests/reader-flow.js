@@ -8,7 +8,7 @@ async (sessionPage) => {
   const atBlock=async index=>{await page.locator(`.source-block[data-block="${index}"]`).evaluate(el=>window.scrollTo(0,scrollY+el.getBoundingClientRect().top-130));await settle();};
   const openSettings=async()=>{if(!await page.locator('.preferences').getAttribute('open'))await page.locator('.preferences summary').click();};
   page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:4178/');
+  await page.goto('http://127.0.0.1:4178/?book=super-ya');
   check(await page.locator('.character-cover img').evaluate(img=>img.complete&&img.naturalWidth===640),'supplied cover picture still loads');
   check(await page.locator('.intro-guide .avatar').evaluate(img=>img.complete&&img.naturalWidth===192),'real Shimajiro avatar loads');
   await page.screenshot({path:'output/playwright/cover-portrait.png'});
@@ -88,7 +88,7 @@ async (sessionPage) => {
   check(await page.locator('#story-map .map-card').count()===4,'map events survive reopening');
   const isolated=await browser.newContext({viewport:{width:820,height:1180}}),blocked=await isolated.newPage();
   await blocked.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Denied','SecurityError');}});});
-  await blocked.goto('http://127.0.0.1:4178/');await blocked.getByRole('button',{name:'一起讀故事',exact:true}).click();
+  await blocked.goto('http://127.0.0.1:4178/?book=super-ya');await blocked.getByRole('button',{name:'一起讀故事',exact:true}).click();
   check(await blocked.locator('#storage-note').isVisible(),'storage failure explains the save limitation');
   for(let i=0;i<story.chapters.length-1;i++)await blocked.getByRole('button',{name:'繼續下一章',exact:true}).click();
   await blocked.locator('.source-block').last().scrollIntoViewIfNeeded();await blocked.waitForTimeout(280);
@@ -99,7 +99,7 @@ async (sessionPage) => {
   await isolated.close();
   const migrationContext=await browser.newContext({viewport:{width:820,height:1180}}),migration=await migrationContext.newPage();
   await migration.addInitScript(()=>localStorage.setItem('shimajiro-novel:v1',JSON.stringify({chapter:7,started:true,positions:{7:6500},choices:{7:2},bopo:false,size:1})));
-  await migration.goto('http://127.0.0.1:4178/');await migration.getByRole('button',{name:'一起讀故事',exact:true}).click();
+  await migration.goto('http://127.0.0.1:4178/?book=super-ya');await migration.getByRole('button',{name:'一起讀故事',exact:true}).click();
   check(await plain(migration.locator('#chapter-title'))===story.chapters[0].title,'old eight-chapter position never opens the wrong chapter');
   check(await migration.locator('#bopo-toggle').getAttribute('aria-pressed')==='false','old annotation preference survives edition replacement');
   check(await migration.locator('[data-size="1"]').getAttribute('aria-pressed')==='true','old font preference survives edition replacement');
@@ -107,7 +107,7 @@ async (sessionPage) => {
   await migrationContext.close();
   const v2Context=await browser.newContext({viewport:{width:820,height:1180}}),v2=await v2Context.newPage();
   await v2.addInitScript(()=>localStorage.setItem('shimajiro-novel:v2',JSON.stringify({chapter:2,started:true,positions:{2:2500},choices:{2:1},bopo:true,size:1})));
-  await v2.goto('http://127.0.0.1:4178/');await v2.getByRole('button',{name:'接著讀・'+story.chapters[2].title,exact:true}).click();await v2.waitForTimeout(280);
+  await v2.goto('http://127.0.0.1:4178/?book=super-ya');await v2.getByRole('button',{name:'接著讀・'+story.chapters[2].title,exact:true}).click();await v2.waitForTimeout(280);
   check(await plain(v2.locator('#chapter-title'))===story.chapters[2].title,'existing five-chapter reader keeps its current chapter');
   check(await v2.evaluate(()=>Math.abs(scrollY-2500)<8),'existing five-chapter pixel position remains a migration fallback');
   await v2Context.close();
