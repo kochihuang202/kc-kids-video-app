@@ -430,6 +430,12 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-060 — Capture selection lacks pixel magnification around the cursor
+
+- Requested behavior, 2026-10-17: Show a cursor-following pixel magnifier while choosing capture endpoints, including before dragging. Preserve the region/scroll mode strip and existing successful capture/clipboard behavior.
+- Fix: Render a nearest-neighbor 8× preview of 17×17 original screen pixels, with a center-pixel outline, crosshair, global coordinates and selection dimensions. Place it within the current monitor, avoiding the cursor and toolbar; clamp sampling at desktop edges and preserve the immutable background used for final capture.
+- Tests: `OverlayUserFlows.HoverMagnifier`, `PixelsAndEdges`, `SelectAndCancel` cover the actual overlay paint/mouse handlers, exact pixel centers and edge padding, negative desktop coordinates, all screen corners, reverse selection, last mouse-up position, scroll mode/minimum size and Esc cancellation. Existing REG-047/049/057 scroll, shortcut and clipboard tests remain required. Real desktop evidence is in `picpick-replacement/tests/UI-VERIFICATION.md`.
+
 ## REG-057 — Captured images are not automatically available in the clipboard
 
 - Scope: `picpick-replacement/AppSettings.cs`, `CaptureCompletion.cs`, `WorkbenchForm.cs`.

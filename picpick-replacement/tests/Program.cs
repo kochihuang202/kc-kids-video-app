@@ -240,5 +240,8 @@ Test("settings checkbox saves the capture clipboard preference", () => CanvasUse
     typeof(Button).GetMethod("OnClick", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(save, [EventArgs.Empty]);
     Check(applied?.CopyCaptureToClipboard == false && form.DialogResult == DialogResult.OK, "Settings dialog did not apply the checkbox value");
 }));
+Test("capture overlay shows the original pixels in a magnifier before dragging", OverlayUserFlows.HoverMagnifier);
+Test("magnifier preserves exact center pixels and stays inside monitor edges", OverlayUserFlows.PixelsAndEdges);
+Test("magnifier keeps reverse selection, scroll mode, release bounds and Esc cancellation", OverlayUserFlows.SelectAndCancel);
 Console.WriteLine($"{testCount - failures.Count}/{testCount} checks passed");
 return failures.Count == 0 ? 0 : 1;
