@@ -1,9 +1,9 @@
-import {storage,preview,draftURL} from './storage.js?v=94e93f714eb1';
-import {pageWordCount} from './text-stats.js?v=94e93f714eb1';
-import {openPreferences} from './preferences.js?v=94e93f714eb1';
-import {drawer} from './drawer.js?v=94e93f714eb1';
-import {openProgress} from './cloud.js?v=94e93f714eb1';
-import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=94e93f714eb1';
+import {storage,preview,draftURL} from './storage.js?v=59d4d55982df';
+import {pageWordCount} from './text-stats.js?v=59d4d55982df';
+import {openPreferences} from './preferences.js?v=59d4d55982df';
+import {drawer} from './drawer.js?v=59d4d55982df';
+import {openProgress} from './cloud.js?v=59d4d55982df';
+import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=59d4d55982df';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSON}){
  const data=(await getJSON('practice.json'))[book.id],localKey='shimajiro-practice:'+book.id+':v1';
@@ -42,7 +42,7 @@ export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSO
  const count=scene=>scene.questions.story.filter((q,i)=>done(p.attempts[scene.id+':story:'+i])).length;
  const b=(text,action,extra='',cls='')=>`<button type="button" data-p="${action}" ${extra} class="${cls}" aria-label="${esc(text)}">${ruby(text)}</button>`;
  const save=()=>{try{storage.setItem(localKey,JSON.stringify(p));}catch{}cloud.update(p);preferencesStore.update(p);};
- function prefs(){return drawer({ui,ruby,close:'data-p="close-settings"',controls:`${b(`${ui.bopo}：${p.bopo?ui.on:ui.off}`,'bopo',`aria-pressed="${p.bopo}"`)}<span>${ruby(ui.size)}</span><div class="size-buttons">${[ui.small,ui.medium,ui.large].map((v,i)=>b(v,'size',`data-size="${i}" aria-pressed="${i===p.size}"`)).join('')}</div>${b(ui.words,'words',`aria-pressed="${p.words}"`)}${b(ui.speakPassage,'speak-all',view==='reader'?'':'disabled')}${b(ui.stopSpeech,'stop')}<div class="rate-buttons">${[[0.6,ui.slow],[0.85,ui.normal],[1,ui.fast]].map(([v,label])=>b(label,'rate',`data-rate="${v}" aria-pressed="${p.rate===v}"`)).join('')}</div><p class="tool-note">${ruby(ui.voiceNotice)}</p><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${b(ui.doneSettings,'close-settings','','primary')}`});}
+ function prefs(){return drawer({ui,ruby,close:'data-p="close-settings"',controls:`${b(`${ui.bopo}：${p.bopo?ui.on:ui.off}`,'bopo',`aria-pressed="${p.bopo}"`)}<span>${ruby(ui.size)}</span><div class="size-buttons">${[ui.small,ui.medium,ui.large].map((v,i)=>b(v,'size',`data-size="${i}" aria-pressed="${i===p.size}"`)).join('')}</div>${b(ui.words,'words',`aria-pressed="${p.words}"`)}<div class="rate-buttons">${[[0.6,ui.slow],[0.85,ui.normal],[1,ui.fast]].map(([v,label])=>b(label,'rate',`data-rate="${v}" aria-pressed="${p.rate===v}"`)).join('')}</div><p class="tool-note">${ruby(ui.voiceNotice)}</p><p class="sync-note" data-sync-status>${esc(cloud.status)}</p>${b(ui.doneSettings,'close-settings','','primary')}`});}
  function nav(){return '';}
  function render(){
   syncRoute();

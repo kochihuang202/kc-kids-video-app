@@ -1,5 +1,9 @@
 # 格式與排版先查現成方案
 
+## 2026-10-17 移除設定中的朗讀操作
+
+依使用者要求，兩種模式的設定面板都移除全文朗讀與停止按鈕；段落、詞語朗讀與播放中的停止控制保留。查核 [MDN 原生 button](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button)，沿用現有原生按鈕與抽屜，不更動排版或增加套件；無新增版本、授權或裝置相容性依賴。保留 Han.css 3.3.0（MIT）及原有語速設定。
+
 ## 2026-10-17 設定抽屜精簡
 
 查核 [MDN details 原生揭露元件](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details)。本次只刪除抽屜中重複的閱讀工具／進度／目錄，不改動已驗證的原生 details/summary 開關、焦點及背景遮罩；不增加套件或新授權。沿用 Han.css 3.3.0 注音，標題統一為「閱讀設定」。以 Chromium 窄畫面與 WebKit 平板流程驗證保留功能。

@@ -7,9 +7,11 @@ async(sessionPage)=>{
  });
  const check=(v,m)=>{if(!v)throw Error(m);checks.push(m);};
  for(const route of ['/?book=kiki&chapter=0','/?book=kiki&mode=practice&scene=0']){
-  await page.goto('http://127.0.0.1:4178'+route);await page.locator('.preferences summary').waitFor();
+  await page.goto(new URL(route,sessionPage.url()).href);await page.locator('.preferences summary').waitFor();
   await page.locator('.preferences summary').click();
   check(await page.locator('.drawer-progress,.drawer-nav').count()===0,'no duplicate tools/progress/contents: '+route);
+  check(await page.locator('.reading-settings [data-action="speak-chapter"],.reading-settings [data-action="speech-stop"],.reading-settings [data-p="speak-all"],.reading-settings [data-p="stop"]').count()===0,'settings excludes full-text speech and stop buttons');
+  check(await page.locator('.reading-settings [data-rate]').count()===3,'speech rate settings retained');
   const heading=await page.locator('.drawer-heading h2').evaluate(el=>{const c=el.cloneNode(true);c.querySelectorAll('rt').forEach(n=>n.remove());return c.textContent;});
   check(heading==='閱讀設定','settings has one clear heading');
   check(await page.locator('[data-parent-hold]').count()===1,'parent entry retained');
