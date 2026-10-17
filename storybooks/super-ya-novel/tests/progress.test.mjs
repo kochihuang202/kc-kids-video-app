@@ -29,3 +29,10 @@ test('cloud validates independently sized modes without rejecting the longer mod
  assert.doesNotThrow(()=>sanitizePatch({attempts:{'s3:story:2':{tries:1}}},'sample','practice',catalog));
  assert.doesNotThrow(()=>sanitizePatch({attempts:{'s1:extra:1':{tries:2,revealed:true}}},'sample','practice',catalog));
 });
+test('approved four/five-question units save their actual current and completed positions',()=>{
+ assert.doesNotThrow(()=>sanitizePatch({positions:{'s4:story':4},attempts:{'s4:story:4':{tries:1}}},'tata','practice'));
+ assert.doesNotThrow(()=>sanitizePatch({positions:{'s4:story':5}},'tata','practice'));
+ assert.doesNotThrow(()=>sanitizePatch({positions:{'s6:story':5}},'super-ya-revisit','practice'));
+ assert.throws(()=>sanitizePatch({positions:{'s4:story':6}},'tata','practice'));
+ assert.throws(()=>sanitizePatch({positions:{'s1:story':4}},'super-ya','practice'));
+});

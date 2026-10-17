@@ -6,7 +6,7 @@ async(sessionPage)=>{
  page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{if(!localStorage.getItem('shimajiro-novel:v2'))localStorage.setItem('shimajiro-novel:v2',JSON.stringify({chapter:2,started:true,bopo:true,size:1,positions:{2:2500}}));});
  await page.goto('http://127.0.0.1:4178/');await page.locator('.bookshelf').waitFor();
- check(await page.locator('.book-card').count()===2,'shelf offers both books');
+ check(await page.locator('.book-card').count()===5,'shelf offers both originals and all three approved books');
  await page.locator('.book-card img').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
  check(await page.locator('.book-card').evaluateAll(nodes=>nodes.every(n=>n.href.includes('?book=')&&n.querySelector('img').complete)),'both book links and cover images work');
  for(const [width,height,label]of [[820,1180,'portrait'],[1180,820,'landscape'],[390,844,'mobile']]){
@@ -70,7 +70,7 @@ async(sessionPage)=>{
  }
  await page.reload();await page.locator('.prose').waitFor();await wait();
  check(await plain(page.locator('#chapter-title'))===story.chapters[3].title,'direct Kiki link reload preserves independent resume');
- await page.goto('http://127.0.0.1:4178/?book=unknown');await page.locator('.bookshelf').waitFor();check(await page.locator('.book-card').count()===2,'unknown book link safely returns to shelf');
+ await page.goto('http://127.0.0.1:4178/?book=unknown');await page.locator('.bookshelf').waitFor();check(await page.locator('.book-card').count()===5,'unknown book link safely returns to the complete shelf');
  const blockedContext=await browser.newContext({viewport:{width:820,height:1180}}),blocked=await blockedContext.newPage();
  await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Denied','SecurityError');}}));
  await blocked.goto('http://127.0.0.1:4178/');await blocked.locator('.book-card[href="?book=kiki"]').click();await blocked.locator('[data-action="start"]').click();

@@ -1,5 +1,5 @@
 async(sessionPage)=>{
- const origin='http://127.0.0.1:4185',context=await sessionPage.context().browser().newContext({viewport:{width:820,height:1180}}),page=await context.newPage(),checks=[],errors=[];let apiCalls=0,answers=0,parts=0;
+ const origin=new URL(sessionPage.url()).origin,isPreview=new URL(origin).port==='4185',context=await sessionPage.context().browser().newContext({viewport:{width:820,height:1180}}),page=await context.newPage(),checks=[],errors=[];let apiCalls=0,answers=0,parts=0;
  page.on('pageerror',e=>errors.push(e.message));await context.route('**/api/**',r=>{apiCalls++;return r.abort();});
  const check=(v,m)=>{if(!v)throw Error(m);checks.push(m);};
  const plain=loc=>loc.evaluate(el=>{const c=el.cloneNode(true);c.querySelectorAll('rt').forEach(n=>n.remove());return c.textContent;});
@@ -7,7 +7,7 @@ async(sessionPage)=>{
  for(const id of ['tata','karate','super-ya-revisit']){
   const book=library.books.find(b=>b.id===id),story=await(await context.request.get(origin+'/'+book.data)).json();
   await page.goto(origin+'/?book='+id);await page.locator('.mode-card').first().waitFor();
-  check(await page.locator('meta[name="reading-preview"]').count()===1,id+' preview isolation enabled');
+  check(await page.locator('meta[name="reading-preview"]').count()===(isPreview?1:0),id+' correct preview/production mode');
   check(await page.locator('.character-cover img').evaluate(i=>i.complete&&i.naturalWidth>0),id+' own episode cover loads');
   await page.screenshot({path:'output/playwright/draft-'+id+'-cover.png'});
   for(let i=0;i<story.chapters.length;i++){
@@ -32,6 +32,6 @@ async(sessionPage)=>{
    check(await page.locator('#own-note').count()===1,id+' unit '+(i+1)+' completes after its actual question count');
   }
  }
- check(parts===19,'all 19 full chapters checked');check(answers===85,'all 85 questions including fourth/fifth are operable');check(apiCalls===0,'preview never calls production progress APIs');check(errors.length===0,'no browser errors '+errors.join(';'));
+ check(parts===19,'all 19 full chapters checked');check(answers===85,'all 85 questions including fourth/fifth are operable');if(isPreview)check(apiCalls===0,'preview never calls production progress APIs');check(errors.length===0,'no browser errors '+errors.join(';'));
  await context.close();return {passed:checks.length,parts,answers,apiCalls,checks};
 }

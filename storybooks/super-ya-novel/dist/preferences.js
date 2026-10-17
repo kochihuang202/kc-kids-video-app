@@ -1,5 +1,5 @@
-import {storage,preview,draftURL} from './storage.js?v=f61edb3476df';
-import {openProgress} from './cloud.js?v=f61edb3476df';
+import {storage,preview,draftURL} from './storage.js?v=94e93f714eb1';
+import {openProgress} from './cloud.js?v=94e93f714eb1';
 const key='shimajiro-reading-preferences:v1';
 export function preferenceValues(v={}){
  return {bopo:v.bopo!==false,size:[0,1,2].includes(v.size)?v.size:0,words:v.words!==false,rate:[0.6,0.85,1].includes(v.rate)?v.rate:0.85};

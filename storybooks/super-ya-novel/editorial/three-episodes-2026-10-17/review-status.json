@@ -1,11 +1,11 @@
 {
-  "status": "三集兩模式完整文字初稿已完成，供一次確認。",
+  "status": "使用者確認後，三集兩模式已發布到正式網站。",
   "manuscriptParts": 19,
   "practiceUnits": 22,
   "questions": 85,
   "questionCounts": "各單元3至5題，不固定三題。",
   "verification": {
-    "nodeTestsPassed": 18,
+    "nodeTestsPassed": 21,
     "chromium": {
       "checks": 268,
       "completeParts": 19,
@@ -28,10 +28,21 @@
       "physicalIPadTested": false
     },
     "sourceArchives": "三份原始稿 SHA-256 核對相同。",
-    "productionCatalogAndKikiManuscript": "未更動。"
+    "productionCatalogAndKikiManuscript": "新增作品清單；原有兩本全文及進度鍵保留。",
+    "localD1FifthQuestionChecks": 7,
+    "historicalLearningChecks": 90,
+    "historicalSharedSettingsChecks": 10,
+    "historicalCloudRecoveryChecks": 4,
+    "productionChecks": 50,
+    "servedFileHashesMatch": 52
   },
-  "phonetics": "已提供自動注音及關鍵多音字修正；全篇逐字人工注音覆校仍待完成。",
+  "phonetics": "上架前已巡查多音字語境，依教育部、國教院資料修正；逐字對齊測試通過。複核範圍見 publish-review.json，不冒稱外部逐字審訂。",
   "preview": "http://127.0.0.1:4185/",
   "delivery": "各集 review.txt 包含完整悄悄話、理解文章、所有題目、答案、原文根據、兩層提示與解析。",
-  "publishing": "未上正式書架；SUPER YA 重製草稿使用新識別碼，保留現有作品與紀錄。"
+  "publishing": "已新增三集；保留原有兩本與進度鍵。",
+  "production": "https://shimajiro-reading.ji3cp31p4.workers.dev/",
+  "release": {
+    "id": "94e93f714eb1",
+    "builtAt": "2026-10-17T00:56:27.285Z"
+  }
 }

@@ -4,9 +4,11 @@ import {readFileSync} from 'node:fs';
 const read=n=>JSON.parse(readFileSync(new URL('../'+n,import.meta.url)));
 test('both episodes have independent comprehension passages, evidence, hints and complete whispers',()=>{
  const practice=read('content/practice.json'),legacy=read('content/legacy-practice.json');
- assert.deepEqual(Object.keys(practice).sort(),['kiki','super-ya']);
+ assert.deepEqual(Object.keys(practice).sort(),['karate','kiki','super-ya','super-ya-revisit','tata']);
  let tasks=0;
- for(const [id,data]of Object.entries(practice)){
+ // The originals use source excerpts; the three new independent articles are
+ // validated separately in published-episodes.test.mjs and validateSubmission.
+ for(const id of ['kiki','super-ya']){const data=practice[id];
   const story=read(id==='kiki'?'content/books/kiki/story.json':'content/story.json');
   assert.ok(data.scenes.length>0&&story.chapters.length>0);
   for(const [i,s]of data.scenes.entries()){

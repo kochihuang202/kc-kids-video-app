@@ -1,0 +1,56 @@
+{
+  "authorized": "使用者於2026-10-17指示直接上正式網站。",
+  "catalog": [
+    "super-ya",
+    "kiki",
+    "tata",
+    "karate",
+    "super-ya-revisit"
+  ],
+  "preserved": "既有作品識別碼、全文與進度鍵未替換；未修改遠端 D1 資料。",
+  "pronunciationReview": {
+    "scope": "三集正文、選項、提示、解析中的多音字語境巡查與修正。未冒稱外部專家逐字審訂。",
+    "corrections": [
+      "園長",
+      "擅長",
+      "答應",
+      "反應",
+      "接應",
+      "倒地",
+      "我倒覺得",
+      "空手道",
+      "背包",
+      "捨不得",
+      "還得",
+      "非得",
+      "贏得",
+      "當成",
+      "妥當",
+      "睡著",
+      "同行的",
+      "教朋友",
+      "重想",
+      "為沙堡／為重逢等介詞語境"
+    ],
+    "retained": [
+      "便當的飯盒義保留ㄅㄧㄢˋ ㄉㄤ",
+      "差在不好、差距等語境依教育部保留ㄔㄚ"
+    ],
+    "references": [
+      "https://dict.concised.moe.edu.tw/dictView.jsp?ID=34555&la=0&powerMode=0",
+      "https://dict.concised.moe.edu.tw/dictView.jsp?ID=6711&la=1&powerMode=0",
+      "https://dict.concised.moe.edu.tw/dictView.jsp?ID=8127&la=1&powerMode=0",
+      "https://dict.revised.moe.edu.tw/dictView.jsp?ID=18926&q=1&word=%E4%BE%BF%E7%95%B6",
+      "https://coct.naer.edu.tw/word.jsp?page=31",
+      "https://stroke-order.learningweb.moe.edu.tw/dictMean.jsp?ID=24046"
+    ],
+    "contextsExtracted": 1472
+  },
+  "cloudFix": "以各單元題數限制目前與完成位置；本機 D1 已驗證第五題跨瀏覽器接續及完成重載。",
+  "release": {
+    "id": "94e93f714eb1",
+    "builtAt": "2026-10-17T00:56:27.285Z"
+  },
+  "deployedUrl": "https://shimajiro-reading.ji3cp31p4.workers.dev/",
+  "cloudflareDeployment": "21afedbb-271b-4d02-80b3-67fc9ff95ae4"
+}

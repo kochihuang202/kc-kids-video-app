@@ -39,6 +39,7 @@ const phraseSounds={
  '轉向':{0:'ㄓㄨㄢˇ'},'轉變':{0:'ㄓㄨㄢˇ'},'放假':{1:'ㄐㄧㄚˋ'},'假期':{0:'ㄐㄧㄚˋ'}
 };
 function choice(a){const [q,options,correct,evidence,h1,h2,why]=a;return {type:'choice',skill:'讀懂故事與根據',q,options,correct,evidence,hints:[h1,h2],why};}
+Object.assign(phraseSounds,{"園長": {"1": "ㄓㄤˇ"}, "擅長": {"1": "ㄔㄤˊ"}, "答應": {"1": "ㄧㄥˋ"}, "反應": {"1": "ㄧㄥˋ"}, "接應": {"1": "ㄧㄥˋ"}, "倒地": {"1": "ㄉㄧˋ"}, "我倒覺得": {"1": "ㄉㄠˋ"}, "空手道": {"0": "ㄎㄨㄥ"}, "背包": {"0": "ㄅㄟ"}, "捨不得": {"2": "˙ㄉㄜ"}, "還得": {"1": "ㄉㄟˇ"}, "非得": {"1": "ㄉㄟˇ"}, "贏得": {"1": "ㄉㄜˊ"}, "當成": {"0": "ㄉㄤˋ"}, "妥當": {"1": "ㄉㄤˋ"}, "睡著": {"1": "ㄓㄠˊ"}, "同行的": {"1": "ㄒㄧㄥˊ"}, "便當": {"1": "ㄉㄤ"}, "教朋友": {"0": "ㄐㄧㄠ"}, "重想": {"0": "ㄔㄨㄥˊ"}, "為沙堡": {"0": "ㄨㄟˋ"}, "為重逢": {"0": "ㄨㄟˋ"}, "為你的": {"0": "ㄨㄟˋ"}, "為自己": {"0": "ㄨㄟˋ"}, "為東西": {"0": "ㄨㄟˋ"}, "為這次": {"0": "ㄨㄟˋ"}, "為娃娃屋": {"0": "ㄨㄟˋ"}, "為何": {"0": "ㄨㄟˋ"}});
 const summaries=[];
 for(const [order,id]of ['tata','karate','super-ya-review'].entries()){
  const dir=path.join(here,id),analysis=read(path.join(dir,'analysis.json'));
@@ -62,9 +63,9 @@ for(const [order,id]of ['tata','karate','super-ya-review'].entries()){
  const glossary=Object.fromEntries(Object.entries(terms).filter(([w])=>allText.includes(w)&&!sharedGlossary[w]).map(([w,[bopo,meaning]])=>[w,{bopo,meaning}]));
  const title=analysis.title,idBook=id==='super-ya-review'?'super-ya-revisit':id;
  const bundle={
-  book:{id:idBook,title,number:String(order+3).padStart(2,'0'),subtitle:analysis.theme+'。先讀故事，再一起想。',detail:`完整初稿：${chapters.length}篇悄悄話、${scenes.length}單元理解。`,data:`books/${idBook}/story.json`,image:`assets/draft-${id}.jpg`,coverImage:`assets/draft-${id}.jpg`,imageAlt:`${title}的本集畫面`,storageKey:`shimajiro-novel:${idBook}:v1`},
+  book:{id:idBook,title,number:String(order+3).padStart(2,'0'),subtitle:analysis.theme+'。先讀故事，再一起想。',detail:`${id==='super-ya-review'?'延伸新版｜':''}${chapters.length}篇悄悄話、${scenes.length}單元理解。`,data:`books/${idBook}/story.json`,image:`assets/draft-${id}.jpg`,coverImage:`assets/draft-${id}.jpg`,imageAlt:`${title}的本集畫面`,storageKey:`shimajiro-novel:${idBook}:v1`},
   source:{original:'original.md',events:analysis.findings.map(([time,basis,event])=>({time,event,quote:'本列為情節整理，非逐字引用。原文見 original.md。',status:'明示；'+basis,turningPoint:true,expectation:'依正文描述，未補定未知內心。',result:event})),uncertainties:analysis.limits},
-  editorial:{sourceReview:'完整初稿依原始逐字稿、已列影片片段及琪琪寫法完成；排除預告。小雅代詞另依台灣巧連智官方本集介紹使用「他」：https://www.youtube.com/watch?v=9prBOQklZ84 。YA 保留等待三天而不編技術原因；角色不明處用朋友。所有客觀題逐一對照本文所提供的段落。',phoneticReview:'預覽使用既有 Han.css 與語境注音，新增長大、處理、行程、得到、重新、角色等語境修正。關鍵詞讀音已整理；全篇注音仍屬待逐字人工覆校的初稿，不聲稱已完成全書人工注音校對。',glossaryReview:'保留既有詞語提示，新增正文出現的護城河、道館、諧星、操控等詞之臺灣注音與兒童詞義；未出現的詞不匯入。',unresolvedCritical:[],reviewStatus:'全文與題組完整初稿，供使用者一次確認，未上架。'},
+  editorial:{sourceReview:'完整初稿依原始逐字稿、已列影片片段及琪琪寫法完成；排除預告。小雅代詞另依台灣巧連智官方本集介紹使用「他」：https://www.youtube.com/watch?v=9prBOQklZ84 。YA 保留等待三天而不編技術原因；角色不明處用朋友。所有客觀題逐一對照本文所提供的段落。',phoneticReview:'逐篇巡查正文、題目、選項、提示與解析的多音字語境，另依教育部辭典及國教院資料校訂園長、擅長、答應、倒地、背包等。保留 Han.css 排版與逐字對齊檢查；此為語境重點複核，不冒稱逐字外部審訂。',glossaryReview:'保留既有詞語提示，新增正文出現的護城河、道館、諧星、操控等詞之臺灣注音與兒童詞義；未出現的詞不匯入。',unresolvedCritical:[],reviewStatus:'使用者已於2026-10-17確認直接上正式網站。'},
   manuscript,
   story:{title,subtitle:'巧虎的時光悄悄話',edition:'complete-draft-2026-10-17',welcome:'先回到那一天，再一起慢慢想。',note:'',chapters},
   practice:{title,scenes},

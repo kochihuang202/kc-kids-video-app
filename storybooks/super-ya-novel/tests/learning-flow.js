@@ -71,8 +71,8 @@ async(sessionPage)=>{
  check(await other.locator('#chapter-title').evaluate(el=>el.textContent.includes('梅')&&el.textContent.includes('婆')),'a fresh device resumes the cloud chapter without child identification');
  check(await other.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','a fresh device restores cloud reading preferences');
  await other.goto('http://127.0.0.1:4178/?view=parent');await other.locator('[data-parent-hold]').focus();await other.keyboard.down('Space');await other.waitForTimeout(3100);await other.keyboard.up('Space');await other.locator('.parent-book').first().waitFor();
- check(await other.locator('.parent-book').count()===2,'parents see both episodes in one cloud progress page');
- check(await other.locator('.progress-table tbody tr').count()===14,'parent progress covers every comprehension scene');
+ check(await other.locator('.parent-book').count()===5,'parents see both original and all approved episodes in one cloud progress page');
+ check(await other.locator('.progress-table tbody tr').count()===36,'parent progress covers the original 14 and all 22 approved comprehension scenes');
  check((await plain(other.locator('.parent-main'))).includes('不是成績單'),'parent view states that progress is not an ability score');
  check((await plain(other.locator('.parent-book').last())).includes('位置，不代表已經理解'),'reading positions are explicitly distinct from understanding');
  check(await other.locator('.parent-notes').count()===1,'parents can inspect the child reflection saved online');

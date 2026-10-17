@@ -33,7 +33,7 @@ test('every Chinese character in delivered reading text has an aligned phonetic 
 });
 test('contextual readings distinguish rereading, grammatical particles, destinations and responsibility',()=>{
   const readings=JSON.parse(readFileSync(new URL('../dist/readings.json',import.meta.url)));
-  for(const [word,index,expected] of [['重新',0,'ㄔㄨㄥˊ'],['看著',1,'˙ㄓㄜ'],['地方',0,'ㄉㄧˋ'],['得等',0,'ㄉㄟˇ'],['覺得',1,'˙ㄉㄜ'],['處理',0,'ㄔㄨˇ'],['突然',0,'ㄊㄨˊ'],['危險',0,'ㄨㄟˊ'],['還在',0,'ㄏㄞˊ'],['彈跳',0,'ㄊㄢˊ'],['仔細',0,'ㄗˇ'],['心血',1,'ㄒㄧㄝˇ'],['幾乎',0,'ㄐㄧ'],['幾次',0,'ㄐㄧˇ'],['為什麼',0,'ㄨㄟˋ'],['美麗',1,'ㄌㄧˋ'],['擅長',1,'ㄓㄤˇ'],['教過',0,'ㄐㄧㄠ'],['舞蹈',1,'ㄉㄠˋ'],['研究',1,'ㄐㄧㄡˋ'],['得由',0,'ㄉㄟˇ']]){
+  for(const [word,index,expected] of [['重新',0,'ㄔㄨㄥˊ'],['看著',1,'˙ㄓㄜ'],['地方',0,'ㄉㄧˋ'],['得等',0,'ㄉㄟˇ'],['覺得',1,'˙ㄉㄜ'],['處理',0,'ㄔㄨˇ'],['突然',0,'ㄊㄨˊ'],['危險',0,'ㄨㄟˊ'],['還在',0,'ㄏㄞˊ'],['彈跳',0,'ㄊㄢˊ'],['仔細',0,'ㄗˇ'],['心血',1,'ㄒㄧㄝˇ'],['幾乎',0,'ㄐㄧ'],['幾次',0,'ㄐㄧˇ'],['為什麼',0,'ㄨㄟˋ'],['美麗',1,'ㄌㄧˋ'],['擅長',1,'ㄔㄤˊ'],['教過',0,'ㄐㄧㄠ'],['舞蹈',1,'ㄉㄠˋ'],['研究',1,'ㄐㄧㄡˋ'],['得由',0,'ㄉㄟˇ']]){
     const entries=Object.entries(readings).filter(([s])=>s.includes(word));assert.ok(entries.length,word);
     for(const [text,sounds] of entries){let at=text.indexOf(word);while(at!==-1){assert.equal(sounds[at+index],expected,`${word} in ${text}`);at=text.indexOf(word,at+1);}}
   }

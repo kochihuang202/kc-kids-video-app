@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 const read=n=>JSON.parse(readFileSync(new URL('../'+n,import.meta.url)));
 test('library preserves SUPER YA and adds the complete Kiki manuscript as an independent book',()=>{
  const library=read('dist/library.json');
- assert.deepEqual(library.books.map(b=>b.id),['super-ya','kiki']);
+ assert.deepEqual(library.books.map(b=>b.id),['super-ya','kiki','tata','karate','super-ya-revisit']);
  assert.notEqual(library.books[0].storageKey,library.books[1].storageKey);
  assert.equal(library.books[0].storageKey,'shimajiro-novel:v2');
  const story=read('dist/books/kiki/story.json');assert.equal(story.chapters.length,9);

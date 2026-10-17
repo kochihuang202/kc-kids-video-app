@@ -30,7 +30,7 @@ export function sanitizePatch(input,book,mode,catalog=books){
     }else if(['positions','notes'].includes(key)){
      const match=k.match(/^s(\d+):(story|extra)$/);if(!match||!integer(+match[1],1,count))bad();
      if(key==='notes'){if(typeof v!=='string'||v.length>1000)bad();map[k]=v;}
-     else{if(!integer(v,0,3))bad();map[k]=v;}
+     else{const last=match[2]==='story'?catalog[book].scenes[+match[1]-1].questions:3;if(!integer(v,0,last))bad();map[k]=v;}
     }else bad();
    }out[key]=map;
   }
