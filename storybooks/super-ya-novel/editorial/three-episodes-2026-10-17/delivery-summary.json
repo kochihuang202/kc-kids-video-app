@@ -1,0 +1,161 @@
+[
+  {
+    "id": "tata",
+    "title": "塔塔回來了",
+    "whisperParts": 6,
+    "whisperCharacters": 3353,
+    "chapters": [
+      {
+        "title": "第一篇｜沙堡旁邊的小聲音",
+        "characters": 543
+      },
+      {
+        "title": "第二篇｜照片把名字找回來了",
+        "characters": 544
+      },
+      {
+        "title": "第三篇｜說好的明天，下雨了",
+        "characters": 583
+      },
+      {
+        "title": "第四篇｜「只是錯覺啦」以後",
+        "characters": 538
+      },
+      {
+        "title": "第五篇｜媽媽為什麼叫我等一等",
+        "characters": 530
+      },
+      {
+        "title": "第六篇｜一定還會再見嗎",
+        "characters": 615
+      }
+    ],
+    "practiceUnits": 7,
+    "questions": [
+      4,
+      4,
+      3,
+      5,
+      3,
+      4,
+      4
+    ],
+    "totalQuestions": 27,
+    "practiceCharacters": 965,
+    "newTerms": [
+      "護城河",
+      "寄居蟹",
+      "牽掛",
+      "錯覺",
+      "盼望"
+    ]
+  },
+  {
+    "id": "karate",
+    "title": "小雅的挑戰",
+    "whisperParts": 6,
+    "whisperCharacters": 3440,
+    "chapters": [
+      {
+        "title": "第一篇｜你說我很厲害，可是我還是怕",
+        "characters": 567
+      },
+      {
+        "title": "第二篇｜我們的好主意，問過你了嗎",
+        "characters": 546
+      },
+      {
+        "title": "第三篇｜擋住足球，就一定會贏嗎",
+        "characters": 552
+      },
+      {
+        "title": "第四篇｜又害怕了，前面就白練了嗎",
+        "characters": 593
+      },
+      {
+        "title": "第五篇｜園長換了一個夢想",
+        "characters": 602
+      },
+      {
+        "title": "第六篇｜比賽還沒告訴我們答案",
+        "characters": 580
+      }
+    ],
+    "practiceUnits": 7,
+    "questions": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      3,
+      4
+    ],
+    "totalQuestions": 27,
+    "practiceCharacters": 1025,
+    "newTerms": [
+      "擅長",
+      "對打",
+      "道館",
+      "諧星"
+    ]
+  },
+  {
+    "id": "super-ya-revisit",
+    "title": "飛吧！SUPER YA！",
+    "whisperParts": 7,
+    "whisperCharacters": 3877,
+    "chapters": [
+      {
+        "title": "第一篇｜娃娃屋壞了，聲音卻越來越大",
+        "characters": 544
+      },
+      {
+        "title": "第二篇｜最需要說話的人，還沒說完",
+        "characters": 527
+      },
+      {
+        "title": "第三篇｜突然出發了，先問什麼",
+        "characters": 559
+      },
+      {
+        "title": "第四篇｜魚群過去了，氣還在嗎",
+        "characters": 519
+      },
+      {
+        "title": "第五篇｜婷婷說沒關係，我還能做什麼",
+        "characters": 546
+      },
+      {
+        "title": "第六篇｜回家看到的禮物",
+        "characters": 554
+      },
+      {
+        "title": "第七篇｜原來大人也會說「都是你」",
+        "characters": 628
+      }
+    ],
+    "practiceUnits": 8,
+    "questions": [
+      3,
+      4,
+      4,
+      4,
+      3,
+      5,
+      4,
+      4
+    ],
+    "totalQuestions": 31,
+    "practiceCharacters": 1136,
+    "newTerms": [
+      "擅長",
+      "道館",
+      "預測",
+      "程式",
+      "操控",
+      "追究",
+      "推責"
+    ]
+  }
+]

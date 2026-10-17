@@ -14,6 +14,15 @@ test('independent mode counts and malformed answers / evidence / source are chec
  const f=fixture();assert.deepEqual(validateSubmission(f),{whisper:2,practice:3});
  for(const mutate of [b=>b.practice.scenes[0].questions.story[0].evidence=[999],b=>b.practice.scenes[0].questions.story[0].correct=99,b=>b.story.chapters[0].presentation.guideRanges=[[0,999]],b=>delete b.source,b=>b.book.data='../outside.json']){const b=structuredClone(f);mutate(b);assert.throws(()=>validateSubmission(b));}
 });
+test('question counts follow each unit and additional answers still require valid evidence',()=>{
+ const f=fixture();
+ f.practice.scenes[1].questions.story.push(structuredClone(f.practice.scenes[1].questions.story[0]));
+ f.practice.scenes[2].questions.story.push(...[0,2].map(i=>structuredClone(f.practice.scenes[2].questions.story[i])));
+ assert.deepEqual(f.practice.scenes.map(s=>s.questions.story.length),[3,4,5]);
+ assert.deepEqual(validateSubmission(f),{whisper:2,practice:3});
+ f.practice.scenes[2].questions.story.at(-1).evidence=[999];
+ assert.throws(()=>validateSubmission(f),/答案根據/);
+});
 test('preview importer builds a separate catalog and never changes production registry or manuscript',()=>{
  const file=new URL('../output/fixture-submission.json',import.meta.url);mkdirSync(new URL('../output/',import.meta.url),{recursive:true});
  const f=fixture();f.source.original='../content/books/kiki/original.md';writeFileSync(file,JSON.stringify(f));

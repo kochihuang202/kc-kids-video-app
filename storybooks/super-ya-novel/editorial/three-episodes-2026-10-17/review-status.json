@@ -1,0 +1,37 @@
+{
+  "status": "三集兩模式完整文字初稿已完成，供一次確認。",
+  "manuscriptParts": 19,
+  "practiceUnits": 22,
+  "questions": 85,
+  "questionCounts": "各單元3至5題，不固定三題。",
+  "verification": {
+    "nodeTestsPassed": 18,
+    "chromium": {
+      "checks": 268,
+      "completeParts": 19,
+      "answeredQuestions": 85,
+      "progressApiCalls": 0
+    },
+    "webkit": {
+      "checks": 9,
+      "viewports": [
+        [
+          820,
+          1180
+        ],
+        [
+          1180,
+          820
+        ]
+      ],
+      "fifthQuestionReloadAndCompletion": true,
+      "physicalIPadTested": false
+    },
+    "sourceArchives": "三份原始稿 SHA-256 核對相同。",
+    "productionCatalogAndKikiManuscript": "未更動。"
+  },
+  "phonetics": "已提供自動注音及關鍵多音字修正；全篇逐字人工注音覆校仍待完成。",
+  "preview": "http://127.0.0.1:4185/",
+  "delivery": "各集 review.txt 包含完整悄悄話、理解文章、所有題目、答案、原文根據、兩層提示與解析。",
+  "publishing": "未上正式書架；SUPER YA 重製草稿使用新識別碼，保留現有作品與紀錄。"
+}

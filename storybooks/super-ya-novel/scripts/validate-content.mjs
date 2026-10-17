@@ -15,7 +15,7 @@ export function validateBook({book,story,practice,existing=false}){
  }
  for(const [i,s]of practice.scenes.entries()){
   if(s.id!==`s${i+1}`||!s.title||!s.story?.length||s.story.some(t=>typeof t!=='string'||!t.trim()))fail('理解單元須有固定順序識別碼與獨立文章');
-  const qs=s.questions?.story;if(!qs||qs.length!==3)fail('每個理解單元須有三題');
+  const qs=s.questions?.story;if(!Array.isArray(qs)||qs.length<2)fail('每個理解單元須有理解題與原文根據題；題數依學習目標安排');
   for(const q of qs){
    if(!q.q||!q.why||q.hints?.length!==2||q.hints.some(h=>!h?.trim())||!q.evidence?.length)fail('題目缺少兩層提示、答案根據或解析');
    if(q.evidence.some(e=>!Number.isInteger(e)||e<0||e>=s.story.length))fail('答案根據超出文章');
