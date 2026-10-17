@@ -6,6 +6,8 @@ internal sealed class CaptureOverlay : Form
 {
     readonly Bitmap screen;
     readonly Panel toolbar;
+    readonly Func<Point> readCursor;
+    readonly Func<Point, bool> moveCursor;
     Point anchor;
     Rectangle selection;
     bool dragging;
@@ -16,9 +18,10 @@ internal sealed class CaptureOverlay : Form
     public Rectangle SelectedRegion { get; private set; }
     public nint TargetWindow { get; private set; }
     public bool IsScrolling => scrolling;
-    public CaptureOverlay(Bitmap background, bool scrollMode)
+    public CaptureOverlay(Bitmap background, bool scrollMode) : this(background, scrollMode, () => System.Windows.Forms.Cursor.Position, point => Native.SetCursorPos(point.X, point.Y)) { }
+    public CaptureOverlay(Bitmap background, bool scrollMode, Func<Point> readCursor, Func<Point, bool> moveCursor)
     {
-        screen = background; scrolling = scrollMode;
+        screen = background; scrolling = scrollMode; this.readCursor = readCursor; this.moveCursor = moveCursor;
         AutoScaleMode = AutoScaleMode.None; FormBorderStyle = FormBorderStyle.None;
         Bounds = SystemInformation.VirtualScreen; StartPosition = FormStartPosition.Manual;
         DoubleBuffered = true; TopMost = true; KeyPreview = true; Cursor = Cursors.Cross;
@@ -29,7 +32,7 @@ internal sealed class CaptureOverlay : Form
         var region = new Button { Text = "框選擷取", AutoSize = true, Height = 32, FlatStyle = FlatStyle.Flat };
         var scroll = new Button { Text = "捲動擷取", AutoSize = true, Height = 32, FlatStyle = FlatStyle.Flat };
         var close = new Button { Text = "取消 · Esc", AutoSize = true, Height = 32, FlatStyle = FlatStyle.Flat };
-        void UpdateMode() { region.BackColor = scrolling ? Color.White : Color.LightSkyBlue; scroll.BackColor = scrolling ? Color.LightSkyBlue : Color.White; Text = scrolling ? "框選可捲動內容；擷取中按 Esc 結束，捲到底自動結束" : "拖曳選取範圍，放開滑鼠完成截圖"; Invalidate(); }
+        void UpdateMode() { region.BackColor = scrolling ? Color.White : Color.LightSkyBlue; scroll.BackColor = scrolling ? Color.LightSkyBlue : Color.White; Text = scrolling ? "框選可捲動內容（方向鍵微調 1 像素）；擷取中按 Esc 結束，捲到底自動結束" : "拖曳選取範圍，方向鍵微調 1 像素，放開滑鼠完成截圖"; Invalidate(); }
         region.Click += (_, _) => { scrolling = false; UpdateMode(); };
         scroll.Click += (_, _) => { scrolling = true; UpdateMode(); };
         close.Click += (_, _) => { DialogResult = DialogResult.Cancel; Close(); };
@@ -37,6 +40,16 @@ internal sealed class CaptureOverlay : Form
         toolbar.MouseEnter += (_, _) => HideMagnifier(); foreach (Control control in toolbar.Controls) control.MouseEnter += (_, _) => HideMagnifier();
         Shown += (_, _) => { var monitor = Screen.FromPoint(Cursor.Position).Bounds; toolbar.Location = new Point(monitor.Left - Left + (monitor.Width - toolbar.Width) / 2, monitor.Top - Top + 14); UpdateMode(); UpdatePointer(PointToClient(Cursor.Position)); Activate(); };
         KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) { DialogResult = DialogResult.Cancel; Close(); } };
+    }
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+        if (keyData is not (Keys.Left or Keys.Right or Keys.Up or Keys.Down)) return base.ProcessCmdKey(ref msg, keyData);
+        var current = readCursor();
+        int dx = keyData == Keys.Left ? -1 : keyData == Keys.Right ? 1 : 0, dy = keyData == Keys.Up ? -1 : keyData == Keys.Down ? 1 : 0;
+        var next = new Point(Math.Clamp(current.X + dx, Left, Left + screen.Width - 1), Math.Clamp(current.Y + dy, Top, Top + screen.Height - 1));
+        if (next != current && !moveCursor(next)) return true;
+        var point = PointToClient(readCursor()); UpdatePointer(point);
+        if (dragging) { selection = SelectionTo(point); Invalidate(); }
+        return true;
     }
     Point SelectionPoint(Point point) => new(Math.Clamp(point.X, 0, screen.Width), Math.Clamp(point.Y, 0, screen.Height));
     Rectangle SelectionTo(Point point) { point = SelectionPoint(point); return Rectangle.FromLTRB(Math.Min(anchor.X, point.X), Math.Min(anchor.Y, point.Y), Math.Max(anchor.X, point.X), Math.Max(anchor.Y, point.Y)); }

@@ -4,9 +4,11 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 ## 執行
 
-可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.2)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.2/CaptureWorkbench.exe)。
+可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.3)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.3/CaptureWorkbench.exe)。
 
 執行 `artifacts/release/CaptureWorkbench.exe`。獨立發行版內含 .NET 執行環境，不需要安裝 SDK。
+
+更新版本時，請先從右下角通知區右鍵「離開」舊版，再開啟新執行檔；單一實例運作中，再執行 exe 只會恢復現有版本。
 
 先前的 `artifacts/v2` 與本輪測試的 `artifacts/v3` 同步到相同版本；以 `release` 為主要入口。
 
@@ -14,6 +16,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 - 如果 PicPick 已占用 `Alt+2`，會自動嘗試 `Ctrl+Alt+2`；也可以直接按「開始擷取」。關閉占用快捷鍵的程式後，按快捷鍵按鈕重新註冊。
 - 框選：拖曳需要的範圍，放開即擷取。
 - 選取時游標旁顯示 8 倍像素放大鏡、中央準星與桌面座標；拖曳時顯示選取寬高。放大鏡自動留在游標所在螢幕、避開工具列與游標，靠近邊角時換邊；一般與捲動模式選取範圍時皆可使用，成品不包含放大鏡。
+- 選取時按 ↑ ↓ ← →，游標每次移動 1 個實際螢幕像素，放大鏡同步更新；按住滑鼠框選時，方向鍵微調終點並固定起點。方向鍵不會越出桌面範圍，也不會切換頂端按鈕焦點；Esc 仍取消選取。
 - 捲動：切換「捲動擷取」，框選可捲動的內容區域，程式自動捲動。**按 Esc 在需要的位置正常結束；連續確認畫面不再前進後也會自動結束。** 不需要捲到最底才算完成。
 - 每次擷取加入獨立 Tab，標題只顯示時間。綠點表示已保存，紅點表示修改中或尚未保存。捲動中保留綠色範圍框，框線在擷取矩形外側。
 - 「選項 → 程式設定 → 一般」可設定「截圖後自動複製到剪貼簿」，預設開啟，舊設定也沿用此預設。一般與捲動截圖完成後會複製完整圖片，可直接 Ctrl+V 貼上；取消勾選後不會替換剪貼簿。編輯、開檔及拖入圖片不觸發自動複製。剪貼簿複製失敗時，已保存的圖片與分頁仍保留，狀態列提示可按 Ctrl+C 重試。

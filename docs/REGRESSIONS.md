@@ -430,6 +430,12 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-061 — Arrow keys do not nudge the capture cursor by one pixel
+
+- Requested behavior, 2026-10-17: While the capture magnifier is visible, arrow keys move the actual cursor by one screen pixel. During a mouse drag, nudge the endpoint while keeping the initial anchor fixed; preserve Esc and modified shortcuts.
+- Fix: Intercept plain arrows before WinForms dialog navigation, move the OS cursor with SetCursorPos in physical desktop coordinates, read its actual resulting position, and update the magnifier and active selection. Clamp to virtual desktop bounds, including negative monitor coordinates. Regular mouse-up still uses the final pointer position.
+- Tests: `OverlayUserFlows.ArrowKeys` exercises the actual command-key handler with deterministic cursor IO for region and scroll modes, all four directions, exact one-pixel deltas, magnifier synchronization, all desktop boundaries, modifier preservation and the final nudged capture rectangle. Existing REG-060 magnifier, reverse-drag and Esc flows remain required.
+
 ## REG-060 — Capture selection lacks pixel magnification around the cursor
 
 - Requested behavior, 2026-10-17: Show a cursor-following pixel magnifier while choosing capture endpoints, including before dragging. Preserve the region/scroll mode strip and existing successful capture/clipboard behavior.

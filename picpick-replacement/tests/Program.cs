@@ -243,5 +243,6 @@ Test("settings checkbox saves the capture clipboard preference", () => CanvasUse
 Test("capture overlay shows the original pixels in a magnifier before dragging", OverlayUserFlows.HoverMagnifier);
 Test("magnifier preserves exact center pixels and stays inside monitor edges", OverlayUserFlows.PixelsAndEdges);
 Test("magnifier keeps reverse selection, scroll mode, release bounds and Esc cancellation", OverlayUserFlows.SelectAndCancel);
+Test("capture arrow keys move the cursor and drag endpoint exactly one pixel", OverlayUserFlows.ArrowKeys);
 Console.WriteLine($"{testCount - failures.Count}/{testCount} checks passed");
 return failures.Count == 0 ? 0 : 1;

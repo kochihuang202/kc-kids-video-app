@@ -5,6 +5,31 @@ static class OverlayUserFlows
 {
     static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
     static void Mouse(Form overlay, string action, int x, int y) => overlay.GetType().GetMethod("OnMouse" + action, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [new MouseEventArgs(MouseButtons.Left, 1, x, y, 0)]);
+    static bool Key(Form overlay, Keys key) {
+        object[] args = [new Message(), key]; return (bool)overlay.GetType().GetMethod("ProcessCmdKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, args)!;
+    }
+    public static void ArrowKeys() => CanvasUserFlows.RunSta(() => {
+        using var background = NewCanvasForm.CreateImage(480, 360, Color.Blue);
+        var type = typeof(AppSettings).Assembly.GetType("CaptureWorkbench.CaptureOverlay")!;
+        foreach (bool scrolling in new[] { false, true }) {
+            Point cursor = Point.Empty; int moves = 0;
+            using var overlay = (Form)Activator.CreateInstance(type, [background, scrolling, new Func<Point>(() => cursor), new Func<Point, bool>(point => { cursor = point; moves++; return true; })])!;
+            overlay.Bounds = new Rectangle(-480, -120, 480, 360); cursor = new Point(overlay.Left + 200, overlay.Top + 160); Mouse(overlay, "Move", 200, 160);
+            foreach (var (key, delta) in new[] { (Keys.Right, new Point(1, 0)), (Keys.Down, new Point(0, 1)), (Keys.Left, new Point(-1, 0)), (Keys.Up, new Point(0, -1)) }) {
+                var before = cursor; Check(Key(overlay, key), "Capture overlay does not intercept arrow keys for one-pixel cursor movement");
+                Check(cursor == new Point(before.X + delta.X, before.Y + delta.Y), "Arrow key did not move exactly one physical desktop pixel");
+                Check((Point)type.GetField("pointer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(overlay)! == new Point(cursor.X - overlay.Left, cursor.Y - overlay.Top), "Magnifier did not follow keyboard movement");
+            }
+            int beforeShortcut = moves; Key(overlay, Keys.Control | Keys.Left); Check(moves == beforeShortcut, "Modified shortcut was intercepted as a plain arrow");
+            cursor = overlay.Location; Mouse(overlay, "Move", 0, 0); Key(overlay, Keys.Left); Key(overlay, Keys.Up); Check(cursor == overlay.Location, "Arrow keys left the top/left desktop boundary");
+            cursor = new Point(overlay.Left + 479, overlay.Top + 359); Key(overlay, Keys.Right); Key(overlay, Keys.Down); Check(cursor == new Point(overlay.Left + 479, overlay.Top + 359), "Arrow keys left the bottom/right desktop boundary");
+            Mouse(overlay, "Down", 50, 50); cursor = new Point(overlay.Left + 250, overlay.Top + 270); Mouse(overlay, "Move", 250, 270);
+            Key(overlay, Keys.Right); Key(overlay, Keys.Up);
+            Check((Rectangle)type.GetField("selection", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(overlay)! == new Rectangle(50, 50, 201, 219), "Arrow keys must adjust the drag endpoint while keeping the anchor fixed");
+            Mouse(overlay, "Up", 251, 269);
+            Check(overlay.DialogResult == DialogResult.OK && (Rectangle)type.GetProperty("SelectedRegion")!.GetValue(overlay)! == new Rectangle(overlay.Left + 50, overlay.Top + 50, 201, 219), "Mouse release lost the keyboard-adjusted selection");
+        }
+    });
     public static void HoverMagnifier() => CanvasUserFlows.RunSta(() => {
         using var background = NewCanvasForm.CreateImage(480, 360, Color.Blue);
         var type = typeof(AppSettings).Assembly.GetType("CaptureWorkbench.CaptureOverlay")!;
