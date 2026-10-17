@@ -116,6 +116,17 @@ export function getRandomThinkingPrompts(count = 5) {
   return shuffled.slice(0, count);
 }
 
+// 暫停時直接乾淨無遮罩（不蓋封面圖、不彈思考卡片）的分類清單
+export const CLEAN_PAUSE_CATEGORY_IDS = new Set<string>([
+  "泉靈的語文課(一上)",
+]);
+
+export function isCleanPauseCategory(categoryIds: string[] | string | undefined | null): boolean {
+  if (!categoryIds) return false;
+  const list = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+  return list.some((id) => CLEAN_PAUSE_CATEGORY_IDS.has(id));
+}
+
 function ParentGate() {
   const navigate = useNavigate();
   const timerRef = useRef<number | null>(null);
@@ -748,6 +759,8 @@ export function WatchPage() {
   const autoRetryActiveRef = useRef(false);
   const mediaRetryAttemptRef = useRef(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasStartedPlayback, setHasStartedPlayback] = useState(false);
+  const cleanPause = useMemo(() => isCleanPauseCategory(video?.categoryIds || video?.categoryId), [video]);
   const [isEnded, setIsEnded] = useState(false);
   const [currentPos, setCurrentPos] = useState(rawInitialPos);
   const currentPosRef = useRef(rawInitialPos);
@@ -821,6 +834,7 @@ export function WatchPage() {
     setTimeUp(false);
     setPlayerError(false);
     setTotalDuration(0);
+    setHasStartedPlayback(false);
     completedLearningListenPlaysRef.current = 0;
     setCompletedLearningListenPlays(0);
   }, [videoId]);
@@ -1190,6 +1204,7 @@ export function WatchPage() {
       bufferingDiagnosticTimerRef.current = null;
     }
     if (state === "PLAYING") {
+      setHasStartedPlayback(true);
       completionHandledRef.current = false;
       if (video?.mediaUrl?.startsWith("blob:") && !navigator.onLine) rememberOfflineView(video.id, playbackMode);
       else void syncOfflineViews();
@@ -1255,11 +1270,11 @@ export function WatchPage() {
       playingStartWallRef.current = null;
       playingStartPositionRef.current = null;
       const cur = playerRef.current?.getCurrentTime() || 0;
-      if (cur > 2) {
+      if (!cleanPause && cur > 2) {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [advanceLearningListenTrack, ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
+  }, [advanceLearningListenTrack, cleanPause, ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
 
   const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
     if (modeSwitchingRef.current) return;
@@ -1582,11 +1597,14 @@ export function WatchPage() {
           {isYouTube && <div className={cn("player-edge-top", !showEdgeMasks && "player-edge-hidden")} aria-hidden="true" />}
           {isYouTube && <div className={cn("player-edge-bottom", !showEdgeMasks && "player-edge-hidden")} aria-hidden="true" />}
 
-          {/* Opaque poster: covers the entire iframe when not playing */}
+          {/* Opaque poster: covers the entire iframe when not playing (except cleanPause categories where pause shows the live frame) */}
           <div
-            className={cn("poster-overlay", (isPlaying || isEnded) && "poster-hidden")}
+            className={cn(
+              "poster-overlay",
+              (isPlaying || isEnded || (cleanPause && hasStartedPlayback)) && "poster-hidden"
+            )}
             onClick={togglePlay}
-            aria-hidden={isPlaying || isEnded}
+            aria-hidden={isPlaying || isEnded || (cleanPause && hasStartedPlayback)}
           >
             <img
               src={video.thumbnailUrl}
