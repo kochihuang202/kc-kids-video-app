@@ -15,32 +15,35 @@ public sealed class WorkbenchForm : Form
     readonly ToolStripButton shortcutButton = new("快捷鍵：註冊中");
     readonly ToolStripButton colorButton = new("顏色");
     readonly ToolStripButton mergeButton = new("合併") { Enabled = false, ToolTipText = "合併浮動圖片與標註到畫布，只保留框內內容；Ctrl＋Enter，Ctrl＋Z 可復原" };
-    readonly ToolStripComboBox width = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 45, AutoSize = false };
+    readonly ToolStripComboBox width = new() { DropDownStyle = ComboBoxStyle.DropDown, Width = 68, AutoSize = false, AccessibleName = "線寬（像素）", ToolTipText = "可選擇或輸入 0.5～100 像素，按 Enter 套用" };
     readonly ToolStripTextBox nextNumber = new() { Width = 48, AutoSize = false, Visible = false, AccessibleName = "下一個圖章編號", Text = "1" };
     readonly ToolStripTextBox currentNumber = new() { Width = 48, AutoSize = false, Visible = false, Enabled = false, AccessibleName = "目前圖章編號" };
     readonly ToolStripLabel currentNumberLabel = new("圖章現用") { Visible = false }, nextNumberLabel = new("下一個") { Visible = false };
     bool syncingStyle;
-    readonly string settingsPath = Path.Combine(DocumentStore.DefaultRoot, "settings.json");
+    readonly string settingsPath;
     AppSettings settings;
     ShortcutBinding? activeShortcut;
     CancellationTokenSource? captureCancellation;
     readonly CancellationTokenSource lifetime = new();
     readonly Queue<string> pendingFiles = new();
-    bool capturing, hotkeyRegistered;
+    bool capturing, hotkeyRegistered, exitRequested;
+    CaptureOverlay? activeSelection;
     EditTool tool = EditTool.Arrow;
     StampDefinition stamp = StampDefinition.NumberStyles[0];
     Color ink = Color.FromArgb(230, 52, 68);
     float stroke = 3;
     ImageCanvas? Canvas => tabs.SelectedTab?.Tag as ImageCanvas;
-    public WorkbenchForm(string[] args)
+    public WorkbenchForm(string[] args) : this(args, null, null) { }
+    internal WorkbenchForm(string[] args, DocumentStore? documentStore, AppSettings? initialSettings)
     {
         Text = "截圖工作台 · Capture Workbench"; Width = 1220; Height = 840; MinimumSize = new Size(850, 580);
         StartPosition = FormStartPosition.CenterScreen; BackColor = Color.FromArgb(242, 245, 250);
         Font = new Font("Microsoft JhengHei UI", 10); KeyPreview = true;
         Icon = new Icon(typeof(WorkbenchForm).Assembly.GetManifestResourceStream("CaptureWorkbench.App.ico")!);
+        settingsPath = Path.Combine(documentStore?.Root ?? DocumentStore.DefaultRoot, "settings.json");
         string? settingsError = null;
-        try { settings = AppSettings.Load(settingsPath); } catch (Exception error) { settings = new(); settingsError = error.Message; }
-        store = new DocumentStore(DocumentStore.DefaultRoot) { OutputRoot = settings.OutputFolder };
+        try { settings = initialSettings ?? AppSettings.Load(settingsPath); } catch (Exception error) { settings = new(); settingsError = error.Message; }
+        store = documentStore ?? new DocumentStore(DocumentStore.DefaultRoot) { OutputRoot = settings.OutputFolder };
         var menu = new MenuStrip();
         var file = new ToolStripMenuItem("檔案");
         file.DropDownItems.Add("新增空白圖片…  Ctrl＋N", null, (_, _) => Safe(NewImage));
@@ -51,7 +54,7 @@ public sealed class WorkbenchForm : Form
         file.DropDownItems.Add("另存圖片…", null, (_, _) => Export());
         file.DropDownItems.Add("保存  Ctrl＋S", null, (_, _) => Safe(SaveCurrent));
         file.DropDownItems.Add("關閉目前分頁", null, (_, _) => CloseTab());
-        file.DropDownItems.Add("離開", null, (_, _) => Close());
+        file.DropDownItems.Add("縮到通知區", null, (_, _) => MinimizeToTray());
         menu.Items.Add(file);
         var options = new ToolStripMenuItem("選項"); options.DropDownItems.Add("程式設定（含開機自動執行）…", null, (_, _) => ShowSettings(false)); options.DropDownItems.Add("快捷鍵…", null, (_, _) => ShowSettings(true)); menu.Items.Add(options); MainMenuStrip = menu;
         var actions = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Padding = new Padding(8, 6, 8, 6), BackColor = Color.White, AutoSize = true };
@@ -67,7 +70,7 @@ public sealed class WorkbenchForm : Form
         Action("縮到通知區", MinimizeToTray);
         var tools = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Padding = new Padding(8, 5, 8, 5), ImageScalingSize = new Size(24, 24), BackColor = Color.FromArgb(246, 248, 252) };
         var toolButtons = new List<ToolStripButton>();
-        foreach (var (name, type) in new[] { ("選取", EditTool.Select), ("箭頭", EditTool.Arrow), ("文字", EditTool.Text), ("框線", EditTool.Rectangle), ("橢圓", EditTool.Ellipse), ("直線", EditTool.Line), ("畫筆", EditTool.Pen), ("螢光標記", EditTool.Highlight), ("馬賽克", EditTool.Mosaic), ("裁切", EditTool.Crop), ("圖章", EditTool.Stamp) }) {
+        foreach (var (name, type) in new[] { ("選取", EditTool.Select), ("箭頭", EditTool.Arrow), ("文字", EditTool.Text), ("框線", EditTool.Rectangle), ("圓角框", EditTool.RoundedRectangle), ("橢圓", EditTool.Ellipse), ("直線", EditTool.Line), ("畫筆", EditTool.Pen), ("螢光標記", EditTool.Highlight), ("馬賽克", EditTool.Mosaic), ("裁切", EditTool.Crop), ("圖章", EditTool.Stamp) }) {
             var button = new ToolStripButton(name, ToolbarArtwork.Tool(type)) { CheckOnClick = false, Checked = type == tool, TextImageRelation = TextImageRelation.ImageAboveText, Padding = new Padding(4, 2, 4, 2), ToolTipText = name };
             button.Click += (_, _) => { if (type == EditTool.Stamp) { using var picker = new StampPicker(ink, stamp, Canvas?.NextStampNumber ?? 1); if (picker.ShowDialog(this) != DialogResult.OK || picker.SelectedStamp == null) return; stamp = picker.SelectedStamp; if (Canvas != null) Canvas.NextStampNumber = picker.NextNumber; } tool = type; foreach (var b in toolButtons) b.Checked = b == button; UpdateTools(); Canvas?.Focus(); }; toolButtons.Add(button); tools.Items.Add(button);
         }
@@ -79,7 +82,10 @@ public sealed class WorkbenchForm : Form
             var swatch = new ToolStripButton("使用 " + ColorTranslator.ToHtml(color), ToolbarArtwork.Swatch(color), (_, _) => SetInk(color)) { DisplayStyle = ToolStripItemDisplayStyle.Image, AutoToolTip = true }; tools.Items.Add(swatch);
         }
         tools.Items.Add(new ToolStripLabel("線寬"));
-        width.Items.AddRange(["2", "3", "5", "8", "12"]); width.SelectedIndex = 1; width.SelectedIndexChanged += (_, _) => { if (syncingStyle || !float.TryParse(width.Text, out var value)) return; stroke = value; UpdateTools(); Canvas?.SetSelectedStyle(ink, stroke); }; tools.Items.Add(width);
+        width.Items.AddRange(["2", "3", "5", "8", "12"]); width.SelectedIndex = 1;
+        width.ComboBox.SelectionChangeCommitted += (_, _) => ApplyStrokeWidth();
+        width.KeyDown += (_, e) => { if (e.KeyCode != Keys.Enter) return; e.SuppressKeyPress = true; if (ApplyStrokeWidth()) Canvas?.Focus(); };
+        width.Leave += (_, _) => ApplyStrokeWidth(); tools.Items.Add(width);
         var view = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Padding = new Padding(8, 3, 8, 3) };
         void View(string title, Action action) => view.Items.Add(new ToolStripButton(title, null, (_, _) => Safe(action)));
         View("復原", () => { Canvas?.Document.Undo(); Canvas?.RefreshDocument(); SetStatus(SaveStatus("已復原")); });
@@ -108,7 +114,7 @@ public sealed class WorkbenchForm : Form
         var trayMenu = new ContextMenuStrip(); trayMenu.Items.Add("開啟編輯器", null, (_, _) => RestoreFromTray());
         trayMenu.Items.Add("開始擷取", null, async (_, _) => await StartCapture(false));
         trayMenu.Items.Add("停止捲動並保存", null, (_, _) => captureCancellation?.Cancel());
-        trayMenu.Items.Add("離開", null, (_, _) => { if (capturing) captureCancellation?.Cancel(); else Close(); });
+        trayMenu.Items.Add("離開", null, (_, _) => RequestExit());
         tray = new NotifyIcon { Icon = Icon, Text = "截圖工作台", Visible = true, ContextMenuStrip = trayMenu };
         tray.DoubleClick += (_, _) => RestoreFromTray();
         Resize += (_, _) => { if (!capturing && WindowState == FormWindowState.Minimized) MinimizeToTray(); };
@@ -120,11 +126,26 @@ public sealed class WorkbenchForm : Form
             if (args.Contains("--tray")) MinimizeToTray();
         };
         FormClosing += (_, e) => {
+            if (!exitRequested && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; MinimizeToTray(); return; }
             if (capturing) { captureCancellation?.Cancel(); e.Cancel = true; return; }
-            try { ApplyNumberFields(); } catch (Exception error) { e.Cancel = true; MessageBox.Show(this, error.Message, "圖章修改未完成"); return; }
-            foreach (TabPage page in tabs.TabPages) { var doc = ((ImageCanvas)page.Tag!).Document; try { doc.CloseAndSave(); } catch (Exception error) { e.Cancel = true; tabs.SelectedTab = page; RestoreFromTray(); MessageBox.Show(this, "尚未保存成功，文件仍保留在分頁中：\n" + error.Message, "保存失敗"); return; } }
+            ApplyStrokeWidth();
+            try { ApplyNumberFields(); } catch (Exception error) { e.Cancel = true; exitRequested = false; MessageBox.Show(this, error.Message, "圖章修改未完成"); return; }
+            foreach (TabPage page in tabs.TabPages) { var doc = ((ImageCanvas)page.Tag!).Document; try { doc.CloseAndSave(); } catch (Exception error) { e.Cancel = true; exitRequested = false; tabs.SelectedTab = page; RestoreFromTray(); MessageBox.Show(this, "尚未保存成功，文件仍保留在分頁中：\n" + error.Message, "保存失敗"); return; } }
         };
         FormClosed += (_, _) => { lifetime.Cancel(); if (hotkeyRegistered) Native.UnregisterHotKey(Handle, 42); tray.Dispose(); foreach (TabPage page in tabs.TabPages) ((ImageCanvas)page.Tag!).Document.Dispose(); };
+    }
+    protected override void Dispose(bool disposing) { if (disposing) { lifetime.Cancel(); tray?.Dispose(); } base.Dispose(disposing); }
+    void SyncStrokeWidth() { bool previous = syncingStyle; syncingStyle = true; try { width.Text = stroke.ToString(System.Globalization.CultureInfo.InvariantCulture); } finally { syncingStyle = previous; } }
+    bool ApplyStrokeWidth() {
+        if (syncingStyle) return true;
+        if ((!float.TryParse(width.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.CurrentCulture, out float value) && !float.TryParse(width.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value)) || !float.IsFinite(value) || value < .5f || value > 100) { SyncStrokeWidth(); SetStatus("線寬請輸入 0.5～100 像素"); return false; }
+        if (stroke == value) { SyncStrokeWidth(); return true; }
+        stroke = value; SyncStrokeWidth(); UpdateTools(); Canvas?.SetSelectedStyle(ink, stroke); return true;
+    }
+    void RequestExit() {
+        exitRequested = true;
+        if (capturing) { captureCancellation?.Cancel(); if (activeSelection is { IsDisposed: false }) { activeSelection.DialogResult = DialogResult.Cancel; activeSelection.Close(); } return; }
+        Close();
     }
     void RegisterShortcut()
     {
@@ -167,7 +188,7 @@ public sealed class WorkbenchForm : Form
         UpdateNumberFields();
     }
     string SaveStatus(string prefix = "") => (prefix.Length > 0 ? prefix + " · " : "") + (Canvas?.Document.Pending == true ? "尚未保存 · Ctrl＋S 保存" : "已保存");
-    void SaveCurrent() { if (Canvas == null) return; ApplyNumberFields(); Canvas.Document.SavePending(); SetStatus("已保存"); }
+    void SaveCurrent() { if (Canvas == null || !ApplyStrokeWidth()) return; ApplyNumberFields(); Canvas.Document.SavePending(); SetStatus("已保存"); }
     void MergeObjects() { ApplyNumberFields(); Canvas?.Merge(); }
     // Hide already removes the taskbar button. Toggling ShowInTaskbar here
     // recreates HWND and silently loses its registered global hotkey.
@@ -183,7 +204,7 @@ public sealed class WorkbenchForm : Form
             if (canvas.SelectedMark is not { } mark) return;
             ink = Color.FromArgb(mark.Argb); stroke = mark.Stroke;
             var old = colorButton.Image; colorButton.Image = ToolbarArtwork.Swatch(ink); old?.Dispose();
-            syncingStyle = true; try { width.SelectedItem = stroke.ToString(System.Globalization.CultureInfo.InvariantCulture); } finally { syncingStyle = false; }
+            SyncStrokeWidth();
             UpdateTools();
         };
         var page = new TabPage(doc.State.Created.ToString("HH:mm:ss")) { Tag = canvas, ToolTipText = doc.OutputPath, AccessibleName = doc.State.Created.ToString("HH:mm:ss") + (doc.Pending ? " 未保存" : " 已保存") };
@@ -197,7 +218,9 @@ public sealed class WorkbenchForm : Form
             await Task.Delay(220);
             using var background = Native.Capture(SystemInformation.VirtualScreen);
             using var overlay = new CaptureOverlay(background, scroll);
+            activeSelection = overlay;
             if (overlay.ShowDialog() != DialogResult.OK) return;
+            activeSelection = null;
             if (!overlay.IsScrolling) {
                 var v = SystemInformation.VirtualScreen; var r = overlay.SelectedRegion;
                 using var image = background.Clone(new Rectangle(r.Left - v.Left, r.Top - v.Top, r.Width, r.Height), PixelFormat.Format32bppArgb);
@@ -213,7 +236,7 @@ public sealed class WorkbenchForm : Form
                 if (result.NeedsReview) MessageBox.Show(result.Message + "\n\n恢復資料：" + result.RecoveryPath, "請檢查擷取結果", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         } catch (Exception error) { MessageBox.Show(error.Message, "擷取未完成", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-        finally { captureCancellation?.Dispose(); captureCancellation = null; tray.Text = "截圖工作台"; capturing = false; DrainOpenRequests(); RestoreFromTray(); }
+        finally { activeSelection = null; captureCancellation?.Dispose(); captureCancellation = null; tray.Text = "截圖工作台"; capturing = false; if (exitRequested) Close(); else { DrainOpenRequests(); RestoreFromTray(); } }
     }
     void Safe(Action action) { try { action(); } catch (Exception error) { Canvas?.RefreshDocument(); SetStatus("操作未完成：" + error.Message); MessageBox.Show(this, error.Message, "操作未完成", MessageBoxButtons.OK, MessageBoxIcon.Warning); } }
     async Task ListenForOpenRequests()
@@ -276,7 +299,7 @@ public sealed class WorkbenchForm : Form
     void ResizeCanvasSize() { if (Canvas == null) return; using var dialog = new CanvasSizeForm(Canvas.Document.Image.Size, Canvas.CanvasBackground); if (dialog.ShowDialog(this) != DialogResult.OK) return; Canvas.ResizeCanvas(dialog.CanvasSize.Width, dialog.CanvasSize.Height, dialog.ExpansionBackground); }
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if ((currentNumber.Focused || nextNumber.Focused) && keyData is (Keys.Control | Keys.A) or (Keys.Control | Keys.C) or (Keys.Control | Keys.V) or (Keys.Control | Keys.Z) or (Keys.Control | Keys.Y)) return base.ProcessCmdKey(ref msg, keyData);
+        if ((currentNumber.Focused || nextNumber.Focused || width.ComboBox.ContainsFocus) && keyData is (Keys.Control | Keys.A) or (Keys.Control | Keys.C) or (Keys.Control | Keys.V) or (Keys.Control | Keys.Z) or (Keys.Control | Keys.Y)) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData) {
             case Keys.Control | Keys.A: Canvas?.SelectAll(); return true;
             case Keys.Control | Keys.Enter: Safe(MergeObjects); return true;

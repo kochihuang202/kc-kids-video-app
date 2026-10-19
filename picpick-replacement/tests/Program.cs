@@ -244,5 +244,9 @@ Test("capture overlay shows the original pixels in a magnifier before dragging",
 Test("magnifier preserves exact center pixels and stays inside monitor edges", OverlayUserFlows.PixelsAndEdges);
 Test("magnifier keeps reverse selection, scroll mode, release bounds and Esc cancellation", OverlayUserFlows.SelectAndCancel);
 Test("capture arrow keys move the cursor and drag endpoint exactly one pixel", OverlayUserFlows.ArrowKeys);
+Test("rounded frames retain editable geometry, custom stroke and persisted tool identities", EditorPolishFlows.RoundedFrames);
+Test("mosaic uses finer averaged cells and preserves selection boundaries and undo", EditorPolishFlows.FineMosaic);
+Test("window X and minimize retain tabs in tray until explicit exit saves them", EditorPolishFlows.TrayLifecycle);
+Test("line width accepts typed decimals and rejects invalid values without edits", EditorPolishFlows.ManualWidth);
 Console.WriteLine($"{testCount - failures.Count}/{testCount} checks passed");
 return failures.Count == 0 ? 0 : 1;

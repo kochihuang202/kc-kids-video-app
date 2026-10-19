@@ -39,12 +39,12 @@ internal sealed class SettingsForm : Form
         var outputPage = new TabPage("自動保存"); var shortcutPage = new TabPage("快捷鍵"); var generalPage = new TabPage("一般"); pages.TabPages.AddRange([outputPage, shortcutPage, generalPage]);
         var startup = new CheckBox { Text = "登入 Windows 時自動執行", Checked = current.StartWithWindows, Left = 22, Top = 30, Width = 420, AccessibleName = "開機自動執行" };
         var copyCapture = new CheckBox { Text = "截圖後自動複製到剪貼簿", Checked = current.CopyCaptureToClipboard, Left = 22, Top = 76, Width = 420, AccessibleName = "截圖後自動複製到剪貼簿" };
-        generalPage.Controls.AddRange([startup, copyCapture, new Label { Text = "一般與捲動截圖完成後皆可直接貼上，編輯時不自動複製。\n\n自動啟動時收在右下角通知區，擷取快捷鍵仍可使用。\n\n關閉分頁或程式時自動保存；下次啟動不重開舊分頁。", Left = 22, Top = 122, Width = 540, Height = 144, ForeColor = Color.FromArgb(78, 92, 112) }]);
+        generalPage.Controls.AddRange([startup, copyCapture, new Label { Text = "一般與捲動截圖完成後皆可直接貼上，編輯時不自動複製。\n\nX／最小化收到通知區；右鍵「離開」才保存並結束。\n\n開機自動執行時收到通知區；下次啟動不重開舊分頁。", Left = 22, Top = 122, Width = 540, Height = 144, ForeColor = Color.FromArgb(78, 92, 112) }]);
         var folderLabel = new Label { Text = "輸出資料夾", Left = 22, Top = 24, AutoSize = true };
         var folder = new TextBox { Text = current.OutputFolder, Left = 22, Top = 56, Width = 450, AccessibleName = "輸出資料夾路徑" };
         var browse = new Button { Text = "瀏覽…", Left = 480, Top = 54, Width = 92, Height = 32 };
         browse.Click += (_, _) => { using var dialog = new FolderBrowserDialog { SelectedPath = folder.Text, Description = "選擇截圖自動保存的位置", UseDescriptionForTitle = true }; if (dialog.ShowDialog(this) == DialogResult.OK) folder.Text = dialog.SelectedPath; };
-        var description = new Label { Text = "截圖完成時自動保存為 PNG，檔名使用當下日期時間。\n編輯時可按 Ctrl＋S 保存，關閉時也會自動保存。\n\n新圖片使用這個資料夾；已開啟圖片維持原保存位置。", Left = 22, Top = 112, Width = 548, Height = 130, ForeColor = Color.FromArgb(78, 92, 112) };
+        var description = new Label { Text = "截圖完成時自動保存為 PNG，檔名使用當下日期時間。\n編輯時按 Ctrl＋S 保存；關閉分頁或通知區「離開」也會保存。\n\n新圖片使用這個資料夾；已開啟圖片維持原保存位置。", Left = 22, Top = 112, Width = 548, Height = 130, ForeColor = Color.FromArgb(78, 92, 112) };
         outputPage.Controls.AddRange([folderLabel, folder, browse, description]);
         var shortcut = current.Shortcut;
         var prompt = new Label { Text = "擷取工具列（可切換一般／捲動擷取）", Left = 22, Top = 24, AutoSize = true };

@@ -17,6 +17,7 @@ internal static class ToolbarArtwork
             case EditTool.Arrow: using (var cap = new AdjustableArrowCap(4, 5, true)) { red.CustomEndCap = cap; g.DrawLine(red, 4, 20, 19, 5); } break;
             case EditTool.Line: g.DrawLine(red, 4, 20, 20, 4); break;
             case EditTool.Rectangle: g.DrawRectangle(blue, 3, 5, 18, 14); break;
+            case EditTool.RoundedRectangle: using (var path = AnnotationRenderer.RoundedRectanglePath(new RectangleF(3, 5, 18, 14))) g.DrawPath(blue, path); break;
             case EditTool.Ellipse: g.DrawEllipse(blue, 3, 4, 18, 16); break;
             case EditTool.Text: using (var font = new Font("Segoe UI", 18, FontStyle.Bold, GraphicsUnit.Pixel)) g.DrawString("A", font, Brushes.RoyalBlue, 3, 0); break;
             case EditTool.Pen: g.DrawCurve(blue, [new Point(3, 19), new(8, 8), new(12, 17), new(20, 4)]); break;

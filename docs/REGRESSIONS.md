@@ -430,6 +430,13 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-062 — Titlebar close exits instead of retaining the editor in the notification area
+
+- User-approved behavior change, 2026-10-19: Window X, Alt+F4 and minimize hide to the tray, retaining the current tabs and pending edits. Only the explicit tray Exit action ends the session and saves/forgets tabs. This supersedes REG-048's earlier interpretation of titlebar close; explicit document close and final-save tests remain unchanged.
+- Fix: Separate hiding from an explicit exit request, cancel UserClosing unless exit was requested, and retain the existing HWND/hotkey. Exit during capture requests cancellation and completes after capture cleanup. Failed final saving retains the window. The related editor request adds a separate rounded-frame tool, typed decimal line widths with validation, and 6px averaged mosaic cells instead of 12px single-point sampling.
+- Compatibility: Append the rounded-frame enum value, preserving numeric identities in existing document histories. Keep independent editable marks, custom stroke persistence, undo and selected-region mosaic boundaries.
+- Tests: `EditorPolishFlows.TrayLifecycle`, `ManualWidth`, `RoundedFrames`, `FineMosaic` exercise actual form-close and tray-exit handlers, pending disk state, preset/manual input and rejection, rounded-corner pixels/direct dragging, saved geometry, fine-cell means/edges and undo. The existing REG-048/049/050 editor, hotkey, paste and close flows remain required. Desktop evidence is recorded in `picpick-replacement/tests/UI-VERIFICATION.md`.
+
 ## REG-061 — Arrow keys do not nudge the capture cursor by one pixel
 
 - Requested behavior, 2026-10-17: While the capture magnifier is visible, arrow keys move the actual cursor by one screen pixel. During a mouse drag, nudge the endpoint while keeping the initial anchor fixed; preserve Esc and modified shortcuts.

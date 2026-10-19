@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace CaptureWorkbench;
 
-public enum EditTool { Select, Arrow, Text, Rectangle, Ellipse, Line, Pen, Highlight, Mosaic, Crop, Stamp, Image }
+public enum EditTool { Select, Arrow, Text, Rectangle, Ellipse, Line, Pen, Highlight, Mosaic, Crop, Stamp, Image, RoundedRectangle }
 
 public sealed class ImageCanvas : ScrollableControl
 {
@@ -158,9 +158,7 @@ public sealed class ImageCanvas : ScrollableControl
             Save(() => Document.CommitDocument(crop, marks)); return;
         }
         if (Tool == EditTool.Mosaic) {
-            ApplyEdit(bitmap => { using var g = Graphics.FromImage(bitmap); var r = Rect; const int block = 12;
-                for (int y = r.Top; y < r.Bottom; y += block) for (int x = r.Left; x < r.Right; x += block) { using var brush = new SolidBrush(Document.BaseImage.GetPixel(Math.Min(x + block / 2, r.Right - 1), Math.Min(y + block / 2, r.Bottom - 1))); g.FillRectangle(brush, x, y, Math.Min(block, r.Right - x), Math.Min(block, r.Bottom - y)); }
-            }); return;
+            ApplyEdit(bitmap => MosaicFilter.Apply(bitmap, Rect)); return;
         }
         if (Tool == EditTool.Pen) points.Add(new(current.X, current.Y));
         var added = NewMark(); selectedId = added.Id; Save(() => Document.CommitMarks(Document.Marks.Append(added)));

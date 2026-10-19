@@ -43,6 +43,14 @@ public sealed record ImageMark
 
 public static class AnnotationRenderer
 {
+    internal static GraphicsPath RoundedRectanglePath(RectangleF rect) {
+        var path = new GraphicsPath(); float diameter = Math.Min(24, Math.Min(rect.Width, rect.Height) * .24f);
+        if (diameter <= 0) return path;
+        path.AddArc(rect.Left, rect.Top, diameter, diameter, 180, 90);
+        path.AddArc(rect.Right - diameter, rect.Top, diameter, diameter, 270, 90);
+        path.AddArc(rect.Right - diameter, rect.Bottom - diameter, diameter, diameter, 0, 90);
+        path.AddArc(rect.Left, rect.Bottom - diameter, diameter, diameter, 90, 90); path.CloseFigure(); return path;
+    }
     public static Bitmap Render(Bitmap background, IEnumerable<ImageMark> marks) { var result = new Bitmap(background); using var g = Graphics.FromImage(result); foreach (var mark in marks) Draw(g, mark); return result; }
     public static void Draw(Graphics g, ImageMark mark)
     {
@@ -56,6 +64,7 @@ public static class AnnotationRenderer
             case EditTool.Arrow: using (var cap = new AdjustableArrowCap(5, 6, true)) { pen.CustomEndCap = cap; g.DrawLine(pen, start, end); } break;
             case EditTool.Line: g.DrawLine(pen, start, end); break;
             case EditTool.Rectangle: if (rect.Width > 0 && rect.Height > 0) g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height); break;
+            case EditTool.RoundedRectangle: if (rect.Width > 0 && rect.Height > 0) { using var path = RoundedRectanglePath(rect); g.DrawPath(pen, path); } break;
             case EditTool.Ellipse: if (rect.Width > 0 && rect.Height > 0) g.DrawEllipse(pen, rect); break;
             case EditTool.Pen: if (mark.Points.Count > 1) g.DrawLines(pen, mark.Points.Select(p => new PointF(p.X, p.Y)).ToArray()); break;
             case EditTool.Highlight: using (var brush = new SolidBrush(Color.FromArgb(80, color))) g.FillRectangle(brush, rect); break;
