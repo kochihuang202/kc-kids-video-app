@@ -12,6 +12,7 @@ export interface Category {
   seriesType: SeriesType;
   unlockLimit?: number | null;
   listenRepeatCount?: number | null;
+  cleanPause?: boolean;
 }
 
 export type MediaSource = "youtube" | "self_hosted";
@@ -45,6 +46,7 @@ export interface VideoFixture extends MediaDescriptor {
   isFavorite?: boolean;
   seriesType?: SeriesType;
   listenRepeatCount?: number | null;
+  cleanPause?: boolean;
   lastPlayedAt?: string | null;
 }
 

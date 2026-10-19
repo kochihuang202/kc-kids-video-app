@@ -967,6 +967,36 @@ svg { flex: 0 0 auto; }
   padding: 4px 6px;
   text-align: center;
 }
+.category-clean-pause-setting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.category-clean-pause-setting:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.category-clean-pause-setting input[type="checkbox"],
+.inline-create-form .category-clean-pause-setting input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
 .admin-list-row.is-dragging { z-index: 20; box-shadow: 0 18px 45px rgba(48, 65, 56, 0.18); }
 .admin-list-row.is-archived { opacity: 0.7; background: #f0eee7; }
 .drag-handle, .row-actions button:not(.ui-button), .video-admin-actions > button:not(.ui-button) {

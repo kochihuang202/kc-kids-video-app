@@ -161,7 +161,7 @@ export async function getParentCategories(request: Request, env: AppEnv) {
   await verifyParent(request, env);
   const result = await env.DB.prepare(`
     SELECT c.id, c.name, c.icon, c.image_url, c.tone, c.sort_order, c.is_active,
-      c.daily_limit_seconds, c.series_type, c.unlock_limit, c.listen_repeat_count, c.created_at, c.updated_at, c.archived_at,
+      c.daily_limit_seconds, c.series_type, c.unlock_limit, c.listen_repeat_count, c.clean_pause, c.created_at, c.updated_at, c.archived_at,
       (SELECT COUNT(*) FROM category_videos cv JOIN videos v ON v.id = cv.video_id WHERE cv.category_id = c.id) AS video_count
     FROM categories c
     ORDER BY sort_order, id
@@ -173,6 +173,7 @@ export async function getParentCategories(request: Request, env: AppEnv) {
     seriesType: row.series_type,
     unlockLimit: row.unlock_limit !== undefined && row.unlock_limit !== null ? row.unlock_limit : (row.series_type === "learning" ? 5 : null),
     listenRepeatCount: row.series_type === "learning" ? (row.listen_repeat_count ?? 5) : null,
+    cleanPause: row.clean_pause === 1,
     videoCount: row.video_count || 0,
     createdAt: row.created_at, updatedAt: row.updated_at, archivedAt: row.archived_at,
   })));
@@ -193,14 +194,15 @@ export async function createCategory(request: Request, env: AppEnv) {
   const listenRepeatCount = body.listenRepeatCount !== undefined && body.listenRepeatCount !== null
     ? integer(body.listenRepeatCount, "純聽重播次數", 1, 20)
     : 5;
+  const cleanPause = body.cleanPause !== undefined ? (boolean(body.cleanPause, "暫停無遮罩") ? 1 : 0) : 0;
   const id = text(body.id || name.toLowerCase().replace(/\s+/g, "-"), "分類識別碼", 1, 40);
   const nextOrder = (await env.DB.prepare("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM categories").first<{ next_order: number }>())?.next_order || 1;
   const now = new Date().toISOString();
   await env.DB.prepare(`
-    INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, unlock_limit, listen_repeat_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)
-  `).bind(id, name, icon, imageUrl, tone, nextOrder, dailyLimitSeconds, seriesType, unlockLimit, listenRepeatCount, now, now).run();
-  return json({ id, name, icon, imageUrl, tone, sortOrder: nextOrder, isActive: true, dailyLimitSeconds, seriesType, unlockLimit, listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null, createdAt: now, updatedAt: now, archivedAt: null }, { status: 201 });
+    INSERT INTO categories (id, name, icon, image_url, tone, sort_order, is_active, daily_limit_seconds, series_type, unlock_limit, listen_repeat_count, clean_pause, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(id, name, icon, imageUrl, tone, nextOrder, dailyLimitSeconds, seriesType, unlockLimit, listenRepeatCount, cleanPause, now, now).run();
+  return json({ id, name, icon, imageUrl, tone, sortOrder: nextOrder, isActive: true, dailyLimitSeconds, seriesType, unlockLimit, listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null, cleanPause: cleanPause === 1, createdAt: now, updatedAt: now, archivedAt: null }, { status: 201 });
 }
 
 export async function updateCategory(request: Request, env: AppEnv, id: string) {
@@ -225,6 +227,9 @@ export async function updateCategory(request: Request, env: AppEnv, id: string) 
   const listenRepeatCount = body.listenRepeatCount !== undefined && body.listenRepeatCount !== null
     ? integer(body.listenRepeatCount, "純聽重播次數", 1, 20)
     : (current.listen_repeat_count ?? 5);
+  const cleanPause = body.cleanPause !== undefined
+    ? (boolean(body.cleanPause, "暫停無遮罩") ? 1 : 0)
+    : (current.clean_pause ?? 0);
   if (seriesType !== current.series_type) {
     const conflicting = await env.DB.prepare(`
       SELECT 1 AS found
@@ -238,9 +243,9 @@ export async function updateCategory(request: Request, env: AppEnv, id: string) 
   }
   const now = new Date().toISOString();
   await env.DB.prepare(`
-    UPDATE categories SET name = ?, icon = ?, image_url = ?, tone = ?, is_active = ?, daily_limit_seconds = ?, series_type = ?, unlock_limit = ?, listen_repeat_count = ?, updated_at = ?
+    UPDATE categories SET name = ?, icon = ?, image_url = ?, tone = ?, is_active = ?, daily_limit_seconds = ?, series_type = ?, unlock_limit = ?, listen_repeat_count = ?, clean_pause = ?, updated_at = ?
     WHERE id = ?
-  `).bind(name, icon, imageUrl, tone, isActive, dailyLimitSeconds, seriesType, unlockLimit, listenRepeatCount, now, id).run();
+  `).bind(name, icon, imageUrl, tone, isActive, dailyLimitSeconds, seriesType, unlockLimit, listenRepeatCount, cleanPause, now, id).run();
   return json({ ok: true });
 }
 

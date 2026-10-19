@@ -19,6 +19,7 @@ interface CategoryRow {
   series_type: "learning" | "leisure";
   unlock_limit?: number | null;
   listen_repeat_count?: number | null;
+  clean_pause?: number | null;
 }
 
 interface VideoRow {
@@ -41,6 +42,7 @@ interface VideoRow {
   is_learned?: number | null;
   learned_at?: string | null;
   is_favorite?: number | null;
+  clean_pause?: number | null;
 }
 
 const categoryDto = (row: CategoryRow) => ({
@@ -54,6 +56,7 @@ const categoryDto = (row: CategoryRow) => ({
   seriesType: row.series_type,
   unlockLimit: row.unlock_limit !== undefined && row.unlock_limit !== null ? row.unlock_limit : (row.series_type === "learning" ? 5 : null),
   listenRepeatCount: row.series_type === "learning" ? (row.listen_repeat_count ?? 5) : null,
+  cleanPause: row.clean_pause === 1,
 });
 
 const videoDto = (
@@ -61,7 +64,7 @@ const videoDto = (
   row: VideoRow,
   categoryIds: string[] = [],
   threshold = 0.9,
-  options: { isLearned?: boolean; learnedAt?: string | null; isSelectable?: boolean; isFavorite?: boolean; seriesType?: "learning" | "leisure"; listenRepeatCount?: number | null } = {},
+  options: { isLearned?: boolean; learnedAt?: string | null; isSelectable?: boolean; isFavorite?: boolean; seriesType?: "learning" | "leisure"; listenRepeatCount?: number | null; cleanPause?: boolean } = {},
 ) => {
   const position = env.RECORDING_ENABLED === "false" ? 0 : row.last_position_seconds || 0;
   const isWatched = playbackCompletionRatio({
@@ -89,6 +92,7 @@ const videoDto = (
     isFavorite: options.isFavorite ?? false,
     seriesType: options.seriesType,
     listenRepeatCount: options.listenRepeatCount ?? null,
+    cleanPause: options.cleanPause ?? false,
   };
 };
 
@@ -105,7 +109,7 @@ async function getCompletionThreshold(env: AppEnv): Promise<number> {
 
 async function getVideoSeriesState(env: AppEnv, videoId: string, childId?: string | null) {
   const categories = await env.DB.prepare(`
-    SELECT c.id, c.series_type, cv.sort_order, c.unlock_limit, c.listen_repeat_count,
+    SELECT c.id, c.series_type, cv.sort_order, c.unlock_limit, c.listen_repeat_count, c.clean_pause,
       COALESCE(
         (SELECT is_learned FROM child_video_learned cls WHERE cls.video_id = cv.video_id AND cls.child_id = ?),
         CASE WHEN ? IS NULL THEN (SELECT is_learned FROM video_learned_state ls WHERE ls.video_id = cv.video_id) ELSE 0 END
@@ -122,7 +126,7 @@ async function getVideoSeriesState(env: AppEnv, videoId: string, childId?: strin
     JOIN categories c ON c.id = cv.category_id
     WHERE cv.video_id = ? AND c.is_active = 1 AND c.archived_at IS NULL
     ORDER BY c.sort_order, c.id
-  `).bind(childId || null, childId || null, childId || null, childId || null, childId || null, childId || null, childId || null, videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; unlock_limit?: number | null; listen_repeat_count?: number | null; is_learned: number; learned_at: string | null; is_favorite: number }>();
+  `).bind(childId || null, childId || null, childId || null, childId || null, childId || null, childId || null, childId || null, videoId).all<{ id: string; series_type: "learning" | "leisure"; sort_order: number; unlock_limit?: number | null; listen_repeat_count?: number | null; clean_pause?: number | null; is_learned: number; learned_at: string | null; is_favorite: number }>();
   const rows = categories.results || [];
   if (!rows.length) throw new HttpError("這部影片目前沒有可用分類。", 404, "VIDEO_NOT_FOUND");
   const types = new Set(rows.map((row) => row.series_type));
@@ -168,12 +172,13 @@ async function getVideoSeriesState(env: AppEnv, videoId: string, childId?: strin
     listenRepeatCount: rows.find((row) => !UNLIMITED_LEARNING_CATEGORY_IDS.has(row.id))?.listen_repeat_count
       ?? rows[0].listen_repeat_count
       ?? 5,
+    cleanPause: rows.some((row) => row.clean_pause === 1),
   };
 }
 
 export async function getPublicCategories(env: AppEnv) {
   const result = await env.DB.prepare(`
-    SELECT id, name, icon, image_url, tone, sort_order, daily_limit_seconds, series_type, unlock_limit, listen_repeat_count
+    SELECT id, name, icon, image_url, tone, sort_order, daily_limit_seconds, series_type, unlock_limit, listen_repeat_count, clean_pause
     FROM categories
     WHERE is_active = 1 AND archived_at IS NULL
     ORDER BY sort_order, id
@@ -183,8 +188,8 @@ export async function getPublicCategories(env: AppEnv) {
 
 export async function getPublicCategoryVideos(request: Request, env: AppEnv, categoryId: string) {
   const category = await env.DB.prepare(
-    "SELECT id, series_type, unlock_limit, listen_repeat_count FROM categories WHERE id = ? AND is_active = 1 AND archived_at IS NULL",
-  ).bind(categoryId).first<{ id: string; series_type: "learning" | "leisure"; unlock_limit?: number | null; listen_repeat_count?: number | null }>();
+    "SELECT id, series_type, unlock_limit, listen_repeat_count, clean_pause FROM categories WHERE id = ? AND is_active = 1 AND archived_at IS NULL",
+  ).bind(categoryId).first<{ id: string; series_type: "learning" | "leisure"; unlock_limit?: number | null; listen_repeat_count?: number | null; clean_pause?: number | null }>();
   if (!category) throw new HttpError("找不到這個分類。", 404, "CATEGORY_NOT_FOUND");
 
   const device = await getChildDevice(request, env, false);
@@ -223,6 +228,7 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
         ${learnedColumn} AS is_learned,
         ${learnedAtColumn} AS learned_at,
         1 AS is_favorite,
+        COALESCE((SELECT MAX(c_sub.clean_pause) FROM category_videos cv_sub JOIN categories c_sub ON c_sub.id = cv_sub.category_id WHERE cv_sub.video_id = v.id AND c_sub.is_active = 1 AND c_sub.archived_at IS NULL), 0) AS clean_pause,
         ${progressColumn} AS last_position_seconds,
         ${lastPlayedAtColumn} AS last_played_at
       FROM videos v
@@ -290,6 +296,7 @@ export async function getPublicCategoryVideos(request: Request, env: AppEnv, cat
       isFavorite: row.is_favorite === 1,
       seriesType: category.series_type,
       listenRepeatCount: category.listen_repeat_count ?? 5,
+      cleanPause: category.id === FAVORITES_CATEGORY_ID ? row.clean_pause === 1 : category.clean_pause === 1,
     });
   }));
 }
@@ -338,6 +345,7 @@ export async function getPublicVideo(request: Request, env: AppEnv, videoId: str
     isFavorite: series.isFavorite,
     seriesType: series.seriesType,
     listenRepeatCount: series.listenRepeatCount,
+    cleanPause: series.cleanPause,
   }));
 }
 

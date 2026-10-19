@@ -1954,7 +1954,7 @@ function SortableCategoryRow({
   onChange, onMove, onArchive, onRestore, onDelete,
 }: {
   category: AdminCategory; index: number; count: number;
-  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount">>) => void;
+  onChange: (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount" | "cleanPause">>) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onArchive: (id: string) => void;
   onRestore: (id: string) => void;
@@ -1966,12 +1966,14 @@ function SortableCategoryRow({
   const [seriesType, setSeriesType] = useState(category.seriesType);
   const [unlockLimit, setUnlockLimit] = useState<number>(category.unlockLimit ?? 5);
   const [listenRepeatCount, setListenRepeatCount] = useState<number>(category.listenRepeatCount ?? 5);
+  const [cleanPause, setCleanPause] = useState(Boolean(category.cleanPause));
   useEffect(() => {
     setName(category.name);
     setIcon(category.icon);
     setSeriesType(category.seriesType);
     setUnlockLimit(category.unlockLimit ?? 5);
     setListenRepeatCount(category.listenRepeatCount ?? 5);
+    setCleanPause(Boolean(category.cleanPause));
   }, [category]);
 
   const handleSave = () => {
@@ -1981,6 +1983,7 @@ function SortableCategoryRow({
       seriesType,
       unlockLimit: seriesType === "learning" ? unlockLimit : null,
       listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null,
+      cleanPause,
     });
   };
 
@@ -2015,6 +2018,15 @@ function SortableCategoryRow({
             </label>
           </>
         )}
+        <label className="category-clean-pause-setting" title="影片暫停時直接顯示清楚畫面，不遮蓋封面海報、不彈出問題卡片">
+          <input
+            aria-label="暫停無遮罩"
+            type="checkbox"
+            checked={cleanPause}
+            onChange={(event) => setCleanPause(event.target.checked)}
+          />
+          📺 暫停無遮罩
+        </label>
       </div>
       <span className={`status-chip ${category.archivedAt ? "archived" : category.isActive ? "active" : "hidden"}`}>
         {category.archivedAt ? "Archived" : category.isActive ? "Active" : "Hidden"}
@@ -2051,6 +2063,7 @@ function CategoriesPage() {
   const [seriesType, setSeriesType] = useState<"learning" | "leisure">("leisure");
   const [unlockLimit, setUnlockLimit] = useState<number>(5);
   const [listenRepeatCount, setListenRepeatCount] = useState<number>(5);
+  const [cleanPause, setCleanPause] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const load = useCallback(async () => {
     setLoading(true);
@@ -2104,13 +2117,13 @@ function CategoriesPage() {
     void persistOrder(arrayMove(leisureActive, from, to), learningActive);
   };
 
-  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount">>) => {
+  const change = async (id: string, body: Partial<Pick<AdminCategory, "name" | "icon" | "isActive" | "seriesType" | "unlockLimit" | "listenRepeatCount" | "cleanPause">>) => {
     await parentRepository.updateCategory(id, body).then(load).catch((e) => setError(e.message));
   };
   const create = async (event: FormEvent) => {
     event.preventDefault();
-    await parentRepository.createCategory({ name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null, listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null })
-      .then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); setUnlockLimit(5); setListenRepeatCount(5); return load(); })
+    await parentRepository.createCategory({ name, icon, seriesType, unlockLimit: seriesType === "learning" ? unlockLimit : null, listenRepeatCount: seriesType === "learning" ? listenRepeatCount : null, cleanPause })
+      .then(() => { setName(""); setIcon("✨"); setSeriesType("leisure"); setUnlockLimit(5); setListenRepeatCount(5); setCleanPause(false); return load(); })
       .catch((e) => setError(e.message));
   };
   const removeCategoryPermanently = async (id: string, categoryName: string) => {
@@ -2155,6 +2168,15 @@ function CategoriesPage() {
             </label>
           </>
         )}
+        <label className="category-clean-pause-setting" title="影片暫停時直接顯示清楚畫面，不遮蓋封面海報、不彈出問題卡片">
+          <input
+            aria-label="新分類暫停無遮罩"
+            type="checkbox"
+            checked={cleanPause}
+            onChange={(e) => setCleanPause(e.target.checked)}
+          />
+          📺 暫停無遮罩
+        </label>
         <Button type="submit"><Plus /> 建立分類</Button>
       </form>
       {loading && <ParentState>正在載入分類…</ParentState>}

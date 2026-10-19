@@ -127,6 +127,11 @@ export function isCleanPauseCategory(categoryIds: string[] | string | undefined 
   return list.some((id) => CLEAN_PAUSE_CATEGORY_IDS.has(id));
 }
 
+export function resolveCleanPause(video?: { cleanPause?: boolean; categoryIds?: string[]; categoryId?: string } | null): boolean {
+  if (typeof video?.cleanPause === "boolean") return video.cleanPause;
+  return isCleanPauseCategory(video?.categoryIds || video?.categoryId);
+}
+
 function ParentGate() {
   const navigate = useNavigate();
   const timerRef = useRef<number | null>(null);
@@ -760,7 +765,7 @@ export function WatchPage() {
   const mediaRetryAttemptRef = useRef(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStartedPlayback, setHasStartedPlayback] = useState(false);
-  const cleanPause = useMemo(() => isCleanPauseCategory(video?.categoryIds || video?.categoryId), [video]);
+  const cleanPause = useMemo(() => resolveCleanPause(video), [video]);
   const [isEnded, setIsEnded] = useState(false);
   const [currentPos, setCurrentPos] = useState(rawInitialPos);
   const currentPosRef = useRef(rawInitialPos);
