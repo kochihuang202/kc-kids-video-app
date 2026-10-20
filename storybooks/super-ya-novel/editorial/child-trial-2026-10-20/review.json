@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-20",
+  "scope": "前五個事件的兒童試讀；只修悄悄話，未上架。",
+  "originalSha256": "46bb33d69a3fb197f264f97e399c9b4fbde3043ec22d95a1d7a79f30c49e71b5",
+  "counts": [
+    {
+      "title": "第一篇｜原來，他先準備好了",
+      "characters": 291,
+      "paragraphs": 10
+    },
+    {
+      "title": "第二篇｜今天不能一起玩了",
+      "characters": 308,
+      "paragraphs": 13
+    },
+    {
+      "title": "第三篇｜我好想現在就知道！",
+      "characters": 285,
+      "paragraphs": 12
+    },
+    {
+      "title": "第四篇｜我還想玩，可是他被撞到了",
+      "characters": 354,
+      "paragraphs": 15
+    },
+    {
+      "title": "第五篇｜先問一句：沒事吧？",
+      "characters": 262,
+      "paragraphs": 11
+    }
+  ],
+  "totalCharacters": 1500,
+  "facts": [
+    "卡歐先設定兜風行程迎接吉吉。",
+    "琪琪他們有別的事不能來。",
+    "目的地出發之後揭曉。",
+    "跳跳球撞上卡歐、使他倒地，巧虎問沒事吧；卡歐後來請收球。"
+  ],
+  "limits": [
+    "巧虎現在回想的分享是創作；不將推測當成當時角色已說出的想法。",
+    "第一篇的積木及第二至五篇的生活情境明示為假設、可能或巧虎一般經驗。",
+    "試讀未新增閱讀理解題；預覽中其餘作品與練習沿用現有內容。",
+    "未做實體 iPad 與孩子接受度測試。"
+  ],
+  "productionUnchanged": [
+    "content/library.json",
+    "content/books/super-ya-revisit/story.json",
+    "content/books/super-ya-revisit/source.md",
+    "worker/generated.mjs"
+  ],
+  "preview": {
+    "dist": "C:\\Users\\ji3cp\\Documents\\ChatGPT\\try\\storybooks\\super-ya-novel\\output\\drafts\\super-ya-first-five-2026-10-20\\dist",
+    "port": 4186,
+    "url": "http://127.0.0.1:4186/?book=super-ya-revisit&chapter=0&preview=1"
+  }
+}
