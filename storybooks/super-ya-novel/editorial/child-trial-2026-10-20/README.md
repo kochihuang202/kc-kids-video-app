@@ -12,6 +12,22 @@
 
 預覽沿用現有 Han.css 3.3.0 注音及閱讀介面；未更動排版套件、正式資料或已發布網站。meta preview 與獨立儲存前綴沿用現有隔離流程。字音逐篇檢查；額外修正「車子」的車、「要是」的是、「他得一直」的得，僅作用於這份預覽。
 
+## 獨立線上試讀站
+
+使用者於 2026-10-20 明確要求上線。獨立 Worker 為 `shimajiro-reading-trial`，採 [Cloudflare Workers 靜態資產部署](https://developers.cloudflare.com/workers/static-assets/get-started/)，沿用已安裝的 Wrangler 4.127.1；只上傳隔離預覽的 dist，不綁定 D1、其他 Worker 或正式站資源。
+
+重建完成後，從儲存庫根目錄執行：
+
+```powershell
+.\node_modules\.bin\wrangler.cmd deploy --config storybooks/super-ya-novel/editorial/child-trial-2026-10-20/wrangler.trial.jsonc
+```
+
+線上入口使用 `/read`，由 Cloudflare `_redirects` 轉到第一篇的預覽網址。讀音、字級及閱讀位置保存在該試讀站的目前瀏覽器，與正式站隔離；不宣稱這個純靜態試讀站有跨裝置雲端同步。發布版本及驗證結果另記於 `deployment.json`。
+
+已上線：[五篇兒童試讀](https://shimajiro-reading-trial.ji3cp31p4.workers.dev/read)。本次發布版本 `2a4dc109-abd8-41de-afeb-d172cb343bf3`，內容版號 `fa83bb3ced49`。
+
+發布後的 `verify-online.mjs <Wrangler Version ID>` 會核對 `/read` 跳轉、52 個資產雜湊、五篇內容、預覽隔離標記與正式站前後版本。正式站維持 `59d4d55982df`。線上桌面操作已確認五篇及目錄、注音開關切頁後重整保留、34px 字級不水平溢出；未做實體 iPad 驗收。上線畫面保存於 `output/playwright/super-ya-trial-online-2026-10-20.png`。
+
 ## 2026-10-20 檢查範圍
 
 - 修改前相關 Node 檢查 8 項通過：內容／排版／預覽匯入隔離。

@@ -45,6 +45,7 @@ writeFileSync(path.join(directory,'readings.json'),JSON.stringify(readings,null,
 const result=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:root,encoding:'utf8',env:{...process.env,READER_CONTENT:content,READER_DIST:dist,READER_PREVIEW:'1'}});
 process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');
 if(result.status)process.exit(result.status);
+writeFileSync(path.join(dist,'_redirects'),'/read /?book=super-ya-revisit&chapter=0&preview=1 302\n');
 protectedPaths.forEach((p,i)=>{if(digest(p)!==before[i])throw Error('正式內容意外改變：'+p);});
 const annotations=JSON.parse(readFileSync(path.join(dist,'readings.json'),'utf8'));
 for(const chapter of chapters)for(const text of [chapter.title,...chapter.blocks.map(b=>b.text)]){
@@ -53,5 +54,5 @@ for(const chapter of chapters)for(const text of [chapter.title,...chapter.blocks
 }
 const counts=chapters.map(c=>({title:c.title,characters:readingCharacterCount(c.blocks.map(b=>b.text)),paragraphs:c.blocks.length}));
 writeFileSync(path.join(directory,'annotation-review.txt'),chapters.map(c=>'# '+c.title+'\n\n'+c.blocks.map(b=>Array.from(b.text).map((ch,i)=>annotations[b.text][i]?`${ch}(${annotations[b.text][i]})`:ch).join('')).join('\n\n')).join('\n\n'));
-writeFileSync(path.join(directory,'review.json'),JSON.stringify({date:'2026-10-20',scope:'前五個事件的兒童試讀；只修悄悄話，未上架。',originalSha256:createHash('sha256').update(readFileSync(original)).digest('hex'),counts,totalCharacters:counts.reduce((n,c)=>n+c.characters,0),facts:['卡歐先設定兜風行程迎接吉吉。','琪琪他們有別的事不能來。','目的地出發之後揭曉。','跳跳球撞上卡歐、使他倒地，巧虎問沒事吧；卡歐後來請收球。'],limits:['巧虎現在回想的分享是創作；不將推測當成當時角色已說出的想法。','第一篇的積木及第二至五篇的生活情境明示為假設、可能或巧虎一般經驗。','試讀未新增閱讀理解題；預覽中其餘作品與練習沿用現有內容。','未做實體 iPad 與孩子接受度測試。'],productionUnchanged:protectedPaths,preview:{dist,port:4186,url:'http://127.0.0.1:4186/?book=super-ya-revisit&chapter=0&preview=1'}},null,2)+'\n');
+writeFileSync(path.join(directory,'review.json'),JSON.stringify({date:'2026-10-20',scope:'前五個事件的兒童試讀；只修悄悄話，與正式站分開。',originalSha256:createHash('sha256').update(readFileSync(original)).digest('hex'),counts,totalCharacters:counts.reduce((n,c)=>n+c.characters,0),facts:['卡歐先設定兜風行程迎接吉吉。','琪琪他們有別的事不能來。','目的地出發之後揭曉。','跳跳球撞上卡歐、使他倒地，巧虎問沒事吧；卡歐後來請收球。'],limits:['巧虎現在回想的分享是創作；不將推測當成當時角色已說出的想法。','第一篇的積木及第二至五篇的生活情境明示為假設、可能或巧虎一般經驗。','試讀未新增閱讀理解題；預覽中其餘作品與練習沿用現有內容。','未做實體 iPad 與孩子接受度測試。'],productionUnchanged:protectedPaths,preview:{dist,port:4186,url:'http://127.0.0.1:4186/?book=super-ya-revisit&chapter=0&preview=1'}},null,2)+'\n');
 console.log(JSON.stringify({chapters:chapters.length,counts,dist},null,2));

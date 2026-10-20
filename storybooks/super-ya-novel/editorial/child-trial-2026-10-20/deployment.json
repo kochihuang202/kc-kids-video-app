@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-20",
+  "worker": "shimajiro-reading-trial",
+  "cloudflareVersionId": "2a4dc109-abd8-41de-afeb-d172cb343bf3",
+  "origin": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev",
+  "readingUrl": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev/read",
+  "release": {
+    "id": "fa83bb3ced49",
+    "builtAt": "2026-10-20T12:37:59.869Z"
+  },
+  "chapters": [
+    "第一篇｜原來，他先準備好了",
+    "第二篇｜今天不能一起玩了",
+    "第三篇｜我好想現在就知道！",
+    "第四篇｜我還想玩，可是他被撞到了",
+    "第五篇｜先問一句：沒事吧？"
+  ],
+  "verifiedAssets": 52,
+  "previewIsolated": true,
+  "productionReleaseBefore": "59d4d55982df",
+  "productionReleaseAfter": "59d4d55982df",
+  "notes": [
+    "此站為獨立靜態試讀；無 D1 綁定，不修改正式書架與進度。",
+    "閱讀位置與設定保存在試讀站目前瀏覽器；不具跨裝置雲端同步。",
+    "未做實體 iPad Safari 驗收。"
+  ]
+}
