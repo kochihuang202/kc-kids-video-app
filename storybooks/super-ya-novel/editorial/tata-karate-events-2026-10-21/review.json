@@ -1,0 +1,415 @@
+{
+  "date": "2026-10-21",
+  "status": "完整重寫試讀，正式版與既有紀錄保留。",
+  "reports": [
+    {
+      "id": "tata",
+      "title": "塔塔回來了",
+      "parts": 28,
+      "characters": 5956,
+      "counts": [
+        {
+          "id": "tata-event-01",
+          "title": "第一篇｜我們想起的，不是同一件事",
+          "characters": 224,
+          "paragraphs": 9
+        },
+        {
+          "id": "tata-event-02",
+          "title": "第二篇｜喜歡大海，也有人在工作",
+          "characters": 213,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-03",
+          "title": "第三篇｜好想靠近看一看",
+          "characters": 218,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-04",
+          "title": "第四篇｜我的沙堡很棒，你怎麼沒在看？",
+          "characters": 217,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-05",
+          "title": "第五篇｜她一直說同一個名字",
+          "characters": 206,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-06",
+          "title": "第六篇｜不想吃飯，是因為不餓嗎？",
+          "characters": 203,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-07",
+          "title": "第七篇｜一張照片，把記憶找回來了",
+          "characters": 225,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-08",
+          "title": "第八篇｜原來，妹妹一直記得",
+          "characters": 194,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-09",
+          "title": "第九篇｜「我就是知道」，真的知道了嗎？",
+          "characters": 203,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-10",
+          "title": "第十篇｜答應陪你找，能不能答應一定找到？",
+          "characters": 211,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-11",
+          "title": "第十一篇｜還想玩，眼睛卻閉起來了",
+          "characters": 218,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-12",
+          "title": "第十二篇｜原本說好的明天，得先看看天氣",
+          "characters": 217,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-13",
+          "title": "第十三篇｜我再生氣，雨也不會停",
+          "characters": 213,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-14",
+          "title": "第十四篇｜不能去了，是哥哥騙我嗎？",
+          "characters": 228,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-15",
+          "title": "第十五篇｜我一直喊無聊，時間也在走",
+          "characters": 218,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-16",
+          "title": "第十六篇｜下雨一天，整趟旅行都不好玩了嗎？",
+          "characters": 205,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-17",
+          "title": "第十七篇｜離開以前，別忘了謝謝他",
+          "characters": 189,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-18",
+          "title": "第十八篇｜「只是錯覺啦」，我是不是說太快了？",
+          "characters": 204,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-19",
+          "title": "第十九篇｜我說錯了，就換一句",
+          "characters": 214,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-20",
+          "title": "第二十篇｜牠回來了，是特地來找我們嗎？",
+          "characters": 205,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-21",
+          "title": "第二十一篇｜我好想跟你永遠在一起",
+          "characters": 213,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-22",
+          "title": "第二十二篇｜帶回家，是誰想要的？",
+          "characters": 213,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-23",
+          "title": "第二十三篇｜我急著說不可以",
+          "characters": 211,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-24",
+          "title": "第二十四篇｜媽媽為什麼讓我等一等？",
+          "characters": 227,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-25",
+          "title": "第二十五篇｜塔塔正在往海邊走",
+          "characters": 219,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-26",
+          "title": "第二十六篇｜放牠走，心裡也可能很捨不得",
+          "characters": 211,
+          "paragraphs": 8
+        },
+        {
+          "id": "tata-event-27",
+          "title": "第二十七篇｜剛才想留下你，現在替你加油",
+          "characters": 218,
+          "paragraphs": 7
+        },
+        {
+          "id": "tata-event-28",
+          "title": "第二十八篇｜「一定會再來」，真的能答應嗎？",
+          "characters": 219,
+          "paragraphs": 7
+        }
+      ],
+      "sourceSha256": "2bebdc8faf604d0a8830ab919b17f4241c3e6ce7f4a929743576e2c8f7a2672e",
+      "legacyProgress": "tata:whisper",
+      "newProgress": "tata-events:whisper",
+      "practicePreserved": "tata:practice"
+    },
+    {
+      "id": "karate",
+      "title": "小雅的挑戰",
+      "parts": 32,
+      "characters": 6891,
+      "counts": [
+        {
+          "id": "karate-event-01",
+          "title": "第一篇｜有人笑了，有人沒有笑",
+          "characters": 230,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-02",
+          "title": "第二篇｜先問怎麼了，別急著猜",
+          "characters": 220,
+          "paragraphs": 8
+        },
+        {
+          "id": "karate-event-03",
+          "title": "第三篇｜以前常輸，以後就一定輸嗎？",
+          "characters": 227,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-04",
+          "title": "第四篇｜一個人會做，怎麼面對別人就怕了？",
+          "characters": 202,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-05",
+          "title": "第五篇｜我誇他很帥，他怎麼還是搖頭？",
+          "characters": 221,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-06",
+          "title": "第六篇｜「你一定沒問題」，我真的知道嗎？",
+          "characters": 208,
+          "paragraphs": 8
+        },
+        {
+          "id": "karate-event-07",
+          "title": "第七篇｜他說，你們不要來",
+          "characters": 197,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-08",
+          "title": "第八篇｜我想幫忙，卻想不出辦法",
+          "characters": 205,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-09",
+          "title": "第九篇｜「別問了，來就對了」",
+          "characters": 207,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-10",
+          "title": "第十篇｜故意做錯，就能請他示範嗎？",
+          "characters": 219,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-11",
+          "title": "第十一篇｜他一著急，我們就說成功了",
+          "characters": 225,
+          "paragraphs": 8
+        },
+        {
+          "id": "karate-event-12",
+          "title": "第十二篇｜願意解釋，不等於願意示範",
+          "characters": 202,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-13",
+          "title": "第十三篇｜「就差一點了」，是誰覺得差一點？",
+          "characters": 203,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-14",
+          "title": "第十四篇｜這次，請他幫忙守球門",
+          "characters": 195,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-15",
+          "title": "第十五篇｜「我可以嗎？」不用先裝得很有把握",
+          "characters": 201,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-16",
+          "title": "第十六篇｜這一次，我真的擋到了",
+          "characters": 212,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-17",
+          "title": "第十七篇｜擋到球，就一定能贏比賽嗎？",
+          "characters": 217,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-18",
+          "title": "第十八篇｜我玩得太起勁，忘了他正在試",
+          "characters": 208,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-19",
+          "title": "第十九篇｜「忍不住」，之後還要做什麼？",
+          "characters": 228,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-20",
+          "title": "第二十篇｜又害怕了，剛才就不算了嗎？",
+          "characters": 207,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-21",
+          "title": "第二十一篇｜他想走開，我一定要追嗎？",
+          "characters": 224,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-22",
+          "title": "第二十二篇｜園長先問他怎麼了",
+          "characters": 220,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-23",
+          "title": "第二十三篇｜我想變強，為什麼還會怕？",
+          "characters": 220,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-24",
+          "title": "第二十四篇｜園長原來也曾經很害怕",
+          "characters": 216,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-25",
+          "title": "第二十五篇｜害怕還在，他仍然上臺了",
+          "characters": 218,
+          "paragraphs": 8
+        },
+        {
+          "id": "karate-event-26",
+          "title": "第二十六篇｜一次不好笑，就是整個人都不好嗎？",
+          "characters": 228,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-27",
+          "title": "第二十七篇｜換一個夢想，算不算逃跑？",
+          "characters": 236,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-28",
+          "title": "第二十八篇｜我們要練到他有勇氣為止？",
+          "characters": 224,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-29",
+          "title": "第二十九篇｜他謝謝我們，決定卻是他做的",
+          "characters": 215,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-30",
+          "title": "第三十篇｜不再說怕，就真的不怕了嗎？",
+          "characters": 209,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-31",
+          "title": "第三十一篇｜輪到他以前，我想怎麼加油？",
+          "characters": 221,
+          "paragraphs": 7
+        },
+        {
+          "id": "karate-event-32",
+          "title": "第三十二篇｜如果沒贏，我還會替他加油嗎？",
+          "characters": 226,
+          "paragraphs": 7
+        }
+      ],
+      "sourceSha256": "7ca22a65c2b9669868e48c0d4c048d0a3e2eef0f6ebc5041a22fdc6000c472e0",
+      "legacyProgress": "karate:whisper",
+      "newProgress": "karate-events:whisper",
+      "practicePreserved": "karate:practice"
+    }
+  ],
+  "protectedFiles": {
+    "content/library.json": "7c1c2c482e7c6cda2f16a4784c9393bebaf8c58adb8250c2b649ebc62f519a36",
+    "content/practice.json": "011031e782771899b6700dd9bf8fd3fcb2185fcb3f1939c423648936cb936d8f",
+    "content/books/tata/story.json": "ae452b8338548925b53b6fc1fde3f6ec7458da1d8ab60c51f64a52ec65a7b04a",
+    "content/books/tata/source.md": "dcda5261177f74c27976238d4092d8d7b0b6c4539eb10bcb2d94199a7c27f009",
+    "content/books/tata/practice-passages.json": "4e7858e95ba3de93186d1e4634fb9c1a9f87a6b420b79ee9ca74dc55faa75db8",
+    "content/books/tata/practice-questions.json": "e39ab2cfcb2edc174ef4c09b72b33da4cbf6e3eb32876f9abde72ce48ec8b86e",
+    "content/books/tata/practice-answers.json": "be1d0795f8ece9a97b99794306521aa22d16da851a54c0c1d46db2e552608aa3",
+    "content/books/karate/story.json": "a8c4c52f56267b2be51f5de5444df895661dbbc8bb5e2a1104f3fabdefff79cf",
+    "content/books/karate/source.md": "9a6a2fc4af2d2a574b522054f5170f1b40405d39b15de4b19959855aea50fcfd",
+    "content/books/karate/practice-passages.json": "e7272a4e60f4fbbc2e41012469297679ff353671eaca85b82d43c3d49be2f738",
+    "content/books/karate/practice-questions.json": "49be832d0655d533bd9c77483d700254b282493b3bb0dce30d258a68fe855767",
+    "content/books/karate/practice-answers.json": "7acd2451f7c7cbce9466d2ab2dfd42dcc63728a7c46fc4ec2e1c9534f6578a33",
+    "worker/generated.mjs": "1b741fcd8c35aaa3a1d737308bb8f851f755418e569bcbc85c4edc7ddaf7a965",
+    "dist/release.json": "c954ece6407e76015c5eb698e8d2e66fbf3769bf89b78748d41430e7b21d08e0"
+  },
+  "phonetics": "逐字對齊及全稿語境輸出；人工重點校對多音字及輕聲，不宣稱外部逐字審定。",
+  "limits": [
+    "未實機測試 iPad。",
+    "未做孩子接受度測試。"
+  ],
+  "preview": {
+    "dist": "C:\\Users\\ji3cp\\Documents\\ChatGPT\\try\\storybooks\\super-ya-novel\\output\\drafts\\tata-karate-events-2026-10-21\\dist",
+    "content": "C:\\Users\\ji3cp\\Documents\\ChatGPT\\try\\storybooks\\super-ya-novel\\output\\drafts\\tata-karate-events-2026-10-21\\content"
+  }
+}

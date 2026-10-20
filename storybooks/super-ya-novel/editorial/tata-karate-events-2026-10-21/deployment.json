@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-20T23:55:16.439Z",
+  "worker": "shimajiro-reading-trial",
+  "workerVersion": "2e0ed7fb-fb04-443c-9847-ece8cf6dddbd",
+  "release": "9f23d3a80a1e",
+  "formalRelease": "0fc51c77b6c1",
+  "formalUnchanged": true,
+  "preview": true,
+  "practiceUnchanged": true,
+  "books": [
+    {
+      "id": "tata",
+      "chapters": 28,
+      "url": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev/?book=tata&mode=whisper&preview=1"
+    },
+    {
+      "id": "karate",
+      "chapters": 32,
+      "url": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev/?book=karate&mode=whisper&preview=1"
+    }
+  ]
+}
