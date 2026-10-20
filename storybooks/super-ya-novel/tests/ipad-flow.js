@@ -9,8 +9,11 @@ async sessionPage=>{
  check(await page.locator('.prose h-zhuyin').count()>100,'touch opens annotated complete manuscript');
  await page.locator('.preferences summary').tap();await page.locator('[data-size="2"]').tap();await page.locator('[data-action="close-settings"]').last().tap();check(await page.locator('.prose').evaluate(el=>getComputedStyle(el).fontSize)==='34px','touch changes font size');
  await page.locator('.mode-toc-link').tap();await page.locator('main .toc-list').waitFor();check(true,'touch returns to own chapter contents');
- await page.locator('.child-nav a[aria-label="回到封面"]').tap();await page.locator('.mode-card a[href*="scene="]').tap();await page.locator('.practice-paper').waitFor();await page.locator('[data-p="begin"]').tap();await page.waitForTimeout(650);
+ await page.locator('.child-nav a[aria-label="回到封面"]').tap();await page.locator('.practice-mode .mode-primary').tap();await page.locator('[data-p="resume"]').tap();await page.locator('.practice-paper').waitFor();await page.locator('[data-p="begin"]').tap();await page.waitForTimeout(650);
  check(await page.locator('.question-title').evaluate(el=>el.getBoundingClientRect().top>=document.querySelector('.child-header').getBoundingClientRect().bottom+4),'begin practice keeps the whole question below the fixed header');
  await page.locator('[data-p="reveal"]').tap();check(await page.locator('.answer-choice.correct .answer-state').count()===1,'touch practice explanation leaves answer readable');
- await page.screenshot({path:'output/playwright/ipad-webkit-answer.png'});await c.close();return {passed:checks.length,checks};
+ await page.screenshot({path:'output/playwright/ipad-webkit-answer.png'});
+ for(let i=0;i<3;i++)await page.locator('[data-p="next"]').tap();await page.locator('#own-note').waitFor();
+ check(await page.locator('[data-p="next-scene"] rb').evaluateAll(ns=>ns.length>0&&ns.every(n=>getComputedStyle(n).color==='rgb(255, 255, 255)')),'touch completion shows white Chinese label without hover');
+ await c.close();return {passed:checks.length,checks};
 }

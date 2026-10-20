@@ -1,10 +1,10 @@
-import {storage,preview,draftURL} from './storage.js?v=59d4d55982df';
-import {parentGate,parentSession} from './parent-gate.js?v=59d4d55982df';
-import {pageWordCount} from './text-stats.js?v=59d4d55982df';
-import {openPreferences,preferenceValues} from './preferences.js?v=59d4d55982df';
-import {drawer} from './drawer.js?v=59d4d55982df';
-import {openProgress} from './cloud.js?v=59d4d55982df';
-import {wordRanges,showWord,speakParagraphs,stopSpeech} from './tools.js?v=59d4d55982df';
+import {storage,preview,draftURL} from './storage.js?v=3f75d000869a';
+import {parentGate,parentSession} from './parent-gate.js?v=3f75d000869a';
+import {pageWordCount} from './text-stats.js?v=3f75d000869a';
+import {openPreferences,preferenceValues} from './preferences.js?v=3f75d000869a';
+import {drawer} from './drawer.js?v=3f75d000869a';
+import {openProgress} from './cloud.js?v=3f75d000869a';
+import {wordRanges,showWord,speakParagraphs,stopSpeech} from './tools.js?v=3f75d000869a';
 const LEGACY_KEY='shimajiro-novel:v1',app=document.querySelector('#app');
 let KEY,library,selectedBook,story,ui,readings,state,glossary,cloud,preferencesStore,practiceResume=0,practiceTitles=[],practiceStarted=false,saveTimer,scrollFrame,restoring=false,storageAvailable=true;
 const defaults=()=>({chapter:0,started:false,bopo:true,size:0,positions:{},anchors:{},readThrough:{},finished:false,words:true,rate:0.85});
@@ -88,7 +88,7 @@ function syncWhisperRoute(chapter){
 }
 function home(){
  stopSpeech();document.body.dataset.view='home';syncWhisperRoute(null);settings();
- app.innerHTML=`<div class="shell cover-shell"><header class="masthead"><span class="wordmark"><img src="assets/shimajiro-avatar.jpg" alt="" width="36" height="36">${ruby(ui.coverBrand)}</span><span class="book-number">${ruby(ui.coverInvitation)}</span></header><main><section class="cover"><div><p class="cover-label">${ruby(ui.coverInvitation)}</p><h1 id="book-title">${ruby(story.title)}</h1><p class="cover-copy">${ruby(selectedBook.subtitle)}</p></div><figure class="cover-art character-cover"><img src="${selectedBook.coverImage||'assets/shimajiro-friends.png'}" alt="${escape(selectedBook.imageAlt)}" width="640" height="359"></figure></section><div class="mode-choices"><section class="mode-card practice-mode"><p class="mode-kicker">${ruby(ui.practiceKicker)}</p><h2>${ruby(ui.practiceTitle)}</h2><p class="mode-description">${ruby(ui.practiceCardDescription)}</p><p class="resume-detail">${ruby(practiceStarted?ui.resumeLabel:ui.firstReading)}${practiceStarted?`<strong>${ruby(practiceTitles[practiceResume]||'')}</strong>`:''}</p><div class="mode-actions"><a class="primary mode-primary" href="?book=${selectedBook.id}&mode=practice&scene=${practiceResume}" aria-label="${practiceStarted?'接著讀閱讀理解':'開始閱讀理解'}">${ruby(practiceStarted?'接著讀':'開始閱讀')}</a><a class="mode-secondary" href="?book=${selectedBook.id}&mode=practice">${ruby('選擇單元')}</a></div></section><section class="mode-card whisper-mode"><p class="mode-kicker">${ruby(ui.whisperKicker)}</p><h2>${ruby(ui.whisperCardTitle)}</h2><p class="mode-description">${ruby(ui.whisperCardDescription)}</p><p class="resume-detail">${ruby(state.started?ui.resumeLabel:ui.firstReading)}${state.started?`<strong>${ruby(story.chapters[state.chapter].title)}</strong>`:''}</p><div class="mode-actions">${button(state.started?'接著讀':'開始閱讀','start','primary mode-primary')}<a class="mode-secondary" href="?book=${selectedBook.id}&mode=whisper">${ruby('選擇篇章')}</a></div></section></div></main></div>${preferences()}`;
+ app.innerHTML=`<div class="shell cover-shell"><header class="masthead"><span class="wordmark"><img src="assets/shimajiro-avatar.jpg" alt="" width="36" height="36">${ruby(ui.coverBrand)}</span><span class="book-number">${ruby(ui.coverInvitation)}</span></header><main><section class="cover"><div><p class="cover-label">${ruby(ui.coverInvitation)}</p><h1 id="book-title">${ruby(story.title)}</h1><p class="cover-copy">${ruby(selectedBook.subtitle)}</p></div><figure class="cover-art character-cover"><img src="${selectedBook.coverImage||'assets/shimajiro-friends.png'}" alt="${escape(selectedBook.imageAlt)}" width="640" height="359"></figure></section><div class="mode-choices"><section class="mode-card practice-mode"><p class="mode-kicker">${ruby(ui.practiceKicker)}</p><h2>${ruby(ui.practiceTitle)}</h2><p class="mode-description">${ruby(ui.practiceCardDescription)}</p><p class="resume-detail">${ruby(practiceStarted?ui.resumeLabel:ui.firstReading)}${practiceStarted?`<strong>${ruby(practiceTitles[practiceResume]||'')}</strong>`:''}</p><div class="mode-actions"><a class="primary mode-primary" href="?book=${selectedBook.id}&mode=practice" aria-label="選擇單元">${ruby('選擇單元')}</a></div></section><section class="mode-card whisper-mode"><p class="mode-kicker">${ruby(ui.whisperKicker)}</p><h2>${ruby(ui.whisperCardTitle)}</h2><p class="mode-description">${ruby(ui.whisperCardDescription)}</p><p class="resume-detail">${ruby(state.started?ui.resumeLabel:ui.firstReading)}${state.started?`<strong>${ruby(story.chapters[state.chapter].title)}</strong>`:''}</p><div class="mode-actions"><a class="primary mode-primary" href="?book=${selectedBook.id}&mode=whisper" aria-label="選擇篇章">${ruby('選擇篇章')}</a></div></section></div></main></div>${preferences()}`;
  if(!storageAvailable)showStorageNotice();
 }
 function whisperContents(){
@@ -196,7 +196,7 @@ try{
   if(selectedBook.ui)ui=await getJSON(selectedBook.ui);
   document.title=story.title+'｜'+story.subtitle;
   if(query.get('mode')==='practice'){
-   const {mountPractice}=await import('./practice.js?v=59d4d55982df');
+   const {mountPractice}=await import('./practice.js?v=3f75d000869a');
    await mountPractice({app,book:selectedBook,story,ui,ruby,rich,glossary,getJSON});
   }else{
    state=loadState();cloud=await openProgress(selectedBook.id,'whisper',state);preferencesStore=await openPreferences(cloud.value);state=loadState({...cloud.value,...preferencesStore.value});
@@ -208,4 +208,4 @@ try{
  }else shelf();
 }catch{app.innerHTML='<p class="loading" role="alert">故事暫時沒有打開，請再試一次。<br><button type="button" id="retry">重新打開</button></p>';document.querySelector('#retry').addEventListener('click',()=>location.reload());}
 
-document.addEventListener('parent-unlocked',async()=>{stopSpeech(true);if(document.body.dataset.view==='reader')remember();const session=parentSession();const {mountParent}=await import('./parent.js?v=59d4d55982df');if(session.isActive())await mountParent({app,library,ui,ruby,getJSON,session});});
+document.addEventListener('parent-unlocked',async()=>{stopSpeech(true);if(document.body.dataset.view==='reader')remember();const session=parentSession();const {mountParent}=await import('./parent.js?v=3f75d000869a');if(session.isActive())await mountParent({app,library,ui,ruby,getJSON,session});});

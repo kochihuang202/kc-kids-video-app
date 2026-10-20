@@ -1,9 +1,9 @@
-import {storage,preview,draftURL} from './storage.js?v=59d4d55982df';
-import {pageWordCount} from './text-stats.js?v=59d4d55982df';
-import {openPreferences} from './preferences.js?v=59d4d55982df';
-import {drawer} from './drawer.js?v=59d4d55982df';
-import {openProgress} from './cloud.js?v=59d4d55982df';
-import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=59d4d55982df';
+import {storage,preview,draftURL} from './storage.js?v=3f75d000869a';
+import {pageWordCount} from './text-stats.js?v=3f75d000869a';
+import {openPreferences} from './preferences.js?v=3f75d000869a';
+import {drawer} from './drawer.js?v=3f75d000869a';
+import {openProgress} from './cloud.js?v=3f75d000869a';
+import {showWord,speakParagraphs,stopSpeech} from './tools.js?v=3f75d000869a';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountPractice({app,book,story,ui,ruby,rich,glossary,getJSON}){
  const data=(await getJSON('practice.json'))[book.id],localKey='shimajiro-practice:'+book.id+':v1';

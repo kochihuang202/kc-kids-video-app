@@ -1,7 +1,7 @@
 async(sessionPage)=>{
  const context=await sessionPage.context().browser().newContext({viewport:{width:390,height:844}}),page=await context.newPage(),checks=[];
  const check=(v,m)=>{if(!v)throw new Error(m);checks.push(m);};
- await page.goto('http://127.0.0.1:4178/?book=kiki');await page.locator('[data-action="start"]').click();await page.waitForTimeout(250);
+ await page.goto('http://127.0.0.1:4178/?book=kiki');await page.locator('.whisper-mode .mode-primary').click();await page.locator('[data-action="start"]').click();await page.waitForTimeout(250);
  check(await page.locator('.preferences').evaluate(el=>getComputedStyle(el).position==='fixed'),'one settings control is fixed to the viewport');
  check(await page.locator('.reader-header [data-action="bopo"],.reader-header [data-size]').count()===0,'settings are absent from the navigation bar');
  const before=await page.locator('.preferences summary').boundingBox();

@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-20",
+  "release": "0b36ec57c5b2",
+  "cloudflareVersionId": "4ccc36e7-53e3-47ee-98b1-569e91e3e55d",
+  "changes": [
+    "封面閱讀理解與悄悄話各一個目錄入口；開始或接著讀在目錄中。",
+    "完成理解練習後的綠色主按鈕，國字在一般、hover、焦點與觸控時均有白色前景。"
+  ],
+  "redBeforeFix": [
+    "polish-flow: each cover card has one contents action",
+    "primary-label-flow: normal Chinese contrast 1.018:1; phonetic contrast 6.919:1"
+  ],
+  "nodeTests": 21,
+  "chromiumFlows": {
+    "polish": 21,
+    "navigation": 30,
+    "preview": 7,
+    "primary-label": 5,
+    "zhuyin": 10,
+    "reader": 102,
+    "library": 101,
+    "edition": 91,
+    "mode-switch": 8,
+    "settings": 16,
+    "settings-entry": 12,
+    "shelf-settings": 30,
+    "drawer": 11,
+    "settings-trim": 18,
+    "ipad": 8,
+    "learning": 90,
+    "shared-settings": 10,
+    "cloud-recovery": 4,
+    "practice-position": 3,
+    "publish-cloud": 7
+  },
+  "chromiumChecks": 584,
+  "webkit": {"flow": "ipad-flow.js", "passed": 8, "scope": "touch, device scale 2, 820x1180 and 1180x820; browser simulation"},
+  "finishedButtonContrast": {"Chinese": 7.405, "phonetics": 6.919},
+  "dataScope": "Only the isolated local D1 under output/cover-entry-d1 received training writes. The trial deployment has no D1 binding.",
+  "onlineVerification": {"assetsCompared": 52, "coverControlsPerMode": 1, "destinations": ["mode=practice", "mode=whisper"], "productionReleaseUnchanged": "59d4d55982df"},
+  "physicalIpadTested": false
+}

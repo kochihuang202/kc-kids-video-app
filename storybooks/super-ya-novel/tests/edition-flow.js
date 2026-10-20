@@ -21,7 +21,7 @@ async(sessionPage)=>{
  const original=await page.locator('.source-block').allTextContents();
  await page.locator('.preferences summary').click();await page.locator('[data-action=bopo]').click();await page.keyboard.press('Escape');
  await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('.mode-card').first().waitFor();
- await page.locator('.mode-card a[href*="scene="]').click();await page.locator('.practice-paper').waitFor();check(await page.locator('body.no-bopo').count()===1,'bopo off persists across modes');
+ await page.locator('.practice-mode .mode-primary').click();await page.locator('[data-p="resume"]').click();await page.locator('.practice-paper').waitFor();check(await page.locator('body.no-bopo').count()===1,'bopo off persists across modes');
  await page.reload();await page.locator('.practice-paper').waitFor();check(await page.locator('body.no-bopo').count()===1,'bopo off survives reload');
  await page.goto('http://127.0.0.1:4178/?book=kiki&mode=practice&scene=2&level=extra');await page.locator('.practice-paper').waitFor();check(!page.url().includes('level=extra')&&page.url().includes('scene=2'),'legacy extra link returns same comprehension unit');
  await page.locator('[data-p=begin]').click();await page.reload();await page.locator('.practice-panel').waitFor();check(true,'exercise phase survives reload');

@@ -1,5 +1,11 @@
 # 格式與排版先查現成方案
 
+## 2026-10-20 封面單一入口與練習完成按鈕
+
+查核 [MDN 原生連結](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a) 與 [CSS specificity](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Specificity)。兩張模式卡沿用現有 `primary mode-primary` 外觀，各保留一個帶有真實目錄網址的原生連結，保留瀏覽器前後頁及預覽參數。不新增套件、字型、授權或相容性依賴；繼續使用 Han.css 3.3.0（MIT）。
+
+練習完成頁的 `.practice-panel > button` 把主按鈕國字改成深綠，蓋過 `.primary` 的白字；`:hover` 的權重較高，才讓文字重新出現。僅為此處的主按鈕明確設定白字與綠色邊框，維持注音元件的獨立顏色，不改全域 ruby/rb。以真實完成單元的流程量測國字和注音在一般、hover、焦點及觸控狀態的對比。
+
 ## 2026-10-17 移除設定中的朗讀操作
 
 依使用者要求，兩種模式的設定面板都移除全文朗讀與停止按鈕；段落、詞語朗讀與播放中的停止控制保留。查核 [MDN 原生 button](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button)，沿用現有原生按鈕與抽屜，不更動排版或增加套件；無新增版本、授權或裝置相容性依賴。保留 Han.css 3.3.0（MIT）及原有語速設定。

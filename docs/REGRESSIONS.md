@@ -476,6 +476,8 @@ Only important bugs that have occurred in the real app belong here.
 
 ## REG-055 — Resume-card typography scatters Bopomofo and locked answers lose contrast
 
+- User-approved entry change, 2026-10-20: both cover cards now expose exactly one primary link to their own contents. Start/resume remains on the corresponding contents page. Historical reader/library/navigation/edition/mode-switch/preview/iPad/cloud flows now take that extra contents step while retaining every saved-position, independent-mode and source assertion. `polish-flow.js` additionally requires one action per card and contents-only primary URLs.
+
 - Scope: reader UI, `public/styles.css`, ruby renderer, shared navigation and mode entry cards.
 - Reproduction: A broad `.resume-panel span` rule overrides the spans inside phonetic markup, scattering the annotation vertically; every disabled answer inherits opacity .4, including the correct answer. Cover links and buttons have different box models, and the last comprehension scene labels a no-op as the next story.
 - Fix: scope metadata styles to direct children; replace custom phonetic-span layout with the pinned Han.css 3.3.0 Zhuyin component and bundled font (MIT, self-hosted). Only an isolated ruby wrapper/white-space adapter remains. Answer locking keeps full opacity and a textual correct-answer marker. Cover primary/secondary actions share dimensions, own-mode contents are directly reachable, and the final scene returns to its contents.
@@ -502,3 +504,11 @@ Only important bugs that have occurred in the real app belong here.
 
 - User-approved behavior update, 2026-10-17: remove full-text speech and stop buttons from both reading-settings panels. Preserve speech speed, paragraph/word speech, and the active playback stop control outside settings.
 - The existing `settings-trim-flow.js` gained two assertions per mode and failed against the old panels before the change. It now checks removed controls and retained speech speeds alongside all prior completion/stop/parent checks (18 checks). `drawer-flow.js` retains shared-setting persistence and portrait/landscape checks (11).
+
+## REG-060 — Completed exercise button hides Chinese text until hover
+
+- Scope: `storybooks/super-ya-novel/public/styles.css`, completion actions in `practice.js`.
+- Reproduction: Finish or skip the three questions in a Kiki unit. The green next-unit button shows phonetics but its Chinese label blends into the background until the mouse hovers.
+- Root cause: `.practice-panel > button` overrides `.primary` with dark green text. The more specific `.primary:hover` restores white only while hovering. Measured normal Chinese contrast was 1.02:1 while annotation contrast was 6.92:1.
+- Fix: scope the explicit white foreground and green border to `.practice-panel > button.primary`, retaining existing Han.css annotation rendering. Normal Chinese contrast is now 7.40:1.
+- Regression: `tests/primary-label-flow.js` follows an actual completed unit, tests normal/hover/focus contrast for Chinese and phonetics, and opens the next unit. It failed before the fix. `ipad-flow.js` also checks the white Chinese label in touch mode without hover. Existing cover/navigation/preview/source and reading-anchor flows remain required.

@@ -230,6 +230,9 @@ body:has(.child-header) .preferences .drawer-trigger-label{display:inline}body:h
 @media(min-width:700px) and (max-height:900px){.cover-shell .masthead{padding-top:16px}.cover{padding:24px 0;min-height:220px}.character-cover{max-width:350px;margin-left:auto}.cover h1{font-size:40px}.mode-card{padding:22px}.mode-card .mode-kicker{font-size:12px;margin-bottom:6px}.mode-card h2{font-size:23px;margin-bottom:8px}.mode-description{font-size:16px;line-height:1.8;min-height:58px;margin-bottom:12px}.resume-detail{padding-top:10px;margin-bottom:14px}.mode-actions{gap:8px}.mode-actions>.mode-primary{min-height:50px}.mode-actions>.mode-secondary{min-height:46px}}
 @media(max-width:600px){.child-nav{grid-template-columns:64px minmax(64px,1fr) 78px 78px}.child-nav .mode-toc-link,.child-nav .mode-toc-placeholder{width:auto}.child-nav .nav-full{display:none}.child-nav .nav-short{display:inline}body:has(.child-header) .preferences summary{width:64px}body:has(.child-header) .preferences .drawer-trigger-label{display:none}}
 
+/* Panel defaults must not recolor green primary buttons until :hover restores white. */
+.practice-panel>button.primary{color:#fff;border-color:var(--green)}
+
 /* Adapter only: Han.css owns symbol count and tone placement. No global span rules. */
 ruby[zhuyin]{display:inline-flex;align-items:baseline;vertical-align:baseline;line-height:1.8;margin-right:.2em;margin-inline-end:.2em;white-space:nowrap}
 ruby[zhuyin]>rb{line-height:1.2}

@@ -1,12 +1,12 @@
 {
   "date": "2026-10-20",
   "worker": "shimajiro-reading-trial",
-  "cloudflareVersionId": "2a4dc109-abd8-41de-afeb-d172cb343bf3",
+  "cloudflareVersionId": "4ccc36e7-53e3-47ee-98b1-569e91e3e55d",
   "origin": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev",
   "readingUrl": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev/read",
   "release": {
-    "id": "fa83bb3ced49",
-    "builtAt": "2026-10-20T12:37:59.869Z"
+    "id": "0b36ec57c5b2",
+    "builtAt": "2026-10-20T15:17:57.512Z"
   },
   "chapters": [
     "第一篇｜原來，他先準備好了",

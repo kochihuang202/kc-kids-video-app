@@ -24,9 +24,15 @@
 
 線上入口使用 `/read`，由 Cloudflare `_redirects` 轉到第一篇的預覽網址。讀音、字級及閱讀位置保存在該試讀站的目前瀏覽器，與正式站隔離；不宣稱這個純靜態試讀站有跨裝置雲端同步。發布版本及驗證結果另記於 `deployment.json`。
 
-已上線：[五篇兒童試讀](https://shimajiro-reading-trial.ji3cp31p4.workers.dev/read)。本次發布版本 `2a4dc109-abd8-41de-afeb-d172cb343bf3`，內容版號 `fa83bb3ced49`。
+已上線：[五篇兒童試讀](https://shimajiro-reading-trial.ji3cp31p4.workers.dev/read)。目前發布版本 `4ccc36e7-53e3-47ee-98b1-569e91e3e55d`，內容／介面版號 `0b36ec57c5b2`。
 
 發布後的 `verify-online.mjs <Wrangler Version ID>` 會核對 `/read` 跳轉、52 個資產雜湊、五篇內容、預覽隔離標記與正式站前後版本。正式站維持 `59d4d55982df`。線上桌面操作已確認五篇及目錄、注音開關切頁後重整保留、34px 字級不水平溢出；未做實體 iPad 驗收。上線畫面保存於 `output/playwright/super-ya-trial-online-2026-10-20.png`。
+
+### 同日介面更新
+
+依使用者要求，封面兩張模式卡各只保留一個綠色目錄入口；開始／接著讀留在目錄，原有閱讀位置仍保留。另修復練習完成後主按鈕的中文字被深綠色樣式覆蓋、直到 hover 才出現的問題。
+
+驗證紀錄見 `interface-review.json`：Node 21 項、20 份 Chromium 閱讀流程共 584 個檢查、WebKit 觸控模擬 8 個檢查通過；資料儲存測試只使用 `output/cover-entry-d1` 的獨立本機 D1。未做實體 iPad 測試。正式站資產與資料庫未部署或變更。封面線上畫面保存於 `output/playwright/cover-single-entry-online.png`。
 
 ## 2026-10-20 檢查範圍
 

@@ -1,4 +1,4 @@
-import {cloudSnapshot} from './cloud.js?v=59d4d55982df';
+import {cloudSnapshot} from './cloud.js?v=3f75d000869a';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountParent({app,library,ui,ruby,getJSON,session}){
  document.body.dataset.view='parent';document.title='父母查看進度｜巧虎陪你讀';

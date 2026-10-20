@@ -67,7 +67,7 @@ async(sessionPage)=>{
  await page.locator('.source-block[data-block="12"]').evaluate(el=>scrollTo(0,scrollY+el.getBoundingClientRect().top-130));await page.waitForTimeout(1200);
  await page.waitForFunction(async()=>{const s=(await(await fetch('/api/progress')).json()).documents['kiki:whisper']?.state;return s?.chapter===1&&s?.size===2&&s?.anchors?.[1];});
  const second=await browser.newContext({viewport:{width:820,height:1180}}),other=await second.newPage();
- await other.goto('http://127.0.0.1:4178/?book=kiki');await other.locator('[data-action="start"]').click();await other.waitForTimeout(300);
+ await other.goto('http://127.0.0.1:4178/?book=kiki');await other.locator('.whisper-mode .mode-primary').click();await other.locator('[data-action="start"]').click();await other.waitForTimeout(300);
  check(await other.locator('#chapter-title').evaluate(el=>el.textContent.includes('梅')&&el.textContent.includes('婆')),'a fresh device resumes the cloud chapter without child identification');
  check(await other.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','a fresh device restores cloud reading preferences');
  await other.goto('http://127.0.0.1:4178/?view=parent');await other.locator('[data-parent-hold]').focus();await other.keyboard.down('Space');await other.waitForTimeout(3100);await other.keyboard.up('Space');await other.locator('.parent-book').first().waitFor();

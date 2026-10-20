@@ -10,7 +10,7 @@ async(sessionPage)=>{
   check(await page.locator('#book-title rt').first().isHidden(),book+' entry annotation setting works');
   await page.getByRole('button',{name:'特大',exact:true}).click();await page.getByRole('button',{name:'詞語提示',exact:true}).click();
   check(await page.locator('[data-action="words"]').getAttribute('aria-pressed')==='false',book+' entry word setting works');
-  await page.getByRole('button',{name:'完成設定',exact:true}).click();await page.locator('[data-action="start"]').click();
+  await page.getByRole('button',{name:'完成設定',exact:true}).click();await page.locator('.whisper-mode .mode-primary').click();await page.locator('[data-action="start"]').click();
   check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true',book+' reader inherits entry font choice');
   check(await page.locator('.prose [data-word]').count()===0,book+' reader inherits word choice');
   await page.locator('.child-nav a[aria-label="回到封面"]').click();await page.locator('#book-title').waitFor();check(await page.locator('.preferences summary').isVisible(),book+' settings survives return to cover');
