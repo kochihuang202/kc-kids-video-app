@@ -1,9 +1,10 @@
-import {cloudSnapshot} from './cloud.js?v=3f75d000869a';
+import {cloudSnapshot} from './cloud.js?v=0fc51c77b6c1';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mountParent({app,library,ui,ruby,getJSON,session}){
  document.body.dataset.view='parent';document.title='父母查看進度｜巧虎陪你讀';
  if(!session.isActive())return;
- const practice=await getJSON('practice.json'),stories=Object.fromEntries(await Promise.all(library.books.map(async b=>[b.id,await getJSON(b.data)])));
+ const practice=await getJSON('practice.json'),stories=Object.fromEntries(await Promise.all(library.books.map(async b=>[b.id,await getJSON(b.whisper?.data||b.data)])));
+ const previous=Object.fromEntries(await Promise.all(library.books.filter(b=>b.whisper).map(async b=>[b.id,await getJSON(b.data)])));
  if(!session.isActive())return;
  app.innerHTML=`<div class="shell"><header class="masthead"><span class="wordmark">${ruby(ui.parent)}</span><a href="${session.returnTo}" aria-label="回孩子模式">回孩子模式</a></header><main class="parent-main"><h1>${ruby(ui.parentHeading)}</h1><p>${ruby(ui.parentNotice)}</p><div class="parent-actions"><button id="refresh-progress" type="button">${ruby(ui.refreshProgress)}</button><span id="parent-sync" role="status">${ruby(ui.connecting)}</span></div><div id="parent-progress"></div><p id="release-info" class="fineprint"></p></main></div>`;
  let loading=false;
@@ -12,7 +13,7 @@ export async function mountParent({app,library,ui,ruby,getJSON,session}){
   try{
    const snapshot=await cloudSnapshot(),docs=snapshot.documents||{};if(!session.isActive())return;
    document.querySelector('#parent-progress').innerHTML=library.books.map(book=>{
-    const reading=docs[book.id+':whisper'],training=docs[book.id+':practice'],s=stories[book.id],p=training?.state||{},r=reading?.state||{};
+    const reading=docs[(book.whisper?.progressId||book.id)+':whisper'],training=docs[book.id+':practice'],s=stories[book.id],p=training?.state||{},r=reading?.state||{};
     const chapter=Number.isInteger(r.chapter)&&s.chapters[r.chapter]?r.chapter:0,anchor=r.anchors?.[chapter];
     let total=0,complete=0,alone=0,help=0,explained=0;
     const rows=practice[book.id].scenes.map((scene,i)=>{
@@ -31,6 +32,14 @@ export async function mountParent({app,library,ui,ruby,getJSON,session}){
     const timestamp=doc=>doc?.updatedAt?new Date(doc.updatedAt).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'}):ui.noProgress;
     return `<section class="parent-book"><h2>${ruby(book.title)}</h2><div class="parent-summary"><article><h3>${ruby(ui.whisperTitle)}</h3><p>${ruby(r.started?s.chapters[chapter].title:ui.notStarted)}${paragraph}</p><p>${ruby(ui.visitedParts)} ${seen} / ${s.chapters.length}</p><p class="tool-note">${ruby(ui.readingNotUnderstanding)}</p><p class="updated-at">${ruby(ui.lastSaved)} ${timestamp(reading)}</p></article><article><h3>${ruby(ui.practiceTitle)}</h3><p>${ruby(ui.completedTasks)} ${complete} / ${total}</p><dl class="progress-stats"><div><dt>${ruby(ui.independent)}</dt><dd>${alone}</dd></div><div><dt>${ruby(ui.withHelp)}</dt><dd>${help}</dd></div><div><dt>${ruby(ui.explained)}</dt><dd>${explained}</dd></div></dl><p class="updated-at">${ruby(ui.lastSaved)} ${timestamp(training)}</p></article></div><div class="progress-table-scroll"><table class="progress-table"><thead><tr><th>${ruby(ui.scene)}</th><th>${ruby(ui.completedTasks)}</th><th>${ruby(ui.independent)}</th><th>${ruby(ui.withHelp)}</th><th>${ruby(ui.explained)}</th><th>${ruby(ui.answerAttempts)}</th></tr></thead><tbody>${rows}</tbody></table></div><details class="attempt-details"><summary>查看作答、提示與重試紀錄</summary>${current}</details>${legacy?`<details class="legacy-records"><summary>舊版想法短文紀錄（不列入目前題數）</summary><ul>${legacy}</ul></details>`:''}${notes?`<details class="parent-notes"><summary>${ruby(ui.childNotes)}</summary>${notes}</details>`:''}</section>`;
    }).join('');
+   for(const [i,book]of library.books.entries()){
+    const section=document.querySelectorAll('.parent-book')[i];
+    if(book.hidden)section.querySelector('h2').append('（舊版紀錄）');
+    if(book.whisper){
+     const old=docs[book.id+':whisper'];
+     if(old){const part=previous[book.id]?.chapters[old.state?.chapter];const details=document.createElement('details');details.className='legacy-whisper-records';details.innerHTML='<summary>舊版悄悄話紀錄（不計入新版進度）</summary><p>'+esc(old.state?.started&&part?part.title:ui.notStarted)+'</p><p>讀過的位置 '+Object.keys(old.state?.readThrough||{}).length+' / '+previous[book.id].chapters.length+'</p>';section.append(details);}
+    }
+   }
    document.querySelector('#parent-sync').textContent=ui.cloudUpdated+' '+new Date().toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei'});
   }catch{if(session.isActive())document.querySelector('#parent-sync').textContent=ui.parentOffline;}
   finally{loading=false;const refreshButton=document.querySelector('#refresh-progress');if(refreshButton)refreshButton.disabled=false;}

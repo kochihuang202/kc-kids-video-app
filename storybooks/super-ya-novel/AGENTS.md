@@ -1,5 +1,7 @@
 # Reading UI maintenance
 
+- 2026-10-21 user preference: keep routine verification proportionate. For content or small UI edits, check the changed content/flow and directly related regressions; do not repeat the whole suite. Expand only for shared persistence, core navigation or similarly cross-cutting changes. Avoid unrelated testing that delays delivery.
+
 - Before authoring or revising episode content, read `docs/AUTHORING.md`, including the user's 2026-10-17 requirements for psychological explanations, concrete child-facing language, interleaved story/commentary, and letting go of fixation on winning or blame.
 - The user's latest event-by-event approach takes priority over a complete-plot structure: a single action or utterance can support an independent reflection. Verify facts without inventing missing causal links. When explaining a character's motive, establish the event, expectation, obstacle, interpretation and response before choosing psychological concepts. Check dialogue referents and exclude unrelated scenes. Use the SUPER YA missed-ride / three-day-wait correction in `docs/AUTHORING.md` as the concrete regression example.
 

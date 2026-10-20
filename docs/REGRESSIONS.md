@@ -508,7 +508,23 @@ Only important bugs that have occurred in the real app belong here.
 ## REG-060 — Completed exercise button hides Chinese text until hover
 
 - Scope: `storybooks/super-ya-novel/public/styles.css`, completion actions in `practice.js`.
+
 - Reproduction: Finish or skip the three questions in a Kiki unit. The green next-unit button shows phonetics but its Chinese label blends into the background until the mouse hovers.
 - Root cause: `.practice-panel > button` overrides `.primary` with dark green text. The more specific `.primary:hover` restores white only while hovering. Measured normal Chinese contrast was 1.02:1 while annotation contrast was 6.92:1.
 - Fix: scope the explicit white foreground and green border to `.practice-panel > button.primary`, retaining existing Han.css annotation rendering. Normal Chinese contrast is now 7.40:1.
 - Regression: `tests/primary-label-flow.js` follows an actual completed unit, tests normal/hover/focus contrast for Chinese and phonetics, and opens the next unit. It failed before the fix. `ipad-flow.js` also checks the white Chinese label in touch mode without hover. Existing cover/navigation/preview/source and reading-anchor flows remain required.
+
+### 2026-10-20 authorized SUPER YA edition replacement
+
+The user requested completing all SUPER YA event reflections and replacing the first SUPER YA on the formal shelf. The active edition now has forty pieces, including the unchanged five approved trial pieces. The duplicate shelf card is hidden; all original sources, comprehension data and cloud documents remain retained. Old five/seven-part completion must not count as reading the new forty-part text. A separate `super-ya-events:whisper` document stores the new progress, and parent mode distinguishes old records. Old seven-part whisper links return to current contents instead of assigning an unrelated chapter number. Comprehension deep links remain usable.
+
+`tests/library-flow.js` and `tests/production-flow.js` now expect four visible shelf cards, as explicitly requested. `tests/reader-flow.js` retains every historical five-document source, image, map, anchor and migration assertion against the archived edition via a local catalog fixture; it no longer asserts that the replaced prose is the active child entry. `tests/events-edition-flow.js` checks the real current root entry, all forty manuscripts, settings, parent gate, legacy isolation and old links. `tests/events-cloud-flow.js` checks actual isolated local D1 writes and fresh-browser resume at piece forty, with unchanged old document revision/time/state. No production-child writes occur during verification.
+
+## REG-061 — Two-digit chapter numbers gain an extra zero
+
+Test-harness correction during this release: tracing the fifth-question test showed that its async `waitForFunction` predicate could finish while a promise resolved false, before the position had reached D1. The resume assertion itself was correct and remains unchanged. `publish-cloud-flow.js` now polls the actual local API until the required position/answer is present and prepares its interrupted local fixture's starting position. All seven checks pass, including fresh-browser resume and completion. `events-cloud-flow.js` uses the same explicit API polling. No product behavior was changed to accommodate the test.
+
+- Scope: `storybooks/super-ya-novel/public/app.js`, whisper contents.
+- Trigger: expanding beyond nine pieces exposes the existing `0${i+1}` formatter, yielding 010, 011, etc.
+- Fix: reuse the reader heading's native `String(i+1).padStart(2,'0')`; no layout or phonetic dependency change.
+- Regression: `tests/events-edition-flow.js` opens the real forty-piece contents and verifies 10 and 40, full source rendering, and large annotated layouts at 820×1180, 1180×820 and 390×844. `tests/events-edition.test.mjs` verifies stable IDs, approved opening and cloud bounds.

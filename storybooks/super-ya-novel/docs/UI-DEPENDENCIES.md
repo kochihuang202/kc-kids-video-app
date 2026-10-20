@@ -1,5 +1,7 @@
 # 格式與排版先查現成方案
 
+2026-10-20：四十篇目錄沿用既有 Han.css 3.3.0、原生清單與按鈕，未新增排版依賴。編號採閱讀標頭已使用的 `String.prototype.padStart(2,'0')`，依 [ECMA-262 的字串補齊規格](https://tc39.es/ecma262/2025/multipage/text-processing.html#sec-string.prototype.padstart)，讓第十篇顯示 10 而非 010。此為原生 ECMAScript API，沒有新增套件授權；Chromium／WebKit 驗證實際 40 篇及放大注音版面。
+
 ## 2026-10-20 封面單一入口與練習完成按鈕
 
 查核 [MDN 原生連結](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a) 與 [CSS specificity](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Specificity)。兩張模式卡沿用現有 `primary mode-primary` 外觀，各保留一個帶有真實目錄網址的原生連結，保留瀏覽器前後頁及預覽參數。不新增套件、字型、授權或相容性依賴；繼續使用 Han.css 3.3.0（MIT）。

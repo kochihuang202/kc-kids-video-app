@@ -1,5 +1,5 @@
 // A single fixed entry opens a left drawer in both reading modes.
-import {parentControl} from './parent-gate.js?v=3f75d000869a';
+import {parentControl} from './parent-gate.js?v=0fc51c77b6c1';
 export function drawer({ui,ruby,controls,close}){
  const query=new URLSearchParams(location.search),id=document.body.dataset.view==='library'?null:query.get('book'),cover=id&&!query.has('chapter')&&!query.has('mode');
  const mode=query.get('mode')==='practice'?'practice':'whisper',inMode=id&&(query.has('chapter')||query.has('mode'));

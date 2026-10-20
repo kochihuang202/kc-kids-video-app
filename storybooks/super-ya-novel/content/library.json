@@ -9,13 +9,19 @@
       "id": "super-ya",
       "number": "01",
       "title": "飛吧！SUPER YA！",
-      "subtitle": "一次意外的旅行，發現朋友的心情。",
-      "detail": "五章冒險故事",
+      "subtitle": "我想把那一天的事，說給你聽。",
+      "detail": "40篇時光悄悄話，從一件小事開始。",
       "image": "assets/episode/welcome.jpg",
       "imageAlt": "SUPER YA 和巧虎、發明家們。",
       "data": "story.json",
       "storageKey": "shimajiro-novel:v2",
-      "practice": "practice.json#super-ya"
+      "practice": "practice.json#super-ya",
+      "whisper": {
+        "data": "books/super-ya-events/story.json",
+        "ui": "books/super-ya-events/ui.json",
+        "storageKey": "shimajiro-novel:super-ya-events:v1",
+        "progressId": "super-ya-events"
+      }
     },
     {
       "id": "kiki",
@@ -74,7 +80,9 @@
       "storageKey": "shimajiro-novel:super-ya-revisit:v1",
       "ui": "books/super-ya-revisit/ui.json",
       "practice": "practice.json#super-ya-revisit",
-      "practiceSource": "books/super-ya-revisit"
+      "practiceSource": "books/super-ya-revisit",
+      "hidden": true,
+      "redirectTo": "super-ya"
     }
   ]
 }

@@ -19,20 +19,25 @@ for(const book of library.books)if(book.practiceSource){
  practice[book.id]={...passages,scenes:passages.scenes.map(s=>({...s,questions:{story:questions[s.id].map((q,i)=>({...q,...answers[s.id][i]}))}}))};
 }
 const stories=Object.fromEntries(library.books.map(book=>[book.id,read(book.data)]));
+const whispers=Object.fromEntries(library.books.filter(b=>b.whisper).map(b=>[b.id,read(b.whisper.data)]));
 const presentation=read('presentation.json');
 for(const c of stories['super-ya'].chapters)c.presentation=presentation[c.id];
 const registry=Object.fromEntries(library.books.map(book=>{
  const story=stories[book.id],data=practice[book.id];validateBook({book,story,practice:data,existing:true});
- book.modes={whisper:story.chapters.length,practice:data.scenes.length};
- return [book.id,{...book.modes,scenes:data.scenes.map(s=>({id:s.id,questions:s.questions.story.length}))}];
+ if(whispers[book.id])validateBook({book,story:whispers[book.id],practice:data,existing:true});
+ book.modes={whisper:(whispers[book.id]||story).chapters.length,practice:data.scenes.length};
+ // Keep old progress validation unchanged; new text receives its own document.
+ return [book.id,{whisper:story.chapters.length,practice:data.scenes.length,scenes:data.scenes.map(s=>({id:s.id,questions:s.questions.story.length}))}];
 }));
+for(const b of library.books.filter(b=>b.whisper))registry[b.whisper.progressId]={whisper:whispers[b.id].chapters.length,practice:0,scenes:[]};
 const bookUIs=Object.fromEntries(library.books.map(b=>[b.id,{...ui,...(b.ui?read(b.ui):{})}]));
+for(const b of library.books.filter(b=>b.whisper?.ui))bookUIs[b.id]={...ui,...read(b.whisper.ui)};
 const strings = new Set();
 function collect(v){if(typeof v==='string'){if(/\p{Script=Han}/u.test(v)){strings.add(v);strings.add(v.replace(/\*\*/g,''));if(v.includes('**'))for(const part of v.split(/(\*\*[^*]+\*\*)/g)){const text=part.startsWith('**')?part.slice(2,-2):part;if(/\p{Script=Han}/u.test(text))strings.add(text);}}}else if(v&&typeof v==='object')Object.values(v).forEach(collect);}
-collect(stories);collect(ui);collect(bookUIs);collect(library);collect(read('reading-fixtures.json'));collect(practice);collect(glossary);
+collect(stories);collect(whispers);collect(ui);collect(bookUIs);collect(library);collect(read('reading-fixtures.json'));collect(practice);collect(glossary);
 collect(['聽這個詞','回去繼續讀','設定','回到書架','回到封面','開始閱讀','接著讀','選擇單元','選擇篇章']);
 for(const data of Object.values(practice))for(const scene of data.scenes)for(const [i,text]of scene.story.entries()){strings.add(text.replace(/\*\*/g,''));strings.add(`${i+1}．${text}`);}
-for(const [id,story]of Object.entries(stories))for(const c of story.chapters)collect(`${bookUIs[id].resume}・${c.title}`);
+for(const [id,story]of Object.entries({...stories,...whispers}))for(const c of story.chapters)collect(`${bookUIs[id].resume}・${c.title}`);
 ['飛吧！','一起飛進故事，也看看心裡的小風景。',`${ui.bopo}：${ui.on}`,`${ui.bopo}：${ui.off}`].forEach(s=>strings.add(s));
 const initials={b:'ㄅ',p:'ㄆ',m:'ㄇ',f:'ㄈ',d:'ㄉ',t:'ㄊ',n:'ㄋ',l:'ㄌ',g:'ㄍ',k:'ㄎ',h:'ㄏ',j:'ㄐ',q:'ㄑ',x:'ㄒ',zh:'ㄓ',ch:'ㄔ',sh:'ㄕ',r:'ㄖ',z:'ㄗ',c:'ㄘ',s:'ㄙ'};
 const finals={a:'ㄚ',o:'ㄛ',e:'ㄜ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',i:'ㄧ',ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',u:'ㄨ',ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uang:'ㄨㄤ',ong:'ㄨㄥ',ueng:'ㄨㄥ',v:'ㄩ',ve:'ㄩㄝ',van:'ㄩㄢ',vn:'ㄩㄣ',ü:'ㄩ',üe:'ㄩㄝ',üan:'ㄩㄢ',ün:'ㄩㄣ',ê:'ㄝ'};
@@ -63,12 +68,13 @@ export function annotate(text){
   }
   return result;
 }
-for(const story of Object.values(stories))for(const c of story.chapters)collect(c.title.replace(/^(第[一二三四五六七八九十]+篇|尾聲)｜/,''));
+for(const story of [...Object.values(stories),...Object.values(whispers)])for(const c of story.chapters)collect(c.title.replace(/^(第[一二三四五六七八九十]+篇|尾聲)｜/,''));
 const readings=Object.fromEntries([...strings].map(s=>[s,annotate(s)]));
 mkdirSync(distRoot,{recursive:true});
 cpSync(path.join(root,'public'),distRoot,{recursive:true});
 for(const [name,value]of Object.entries({'ui.json':ui,'readings.json':readings,'library.json':library,'practice.json':practice,'glossary.json':glossary}))writeFileSync(path.join(distRoot,name),JSON.stringify(value));
 for(const book of library.books){const target=path.join(distRoot,book.data);mkdirSync(path.dirname(target),{recursive:true});writeFileSync(target,JSON.stringify(stories[book.id]));if(book.ui){const targetUi=path.join(distRoot,book.ui);mkdirSync(path.dirname(targetUi),{recursive:true});writeFileSync(targetUi,JSON.stringify(bookUIs[book.id]));}}
+for(const book of library.books.filter(b=>b.whisper)){const target=path.join(distRoot,book.whisper.data);mkdirSync(path.dirname(target),{recursive:true});writeFileSync(target,JSON.stringify(whispers[book.id]));if(book.whisper.ui)writeFileSync(path.join(distRoot,book.whisper.ui),JSON.stringify(bookUIs[book.id]));}
 // Version every module edge, not just app.js: a stale imported drawer must not survive release.
 const hash=createHash('sha256');
 function hashTree(dir){for(const entry of readdirSync(dir,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){const target=path.join(dir,entry.name);if(entry.isDirectory())hashTree(target);else hash.update(path.relative(root,target)).update(readFileSync(target));}}
@@ -80,6 +86,6 @@ for(const entry of readdirSync(distRoot)){if(!/\.(js|html)$/.test(entry))continu
 if(!process.env.READER_PREVIEW)writeFileSync(path.join(root,'worker/generated.mjs'),`// Generated by scripts/build.mjs.\nexport const books=${JSON.stringify(registry)};\nexport const release=${JSON.stringify(release)};\n`);
 mkdirSync(path.join(root,'output'),{recursive:true});
 const audit=[];
-for(const c of Object.values(stories).flatMap(s=>s.chapters)){audit.push(`# ${c.title}`);for(const text of c.blocks.map(b=>b.text))audit.push(Array.from(text).map((ch,i)=>readings[text][i]?`${ch}(${readings[text][i]})`:ch).join(''));}
+for(const c of [...Object.values(stories),...Object.values(whispers)].flatMap(s=>s.chapters)){audit.push(`# ${c.title}`);for(const text of c.blocks.map(b=>b.text))audit.push(Array.from(text).map((ch,i)=>readings[text][i]?`${ch}(${readings[text][i]})`:ch).join(''));}
 writeFileSync(path.join(root,'output','annotation-review.txt'),audit.join('\n\n'));
-console.log(`Built ${library.books.length} books, ${Object.values(stories).reduce((n,s)=>n+s.chapters.length,0)} parts, ${strings.size} annotated strings. Version ${release.id}.`);
+console.log(`Built ${library.books.filter(b=>!b.hidden).length} shelf books, ${library.books.filter(b=>!b.hidden).reduce((n,b)=>n+(whispers[b.id]||stories[b.id]).chapters.length,0)} current parts, ${strings.size} annotated strings (legacy sources retained). Version ${release.id}.`);

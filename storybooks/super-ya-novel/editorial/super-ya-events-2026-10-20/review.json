@@ -1,0 +1,273 @@
+{
+  "date": "2026-10-20",
+  "edition": "event-reflections-2026-10-20",
+  "chapters": 40,
+  "added": 35,
+  "openingPreserved": true,
+  "totalCharacters": 10266,
+  "counts": [
+    {
+      "id": "trial-opening-1",
+      "title": "第一篇｜原來，他先準備好了",
+      "characters": 291,
+      "paragraphs": 10
+    },
+    {
+      "id": "trial-opening-2",
+      "title": "第二篇｜今天不能一起玩了",
+      "characters": 308,
+      "paragraphs": 13
+    },
+    {
+      "id": "trial-opening-3",
+      "title": "第三篇｜我好想現在就知道！",
+      "characters": 285,
+      "paragraphs": 12
+    },
+    {
+      "id": "trial-opening-4",
+      "title": "第四篇｜我還想玩，可是他被撞到了",
+      "characters": 354,
+      "paragraphs": 15
+    },
+    {
+      "id": "trial-opening-5",
+      "title": "第五篇｜先問一句：沒事吧？",
+      "characters": 262,
+      "paragraphs": 11
+    },
+    {
+      "id": "trial-opening-6",
+      "title": "第六篇｜球為什麼要先收起來？",
+      "characters": 257,
+      "paragraphs": 10
+    },
+    {
+      "id": "trial-opening-7",
+      "title": "第七篇｜我無聊，別人就得一直躲嗎？",
+      "characters": 242,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-8",
+      "title": "第八篇｜你想先看哪一個？",
+      "characters": 268,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-9",
+      "title": "第九篇｜幫忙拿袋子，先問一句",
+      "characters": 242,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-10",
+      "title": "第十篇｜聽見「不能碰」，手先等一下",
+      "characters": 243,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-11",
+      "title": "第十一篇｜婷婷是來找人修娃娃屋的",
+      "characters": 254,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-12",
+      "title": "第十二篇｜為什麼一開口就說「都是你」？",
+      "characters": 256,
+      "paragraphs": 10
+    },
+    {
+      "id": "trial-opening-13",
+      "title": "第十三篇｜「你還不是一樣！」",
+      "characters": 248,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-14",
+      "title": "第十四篇｜我沒看到，就先不選邊",
+      "characters": 242,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-15",
+      "title": "第十五篇｜婷婷一定最生氣嗎？",
+      "characters": 222,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-16",
+      "title": "第十六篇｜要不要先來看機器人？",
+      "characters": 255,
+      "paragraphs": 10
+    },
+    {
+      "id": "trial-opening-17",
+      "title": "第十七篇｜我還沒說完！",
+      "characters": 238,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-18",
+      "title": "第十八篇｜嘴巴說喜歡，心裡呢？",
+      "characters": 243,
+      "paragraphs": 8
+    },
+    {
+      "id": "trial-opening-19",
+      "title": "第十九篇｜只要不碰那個，就沒事嗎？",
+      "characters": 239,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-20",
+      "title": "第二十篇｜我們原本都想一起玩",
+      "characters": 243,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-21",
+      "title": "第二十一篇｜不想玩，可以怎麼離開？",
+      "characters": 246,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-22",
+      "title": "第二十二篇｜糟了，它突然動起來了！",
+      "characters": 233,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-23",
+      "title": "第二十三篇｜我好怕，先問怎麼停",
+      "characters": 261,
+      "paragraphs": 10
+    },
+    {
+      "id": "trial-opening-24",
+      "title": "第二十四篇｜不會的地方，先不亂試",
+      "characters": 260,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-25",
+      "title": "第二十五篇｜答應要說一聲，我想記得",
+      "characters": 233,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-26",
+      "title": "第二十六篇｜我第一次看到這麼多魚！",
+      "characters": 266,
+      "paragraphs": 8
+    },
+    {
+      "id": "trial-opening-27",
+      "title": "第二十七篇｜便當竟然沒帶來",
+      "characters": 260,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-28",
+      "title": "第二十八篇｜還有點生氣，也可以一起做花環",
+      "characters": 249,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-29",
+      "title": "第二十九篇｜婷婷怎麼知道不是故意的？",
+      "characters": 251,
+      "paragraphs": 8
+    },
+    {
+      "id": "trial-opening-30",
+      "title": "第三十篇｜不是故意的，可是我的玩具壞了",
+      "characters": 268,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-31",
+      "title": "第三十一篇｜婷婷不想再追著問了",
+      "characters": 251,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-32",
+      "title": "第三十二篇｜她說沒關係，我就能催別人嗎？",
+      "characters": 250,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-33",
+      "title": "第三十三篇｜連一直吵架，也想說聲對不起",
+      "characters": 253,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-34",
+      "title": "第三十四篇｜娃娃屋修好了，誰花了時間？",
+      "characters": 254,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-35",
+      "title": "第三十五篇｜好想再玩一次！",
+      "characters": 248,
+      "paragraphs": 8
+    },
+    {
+      "id": "trial-opening-36",
+      "title": "第三十六篇｜輪到我了，卻還要等三天",
+      "characters": 264,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-37",
+      "title": "第三十七篇｜到底在怪球，還是在怪機器？",
+      "characters": 263,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-38",
+      "title": "第三十八篇｜再吵一句，三天會變短嗎？",
+      "characters": 251,
+      "paragraphs": 9
+    },
+    {
+      "id": "trial-opening-39",
+      "title": "第三十九篇｜他們正在氣頭上，我要加入嗎？",
+      "characters": 253,
+      "paragraphs": 8
+    },
+    {
+      "id": "trial-opening-40",
+      "title": "第四十篇｜我不用把每個人都勸好",
+      "characters": 260,
+      "paragraphs": 8
+    }
+  ],
+  "sourceSha256": "46bb33d69a3fb197f264f97e399c9b4fbde3043ec22d95a1d7a79f30c49e71b5",
+  "checks": [
+    "前五篇與已上線試讀逐字、逐段及 ID 一致。",
+    "新篇章每篇只談一個事件；陪讀與情節交錯，使用既有引用段落。",
+    "影片 03:09 字幕為「真想坐坐看」，不能照逐字稿誤寫做機器人。",
+    "花田說話及道歉在先，返程看到修好娃娃屋在後。",
+    "最後的等待與爭吵不以娃娃屋當起因；不補充三天的技術理由。",
+    "推測以如果、可能、也許或巧虎的回想標示，不宣稱已知角色內心。"
+  ],
+  "limits": [
+    "未做實體 iPad 與孩子接受度測試。",
+    "情緒小怪獸是創作比喻，不是佛經原話；不把感受等同傷人行為。"
+  ],
+  "progress": {
+    "current": "super-ya-events:whisper",
+    "legacy": [
+      "super-ya:whisper",
+      "super-ya-revisit:whisper",
+      "super-ya-revisit:practice"
+    ],
+    "practiceUnchanged": "super-ya:practice",
+    "note": "新版使用獨立進度；舊紀錄留在原文件，不將舊版完成算為新版完成。"
+  }
+}

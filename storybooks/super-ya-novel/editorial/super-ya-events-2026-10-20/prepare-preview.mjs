@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=path.resolve(fileURLToPath(new URL('.',import.meta.url)),'../..'),dist=path.join(root,'output/drafts/super-ya-events-2026-10-20/dist');
+const generated=readFileSync(path.join(root,'worker/generated.mjs'),'utf8');
+const result=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:root,encoding:'utf8',env:{...process.env,READER_DIST:dist,READER_PREVIEW:'1'}});
+process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');if(result.status)process.exit(result.status);
+if(readFileSync(path.join(root,'worker/generated.mjs'),'utf8')!==generated)throw Error('預覽不能改正式 Worker registry');
+writeFileSync(path.join(dist,'_redirects'),'/read /?book=super-ya&mode=whisper&preview=1 302\n');
+console.log(dist);

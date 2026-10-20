@@ -1,6 +1,10 @@
 async (sessionPage) => {
   const browser=sessionPage.context().browser();
+  // Retain the historical five-document renderer/anchor/map contract as an archive
+  // fixture. The user replaced the active edition; events-edition-flow tests it.
+  const archive=ctx=>ctx.route('**/library.json',async route=>{const response=await route.fetch(),data=await response.json();delete data.books.find(b=>b.id==='super-ya').whisper;await route.fulfill({json:data});});
   const context=await browser.newContext({viewport:{width:820,height:1180}}),page=await context.newPage();
+  await archive(context);
   const checks=[],errors=[];
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   const plain=locator=>locator.evaluate(el=>{const clone=el.cloneNode(true);clone.querySelectorAll('rt').forEach(n=>n.remove());return clone.textContent;});
@@ -85,6 +89,7 @@ async (sessionPage) => {
   check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','font setting survives reopening');
   check(await page.locator('#story-map .map-card').count()===4,'map events survive reopening');
   const isolated=await browser.newContext({viewport:{width:820,height:1180}}),blocked=await isolated.newPage();
+  await archive(isolated);
   await blocked.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Denied','SecurityError');}});});
   await blocked.goto('http://127.0.0.1:4178/?book=super-ya');await blocked.locator('.whisper-mode .mode-primary').click();await blocked.locator('[data-action="start"]').click();
   check(await blocked.locator('#storage-note').isVisible(),'storage failure explains the save limitation');
@@ -96,6 +101,7 @@ async (sessionPage) => {
   check(await blocked.locator('.whisper-mode .mode-primary').isVisible(),'whole book remains readable with storage blocked');
   await isolated.close();
   const migrationContext=await browser.newContext({viewport:{width:820,height:1180}}),migration=await migrationContext.newPage();
+  await archive(migrationContext);
   await migration.addInitScript(()=>localStorage.setItem('shimajiro-novel:v1',JSON.stringify({chapter:7,started:true,positions:{7:6500},choices:{7:2},bopo:false,size:1})));
   await migration.goto('http://127.0.0.1:4178/?book=super-ya');await migration.locator('.whisper-mode .mode-primary').click();await migration.locator('[data-action="start"]').click();
   check(await plain(migration.locator('#chapter-title'))===story.chapters[0].title,'old eight-chapter position never opens the wrong chapter');
@@ -104,6 +110,7 @@ async (sessionPage) => {
   check(await migration.evaluate(()=>!JSON.parse(localStorage.getItem('shimajiro-novel:v2')).choices),'removed conversation choices are not migrated');
   await migrationContext.close();
   const v2Context=await browser.newContext({viewport:{width:820,height:1180}}),v2=await v2Context.newPage();
+  await archive(v2Context);
   await v2.addInitScript(()=>localStorage.setItem('shimajiro-novel:v2',JSON.stringify({chapter:2,started:true,positions:{2:2500},choices:{2:1},bopo:true,size:1})));
   await v2.goto('http://127.0.0.1:4178/?book=super-ya');await v2.locator('.whisper-mode .mode-primary').click();await v2.locator('[data-action=start]').click();await v2.waitForTimeout(280);
   check(await plain(v2.locator('#chapter-title'))===story.chapters[2].title,'existing five-chapter reader keeps its current chapter');

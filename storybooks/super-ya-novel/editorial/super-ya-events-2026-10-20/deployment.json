@@ -1,0 +1,38 @@
+{
+  "publishedAt": "2026-10-20T16:12:41.138Z",
+  "mainVersion": "bf079ef5-96e3-4267-8269-94fbd30337e4",
+  "trialVersion": "98d2777f-a8d2-4bec-aaef-f307f7b8c8fa",
+  "reports": [
+    {
+      "origin": "https://shimajiro-reading.ji3cp31p4.workers.dev",
+      "release": {
+        "id": "0fc51c77b6c1",
+        "builtAt": "2026-10-20T15:53:33.831Z"
+      },
+      "verifiedAssets": 10,
+      "chapters": 40
+    },
+    {
+      "origin": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev",
+      "release": {
+        "id": "0fc51c77b6c1",
+        "builtAt": "2026-10-20T16:04:42.996Z"
+      },
+      "verifiedAssets": 10,
+      "chapters": 40
+    }
+  ],
+  "previousRelease": "59d4d55982df",
+  "practiceUnchanged": true,
+  "legacyDocumentsUnchanged": true,
+  "checks": {
+    "node": 23,
+    "chromiumFlows": 22,
+    "webkitTouchChecks": 8,
+    "newManuscriptChecks": 103,
+    "cloudWrites": "isolated local D1 only"
+  },
+  "limits": [
+    "未做實體 iPad 與孩子接受度測試。"
+  ]
+}

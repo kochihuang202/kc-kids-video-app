@@ -6,7 +6,7 @@ async(sessionPage)=>{
  page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{if(!localStorage.getItem('shimajiro-novel:v2'))localStorage.setItem('shimajiro-novel:v2',JSON.stringify({chapter:2,started:true,bopo:true,size:1,positions:{2:2500}}));});
  await page.goto('http://127.0.0.1:4178/');await page.locator('.bookshelf').waitFor();
- check(await page.locator('.book-card').count()===5,'shelf offers both originals and all three approved books');
+ check(await page.locator('.book-card').count()===4,'shelf offers one current SUPER YA and preserves the other three stories');
  await page.locator('.book-card img').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
  check(await page.locator('.book-card').evaluateAll(nodes=>nodes.every(n=>n.href.includes('?book=')&&n.querySelector('img').complete)),'both book links and cover images work');
  for(const [width,height,label]of [[820,1180,'portrait'],[1180,820,'landscape'],[390,844,'mobile']]){
@@ -50,7 +50,7 @@ async(sessionPage)=>{
  const stored=await page.evaluate(()=>localStorage.getItem('shimajiro-novel:kiki:v1'));
  await page.goto('http://127.0.0.1:4178/');await page.locator('.book-card[href="?book=super-ya"]').click();
  await page.locator('.whisper-mode .mode-primary').click();await page.locator('[data-action="start"]').click();await wait();
- check(await page.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v2')).chapter===2),'switching back preserves the original SUPER YA chapter');
+ check(await page.evaluate(()=>JSON.parse(localStorage.getItem('shimajiro-novel:v2')).chapter===2),'reading the new edition preserves archived original SUPER YA progress');
  check(await page.locator('[data-size="2"]').getAttribute('aria-pressed')==='true','SUPER YA shares the latest reading font size');
  check(await page.locator('#bopo-toggle').getAttribute('aria-pressed')==='false','SUPER YA shares the latest annotation preference');
  check(await page.evaluate(()=>localStorage.getItem('shimajiro-novel:kiki:v1'))===stored,'reading SUPER YA does not mutate Kiki saved progress');
@@ -70,7 +70,7 @@ async(sessionPage)=>{
  }
  await page.reload();await page.locator('.prose').waitFor();await wait();
  check(await plain(page.locator('#chapter-title'))===story.chapters[3].title,'direct Kiki link reload preserves independent resume');
- await page.goto('http://127.0.0.1:4178/?book=unknown');await page.locator('.bookshelf').waitFor();check(await page.locator('.book-card').count()===5,'unknown book link safely returns to the complete shelf');
+ await page.goto('http://127.0.0.1:4178/?book=unknown');await page.locator('.bookshelf').waitFor();check(await page.locator('.book-card').count()===4,'unknown book link safely returns to the current shelf');
  const blockedContext=await browser.newContext({viewport:{width:820,height:1180}}),blocked=await blockedContext.newPage();
  await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Denied','SecurityError');}}));
  await blocked.goto('http://127.0.0.1:4178/');await blocked.locator('.book-card[href="?book=kiki"]').click();await blocked.locator('.whisper-mode .mode-primary').click();await blocked.locator('[data-action="start"]').click();
