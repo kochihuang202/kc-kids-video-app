@@ -1,0 +1,9 @@
+{
+ "$schema":"../../../../node_modules/wrangler/config-schema.json",
+ "name":"shimajiro-reading-trial",
+ "account_id":"eba7a9eadf07a5e606c2023482e787af",
+ "compatibility_date":"2026-10-16",
+ "workers_dev":true,
+ "preview_urls":false,
+ "assets":{"directory":"../../output/drafts/dad-base-events-2026-10-21/dist"}
+}

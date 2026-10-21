@@ -1,0 +1,432 @@
+{
+  "date": "2026-10-21",
+  "status": "兩份完整新作，試讀專用，未加入正式書架。",
+  "reports": [
+    {
+      "id": "dad-shampoo",
+      "title": "小花為什麼說不要",
+      "parts": 26,
+      "characters": 4971,
+      "practiceUnits": 6,
+      "practiceQuestions": 24,
+      "sourceSha256": "b915b6d6707d8b191c677122617bc413153cba472ac6f2ee64a8829b5444a971",
+      "counts": [
+        {
+          "id": "dad-shampoo-event-01",
+          "title": "第一篇｜剛才明明還很開心",
+          "sourceTime": "00:00:07–00:00:21",
+          "characters": 200
+        },
+        {
+          "id": "dad-shampoo-event-02",
+          "title": "第二篇｜她說臭，我卻聽成討厭",
+          "sourceTime": "00:00:21–00:01:59",
+          "characters": 183
+        },
+        {
+          "id": "dad-shampoo-event-03",
+          "title": "第三篇｜洗了兩次，怎麼還是不行？",
+          "sourceTime": "00:00:39–00:01:08",
+          "characters": 193
+        },
+        {
+          "id": "dad-shampoo-event-04",
+          "title": "第四篇｜我聞起來香，她也一定喜歡嗎？",
+          "sourceTime": "00:00:45–00:01:08",
+          "characters": 186
+        },
+        {
+          "id": "dad-shampoo-event-05",
+          "title": "第五篇｜一句「不要」，還少了什麼？",
+          "sourceTime": "00:01:08",
+          "characters": 193
+        },
+        {
+          "id": "dad-shampoo-event-06",
+          "title": "第六篇｜媽媽的解釋，也可以再等等",
+          "sourceTime": "00:01:20–00:01:50",
+          "characters": 193
+        },
+        {
+          "id": "dad-shampoo-event-07",
+          "title": "第七篇｜我很確定，可是我猜錯了",
+          "sourceTime": "00:01:51–00:01:59",
+          "characters": 172
+        },
+        {
+          "id": "dad-shampoo-event-08",
+          "title": "第八篇｜因為她是女生？",
+          "sourceTime": "00:02:21–00:02:47",
+          "characters": 199
+        },
+        {
+          "id": "dad-shampoo-event-09",
+          "title": "第九篇｜安慰我的話，是真的嗎？",
+          "sourceTime": "00:02:50",
+          "characters": 181
+        },
+        {
+          "id": "dad-shampoo-event-10",
+          "title": "第十篇｜還沒發生，就先把自己嚇到了",
+          "sourceTime": "00:03:03–00:03:24",
+          "characters": 190
+        },
+        {
+          "id": "dad-shampoo-event-11",
+          "title": "第十一篇｜變得帥氣，就能解決嗎？",
+          "sourceTime": "00:03:24–00:03:56",
+          "characters": 201
+        },
+        {
+          "id": "dad-shampoo-event-12",
+          "title": "第十二篇｜說不會輸，卻還想再練一下",
+          "sourceTime": "00:03:56–00:04:09",
+          "characters": 176
+        },
+        {
+          "id": "dad-shampoo-event-13",
+          "title": "第十三篇｜別人說「你可以」，我還能說等等嗎？",
+          "sourceTime": "00:04:14–00:04:45",
+          "characters": 195
+        },
+        {
+          "id": "dad-shampoo-event-14",
+          "title": "第十四篇｜這麼努力，怎麼多了一個問題？",
+          "sourceTime": "00:05:01–00:05:08",
+          "characters": 185
+        },
+        {
+          "id": "dad-shampoo-event-15",
+          "title": "第十五篇｜我也跟著猜錯了",
+          "sourceTime": "00:05:08–00:05:33",
+          "characters": 200
+        },
+        {
+          "id": "dad-shampoo-event-16",
+          "title": "第十六篇｜她想找媽媽，不等於要趕走爸爸",
+          "sourceTime": "00:05:24–00:05:33",
+          "characters": 187
+        },
+        {
+          "id": "dad-shampoo-event-17",
+          "title": "第十七篇｜想自己靜一靜",
+          "sourceTime": "00:05:39–00:06:42",
+          "characters": 191
+        },
+        {
+          "id": "dad-shampoo-event-18",
+          "title": "第十八篇｜謝謝你，事情還沒有好也能說",
+          "sourceTime": "00:05:47",
+          "characters": 187
+        },
+        {
+          "id": "dad-shampoo-event-19",
+          "title": "第十九篇｜這一次，她連我也不要了",
+          "sourceTime": "00:05:58–00:06:12",
+          "characters": 176
+        },
+        {
+          "id": "dad-shampoo-event-20",
+          "title": "第二十篇｜原來，我拿錯瓶子了",
+          "sourceTime": "00:06:12–00:06:29",
+          "characters": 198
+        },
+        {
+          "id": "dad-shampoo-event-21",
+          "title": "第二十一篇｜同一個味道，不同的人",
+          "sourceTime": "00:06:24–00:06:59",
+          "characters": 192
+        },
+        {
+          "id": "dad-shampoo-event-22",
+          "title": "第二十二篇｜知道原因了，不用先說「我早就知道」",
+          "sourceTime": "00:06:53–00:07:08",
+          "characters": 186
+        },
+        {
+          "id": "dad-shampoo-event-23",
+          "title": "第二十三篇｜他想安靜，我有新消息",
+          "sourceTime": "00:06:40–00:06:59",
+          "characters": 198
+        },
+        {
+          "id": "dad-shampoo-event-24",
+          "title": "第二十四篇｜爸爸也能說「我沒發現」",
+          "sourceTime": "00:07:08",
+          "characters": 185
+        },
+        {
+          "id": "dad-shampoo-event-25",
+          "title": "第二十五篇｜換掉的是洗髮精",
+          "sourceTime": "00:07:16",
+          "characters": 199
+        },
+        {
+          "id": "dad-shampoo-event-26",
+          "title": "第二十六篇｜終於聽懂她說的不要",
+          "sourceTime": "00:07:25–00:07:55",
+          "characters": 225
+        }
+      ]
+    },
+    {
+      "id": "secret-base",
+      "title": "男生最棒：我們的祕密基地",
+      "parts": 30,
+      "characters": 5733,
+      "practiceUnits": 7,
+      "practiceQuestions": 29,
+      "sourceSha256": "9ddc8927afe5af296e75706a793b2ebb3d7f8a695cdb76aac71012d62e4d1592",
+      "counts": [
+        {
+          "id": "secret-base-event-01",
+          "title": "第一篇｜他們兩個，最近怎麼那麼好？",
+          "sourceTime": "00:00:11–00:00:26",
+          "characters": 183
+        },
+        {
+          "id": "secret-base-event-02",
+          "title": "第二篇｜看起來可疑，就真的有問題嗎？",
+          "sourceTime": "00:00:26–00:00:34",
+          "characters": 180
+        },
+        {
+          "id": "secret-base-event-03",
+          "title": "第三篇｜好奇，就能悄悄跟著嗎？",
+          "sourceTime": "00:00:37–00:01:17",
+          "characters": 183
+        },
+        {
+          "id": "secret-base-event-04",
+          "title": "第四篇｜大人在忙，也不一定在藏祕密",
+          "sourceTime": "00:00:53–00:01:04",
+          "characters": 195
+        },
+        {
+          "id": "secret-base-event-05",
+          "title": "第五篇｜我很想加入，他們卻說不行",
+          "sourceTime": "00:01:25–00:01:43",
+          "characters": 186
+        },
+        {
+          "id": "secret-base-event-06",
+          "title": "第六篇｜不知道密語，怎麼答得出來？",
+          "sourceTime": "00:01:43–00:02:03",
+          "characters": 172
+        },
+        {
+          "id": "secret-base-event-07",
+          "title": "第七篇｜飛得進去，就能進去嗎？",
+          "sourceTime": "00:02:04–00:02:26",
+          "characters": 187
+        },
+        {
+          "id": "secret-base-event-08",
+          "title": "第八篇｜不讓我玩，我就說出去",
+          "sourceTime": "00:02:35–00:02:43",
+          "characters": 206
+        },
+        {
+          "id": "secret-base-event-09",
+          "title": "第九篇｜點頭了，還可以再問一次",
+          "sourceTime": "00:02:35–00:02:51",
+          "characters": 188
+        },
+        {
+          "id": "secret-base-event-10",
+          "title": "第十篇｜保密，也能找大人幫忙",
+          "sourceTime": "00:02:43–00:03:59",
+          "characters": 202
+        },
+        {
+          "id": "secret-base-event-11",
+          "title": "第十一篇｜說男生最棒，就不能和女生玩？",
+          "sourceTime": "00:02:51–00:03:01",
+          "characters": 184
+        },
+        {
+          "id": "secret-base-event-12",
+          "title": "第十二篇｜拿水球防備，打到誰呢？",
+          "sourceTime": "00:03:02–00:03:12",
+          "characters": 192
+        },
+        {
+          "id": "secret-base-event-13",
+          "title": "第十三篇｜自己人，也會忘記陷阱",
+          "sourceTime": "00:04:28–00:04:39",
+          "characters": 191
+        },
+        {
+          "id": "secret-base-event-14",
+          "title": "第十四篇｜小可想幫烏龜",
+          "sourceTime": "00:03:27–00:03:59",
+          "characters": 204
+        },
+        {
+          "id": "secret-base-event-15",
+          "title": "第十五篇｜只躲開不准，問題會不見嗎？",
+          "sourceTime": "00:03:45–00:03:59",
+          "characters": 202
+        },
+        {
+          "id": "secret-base-event-16",
+          "title": "第十六篇｜不被罵的房間，還是要找東西",
+          "sourceTime": "00:04:03–00:04:14",
+          "characters": 199
+        },
+        {
+          "id": "secret-base-event-17",
+          "title": "第十七篇｜我的舊機器人，也先問一聲",
+          "sourceTime": "00:04:16–00:04:22",
+          "characters": 195
+        },
+        {
+          "id": "secret-base-event-18",
+          "title": "第十八篇｜爸爸送望遠鏡，算不算洩密？",
+          "sourceTime": "00:04:45–00:05:15",
+          "characters": 196
+        },
+        {
+          "id": "secret-base-event-19",
+          "title": "第十九篇｜密語傳出去了，先怪誰？",
+          "sourceTime": "00:05:24–00:05:40",
+          "characters": 183
+        },
+        {
+          "id": "secret-base-event-20",
+          "title": "第二十篇｜一直問，好像說了才會停",
+          "sourceTime": "00:05:45",
+          "characters": 192
+        },
+        {
+          "id": "secret-base-event-21",
+          "title": "第二十一篇｜越說不能講，我越想講",
+          "sourceTime": "00:05:57",
+          "characters": 182
+        },
+        {
+          "id": "secret-base-event-22",
+          "title": "第二十二篇｜說抱歉，已經聽見的人會忘嗎？",
+          "sourceTime": "00:05:45–00:06:06",
+          "characters": 191
+        },
+        {
+          "id": "secret-base-event-23",
+          "title": "第二十三篇｜她不喜歡基地，就不懂我們嗎？",
+          "sourceTime": "00:06:11–00:06:29",
+          "characters": 187
+        },
+        {
+          "id": "secret-base-event-24",
+          "title": "第二十四篇｜她說我的玩具奇怪，我也不舒服",
+          "sourceTime": "00:06:16–00:06:29",
+          "characters": 187
+        },
+        {
+          "id": "secret-base-event-25",
+          "title": "第二十五篇｜暴風雨，不是在處罰我們",
+          "sourceTime": "00:06:40–00:07:00",
+          "characters": 181
+        },
+        {
+          "id": "secret-base-event-26",
+          "title": "第二十六篇｜烏龜不見了，我只想怪自己",
+          "sourceTime": "00:07:04–00:07:10",
+          "characters": 185
+        },
+        {
+          "id": "secret-base-event-27",
+          "title": "第二十七篇｜原來，大人已經先來幫忙",
+          "sourceTime": "00:07:18–00:07:38",
+          "characters": 191
+        },
+        {
+          "id": "secret-base-event-28",
+          "title": "第二十八篇｜謝謝，不只因為東西還在",
+          "sourceTime": "00:07:30–00:07:38",
+          "characters": 193
+        },
+        {
+          "id": "secret-base-event-29",
+          "title": "第二十九篇｜要重蓋，也可以重新想",
+          "sourceTime": "00:07:40–00:07:53",
+          "characters": 199
+        },
+        {
+          "id": "secret-base-event-30",
+          "title": "第三十篇｜想蓋得更好，不是保證永遠不壞",
+          "sourceTime": "00:07:46–00:07:53",
+          "characters": 217
+        }
+      ]
+    }
+  ],
+  "protectedFiles": {
+    "content\\books\\karate\\delivery.md": "cd4cf38b5b1ae5afdb15c9bb3b73a2c948183b0538f2e9fcdc35000edf6ee012",
+    "content\\books\\karate\\evidence.json": "fd33a90f170de4d01e75a40f5ba37f1f9c05045e8c3a739e1dace084098ab064",
+    "content\\books\\karate\\original.md": "7ca22a65c2b9669868e48c0d4c048d0a3e2eef0f6ebc5041a22fdc6000c472e0",
+    "content\\books\\karate\\practice-answers.json": "7acd2451f7c7cbce9466d2ab2dfd42dcc63728a7c46fc4ec2e1c9534f6578a33",
+    "content\\books\\karate\\practice-passages.json": "e7272a4e60f4fbbc2e41012469297679ff353671eaca85b82d43c3d49be2f738",
+    "content\\books\\karate\\practice-questions.json": "49be832d0655d533bd9c77483d700254b282493b3bb0dce30d258a68fe855767",
+    "content\\books\\karate\\source.md": "9a6a2fc4af2d2a574b522054f5170f1b40405d39b15de4b19959855aea50fcfd",
+    "content\\books\\karate\\story.json": "a8c4c52f56267b2be51f5de5444df895661dbbc8bb5e2a1104f3fabdefff79cf",
+    "content\\books\\karate\\ui.json": "f37ade23f30e76aefdb470dd294df18c563c2d77a341d0d4cddaba5548a34413",
+    "content\\books\\kiki\\evidence.json": "e04d63359d2df57e89c0661332119cffc28712e2ebbb396909c5851fac78011e",
+    "content\\books\\kiki\\original.md": "169c2b49b9dea7d45598d6d235333e43d7638e7a46555d378ae53f68da5383b8",
+    "content\\books\\kiki\\practice-answers.json": "d577959b55b5b72feae31b14a976d4c27fc666720ed60eaed763a5611653a6eb",
+    "content\\books\\kiki\\practice-passages.json": "b8728c3b8c677819f067f632ffce47547b219f9fd8c1619b13c13dad06ee0dae",
+    "content\\books\\kiki\\practice-questions.json": "603aeb4b9fd2f63e80125f5b59c550c2674707a6e53127074f6608ba5fdb3c68",
+    "content\\books\\kiki\\source.md": "f245b78bb3ccff761bf48eeb3af58b3e5d933c35746b35159be2cf2ae548814d",
+    "content\\books\\kiki\\story.json": "682bc9370ca2c73393646b943fd1c0580fc713f5fc71aa2bc3b7e2aaa82e0604",
+    "content\\books\\kiki\\ui.json": "dcd43a97074fbadb414d96681e2a7036e24a291ee22a7eff73b0e79d4903841f",
+    "content\\books\\super-ya-events\\source.md": "ad2a7fa0d9c299314ccfcc3aea0f47244accc64484b64c991fc3c8de3ba0149f",
+    "content\\books\\super-ya-events\\story.json": "ee95b72cdc923096ec33467db862cbaf363cb505ee348044719f51b57958051a",
+    "content\\books\\super-ya-events\\ui.json": "8e73bfc34749231921b1d511c56109692a8f77cc0a71dc80a62fa731c3df2578",
+    "content\\books\\super-ya-revisit\\delivery.md": "90fcb0bdc8c26e80e24fe0e1a6585c413a8d76586a8b9c83482551c97535c514",
+    "content\\books\\super-ya-revisit\\evidence.json": "003f44c303887bcf7cc67fdd7818d1dcee00800ee1b5a7a1a49ac50b55a1a4fb",
+    "content\\books\\super-ya-revisit\\original.md": "46bb33d69a3fb197f264f97e399c9b4fbde3043ec22d95a1d7a79f30c49e71b5",
+    "content\\books\\super-ya-revisit\\practice-answers.json": "875e561cabac1d1ee42f360088f6c09c1a5b3b04e4b318c9d2aac8f1ea7fe704",
+    "content\\books\\super-ya-revisit\\practice-passages.json": "059951f6c27c876e07defb7b5f62be6731cff4e60fa1083271f6a71d864cf451",
+    "content\\books\\super-ya-revisit\\practice-questions.json": "6a1f669b4fc577965530b9cb43543438eecaaab87a0f508b1e8de4ba5dfa7dfb",
+    "content\\books\\super-ya-revisit\\source.md": "18ac1f73141137b68be4b4bcd9604e592efcd2ab7e421ea99be5e976730daa50",
+    "content\\books\\super-ya-revisit\\story.json": "ff01f1f4a3e521ffce1aa898e31f62e0c58269fbb963ae57eb7c0825c85a2170",
+    "content\\books\\super-ya-revisit\\ui.json": "c2f6fc7f38cf8eaea06137d30c82af0ca23b8c7bce04042d2377eaeefeb6d88c",
+    "content\\books\\tata\\delivery.md": "31b6566150228c6a74ae68fba9df1d3fe2f3235c94eb1da3a345f1600c3d06ce",
+    "content\\books\\tata\\evidence.json": "fcf9d5572ae010c5e92fbfaf809feed7ce6057c994a302e6c6a629c3cf714028",
+    "content\\books\\tata\\original.md": "2bebdc8faf604d0a8830ab919b17f4241c3e6ce7f4a929743576e2c8f7a2672e",
+    "content\\books\\tata\\practice-answers.json": "be1d0795f8ece9a97b99794306521aa22d16da851a54c0c1d46db2e552608aa3",
+    "content\\books\\tata\\practice-passages.json": "4e7858e95ba3de93186d1e4634fb9c1a9f87a6b420b79ee9ca74dc55faa75db8",
+    "content\\books\\tata\\practice-questions.json": "e39ab2cfcb2edc174ef4c09b72b33da4cbf6e3eb32876f9abde72ce48ec8b86e",
+    "content\\books\\tata\\source.md": "dcda5261177f74c27976238d4092d8d7b0b6c4539eb10bcb2d94199a7c27f009",
+    "content\\books\\tata\\story.json": "ae452b8338548925b53b6fc1fde3f6ec7458da1d8ab60c51f64a52ec65a7b04a",
+    "content\\books\\tata\\ui.json": "f37ade23f30e76aefdb470dd294df18c563c2d77a341d0d4cddaba5548a34413",
+    "content\\glossary.json": "0e595df13843f61fa5d3768ccb32f0804dfdad67d54e292248696eaf8160d706",
+    "content\\image-sources.json": "a92365abf8d4ff94825f8bdeffbc7bf90728cd185f18fd47b0d8456f82bc8121",
+    "content\\learning-ui.json": "5dbf66e3978257003714be6440ad67ffb4b6e86c4028807039e97f563edf33a2",
+    "content\\legacy-practice.json": "f59b7218e804d1045a2b72cb6b37edd482e9b9b35658d669f25eb04fbb12aae5",
+    "content\\library.json": "7c1c2c482e7c6cda2f16a4784c9393bebaf8c58adb8250c2b649ebc62f519a36",
+    "content\\practice.json": "011031e782771899b6700dd9bf8fd3fcb2185fcb3f1939c423648936cb936d8f",
+    "content\\presentation.json": "cfc1e64cfc8dc4794113e3d9310758ee4e9ec95300254550c87d0b511c87866b",
+    "content\\reading-fixtures.json": "6e814f205c89face1235d184ece1e832f58b95693dc84eabbc07d9ccbda7f158",
+    "content\\readings-overrides.json": "229da1b048440ed30c331498a71de6c183ad08b4528027e5ed69dc23f5f69d16",
+    "content\\reference\\qiqi_reading.html": "4d401a2d3247e1b0a4ccf08b33ffe4e16fd37cf9918e9c332fa8ebbbc3fec238",
+    "content\\source\\01_兩位發明家兩種想法.md": "b18a0eda77914896a7699b3f5be5b19a8a6b24bbe5dc3e19b91ffe1c64a4af68",
+    "content\\source\\02_壞掉的娃娃屋.md": "f65932c84b7f8f6b4bd0050f0c4072271fe0a24ba0406752528c9aabe61fa53a",
+    "content\\source\\03_SUPER_YA突然出發.md": "eb53bbe2c89c0dfb688b2c6d9500fa93b308d99346282871ac7f8216c05e9c8f",
+    "content\\source\\04_花田裡的和解.md": "d67d6b046be5301996cca5051fcb27bd42a5d965b611256a47c015d1d68ef4ba",
+    "content\\source\\05_大人怎麼也吵起來了.md": "a812422802b6e325cee700cec52d2746c5c78517437bf898c37ba1daed4a47a9",
+    "content\\story.json": "cd5d6756fc41d1d628e2466926386f25003a3484262183c01592f230db0793fa",
+    "content\\ui.json": "856efb27e227e9101e9f03529a28a0c5adf9e020b622fc3de2e0816f12ca0c68",
+    "worker/generated.mjs": "1b741fcd8c35aaa3a1d737308bb8f851f755418e569bcbc85c4edc7ddaf7a965",
+    "dist/release.json": "c954ece6407e76015c5eb698e8d2e66fbf3769bf89b78748d41430e7b21d08e0"
+  },
+  "retainedTrial": {
+    "tata": 28,
+    "karate": 32
+  },
+  "limits": [
+    "小花這集未確認相應影片，依原逐字稿，不補未核對畫面。",
+    "祕密基地影片抽格核對，不是逐字聽打。",
+    "沒有實體iPad或孩子接受度測試。"
+  ]
+}

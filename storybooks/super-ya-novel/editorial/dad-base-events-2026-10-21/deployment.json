@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-10-21T01:17:06.309Z",
+  "worker": "shimajiro-reading-trial",
+  "workerVersion": "bca78902-e4e3-447a-b33d-8992d9de83e6",
+  "release": "8a7bb4bb8d1b",
+  "formalRelease": "0fc51c77b6c1",
+  "formalUnchanged": true,
+  "preview": true,
+  "retainedTrial": {
+    "tata": 28,
+    "karate": 32
+  },
+  "books": [
+    {
+      "id": "dad-shampoo",
+      "whisper": 26,
+      "units": 6,
+      "questions": 24,
+      "url": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev/?book=dad-shampoo&preview=1"
+    },
+    {
+      "id": "secret-base",
+      "whisper": 30,
+      "units": 7,
+      "questions": 29,
+      "url": "https://shimajiro-reading-trial.ji3cp31p4.workers.dev/?book=secret-base&preview=1"
+    }
+  ]
+}
