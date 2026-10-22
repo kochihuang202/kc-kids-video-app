@@ -33,7 +33,7 @@ interface NativeMediaPlayerProps {
   onError?: (error?: NativePlaybackError) => void;
   onReady?: () => void;
   onPlayable?: () => void;
-  onDiagnostic?: (type: string, detail: PlayerDebugInfo) => void;
+  onDiagnostic?: (type: string, detail: PlayerDebugInfo, errorCode?: string) => void;
 }
 
 export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlayerProps>(
@@ -47,10 +47,14 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     const remotePauseRef = useRef(false);
     const lastCurrentTimeRef = useRef(startAt);
     const sourceGenerationRef = useRef(0);
+    const systemResumeRef = useRef<{
+      element: HTMLMediaElement; generation: number; position: number;
+      timer: number | null; notBefore: number; reported: boolean; restarted: boolean;
+    } | null>(null);
     const settingsRef = useRef({ autoPlay, startAt, src });
     settingsRef.current = { autoPlay, startAt, src };
-    const callbacksRef = useRef({ onError, onDiagnostic });
-    callbacksRef.current = { onError, onDiagnostic };
+    const callbacksRef = useRef({ onError, onDiagnostic, onStateChange });
+    callbacksRef.current = { onError, onDiagnostic, onStateChange };
     const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType, src);
 
     const debugState = (): PlayerDebugInfo => {
@@ -75,9 +79,89 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         sourceGeneration: sourceGenerationRef.current,
         muted: element?.muted, volume: element?.volume, playbackRate: element?.playbackRate,
         mediaErrorCode: element?.error?.code || 0,
+        ...audioSessionState(),
       };
     };
-    const diagnostic = (state: string) => callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state });
+    const diagnostic = (state: string, errorCode?: string) => callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state }, errorCode);
+
+    function audioSessionState(): PlayerDebugInfo {
+      try {
+        const session = (navigator as Navigator & {
+          audioSession?: { state?: string; type?: string };
+        }).audioSession;
+        return {
+          audioSessionState: session?.state, audioSessionType: session?.type,
+          systemPlaybackState: navigator.mediaSession?.playbackState,
+          userActivationActive: navigator.userActivation?.isActive,
+        };
+      } catch { return {}; }
+    }
+
+    function cancelSystemResumeCheck() {
+      const check = systemResumeRef.current;
+      if (check && check.timer !== null) window.clearTimeout(check.timer);
+      systemResumeRef.current = null;
+    }
+
+    function scheduleSystemResumeCheck(delay: number) {
+      const check = systemResumeRef.current;
+      if (!check) return;
+      if (check.timer !== null) window.clearTimeout(check.timer);
+      check.timer = window.setTimeout(checkSystemResume, delay);
+    }
+
+    function checkSystemResume() {
+      const check = systemResumeRef.current;
+      if (!check) return;
+      check.timer = null;
+      if (Date.now() < check.notBefore) {
+        scheduleSystemResumeCheck(check.notBefore - Date.now());
+        return;
+      }
+      const element = elementRef.current;
+      if (!element || element !== check.element || sourceGenerationRef.current !== check.generation
+        || !playRequestedRef.current || element.ended || element.seeking
+        || audioSessionState().audioSessionState === "interrupted") {
+        cancelSystemResumeCheck();
+        return;
+      }
+      if (Math.abs(element.currentTime - check.position) >= 0.25) {
+        diagnostic("system_resume_progress");
+        cancelSystemResumeCheck();
+        return;
+      }
+      // Only diagnose the captured false-playing failure. A real network
+      // wait must continue through the existing bounded connection recovery.
+      const bufferedAhead = debugState().bufferedAheadSeconds;
+      if (element.readyState < 3 || typeof bufferedAhead !== "number" || bufferedAhead < 0.25) {
+        cancelSystemResumeCheck();
+        return;
+      }
+      if (!check.reported) {
+        check.reported = true;
+        diagnostic("system_resume_stalled", "NATIVE_RESUME_STALLED");
+      }
+      if (document.hidden) return; // no background polling or source reload
+      if (check.restarted) {
+        cancelSystemResumeCheck();
+        playRequestedRef.current = false;
+        pendingPlayRef.current = null;
+        element.pause();
+        callbacksRef.current.onStateChange?.("PAUSED");
+        diagnostic("system_resume_recovery_failed", "NATIVE_RESUME_REQUIRES_TAP");
+        return;
+      }
+      // Reproduce the user's effective foreground Pause -> Play exactly once,
+      // keeping the loaded media and position. A new user pause cancels this.
+      check.restarted = true;
+      check.position = element.currentTime;
+      check.notBefore = Date.now() + 1_200;
+      pendingPlayRef.current = null;
+      element.pause();
+      diagnostic("foreground_resume_restart");
+      playElement(element);
+      scheduleSystemResumeCheck(1_200);
+    }
 
     const syncVisualVideo = (play: boolean) => {
       const master = elementRef.current;
@@ -96,17 +180,18 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       const request = element.play();
       pendingPlayRef.current = request;
       void request.then(() => {
-        if (generation !== sourceGenerationRef.current) return;
+        if (generation !== sourceGenerationRef.current || pendingPlayRef.current !== request) return;
         diagnostic("play_resolved");
         if (playRequestedRef.current && elementRef.current === element) syncVisualVideo(true);
       }).catch((error: unknown) => {
-        if (generation !== sourceGenerationRef.current) return;
+        if (generation !== sourceGenerationRef.current || pendingPlayRef.current !== request) return;
         const name = error instanceof Error ? error.name : "UnknownError";
         callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state: "play_rejected", errorName: name, errorOperation: "play" });
         // A pending play promise is commonly aborted when our own pause/load
         // wins the race. That is a control-flow interruption, not a broken
         // Mac/Tailscale media connection.
         if (error instanceof DOMException && error.name === "AbortError") return;
+        cancelSystemResumeCheck();
         callbacksRef.current.onError?.({ code: 0, name, message: error instanceof Error ? error.message : "Playback failed", operation: "play" });
       }).finally(() => {
         if (pendingPlayRef.current === request) pendingPlayRef.current = null;
@@ -120,17 +205,21 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         return duration && Number.isFinite(duration) ? duration : 0;
       },
       play: () => {
+        cancelSystemResumeCheck();
         playRequestedRef.current = true;
         const element = elementRef.current;
         if (!element) return;
         playElement(element);
       },
       pause: () => {
+        cancelSystemResumeCheck();
         playRequestedRef.current = false;
         elementRef.current?.pause();
+        pendingPlayRef.current = null;
         visualVideoRef.current?.pause();
       },
       seekTo: (seconds) => {
+        cancelSystemResumeCheck();
         const element = elementRef.current;
         if (!element) return;
         const duration = Number.isFinite(element.duration) ? element.duration : Number.MAX_SAFE_INTEGER;
@@ -145,6 +234,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     }), [onError, startAt]);
 
     useEffect(() => {
+      cancelSystemResumeCheck();
       sourceGenerationRef.current += 1;
       readySentRef.current = false;
       playingRef.current = false;
@@ -211,6 +301,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     useEffect(() => {
       const element = elementRef.current;
       return () => {
+        cancelSystemResumeCheck();
         if (!element) return;
         sourceGenerationRef.current += 1;
         element.pause();
@@ -238,10 +329,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       if (mediaType !== "audio" || typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
       const mediaSession = navigator.mediaSession;
       const pauseFromSystem = () => {
+        cancelSystemResumeCheck();
         remotePauseRef.current = true;
         playRequestedRef.current = false;
         diagnostic("system_pause");
         elementRef.current?.pause();
+        pendingPlayRef.current = null;
       };
       const playFromSystem = () => {
         const element = elementRef.current;
@@ -271,6 +364,14 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
             try { element.currentTime = position; } catch { /* restored after metadata */ }
           }
         }
+        if (document.hidden) {
+          cancelSystemResumeCheck();
+          systemResumeRef.current = {
+            element, generation: sourceGenerationRef.current, position: element.currentTime,
+            timer: null, notBefore: Date.now() + 1_200, reported: false, restarted: false,
+          };
+          scheduleSystemResumeCheck(1_200);
+        }
         playElement(element);
       };
 
@@ -293,6 +394,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         if (document.hidden) {
           visualVideoRef.current?.pause();
         } else if (master) {
+          if (systemResumeRef.current) {
+            // Allow native state to settle after foregrounding before deciding
+            // whether a supposedly playing audio element is actually frozen.
+            scheduleSystemResumeCheck(250);
+            return;
+          }
           if (playRequestedRef.current && master.paused && !master.ended) {
             diagnostic("foreground_resume_attempt");
             playElement(master);

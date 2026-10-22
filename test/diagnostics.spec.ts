@@ -133,6 +133,35 @@ describe("playback diagnostics", () => {
     expect((await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?").bind(id).first<{ outcome: string }>())?.outcome).toBe("error");
   });
 
+  it("retains false-playing resume failures and optional audio-session evidence", async () => {
+    const device = await pairedDevice();
+    const response = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "self_hosted", playbackMode: "listen", userAgent: "iPad Safari",
+      }),
+    });
+    const { id } = await response.json<{ id: string }>();
+    expect((await call(`/api/diagnostics/sessions/${id}/events`, {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events: [
+        { seq: 1, type: "page_opened", occurredAt: new Date().toISOString(), detail: { diagnosticVersion: "playback-v2" } },
+        { seq: 2, type: "native_media_event", occurredAt: new Date().toISOString(), errorCode: "NATIVE_RESUME_STALLED", detail: {
+          state: "system_resume_stalled", audioSessionState: "inactive", audioSessionType: "auto",
+          systemPlaybackState: "playing", userActivationActive: false, currentTime: 215.77,
+          mediaPaused: false, bufferedAheadSeconds: 661,
+        } },
+        { seq: 3, type: "playing", occurredAt: new Date().toISOString() },
+      ] }),
+    })).status).toBe(200);
+    const row = await env.DB.prepare("SELECT outcome, last_error_code FROM diagnostic_sessions WHERE id = ?")
+      .bind(id).first<{ outcome: string; last_error_code: string }>();
+    expect(row).toEqual({ outcome: "error", last_error_code: "NATIVE_RESUME_STALLED" });
+    const event = await env.DB.prepare("SELECT detail_json FROM diagnostic_events WHERE diagnostic_session_id = ? AND event_seq = 2")
+      .bind(id).first<{ detail_json: string }>();
+    expect(JSON.parse(event!.detail_json)).toMatchObject({
+      audioSessionState: "inactive", audioSessionType: "auto", systemPlaybackState: "playing", userActivationActive: false,
+    });
+  });
+
   it("rolls old errors into summaries and keeps only 100 successful sessions per device", async () => {
     const device = await pairedDevice();
     const oldStarted = new Date(Date.now() - 40 * 86400000).toISOString();

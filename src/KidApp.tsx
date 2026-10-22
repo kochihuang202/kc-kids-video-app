@@ -1677,8 +1677,11 @@ export function WatchPage() {
               onProgress={handleNativeProgress}
               onError={handleMediaError}
               onPlayable={handleMediaPlayable}
-              onDiagnostic={(type, detail) => {
-                diagnosticsRef.current?.event(type, detail, undefined, currentPosRef.current);
+              onDiagnostic={(type, detail, errorCode) => {
+                diagnosticsRef.current?.event(type, detail, errorCode, currentPosRef.current);
+                if (detail.state === "system_resume_recovery_failed") {
+                  setPlaybackBlockedMessage("音訊尚未恢復，請點一下播放繼續。");
+                }
                 if (detail.state === "system_pause") {
                   autoRetryActiveRef.current = false;
                   setAutoRetryActive(false);

@@ -62,3 +62,12 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 - 鎖屏／背景收到系統播放時，改為沿用目前音訊，事件為 `native_media_event.state=system_resume_preserve_source`。此路徑不得呼叫 `load()`、重綁來源或重建元素；前景原有修復路徑仍保留，事件為 `system_resume_rebind_source`。
 - 不新增健康輪詢，也不修改 YouTube、額度、下一首或紀錄規則。未收到系統按鍵事件不代表已證明 iPad 原生播放程序殘留；仍可能有暫停送出診斷等因素。
 - 驗證：`npx playwright test e2e/regressions/lock-screen-resume-buffer.spec.ts e2e/regressions/listen-background-audio.spec.ts`。測試可防止背景重載和進度卡住，不能直接證明喇叭有聲音；部署後仍需實體 iPad 驗證同一操作。
+
+### 2026-10-22：假播放與解鎖後的一次性恢復（REG-064）
+
+- 新版已生效的 Session `6e34a0b6-a0a0-4b59-a3f7-cf4f4bed7bc4`，台北時間 22:38:35 系統播放保留了約 661 秒緩衝，且回報 `playing`/`play_resolved`，但實際 `currentTime` 凍結於 215.77 秒；22:38:38 解鎖仍未恢復，22:38:41–43 家長在頁面按暫停／播放後才出現 `playback_confirmed`。
+- 只在隱藏頁面收到系統播放時安排一次 1.2 秒的實際位置檢查。真正缺資料、正在 seek、已結束或可取得的音訊狀態為 interrupted，不使用這個恢復機制。正常進度會取消檢查。
+- 凍結記為 `NATIVE_RESUME_STALLED`，不啟動 Mac／Tailscale 重連。在前景等待狀態穩定後，最多執行一次 `foreground_resume_restart`（同一元素 pause/play），不呼叫 load、不清緩衝。仍失敗時記為 `NATIVE_RESUME_REQUIRES_TAP`，停止並提示「音訊尚未恢復，請點一下播放繼續。」
+- 明確暫停、拖曳、頁面播放、換來源、離開頁面會取消待處理檢查；舊 play promise 不得在較新的操作後回報錯誤。這不是持續 polling，背景不反覆強制 play，也不新增健康探測。
+- 可取得時附 `audioSessionState`、`audioSessionType`、`systemPlaybackState`、`userActivationActive`。依 [W3C Audio Session 草案](https://www.w3.org/TR/audio-session/) 的狀態語義讀取；僅作診斷，不設定實驗性 AudioSession type、不要求麥克風權限，也不以 active 當成有聲音的證明。
+- 仍需實機驗證前景恢復是否獲 iPad 允許；自動化測試不能聽取實體裝置喇叭。若無聲時真正的 media currentTime 持續前進，此機制無法直接識別音訊輸出失效。滑掉 PWA 後仍有聲音的系統層原因也尚未確認。
