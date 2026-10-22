@@ -7,6 +7,7 @@ const EVENT_TYPES = new Set([
   "buffering", "ended", "seeked", "retry_started", "retry_succeeded", "retry_exhausted",
   "media_probe", "media_error", "youtube_error", "autoplay_blocked", "visibility_hidden",
   "visibility_visible", "next_requested", "route_left", "javascript_error",
+  "native_media_event", "playback_confirmed", "youtube_playlist_reset_prevented",
 ]);
 const ERROR_EVENTS = new Set(["retry_exhausted", "media_error", "youtube_error", "autoplay_blocked", "javascript_error"]);
 
@@ -43,11 +44,16 @@ function sanitizeDetail(value: unknown) {
     "status", "latencyMs", "requestId", "serviceVersion", "serverTiming", "readyMs",
     "state", "retryNumber", "networkOnline", "mediaErrorCode", "youtubeErrorCode", "message",
     "tailscaleRunning", "tailscaleOnline", "mediaRootReadable", "activeStreams",
+    "diagnosticVersion", "errorName", "errorOperation", "sourceKind", "visibilityState", "documentHidden",
+    "currentTime", "duration", "readyState", "networkState", "mediaPaused", "mediaEnded", "mediaSeeking",
+    "bufferedAheadSeconds", "playIntent", "pendingPlay", "muted", "volume", "playbackRate",
+    "youtubePlayerState", "playerVideoId", "retryRemainingMs", "recoveryEvidence",
+    "transition", "repeatCount", "reportedVideoId", "expectedVideoId", "sourceGeneration",
   ];
   const output: JsonObject = {};
   for (const key of allowed) {
     const item = (value as JsonObject)[key];
-    if (typeof item === "string") output[key] = item.slice(0, 240);
+    if (typeof item === "string") output[key] = item.replace(/(?:https?|blob|file):[^\s"'<>]+/gi, "[redacted-url]").slice(0, 240);
     else if (typeof item === "number" && Number.isFinite(item)) output[key] = item;
     else if (typeof item === "boolean") output[key] = item;
   }
@@ -179,7 +185,23 @@ export async function addDiagnosticEvents(request: Request, env: AppEnv, id: str
       last_error_code = (SELECT error_code FROM diagnostic_events WHERE diagnostic_session_id = ? AND error_code IS NOT NULL ORDER BY event_seq DESC LIMIT 1),
       first_play_at = COALESCE(first_play_at, (SELECT MIN(occurred_at) FROM diagnostic_events WHERE diagnostic_session_id = ? AND event_type = 'playing')),
       first_play_ms = COALESCE(first_play_ms, MAX(0, CAST((julianday((SELECT MIN(occurred_at) FROM diagnostic_events WHERE diagnostic_session_id = ? AND event_type = 'playing')) - julianday(started_at)) * 86400000 AS INTEGER))),
-      outcome = CASE WHEN EXISTS (SELECT 1 FROM diagnostic_events WHERE diagnostic_session_id = ? AND error_code IS NOT NULL) THEN 'recovered' ELSE outcome END,
+      outcome = CASE WHEN EXISTS (
+        SELECT 1 FROM diagnostic_events WHERE diagnostic_session_id = ? AND error_code IS NOT NULL
+      ) THEN CASE WHEN EXISTS (
+        SELECT 1 FROM diagnostic_events recovered
+        WHERE recovered.diagnostic_session_id = diagnostic_sessions.id
+          AND recovered.event_seq > (
+            SELECT MAX(failed.event_seq) FROM diagnostic_events failed
+            WHERE failed.diagnostic_session_id = diagnostic_sessions.id AND failed.error_code IS NOT NULL
+          )
+          AND (recovered.event_type IN ('playback_confirmed', 'retry_succeeded') OR (
+            recovered.event_type = 'playing' AND NOT EXISTS (
+              SELECT 1 FROM diagnostic_events opened
+              WHERE opened.diagnostic_session_id = diagnostic_sessions.id AND opened.event_type = 'page_opened'
+                AND json_extract(opened.detail_json, '$.diagnosticVersion') = 'playback-v2'
+            )
+          ))
+      ) THEN 'recovered' ELSE 'error' END ELSE outcome END,
       updated_at = ? WHERE id = ?
   `).bind(id, id, id, id, id, id, now, id).run();
   return json({ ok: true });
@@ -194,10 +216,10 @@ export async function finishDiagnosticSession(request: Request, env: AppEnv, id:
   const now = new Date().toISOString();
   await env.DB.prepare(`
     UPDATE diagnostic_sessions SET outcome = CASE
-      WHEN error_count > 0 AND ? = 'success' THEN 'recovered' ELSE ? END,
+      WHEN error_count > 0 THEN CASE WHEN outcome = 'recovered' THEN 'recovered' ELSE 'error' END ELSE ? END,
       ended_at = ?, updated_at = ?
     WHERE id = ? AND device_id = ?
-  `).bind(requested, requested, now, now, id, device!.id).run();
+  `).bind(requested, now, now, id, device!.id).run();
   await runRetentionIfDue(env);
   return json({ ok: true });
 }

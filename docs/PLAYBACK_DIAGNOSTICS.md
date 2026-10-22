@@ -45,3 +45,13 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 ```
 
 診斷失敗不得阻斷播放；前端暫時送不出的批次只在本機保留最近 20 批，之後使用相同事件序號重送，D1 以 `(diagnostic_session_id, event_seq)` 去重。
+
+## 2026-10-22：背景播放與重試診斷 v2
+
+- 新紀錄的 `page_opened.detailJson.diagnosticVersion` 為 `playback-v2`；每筆事件附頁面可見性、來源種類（`blob` 本機下載、`remote` 串流、`youtube`）、當前位置、播放意圖與重試剩餘時間。
+- 自家播放器另附 `readyState`、`networkState`、緩衝秒數、暫停／結束／seek、音量／靜音、播放速率與待處理 play promise。`native_media_event` 區分 source change、載入、stalled、suspend、abort、play resolve/reject、鎖屏系統 play/pause 及前景恢復嘗試。事件沒有記錄完整影音網址。
+- 播放拒絕保留 `errorName`、`errorOperation` 與經網址遮罩的訊息。`PLAY_NOT_ALLOWED` 是原生播放權限拒絕；`YT_AUTOPLAY_BLOCKED` 來自 YouTube 真正的 `onAutoplayBlocked` 回報。舊的 `AUTOPLAY_NOT_STARTED` 僅代表 4 秒內沒看到 playing，不能單憑它判定網路或權限原因。
+- `playback_confirmed` 代表實際位置前進至少 0.25 秒；它可以排除 frozen timeline，但不代表能直接偵測喇叭是否真的有聲音。只有最後一個錯誤之後出現恢復證據，v2 紀錄才顯示 `recovered`。
+- 自動重試共用一次 60 秒期限，正常間隔 4 秒。metadata 不算重試成功；有播放意圖時須等位置前進，尚未按播放時則可在 `canplay` 完成準備。手動「立即再試」不延長當輪期限；到期後明確按「再試一次」才開新一輪。重試沿用同一個 media element。
+- Mac 探測依「開始」或「失敗」合併進行，同一類別 4 秒內不重複執行，也不新增持續健康檢查。
+- 沿用每台成功 100 次、錯誤詳情 30 天的保存方式。排查時先確認診斷版本，依序比較 `visibility_hidden`、`ended`、`next_requested`、下一個 Session 的 source/ready/buffering，以及恢復可見後是否出現 `playback_confirmed`。

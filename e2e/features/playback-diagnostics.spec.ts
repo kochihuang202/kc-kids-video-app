@@ -14,6 +14,7 @@ test("records a real playback flow as one batched device diagnostic", async ({ p
   const eventTypes: string[] = [];
   const eventErrors: Array<string | undefined> = [];
   const outcomes: string[] = [];
+  const details: Array<Record<string, unknown>> = [];
   await page.route("**/api/diagnostics/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -22,9 +23,10 @@ test("records a real playback flow as one batched device diagnostic", async ({ p
       return;
     }
     if (path.endsWith("/events")) {
-      const body = request.postDataJSON() as { events: Array<{ type: string; errorCode?: string }> };
+      const body = request.postDataJSON() as { events: Array<{ type: string; errorCode?: string; detail?: Record<string, unknown> }> };
       eventTypes.push(...body.events.map((event) => event.type));
       eventErrors.push(...body.events.map((event) => event.errorCode));
+      details.push(...body.events.map((event) => event.detail || {}));
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
       return;
     }
@@ -39,6 +41,10 @@ test("records a real playback flow as one batched device diagnostic", async ({ p
   await expect.poll(() => eventTypes).toEqual(expect.arrayContaining([
     "page_opened", "player_created", "player_ready", "play_requested", "playing",
   ]));
+  await expect.poll(() => eventTypes).toContain("playback_confirmed");
+  expect(details).toEqual(expect.arrayContaining([expect.objectContaining({
+    diagnosticVersion: "playback-v2", sourceKind: "remote", documentHidden: false,
+  }), expect.objectContaining({ readyState: expect.any(Number), playIntent: true })]));
   await page.locator(".player-back").click();
 
   await expect.poll(() => eventTypes).toEqual(expect.arrayContaining([

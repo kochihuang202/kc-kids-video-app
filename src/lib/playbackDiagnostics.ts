@@ -60,30 +60,49 @@ export class PlaybackDiagnostics {
   private hadError = false;
   private hadRetry = false;
   private played = false;
+  private confirmed = false;
+  private lastProbeAt = new Map<string, number>();
+  private activeProbes = new Set<string>();
   private closed = false;
   private finishing = false;
 
-  constructor(device: DeviceStatus, video: VideoFixture, mode: PlaybackMode) {
+  constructor(device: DeviceStatus, video: VideoFixture, mode: PlaybackMode,
+    private context: () => NonNullable<DiagnosticEventInput["detail"]> = () => ({})) {
     void replayPending();
     this.idPromise = diagnosticRepository.start({
       clientSessionId: this.clientSessionId, videoId: video.id, videoLabel: video.parentLabel,
       categoryId: video.categoryId, source: video.source, playbackMode: mode, ...clientInfo(),
     }).then(({ id }) => id).catch(() => null);
     this.timer = window.setInterval(() => void this.flush(), 10_000);
-    this.event("page_opened", { networkOnline: navigator.onLine, state: device.device?.name || "unknown" });
+    this.event("page_opened", {
+      diagnosticVersion: "playback-v2", networkOnline: navigator.onLine, state: device.device?.name || "unknown",
+      sourceKind: video.source === "youtube" ? "youtube" : video.mediaUrl?.startsWith("blob:") ? "blob" : "remote",
+    });
   }
 
   event(type: string, detail?: Record<string, string | number | boolean | null | undefined>, errorCode?: string, positionSeconds?: number) {
     if (this.closed) return;
     if (errorCode) this.hadError = true;
+    if (errorCode && type !== "media_probe") this.confirmed = false;
     if (type === "retry_started") this.hadRetry = true;
     if (type === "playing") this.played = true;
-    this.queue.push({ seq: ++this.seq, type, occurredAt: new Date().toISOString(), detail, errorCode, positionSeconds });
-    if (errorCode || this.queue.length >= 20) void this.flush();
+    if (type === "playback_confirmed" || type === "retry_succeeded") this.confirmed = true;
+    let context: NonNullable<DiagnosticEventInput["detail"]> = {};
+    try { context = this.context(); } catch { /* telemetry cannot interrupt playback */ }
+    const snapshot = {
+      ...context, ...detail,
+      visibilityState: document.visibilityState, documentHidden: document.hidden, networkOnline: navigator.onLine,
+    };
+    this.queue.push({ seq: ++this.seq, type, occurredAt: new Date().toISOString(), detail: snapshot, errorCode, positionSeconds });
+    if (errorCode || type === "playback_confirmed" || this.queue.length >= 20) void this.flush();
   }
 
   hasPlayedSuccessfully() {
     return this.played;
+  }
+
+  hasPlaybackProblem() {
+    return this.hadError;
   }
 
   async flush(keepalive = false) {
@@ -102,6 +121,19 @@ export class PlaybackDiagnostics {
   }
 
   async probeMedia(url: string, reason: string) {
+    if (this.closed) return;
+    const group = reason === "playback_start" ? "start" : "failure";
+    if (this.activeProbes.has(group) || Date.now() - (this.lastProbeAt.get(group) ?? -Infinity) < 4_000) return;
+    this.lastProbeAt.set(group, Date.now());
+    this.activeProbes.add(group);
+    try {
+      await this.collectMediaProbe(url, reason);
+    } finally {
+      this.activeProbes.delete(group);
+    }
+  }
+
+  private async collectMediaProbe(url: string, reason: string) {
     const mediaUrl = new URL(url, window.location.href);
     const started = performance.now();
     try {
@@ -151,15 +183,13 @@ export class PlaybackDiagnostics {
     this.finishing = true;
     this.closed = true;
     window.clearInterval(this.timer);
-    const outcome = this.hadError || this.hadRetry ? (this.played ? "recovered" : "error") : "success";
+    const outcome = this.hadError || this.hadRetry ? (this.confirmed ? "recovered" : "error") : "success";
     const batch = this.queue.splice(0, 30);
     try {
       const id = await this.idPromise;
       if (!id) return;
-      await Promise.all([
-        batch.length ? diagnosticRepository.events(id, batch, keepalive) : Promise.resolve({ ok: true as const }),
-        diagnosticRepository.finish(id, outcome, keepalive),
-      ]);
+      if (batch.length) await diagnosticRepository.events(id, batch, keepalive);
+      await diagnosticRepository.finish(id, outcome, keepalive);
     } catch {
       try {
         const id = await this.idPromise;

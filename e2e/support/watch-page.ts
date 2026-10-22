@@ -34,9 +34,15 @@ function silentWav() {
 export async function installDeterministicMedia(
   page: Page,
   failLoads: number,
-  options: { abortNetwork?: boolean; readyDelayMs?: number; deferPlayUntilReady?: boolean; stallBlobAudio?: boolean } = {},
+  options: { abortNetwork?: boolean; readyDelayMs?: number; deferPlayUntilReady?: boolean; stallBlobAudio?: boolean; errorAfterMetadata?: boolean; playFailureName?: string } = {},
 ) {
-  await page.addInitScript(({ failures, readyDelayMs, deferPlayUntilReady, stallBlobAudio }) => {
+  await page.addInitScript(({ failures, readyDelayMs, deferPlayUntilReady, stallBlobAudio, errorAfterMetadata, playFailureName }) => {
+    // This fixture owns media failures through failLoads/errorAfterMetadata.
+    // Aborted dummy WAV traffic must not add Chromium's unrelated source-4
+    // errors on top of the synthetic playback timeline.
+    window.addEventListener("error", (event) => {
+      if (event.isTrusted && event.target instanceof HTMLMediaElement) event.stopImmediatePropagation();
+    }, true);
     const mediaSessionHandlers = new Map<string, MediaSessionActionHandler | null>();
     Object.defineProperty(navigator, "mediaSession", {
       configurable: true,
@@ -85,6 +91,14 @@ export async function installDeterministicMedia(
       configurable: true,
       get() { return 120; },
     });
+    if (errorAfterMetadata) {
+      // Model a transient network failure explicitly; Chromium otherwise maps
+      // an aborted mocked request to unsupported-source error 4.
+      Object.defineProperty(HTMLMediaElement.prototype, "error", {
+        configurable: true,
+        get() { return { code: 2, message: "Connection lost after metadata" }; },
+      });
+    }
     Object.defineProperty(HTMLMediaElement.prototype, "currentTime", {
       configurable: true,
       get() {
@@ -100,11 +114,19 @@ export async function installDeterministicMedia(
     HTMLMediaElement.prototype.load = function load() {
       if (!this.getAttribute("src")) return;
       const attempt = ++loadCount;
+      const loadingState = stateFor(this);
+      loadingState.base = 0;
+      loadingState.playing = false;
+      loadingState.ready = false;
       (window as Window & { __mediaLoadCount?: number }).__mediaLoadCount = loadCount;
       const element = this;
       window.setTimeout(() => {
         stateFor(element).ready = attempt > failures;
         element.dispatchEvent(new Event(attempt <= failures ? "error" : "loadedmetadata"));
+        if (attempt > failures) {
+          if (errorAfterMetadata) element.dispatchEvent(new Event("error"));
+          else element.dispatchEvent(new Event("canplay"));
+        }
         const state = stateFor(element);
         if (state.ready && state.pendingPlay.length) {
           state.playing = true;
@@ -116,6 +138,7 @@ export async function installDeterministicMedia(
     };
     HTMLMediaElement.prototype.play = function play() {
       const state = stateFor(this);
+      if (playFailureName) return Promise.reject(new DOMException("Playback rejected by the test device", playFailureName));
       // WebKit can resolve play() and emit `playing` for an OPFS-backed MP4
       // audio master while its timeline remains at 0. Model that production
       // failure so downloaded viewing cannot regress to the dual-player path.
@@ -177,6 +200,8 @@ export async function installDeterministicMedia(
     readyDelayMs: options.readyDelayMs ?? 25,
     deferPlayUntilReady: options.deferPlayUntilReady ?? false,
     stallBlobAudio: options.stallBlobAudio ?? false,
+    errorAfterMetadata: options.errorAfterMetadata ?? false,
+    playFailureName: options.playFailureName ?? "",
   });
 
   await page.route("**/e2e-media/regression-media.wav*", async (route) => {

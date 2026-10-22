@@ -7,6 +7,7 @@ async function setupYouTubeMocks(page: Page, sessionModes: string[] = []) {
       events: {
         onReady(event: { target: unknown }): void;
         onStateChange(event: { target: unknown; data: number }): void;
+        onAutoplayBlocked?(): void;
       };
     };
 
@@ -189,4 +190,22 @@ test("prevents unintended YouTube playlist reset to episode 1 on startup", async
   await expect.poll(() => page.evaluate(() => (window as typeof window & {
     __youtubeTest: { cuedVideos: Array<{ videoId: string; startSeconds: number }> };
   }).__youtubeTest.cuedVideos)).toEqual([{ videoId: "youtube-two", startSeconds: 0 }]);
+});
+
+test("YouTube autoplay-blocked events offer resume without recreating the player", async ({ page }) => {
+  await setupYouTubeMocks(page);
+  await page.goto("/watch/qiaohu-1?mode=listen");
+  await expect(page.getByLabel("純聽模式")).toBeVisible();
+  await page.evaluate(() => {
+    const current = (window as typeof window & {
+      __youtubeTest: { options: { events: { onAutoplayBlocked(): void } } };
+    }).__youtubeTest;
+    current.options.events.onAutoplayBlocked();
+  });
+  await expect(page.getByText("播放尚未開始，請點一下播放繼續。")).toBeVisible();
+  await page.getByRole("button", { name: "繼續播放", exact: true }).click();
+  await expect(page.locator(".main-play-btn")).toHaveAttribute("aria-label", "暫停");
+  await expect.poll(() => page.evaluate(() => (window as typeof window & {
+    __youtubeTest: { constructorCount: number };
+  }).__youtubeTest.constructorCount)).toBe(1);
 });

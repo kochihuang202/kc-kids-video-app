@@ -96,6 +96,43 @@ describe("playback diagnostics", () => {
     expect(await exported.json()).toMatchObject({ sessions: [] });
   });
 
+  it("preserves background playback evidence and does not label metadata-only failures recovered", async () => {
+    const device = await pairedDevice();
+    const started = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "self_hosted", playbackMode: "listen", userAgent: "iPad Safari",
+      }),
+    });
+    const { id } = await started.json<{ id: string }>();
+    const write = async (events: unknown[]) => {
+      expect((await call(`/api/diagnostics/sessions/${id}/events`, {
+        method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events }),
+      })).status).toBe(200);
+    };
+    await write([
+      { seq: 1, type: "page_opened", occurredAt: new Date().toISOString(), detail: { diagnosticVersion: "playback-v2" } },
+      { seq: 2, type: "media_error", occurredAt: new Date().toISOString(), errorCode: "PLAY_NOT_ALLOWED", detail: {
+        errorName: "NotAllowedError", errorOperation: "play", sourceKind: "blob", documentHidden: true,
+        readyState: 1, networkState: 2, bufferedAheadSeconds: 0, playIntent: true,
+        message: "Rejected https://private.example/video.mp4?secret=hidden",
+      } },
+      { seq: 3, type: "player_ready", occurredAt: new Date().toISOString() },
+      { seq: 4, type: "playing", occurredAt: new Date().toISOString() },
+    ]);
+    expect((await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?").bind(id).first<{ outcome: string }>())?.outcome).toBe("error");
+    const detail = await env.DB.prepare("SELECT detail_json FROM diagnostic_events WHERE diagnostic_session_id = ? AND event_seq = 2")
+      .bind(id).first<{ detail_json: string }>();
+    expect(JSON.parse(detail!.detail_json)).toMatchObject({
+      errorName: "NotAllowedError", errorOperation: "play", sourceKind: "blob", documentHidden: true,
+      readyState: 1, networkState: 2, bufferedAheadSeconds: 0, playIntent: true,
+    });
+    expect(detail!.detail_json).not.toContain("private.example");
+    await write([{ seq: 5, type: "playback_confirmed", occurredAt: new Date().toISOString(), positionSeconds: 1 }]);
+    expect((await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?").bind(id).first<{ outcome: string }>())?.outcome).toBe("recovered");
+    await write([{ seq: 6, type: "media_error", occurredAt: new Date().toISOString(), errorCode: "MEDIA_ERROR_2" }]);
+    expect((await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?").bind(id).first<{ outcome: string }>())?.outcome).toBe("error");
+  });
+
   it("rolls old errors into summaries and keeps only 100 successful sessions per device", async () => {
     const device = await pairedDevice();
     const oldStarted = new Date(Date.now() - 40 * 86400000).toISOString();

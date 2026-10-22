@@ -1,6 +1,13 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { MediaType } from "../types";
-import type { PlayerState, YouTubePlayerHandle } from "./YouTubePlayer";
+import type { PlayerDebugInfo, PlayerState, YouTubePlayerHandle } from "./YouTubePlayer";
+
+export interface NativePlaybackError {
+  code: number;
+  name: string;
+  message: string;
+  operation: "play" | "media";
+}
 
 function shouldUseBackgroundAudioMaster(mediaType: MediaType, src: string) {
   // Opening the same large OPFS-backed blob in both an audio master and a
@@ -23,20 +30,54 @@ interface NativeMediaPlayerProps {
   onLoop?: () => void;
   onStateChange?: (state: PlayerState) => void;
   onProgress?: (currentTime: number, duration: number) => void;
-  onError?: (error?: MediaError | null) => void;
+  onError?: (error?: NativePlaybackError) => void;
   onReady?: () => void;
+  onPlayable?: () => void;
+  onDiagnostic?: (type: string, detail: PlayerDebugInfo) => void;
 }
 
 export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlayerProps>(
-  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onLoop, onStateChange, onProgress, onError, onReady }, ref) => {
+  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onLoop, onStateChange, onProgress, onError, onReady, onPlayable, onDiagnostic }, ref) => {
     const elementRef = useRef<HTMLMediaElement | null>(null);
     const visualVideoRef = useRef<HTMLVideoElement | null>(null);
     const readySentRef = useRef(false);
+    const playingRef = useRef(false);
     const playRequestedRef = useRef(autoPlay);
     const pendingPlayRef = useRef<Promise<void> | null>(null);
     const remotePauseRef = useRef(false);
     const lastCurrentTimeRef = useRef(startAt);
+    const sourceGenerationRef = useRef(0);
+    const settingsRef = useRef({ autoPlay, startAt, src });
+    settingsRef.current = { autoPlay, startAt, src };
+    const callbacksRef = useRef({ onError, onDiagnostic });
+    callbacksRef.current = { onError, onDiagnostic };
     const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType, src);
+
+    const debugState = (): PlayerDebugInfo => {
+      const element = elementRef.current;
+      const position = element?.currentTime || 0;
+      let bufferedEnd = position;
+      if (element) {
+        for (let index = 0; index < element.buffered.length; index += 1) {
+          if (element.buffered.start(index) <= position + 0.1 && element.buffered.end(index) >= position) {
+            bufferedEnd = element.buffered.end(index);
+            break;
+          }
+        }
+      }
+      return {
+        sourceKind: settingsRef.current.src.startsWith("blob:") ? "blob" : "remote",
+        currentTime: position, duration: element && Number.isFinite(element.duration) ? element.duration : 0,
+        readyState: element?.readyState, networkState: element?.networkState,
+        mediaPaused: element?.paused, mediaEnded: element?.ended, mediaSeeking: element?.seeking,
+        bufferedAheadSeconds: Math.max(0, bufferedEnd - position),
+        playIntent: playRequestedRef.current, pendingPlay: !!pendingPlayRef.current,
+        sourceGeneration: sourceGenerationRef.current,
+        muted: element?.muted, volume: element?.volume, playbackRate: element?.playbackRate,
+        mediaErrorCode: element?.error?.code || 0,
+      };
+    };
+    const diagnostic = (state: string) => callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state });
 
     const syncVisualVideo = (play: boolean) => {
       const master = elementRef.current;
@@ -50,23 +91,30 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
 
     const playElement = (element: HTMLMediaElement) => {
       if (pendingPlayRef.current) return;
+      const generation = sourceGenerationRef.current;
+      diagnostic("play_invoked");
       const request = element.play();
       pendingPlayRef.current = request;
       void request.then(() => {
+        if (generation !== sourceGenerationRef.current) return;
+        diagnostic("play_resolved");
         if (playRequestedRef.current && elementRef.current === element) syncVisualVideo(true);
       }).catch((error: unknown) => {
+        if (generation !== sourceGenerationRef.current) return;
+        const name = error instanceof Error ? error.name : "UnknownError";
+        callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state: "play_rejected", errorName: name, errorOperation: "play" });
         // A pending play promise is commonly aborted when our own pause/load
         // wins the race. That is a control-flow interruption, not a broken
         // Mac/Tailscale media connection.
         if (error instanceof DOMException && error.name === "AbortError") return;
-        onError?.();
+        callbacksRef.current.onError?.({ code: 0, name, message: error instanceof Error ? error.message : "Playback failed", operation: "play" });
       }).finally(() => {
         if (pendingPlayRef.current === request) pendingPlayRef.current = null;
       });
     };
 
     useImperativeHandle(ref, () => ({
-      getCurrentTime: () => elementRef.current?.currentTime || startAt,
+      getCurrentTime: () => elementRef.current?.currentTime ?? startAt,
       getDuration: () => {
         const duration = elementRef.current?.duration;
         return duration && Number.isFinite(duration) ? duration : 0;
@@ -93,11 +141,14 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         if (elementRef.current) elementRef.current.playbackRate = rate;
         if (visualVideoRef.current) visualVideoRef.current.playbackRate = rate;
       },
+      getDebugState: debugState,
     }), [onError, startAt]);
 
     useEffect(() => {
+      sourceGenerationRef.current += 1;
       readySentRef.current = false;
-      playRequestedRef.current = autoPlay;
+      playingRef.current = false;
+      playRequestedRef.current = settingsRef.current.autoPlay;
       pendingPlayRef.current = null;
       lastCurrentTimeRef.current = startAt;
       const element = elementRef.current;
@@ -108,7 +159,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       // Keep the native autoplay flag for playlist continuation. On iPadOS a
       // script-only play() after the screen locks can be rejected, while the
       // existing user-started media session may continue to the next source.
-      element.autoplay = autoPlay;
+      element.autoplay = settingsRef.current.autoPlay;
       element.loop = loopPlayback;
       element.controls = false;
       element.setAttribute("playsinline", "");
@@ -124,6 +175,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         if (appleVideo.webkitDisplayingFullscreen) appleVideo.webkitExitFullscreen?.();
       };
       element.addEventListener("webkitbeginfullscreen", keepInline);
+      diagnostic("source_changed");
       element.load();
       const visual = visualVideoRef.current;
       if (visual) {
@@ -135,7 +187,17 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       return () => {
         element.removeEventListener("webkitbeginfullscreen", keepInline);
       };
-    }, [autoPlay, src]);
+    }, [src]);
+
+    useEffect(() => {
+      const element = elementRef.current;
+      if (!element) return;
+      element.autoplay = autoPlay;
+      if (autoPlay) {
+        playRequestedRef.current = true;
+        if (readySentRef.current) playElement(element);
+      }
+    }, [autoPlay]);
 
     useEffect(() => {
       const element = elementRef.current;
@@ -150,6 +212,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       const element = elementRef.current;
       return () => {
         if (!element) return;
+        sourceGenerationRef.current += 1;
         element.pause();
         element.removeAttribute("src");
         element.load();
@@ -177,12 +240,14 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       const pauseFromSystem = () => {
         remotePauseRef.current = true;
         playRequestedRef.current = false;
+        diagnostic("system_pause");
         elementRef.current?.pause();
       };
       const playFromSystem = () => {
         const element = elementRef.current;
         if (!element) return;
         playRequestedRef.current = true;
+        diagnostic("system_play");
 
         if (remotePauseRef.current) {
           remotePauseRef.current = false;
@@ -215,13 +280,16 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     }, [mediaType, src]);
 
     useEffect(() => {
-      if (!useBackgroundAudioMaster) return;
       const handleVisibility = () => {
         const master = elementRef.current;
+        diagnostic(document.hidden ? "background_entered" : "foreground_entered");
         if (document.hidden) {
           visualVideoRef.current?.pause();
-        } else if (master && !master.paused) {
-          syncVisualVideo(true);
+        } else if (master) {
+          if (playRequestedRef.current && master.paused && !master.ended) {
+            diagnostic("foreground_resume_attempt");
+            playElement(master);
+          } else if (!master.paused) syncVisualVideo(true);
         }
       };
       document.addEventListener("visibilitychange", handleVisibility);
@@ -245,10 +313,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       readySentRef.current = true;
       reportProgress();
       onReady?.();
-      onStateChange?.("READY");
-      if (playRequestedRef.current) {
+      // A user's early play() may already have started before metadata is
+      // delivered. READY must not replace that real PLAYING state.
+      if (!playingRef.current) onStateChange?.("READY");
+      if (playRequestedRef.current && !playingRef.current) {
         playElement(element);
-      } else {
+      } else if (!playRequestedRef.current) {
         element.pause();
       }
     };
@@ -257,8 +327,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       ref: (node: HTMLMediaElement | null) => { elementRef.current = node; },
       src,
       preload: "metadata" as const,
-      onLoadedMetadata: markReady,
-      onCanPlay: markReady,
+      onLoadedMetadata: () => { diagnostic("loadedmetadata"); markReady(); },
+      onCanPlay: () => { diagnostic("canplay"); markReady(); onPlayable?.(); },
+      onStalled: () => diagnostic("stalled"),
+      onSuspend: () => diagnostic("suspend"),
+      onAbort: () => diagnostic("abort"),
+      onEmptied: () => diagnostic("emptied"),
       onDurationChange: reportProgress,
       onTimeUpdate: () => {
         const master = elementRef.current;
@@ -284,29 +358,34 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         syncVisualVideo(playRequestedRef.current);
       },
       onPlaying: () => {
+        playingRef.current = true;
         playRequestedRef.current = true;
         if (typeof navigator !== "undefined" && "mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
         syncVisualVideo(true);
         onStateChange?.("PLAYING");
       },
       onPause: () => {
+        playingRef.current = false;
         if (typeof navigator !== "undefined" && "mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
         if (!elementRef.current?.ended) onStateChange?.("PAUSED");
       },
-      onWaiting: () => onStateChange?.("BUFFERING"),
+      onWaiting: () => { playingRef.current = false; onStateChange?.("BUFFERING"); },
       onEnded: () => {
         if (loopPlayback) {
           const el = elementRef.current;
           if (el) {
             el.currentTime = 0;
-            void el.play().catch(() => {});
+            playElement(el);
           }
           syncVisualVideo(true);
           return;
         }
         onStateChange?.("ENDED");
       },
-      onError: () => onError?.(elementRef.current?.error),
+      onError: () => {
+        const error = elementRef.current?.error;
+        callbacksRef.current.onError?.({ code: error?.code || 0, name: "MediaError", message: error?.message || "Media element error", operation: "media" });
+      },
       loop: loopPlayback,
     };
 

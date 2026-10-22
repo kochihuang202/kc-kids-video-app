@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 export type PlayerState = "PLAYING" | "PAUSED" | "ENDED" | "BUFFERING" | "READY";
+export type PlayerDebugInfo = Record<string, string | number | boolean | null | undefined>;
 
 interface PlayerInstance {
   destroy(): void;
@@ -66,6 +67,7 @@ export interface YouTubePlayerHandle {
   seekTo(seconds: number): void;
   setPlaybackRate?(rate: number): void;
   getAudioState?(): { volume: number | null; muted: boolean | null };
+  getDebugState?(): PlayerDebugInfo;
   switchToPlaylist?(videoIds: string[], videoId: string, seconds: number, play: boolean): void;
   switchToVideo?(videoId: string, seconds: number, play: boolean): void;
   nextVideo?(): void;
@@ -82,20 +84,23 @@ interface YouTubePlayerProps {
   onVideoChange?: (youtubeVideoId: string) => void;
   onStateChange?: (state: PlayerState) => void;
   onError?: (code?: number) => void;
+  onAutoplayBlocked?: () => void;
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  ({ videoId, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, playlist = [], playlistStartIndex = 0, onVideoChange, onStateChange, onError }, ref) => {
+  ({ videoId, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, playlist = [], playlistStartIndex = 0, onVideoChange, onStateChange, onError, onAutoplayBlocked }, ref) => {
     const hostRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<PlayerInstance | null>(null);
     const loadedVideoIdRef = useRef(videoId);
     const requestedVideoRef = useRef({ videoId, startAt, autoPlay });
     const stateCallbackRef = useRef(onStateChange);
     const errorCallbackRef = useRef(onError);
+    const blockedCallbackRef = useRef(onAutoplayBlocked);
     const videoChangeCallbackRef = useRef(onVideoChange);
     const volumeRef = useRef(volume);
     stateCallbackRef.current = onStateChange;
     errorCallbackRef.current = onError;
+    blockedCallbackRef.current = onAutoplayBlocked;
     videoChangeCallbackRef.current = onVideoChange;
     volumeRef.current = volume;
     requestedVideoRef.current = { videoId, startAt, autoPlay };
@@ -151,6 +156,15 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
       getAudioState: () => ({
         volume: typeof playerRef.current?.getVolume === "function" ? playerRef.current.getVolume() : null,
         muted: typeof playerRef.current?.isMuted === "function" ? playerRef.current.isMuted() : null,
+      }),
+      getDebugState: () => ({
+        sourceKind: "youtube",
+        currentTime: playerRef.current?.getCurrentTime?.() || 0,
+        duration: playerRef.current?.getDuration?.() || 0,
+        youtubePlayerState: playerRef.current?.getPlayerState?.(),
+        playerVideoId: playerRef.current?.getVideoData?.().video_id,
+        volume: playerRef.current?.getVolume?.(),
+        muted: playerRef.current?.isMuted?.(),
       }),
       switchToPlaylist: (videoIds, activeVideoId, seconds, play) => {
         const player = playerRef.current;
@@ -244,6 +258,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
               if (state) stateCallbackRef.current?.(state);
             },
             onError: (event: PlayerEvent) => errorCallbackRef.current?.(event.data),
+            onAutoplayBlocked: () => blockedCallbackRef.current?.(),
           },
         });
       });
