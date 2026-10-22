@@ -2,13 +2,6 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { MediaType } from "../types";
 import type { PlayerDebugInfo, PlayerState, YouTubePlayerHandle } from "./YouTubePlayer";
 
-export interface NativePlaybackError {
-  code: number;
-  name: string;
-  message: string;
-  operation: "play" | "media";
-}
-
 function shouldUseBackgroundAudioMaster(mediaType: MediaType, src: string) {
   // Opening the same large OPFS-backed blob in both an audio master and a
   // visual video can leave WebKit reporting `playing` at 0:00. Local viewing
@@ -27,36 +20,26 @@ interface NativeMediaPlayerProps {
   playbackRate?: number;
   autoPlay?: boolean;
   loopPlayback?: boolean;
-  onLoop?: () => void;
   onStateChange?: (state: PlayerState) => void;
   onProgress?: (currentTime: number, duration: number) => void;
-  onError?: (error?: NativePlaybackError) => void;
+  onError?: (error?: MediaError | null) => void;
   onReady?: () => void;
-  onPlayable?: () => void;
-  onDiagnostic?: (type: string, detail: PlayerDebugInfo, errorCode?: string) => void;
+  onDiagnostic?: (state: string, detail: PlayerDebugInfo) => void;
 }
 
 export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlayerProps>(
-  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onLoop, onStateChange, onProgress, onError, onReady, onPlayable, onDiagnostic }, ref) => {
+  ({ src, mediaType, poster, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, loopPlayback = false, onStateChange, onProgress, onError, onReady, onDiagnostic }, ref) => {
     const elementRef = useRef<HTMLMediaElement | null>(null);
     const visualVideoRef = useRef<HTMLVideoElement | null>(null);
     const readySentRef = useRef(false);
-    const playingRef = useRef(false);
     const playRequestedRef = useRef(autoPlay);
     const pendingPlayRef = useRef<Promise<void> | null>(null);
     const remotePauseRef = useRef(false);
-    const lastCurrentTimeRef = useRef(startAt);
-    const sourceGenerationRef = useRef(0);
-    const systemResumeRef = useRef<{
-      element: HTMLMediaElement; generation: number; position: number;
-      timer: number | null; notBefore: number; reported: boolean; restarted: boolean;
-    } | null>(null);
-    const settingsRef = useRef({ autoPlay, startAt, src });
-    settingsRef.current = { autoPlay, startAt, src };
-    const callbacksRef = useRef({ onError, onDiagnostic, onStateChange });
-    callbacksRef.current = { onError, onDiagnostic, onStateChange };
     const useBackgroundAudioMaster = shouldUseBackgroundAudioMaster(mediaType, src);
-
+    // Observation only: retain the baseline's play/load/pause control flow.
+    const sourceGenerationRef = useRef(0);
+    const diagnosticCallbackRef = useRef(onDiagnostic);
+    diagnosticCallbackRef.current = onDiagnostic;
     const debugState = (): PlayerDebugInfo => {
       const element = elementRef.current;
       const position = element?.currentTime || 0;
@@ -70,7 +53,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         }
       }
       return {
-        sourceKind: settingsRef.current.src.startsWith("blob:") ? "blob" : "remote",
+        sourceKind: src.startsWith("blob:") ? "blob" : "remote",
         currentTime: position, duration: element && Number.isFinite(element.duration) ? element.duration : 0,
         readyState: element?.readyState, networkState: element?.networkState,
         mediaPaused: element?.paused, mediaEnded: element?.ended, mediaSeeking: element?.seeking,
@@ -78,90 +61,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         playIntent: playRequestedRef.current, pendingPlay: !!pendingPlayRef.current,
         sourceGeneration: sourceGenerationRef.current,
         muted: element?.muted, volume: element?.volume, playbackRate: element?.playbackRate,
-        mediaErrorCode: element?.error?.code || 0,
-        ...audioSessionState(),
       };
     };
-    const diagnostic = (state: string, errorCode?: string) => callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state }, errorCode);
-
-    function audioSessionState(): PlayerDebugInfo {
-      try {
-        const session = (navigator as Navigator & {
-          audioSession?: { state?: string; type?: string };
-        }).audioSession;
-        return {
-          audioSessionState: session?.state, audioSessionType: session?.type,
-          systemPlaybackState: navigator.mediaSession?.playbackState,
-          userActivationActive: navigator.userActivation?.isActive,
-        };
-      } catch { return {}; }
-    }
-
-    function cancelSystemResumeCheck() {
-      const check = systemResumeRef.current;
-      if (check && check.timer !== null) window.clearTimeout(check.timer);
-      systemResumeRef.current = null;
-    }
-
-    function scheduleSystemResumeCheck(delay: number) {
-      const check = systemResumeRef.current;
-      if (!check) return;
-      if (check.timer !== null) window.clearTimeout(check.timer);
-      check.timer = window.setTimeout(checkSystemResume, delay);
-    }
-
-    function checkSystemResume() {
-      const check = systemResumeRef.current;
-      if (!check) return;
-      check.timer = null;
-      if (Date.now() < check.notBefore) {
-        scheduleSystemResumeCheck(check.notBefore - Date.now());
-        return;
-      }
-      const element = elementRef.current;
-      if (!element || element !== check.element || sourceGenerationRef.current !== check.generation
-        || !playRequestedRef.current || element.ended || element.seeking
-        || audioSessionState().audioSessionState === "interrupted") {
-        cancelSystemResumeCheck();
-        return;
-      }
-      if (Math.abs(element.currentTime - check.position) >= 0.25) {
-        diagnostic("system_resume_progress");
-        cancelSystemResumeCheck();
-        return;
-      }
-      // Only diagnose the captured false-playing failure. A real network
-      // wait must continue through the existing bounded connection recovery.
-      const bufferedAhead = debugState().bufferedAheadSeconds;
-      if (element.readyState < 3 || typeof bufferedAhead !== "number" || bufferedAhead < 0.25) {
-        cancelSystemResumeCheck();
-        return;
-      }
-      if (!check.reported) {
-        check.reported = true;
-        diagnostic("system_resume_stalled", "NATIVE_RESUME_STALLED");
-      }
-      if (document.hidden) return; // no background polling or source reload
-      if (check.restarted) {
-        cancelSystemResumeCheck();
-        playRequestedRef.current = false;
-        pendingPlayRef.current = null;
-        element.pause();
-        callbacksRef.current.onStateChange?.("PAUSED");
-        diagnostic("system_resume_recovery_failed", "NATIVE_RESUME_REQUIRES_TAP");
-        return;
-      }
-      // Reproduce the user's effective foreground Pause -> Play exactly once,
-      // keeping the loaded media and position. A new user pause cancels this.
-      check.restarted = true;
-      check.position = element.currentTime;
-      check.notBefore = Date.now() + 1_200;
-      pendingPlayRef.current = null;
-      element.pause();
-      diagnostic("foreground_resume_restart");
-      playElement(element);
-      scheduleSystemResumeCheck(1_200);
-    }
+    const diagnostic = (state: string, detail: PlayerDebugInfo = {}) => {
+      try { diagnosticCallbackRef.current?.(state, { ...debugState(), ...detail }); }
+      catch { /* Observability cannot change baseline playback. */ }
+    };
 
     const syncVisualVideo = (play: boolean) => {
       const master = elementRef.current;
@@ -175,51 +80,43 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
 
     const playElement = (element: HTMLMediaElement) => {
       if (pendingPlayRef.current) return;
-      const generation = sourceGenerationRef.current;
       diagnostic("play_invoked");
       const request = element.play();
       pendingPlayRef.current = request;
       void request.then(() => {
-        if (generation !== sourceGenerationRef.current || pendingPlayRef.current !== request) return;
         diagnostic("play_resolved");
         if (playRequestedRef.current && elementRef.current === element) syncVisualVideo(true);
       }).catch((error: unknown) => {
-        if (generation !== sourceGenerationRef.current || pendingPlayRef.current !== request) return;
-        const name = error instanceof Error ? error.name : "UnknownError";
-        callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state: "play_rejected", errorName: name, errorOperation: "play" });
+        diagnostic("play_rejected", { errorName: error instanceof Error ? error.name : "UnknownError", errorOperation: "play" });
         // A pending play promise is commonly aborted when our own pause/load
         // wins the race. That is a control-flow interruption, not a broken
         // Mac/Tailscale media connection.
         if (error instanceof DOMException && error.name === "AbortError") return;
-        cancelSystemResumeCheck();
-        callbacksRef.current.onError?.({ code: 0, name, message: error instanceof Error ? error.message : "Playback failed", operation: "play" });
+        onError?.();
       }).finally(() => {
         if (pendingPlayRef.current === request) pendingPlayRef.current = null;
       });
     };
 
     useImperativeHandle(ref, () => ({
-      getCurrentTime: () => elementRef.current?.currentTime ?? startAt,
+      getCurrentTime: () => elementRef.current?.currentTime || startAt,
+      getDebugState: debugState,
       getDuration: () => {
         const duration = elementRef.current?.duration;
         return duration && Number.isFinite(duration) ? duration : 0;
       },
       play: () => {
-        cancelSystemResumeCheck();
         playRequestedRef.current = true;
         const element = elementRef.current;
         if (!element) return;
         playElement(element);
       },
       pause: () => {
-        cancelSystemResumeCheck();
         playRequestedRef.current = false;
         elementRef.current?.pause();
-        pendingPlayRef.current = null;
         visualVideoRef.current?.pause();
       },
       seekTo: (seconds) => {
-        cancelSystemResumeCheck();
         const element = elementRef.current;
         if (!element) return;
         const duration = Number.isFinite(element.duration) ? element.duration : Number.MAX_SAFE_INTEGER;
@@ -230,17 +127,13 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         if (elementRef.current) elementRef.current.playbackRate = rate;
         if (visualVideoRef.current) visualVideoRef.current.playbackRate = rate;
       },
-      getDebugState: debugState,
     }), [onError, startAt]);
 
     useEffect(() => {
-      cancelSystemResumeCheck();
       sourceGenerationRef.current += 1;
       readySentRef.current = false;
-      playingRef.current = false;
-      playRequestedRef.current = settingsRef.current.autoPlay;
+      playRequestedRef.current = autoPlay;
       pendingPlayRef.current = null;
-      lastCurrentTimeRef.current = startAt;
       const element = elementRef.current;
       if (!element) return;
       // StrictMode replays effect cleanup/setup without re-rendering the DOM.
@@ -249,7 +142,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       // Keep the native autoplay flag for playlist continuation. On iPadOS a
       // script-only play() after the screen locks can be rejected, while the
       // existing user-started media session may continue to the next source.
-      element.autoplay = settingsRef.current.autoPlay;
+      element.autoplay = autoPlay;
       element.loop = loopPlayback;
       element.controls = false;
       element.setAttribute("playsinline", "");
@@ -277,7 +170,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       return () => {
         element.removeEventListener("webkitbeginfullscreen", keepInline);
       };
-    }, [src]);
+    }, [autoPlay, src]);
 
     useEffect(() => {
       const element = elementRef.current;
@@ -291,9 +184,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     useEffect(() => {
       const element = elementRef.current;
       return () => {
-        cancelSystemResumeCheck();
         if (!element) return;
-        sourceGenerationRef.current += 1;
         element.pause();
         element.removeAttribute("src");
         element.load();
@@ -316,69 +207,34 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     }, [playbackRate]);
 
     useEffect(() => {
-      const element = elementRef.current;
-      if (!element) return;
-      element.autoplay = autoPlay;
-      if (autoPlay) {
-        playRequestedRef.current = true;
-        // Register continuation while the new source is being selected, not
-        // only after loadedmetadata. A background iPad can remain at metadata
-        // readiness until the page is visible again. Keep the same element
-        // and one pending play request; do not reload or poll for readiness.
-        // Run after the volume/rate effects so a saved mute is respected.
-        if (mediaType === "audio" || readySentRef.current) {
-          if (!readySentRef.current) diagnostic("source_autoplay_requested");
-          playElement(element);
-        }
-      }
-    }, [autoPlay, mediaType, src]);
-
-    useEffect(() => {
       if (mediaType !== "audio" || typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
       const mediaSession = navigator.mediaSession;
       const pauseFromSystem = () => {
-        cancelSystemResumeCheck();
+        diagnostic("system_pause");
         remotePauseRef.current = true;
         playRequestedRef.current = false;
-        diagnostic("system_pause");
         elementRef.current?.pause();
-        pendingPlayRef.current = null;
       };
       const playFromSystem = () => {
+        diagnostic("system_play");
         const element = elementRef.current;
         if (!element) return;
         playRequestedRef.current = true;
-        diagnostic("system_play");
 
         if (remotePauseRef.current) {
           remotePauseRef.current = false;
-          if (document.hidden) {
-            // The iPad can load metadata but stall fetching playable data in
-            // the background. Do not discard a healthy buffer or native audio
-            // session just because the lock-screen Play action was pressed.
-            diagnostic("system_resume_preserve_source");
-          } else {
-            diagnostic("system_resume_rebind_source");
-            const position = Math.max(0, element.currentTime || 0);
-            const activeSource = element.getAttribute("src") || src;
-            // Keep the existing foreground repair for a silent native audio
-            // output, where WebKit can actually finish loading the resource.
-            element.setAttribute("src", activeSource);
-            element.load();
-            const restorePosition = () => {
-              if (Math.abs(element.currentTime - position) > 0.25) element.currentTime = position;
-            };
-            element.addEventListener("loadedmetadata", restorePosition, { once: true });
-            try { element.currentTime = position; } catch { /* restored after metadata */ }
-          }
-        }
-        if (document.hidden) {
-          cancelSystemResumeCheck();
-          systemResumeRef.current = {
-            element, generation: sourceGenerationRef.current, position: element.currentTime,
-            timer: null, notBefore: Date.now() + 1_200, reported: false, restarted: false,
+          const position = Math.max(0, element.currentTime || 0);
+          const activeSource = element.getAttribute("src") || src;
+          // WebKit can resolve play() and advance currentTime while the PWA's
+          // audio output remains silent after a lock-screen pause. Rebinding
+          // the source immediately before remote play reattaches native audio.
+          element.setAttribute("src", activeSource);
+          element.load();
+          const restorePosition = () => {
+            if (Math.abs(element.currentTime - position) > 0.25) element.currentTime = position;
           };
-          scheduleSystemResumeCheck(1_200);
+          element.addEventListener("loadedmetadata", restorePosition, { once: true });
+          try { element.currentTime = position; } catch { /* restored after metadata */ }
         }
         playElement(element);
       };
@@ -396,22 +252,13 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     }, [mediaType, src]);
 
     useEffect(() => {
+      if (!useBackgroundAudioMaster) return;
       const handleVisibility = () => {
         const master = elementRef.current;
-        diagnostic(document.hidden ? "background_entered" : "foreground_entered");
         if (document.hidden) {
           visualVideoRef.current?.pause();
-        } else if (master) {
-          if (systemResumeRef.current) {
-            // Allow native state to settle after foregrounding before deciding
-            // whether a supposedly playing audio element is actually frozen.
-            scheduleSystemResumeCheck(250);
-            return;
-          }
-          if (playRequestedRef.current && master.paused && !master.ended) {
-            diagnostic("foreground_resume_attempt");
-            playElement(master);
-          } else if (!master.paused) syncVisualVideo(true);
+        } else if (master && !master.paused) {
+          syncVisualVideo(true);
         }
       };
       document.addEventListener("visibilitychange", handleVisibility);
@@ -435,12 +282,10 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       readySentRef.current = true;
       reportProgress();
       onReady?.();
-      // A user's early play() may already have started before metadata is
-      // delivered. READY must not replace that real PLAYING state.
-      if (!playingRef.current) onStateChange?.("READY");
-      if (playRequestedRef.current && !playingRef.current) {
+      onStateChange?.("READY");
+      if (playRequestedRef.current) {
         playElement(element);
-      } else if (!playRequestedRef.current) {
+      } else {
         element.pause();
       }
     };
@@ -450,26 +295,15 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       src,
       preload: "metadata" as const,
       onLoadedMetadata: () => { diagnostic("loadedmetadata"); markReady(); },
-      onCanPlay: () => { diagnostic("canplay"); markReady(); onPlayable?.(); },
+      onCanPlay: () => { diagnostic("canplay"); markReady(); },
       onStalled: () => diagnostic("stalled"),
       onSuspend: () => diagnostic("suspend"),
       onAbort: () => diagnostic("abort"),
       onEmptied: () => diagnostic("emptied"),
       onDurationChange: reportProgress,
       onTimeUpdate: () => {
-        const master = elementRef.current;
-        const currentTime = Math.max(0, master?.currentTime || 0);
-        const duration = master && Number.isFinite(master.duration) ? master.duration : 0;
-        if (
-          loopPlayback
-          && duration > 0
-          && lastCurrentTimeRef.current >= duration - 2
-          && currentTime <= Math.max(2, startAt + 1)
-        ) {
-          onLoop?.();
-        }
-        lastCurrentTimeRef.current = currentTime;
         reportProgress();
+        const master = elementRef.current;
         const visual = visualVideoRef.current;
         if (master && visual && !document.hidden && Math.abs(visual.currentTime - master.currentTime) > 0.5) {
           syncVisualVideo(playRequestedRef.current);
@@ -480,34 +314,29 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         syncVisualVideo(playRequestedRef.current);
       },
       onPlaying: () => {
-        playingRef.current = true;
         playRequestedRef.current = true;
         if (typeof navigator !== "undefined" && "mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
         syncVisualVideo(true);
         onStateChange?.("PLAYING");
       },
       onPause: () => {
-        playingRef.current = false;
         if (typeof navigator !== "undefined" && "mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
         if (!elementRef.current?.ended) onStateChange?.("PAUSED");
       },
-      onWaiting: () => { playingRef.current = false; onStateChange?.("BUFFERING"); },
+      onWaiting: () => onStateChange?.("BUFFERING"),
       onEnded: () => {
         if (loopPlayback) {
           const el = elementRef.current;
           if (el) {
             el.currentTime = 0;
-            playElement(el);
+            void el.play().catch(() => {});
           }
           syncVisualVideo(true);
           return;
         }
         onStateChange?.("ENDED");
       },
-      onError: () => {
-        const error = elementRef.current?.error;
-        callbacksRef.current.onError?.({ code: error?.code || 0, name: "MediaError", message: error?.message || "Media element error", operation: "media" });
-      },
+      onError: () => onError?.(elementRef.current?.error),
       loop: loopPlayback,
     };
 

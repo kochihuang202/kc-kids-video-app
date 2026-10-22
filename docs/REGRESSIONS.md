@@ -1,5 +1,9 @@
 # Regression Memory
 
+## Active verification baseline — 2026-10-23
+
+The user explicitly requested temporarily restoring the 2026-09-06 playback flow (`59bcc15`) for a real iPad comparison. This intentionally suspends later playback behavior, including configured learning-repeat advancement, range enforcement, player preference persistence and REG-063/064/065 recovery paths; it does not erase their settings, data or tests. Do not weaken the modern tests to match this temporary baseline. Normal playback uses the historical WatchPage and players; observation-only diagnostics and a bounded retry resource guard remain. Scope, differences, acceptance tests and the restore point are recorded in `docs/PLAYBACK_BASELINE_2026-09-06.md`. This is not a confirmed fix or a known-good-device claim.
+
 Only important bugs that have occurred in the real app belong here.
 
 ## REG-001 — Playback time jumps back while a video is playing

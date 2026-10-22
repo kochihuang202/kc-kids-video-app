@@ -1,7 +1,7 @@
 import { ArrowLeft, Clock, Clock3, Headphones, Heart, Pause, Play, RefreshCw, RotateCcw, RotateCw, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { NativeMediaPlayer, type NativePlaybackError } from "./components/NativeMediaPlayer";
+import { NativeMediaPlayer } from "./components/NativeMediaPlayer";
 import { localMedia, managedVideo } from "./lib/downloads";
 import { rememberOfflineView, syncOfflineViews } from "./lib/offlineViews";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
@@ -743,7 +743,6 @@ export function WatchPage() {
   const [device, setDevice] = useState<DeviceStatus | null>(null);
   const [startPosition, setStartPosition] = useState(rawInitialPos);
   const [loadError, setLoadError] = useState("");
-  const [loadErrorCode, setLoadErrorCode] = useState("");
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const capabilityRef = useRef<Capability | null>(null);
   const sessionPromiseRef = useRef<Promise<Capability | null> | null>(null);
@@ -759,26 +758,29 @@ export function WatchPage() {
   const diagnosticsRef = useRef<PlaybackDiagnostics | null>(null);
   const bufferingDiagnosticTimerRef = useRef<number | null>(null);
   const modeSwitchingRef = useRef(false);
-  const trimEndingRef = useRef(false);
-  const completionHandledRef = useRef(false);
-  const rangeStartRef = useRef(0);
-  const rangeEndRef = useRef<number | null>(null);
 
   const [playerError, setPlayerError] = useState(false);
-  const [playbackBlockedMessage, setPlaybackBlockedMessage] = useState("");
   const [mediaRetryKey, setMediaRetryKey] = useState(0);
   const [autoRetryActive, setAutoRetryActive] = useState(false);
   const [autoRetrySecondsLeft, setAutoRetrySecondsLeft] = useState(60);
   const retryDeadlineRef = useRef(0);
   const autoRetryActiveRef = useRef(false);
   const mediaRetryAttemptRef = useRef(0);
-  const retryPlayIntentRef = useRef(false);
-  const retryLastAttemptAtRef = useRef(0);
-  const progressBaselineRef = useRef<number | null>(null);
-  const playbackConfirmedRef = useRef(false);
+  // Verification safety only: an old error loop must not create unlimited
+  // reloads, probes or D1 writes. Normal playback still follows 59bcc15.
+  const baselineRetryDeadlineRef = useRef(0);
+  const baselineRetryLastAttemptRef = useRef(0);
+  const allowBaselineRetry = (restartExpired = false) => {
+    const now = Date.now();
+    if (!baselineRetryDeadlineRef.current || (restartExpired && now >= baselineRetryDeadlineRef.current)) {
+      baselineRetryDeadlineRef.current = now + 60_000;
+      baselineRetryLastAttemptRef.current = 0;
+    }
+    if (now >= baselineRetryDeadlineRef.current || (baselineRetryLastAttemptRef.current && now - baselineRetryLastAttemptRef.current < 4_000)) return false;
+    baselineRetryLastAttemptRef.current = now;
+    return true;
+  };
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasStartedPlayback, setHasStartedPlayback] = useState(false);
-  const cleanPause = useMemo(() => resolveCleanPause(video), [video]);
   const [isEnded, setIsEnded] = useState(false);
   const [currentPos, setCurrentPos] = useState(rawInitialPos);
   const currentPosRef = useRef(rawInitialPos);
@@ -791,8 +793,6 @@ export function WatchPage() {
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("video");
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [playerAutoPlay, setPlayerAutoPlay] = useState(isAutoplay);
-  const [completedLearningListenPlays, setCompletedLearningListenPlays] = useState(0);
-  const completedLearningListenPlaysRef = useRef(0);
 
   const [accessState, setAccessState] = useState<ChildAccessState | null>(null);
   const [timeUp, setTimeUp] = useState(false);
@@ -806,8 +806,7 @@ export function WatchPage() {
     if (!categoryVideos.length || !video) return null;
     const currentIndex = categoryVideos.findIndex((v) => v.id === video.id);
     if (currentIndex >= 0 && currentIndex < categoryVideos.length - 1) {
-      const candidate = categoryVideos[currentIndex + 1];
-      return candidate.isSelectable === false ? null : candidate;
+      return categoryVideos[currentIndex + 1];
     }
     return null;
   }, [categoryVideos, video]);
@@ -823,18 +822,17 @@ export function WatchPage() {
   const nextListenTrackRef = useRef<VideoFixture | null>(null);
   nextListenTrackRef.current = nextListenTrack;
   const youtubeListenPlaylist = useMemo(() => {
-    if (playbackMode !== "listen" || video?.source !== "youtube" || video.seriesType !== "leisure" || !video.youtubeVideoId) return [];
-    return buildYouTubeListenPlaylist(categoryVideos, video.youtubeVideoId);
-  }, [categoryVideos, playbackMode, video?.seriesType, video?.source, video?.youtubeVideoId]);
+    if (playbackMode !== "listen" || video?.source !== "youtube" || video.seriesType !== "leisure") return [];
+    return categoryVideos
+      .filter((item) => item.source === "youtube" && !!item.youtubeVideoId)
+      .map((item) => item.youtubeVideoId!);
+  }, [categoryVideos, playbackMode, video?.seriesType, video?.source]);
   const usesYouTubeListenPlaylist = youtubeListenPlaylist.length > 1 && !!video?.youtubeVideoId
     && youtubeListenPlaylist.includes(video.youtubeVideoId);
   const usesYouTubeListenPlaylistRef = useRef(false);
   usesYouTubeListenPlaylistRef.current = usesYouTubeListenPlaylist;
   const playbackModeRef = useRef<PlaybackMode>(playbackMode);
   playbackModeRef.current = playbackMode;
-  const learningListenRepeatCount = Math.min(20, Math.max(1, video?.listenRepeatCount ?? 5));
-  const learningListenRepeatCountRef = useRef(learningListenRepeatCount);
-  learningListenRepeatCountRef.current = learningListenRepeatCount;
 
   // A route can advance to another episode without unmounting WatchPage. Each
   // episode still needs its own write capability and heartbeat sequence.
@@ -851,26 +849,13 @@ export function WatchPage() {
     setIsEnded(false);
     setTimeUp(false);
     setPlayerError(false);
-    setPlaybackBlockedMessage("");
-    retryDeadlineRef.current = 0;
-    autoRetryActiveRef.current = false;
-    setAutoRetryActive(false);
-    progressBaselineRef.current = null;
-    playbackConfirmedRef.current = false;
     setTotalDuration(0);
-    setHasStartedPlayback(false);
-    completedLearningListenPlaysRef.current = 0;
-    setCompletedLearningListenPlays(0);
+    baselineRetryDeadlineRef.current = 0;
+    baselineRetryLastAttemptRef.current = 0;
   }, [videoId]);
-
-  useEffect(() => {
-    completedLearningListenPlaysRef.current = 0;
-    setCompletedLearningListenPlays(0);
-  }, [playbackMode]);
 
   const load = useCallback(async () => {
     setLoadError("");
-    setLoadErrorCode("");
     try {
       const nextDevice = await deviceRepository.status(preferOffline).catch(() => ({ authorized: false, device: null }));
       setDevice(nextDevice);
@@ -883,9 +868,7 @@ export function WatchPage() {
         contentRepository.getAccessState(preferOffline).catch(() => null),
       ]);
       if (nextVideo.source === "self_hosted") {
-        if (nextVideo.isSelectable === false) {
-          throw new ApiError("這部學習影片尚未解鎖，請先觀看前面的集數。", 403, "LEARNING_VIDEO_LOCKED");
-        }
+        if (nextVideo.isSelectable === false) throw new Error("請先從前五部影片選擇。");
         const file = await localMedia(nextVideo.id);
         if (file) {
           nextVideo.mediaUrl = URL.createObjectURL(file);
@@ -895,7 +878,6 @@ export function WatchPage() {
         }
       }
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
-      const playerPreferences = readSeriesPlayerPreferences(playerPreferenceSeriesId(nextVideo));
       let nextCategoryVideos: VideoFixture[] = [];
       if (nextVideo.categoryId) {
         nextCategoryVideos = await contentRepository.getVideos(nextVideo.categoryId, preferOffline).catch(() => []);
@@ -904,14 +886,10 @@ export function WatchPage() {
       // Load the category queue before mounting YouTube. Pure-listening mode
       // can then cue the complete playlist before the child's first play tap.
       setCategoryVideos(nextCategoryVideos);
-      setVolume(playerPreferences.volume);
-      setPlaybackRate(playerPreferences.playbackRate);
       setPlaybackMode(initialMode);
       setPlayerAutoPlay(isAutoplay);
       setVideo(nextVideo);
-      const resumePosition = forceFreshStart || !hasExplicitResumePosition
-        ? getPlaybackRange(nextVideo).startSeconds
-        : clampPlaybackPosition(nextVideo, rawInitialPos);
+      const resumePosition = forceFreshStart || !hasExplicitResumePosition ? 0 : rawInitialPos;
       setStartPosition(resumePosition);
       setCurrentPos(resumePosition);
       setDragPos(resumePosition);
@@ -930,7 +908,6 @@ export function WatchPage() {
       }
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
-      setLoadErrorCode(error instanceof ApiError ? error.code || "" : "");
     }
   }, [forceFreshStart, hasExplicitResumePosition, isAutoplay, preferOffline, rawInitialPos, requestedMode, videoId]);
 
@@ -946,13 +923,11 @@ export function WatchPage() {
   useEffect(() => {
     if (!video || !device?.authorized) return;
     const diagnostics = new PlaybackDiagnostics(device, video, playbackMode, () => ({
-      ...playerRef.current?.getDebugState?.(),
-      state: playerStateRef.current,
-      retryNumber: mediaRetryAttemptRef.current,
-      retryRemainingMs: Math.max(0, retryDeadlineRef.current - Date.now()),
+      ...playerRef.current?.getDebugState?.(), state: playerStateRef.current,
     }));
     diagnosticsRef.current = diagnostics;
     diagnostics.event("player_created", { state: video.source });
+    diagnostics.event("playback_baseline", { state: "2026-09-06@59bcc15" });
     if (video.source === "self_hosted" && video.mediaUrl && !video.mediaUrl.startsWith("blob:")) void diagnostics.probeMedia(video.mediaUrl, "playback_start");
     const onWindowError = (event: ErrorEvent) => diagnostics.event(
       "javascript_error", { message: event.error?.name || "window_error" }, "JAVASCRIPT_ERROR", currentPosRef.current,
@@ -966,7 +941,7 @@ export function WatchPage() {
     window.addEventListener("unhandledrejection", onUnhandled);
     window.addEventListener("pagehide", onPageHide);
     const autoplayTimer = isAutoplay ? window.setTimeout(() => {
-      if (!diagnostics.hasPlayedSuccessfully() && !diagnostics.hasPlaybackProblem()) diagnostics.event(
+      if (!diagnostics.hasPlayedSuccessfully()) diagnostics.event(
         "autoplay_blocked", { state: playerStateRef.current }, "AUTOPLAY_NOT_STARTED", currentPosRef.current,
       );
     }, 4_000) : null;
@@ -1010,19 +985,11 @@ export function WatchPage() {
     currentPosRef.current = currentPos;
   }, [currentPos]);
 
-  const startMediaRetry = useCallback((manual = false) => {
-    // An exhausted automatic cycle stays exhausted until explicit retry or a
-    // different episode. Metadata and repeated errors cannot renew its budget.
-    if (retryDeadlineRef.current && !manual) return;
+  const startMediaRetry = useCallback(() => {
+    if (!allowBaselineRetry()) return;
     const retryPosition = playerRef.current?.getCurrentTime() || currentPosRef.current;
-    retryPlayIntentRef.current = playerRef.current?.getDebugState?.().playIntent === true
-      || playerStateRef.current === "PLAYING" || playerAutoPlay;
-    if (retryPlayIntentRef.current) setPlayerAutoPlay(true);
     setStartPosition(Math.max(0, retryPosition));
-    retryDeadlineRef.current = Date.now() + 60_000;
-    retryLastAttemptAtRef.current = Date.now();
-    progressBaselineRef.current = null;
-    playbackConfirmedRef.current = false;
+    retryDeadlineRef.current = baselineRetryDeadlineRef.current;
     autoRetryActiveRef.current = true;
     mediaRetryAttemptRef.current = 1;
     setAutoRetrySecondsLeft(60);
@@ -1031,78 +998,36 @@ export function WatchPage() {
     diagnosticsRef.current?.event("retry_started", { retryNumber: mediaRetryAttemptRef.current, networkOnline: navigator.onLine }, undefined, retryPosition);
     if (video?.mediaUrl && !video.mediaUrl.startsWith("blob:")) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "retry_start");
     setMediaRetryKey((key) => key + 1);
-  }, [playerAutoPlay, video?.mediaUrl]);
+  }, [video?.mediaUrl]);
 
-  const handleMediaError = useCallback((mediaError?: NativePlaybackError) => {
-    playbackConfirmedRef.current = false;
-    progressBaselineRef.current = null;
-    const blocked = mediaError?.name === "NotAllowedError";
-    const code = blocked ? "PLAY_NOT_ALLOWED" : mediaError?.code ? `MEDIA_ERROR_${mediaError.code}` : "MEDIA_ERROR";
-    diagnosticsRef.current?.event(blocked ? "autoplay_blocked" : "media_error", {
-      mediaErrorCode: mediaError?.code || 0,
-      errorName: mediaError?.name, errorOperation: mediaError?.operation, message: mediaError?.message,
-      networkOnline: navigator.onLine,
-    }, code, currentPosRef.current);
-    if (blocked || mediaError?.name === "NotSupportedError") {
-      if (bufferingDiagnosticTimerRef.current !== null) {
-        window.clearTimeout(bufferingDiagnosticTimerRef.current);
-        bufferingDiagnosticTimerRef.current = null;
-      }
-      autoRetryActiveRef.current = false;
-      setAutoRetryActive(false);
-      setPlayerError(false);
-      setIsPlaying(false);
-      playerStateRef.current = "PAUSED";
-      setPlaybackBlockedMessage(blocked ? "播放尚未開始，請點一下播放繼續。" : "這台裝置無法播放這個影音格式，請家長確認檔案。");
-      return;
-    }
+  const handleMediaError = useCallback((mediaError?: MediaError | null) => {
     if (video?.mediaUrl?.startsWith("blob:")) {
       setLoadError("本機影片無法播放。請家長到管理中心的「離線下載」刪除該系列後重新下載；若仍失敗，可能是裝置不支援此影音格式。");
       return;
     }
     setPlayerError(true);
+    const code = mediaError?.code ? `MEDIA_ERROR_${mediaError.code}` : "MEDIA_ERROR";
+    diagnosticsRef.current?.event("media_error", { mediaErrorCode: mediaError?.code || 0, networkOnline: navigator.onLine }, code, currentPosRef.current);
     if (video?.mediaUrl && !video.mediaUrl.startsWith("blob:")) void diagnosticsRef.current?.probeMedia(video.mediaUrl, "media_error");
     if (video?.source !== "self_hosted" || autoRetryActiveRef.current) return;
     startMediaRetry();
   }, [startMediaRetry, video?.mediaUrl, video?.source]);
 
-  const completeMediaRetry = useCallback((evidence: string) => {
-    if (!retryDeadlineRef.current) return;
+  const handleMediaReady = useCallback(() => {
+    const recoveredFromRetry = autoRetryActiveRef.current;
     retryDeadlineRef.current = 0;
     autoRetryActiveRef.current = false;
     setAutoRetryActive(false);
     setAutoRetrySecondsLeft(60);
     setPlayerError(false);
-    diagnosticsRef.current?.event("retry_succeeded", { retryNumber: mediaRetryAttemptRef.current, recoveryEvidence: evidence }, undefined, currentPosRef.current);
+    if (recoveredFromRetry) {
+      diagnosticsRef.current?.event("baseline_metadata_ready", { retryNumber: mediaRetryAttemptRef.current }, undefined, currentPosRef.current);
+    }
   }, []);
 
-  const handleMediaPlayable = useCallback(() => {
-    // A paused, never-started item only needs to become playable. Once the
-    // child has requested playback, require advancing time before recovery.
-    if (!retryPlayIntentRef.current && playerRef.current?.getDebugState?.().playIntent !== true) {
-      completeMediaRetry("canplay_without_play_request");
-    }
-  }, [completeMediaRetry]);
-
-  const confirmPlaybackProgress = useCallback((time: number) => {
-    if (playerStateRef.current !== "PLAYING") return;
-    if (progressBaselineRef.current === null || time < progressBaselineRef.current) {
-      progressBaselineRef.current = time;
-      return;
-    }
-    if (time - progressBaselineRef.current < 0.25 || playbackConfirmedRef.current) return;
-    playbackConfirmedRef.current = true;
-    setPlaybackBlockedMessage("");
-    setPlayerError(false);
-    diagnosticsRef.current?.event("playback_confirmed", { recoveryEvidence: "timeline_advanced" }, undefined, time);
-    completeMediaRetry("timeline_advanced");
-  }, [completeMediaRetry]);
-
   const retryMediaNow = useCallback(() => {
-    if (autoRetryActiveRef.current) {
-      if (Date.now() >= retryDeadlineRef.current || Date.now() - retryLastAttemptAtRef.current < 1_000) return;
-      retryLastAttemptAtRef.current = Date.now();
-      progressBaselineRef.current = null;
+    if (autoRetryActive) {
+      if (!allowBaselineRetry()) return;
       mediaRetryAttemptRef.current += 1;
       diagnosticsRef.current?.event("retry_started", {
         retryNumber: mediaRetryAttemptRef.current,
@@ -1111,17 +1036,15 @@ export function WatchPage() {
       setMediaRetryKey((key) => key + 1);
       return;
     }
-    startMediaRetry(true);
-  }, [startMediaRetry]);
+    if (baselineRetryDeadlineRef.current && Date.now() >= baselineRetryDeadlineRef.current) baselineRetryDeadlineRef.current = 0;
+    startMediaRetry();
+  }, [autoRetryActive, startMediaRetry]);
 
   useEffect(() => {
     if (!autoRetryActive) return;
     const tick = () => {
       const remainingMs = retryDeadlineRef.current - Date.now();
       if (remainingMs <= 0) {
-        if (autoRetryActiveRef.current) diagnosticsRef.current?.event("retry_exhausted", {
-          retryNumber: mediaRetryAttemptRef.current,
-        }, "RETRY_EXHAUSTED", currentPosRef.current);
         autoRetryActiveRef.current = false;
         setAutoRetrySecondsLeft(0);
         setAutoRetryActive(false);
@@ -1132,9 +1055,7 @@ export function WatchPage() {
     tick();
     const countdown = window.setInterval(tick, 1000);
     const retry = window.setInterval(() => {
-      if (Date.now() < retryDeadlineRef.current) {
-        retryLastAttemptAtRef.current = Date.now();
-        progressBaselineRef.current = null;
+      if (Date.now() < retryDeadlineRef.current && allowBaselineRetry()) {
         mediaRetryAttemptRef.current += 1;
         diagnosticsRef.current?.event("retry_started", {
           retryNumber: mediaRetryAttemptRef.current,
@@ -1238,45 +1159,13 @@ export function WatchPage() {
 
   const restartVideo = useCallback(() => {
     setIsEnded(false);
-    playerRef.current?.seekTo(rangeStartRef.current);
-    setCurrentPos(rangeStartRef.current);
+    playerRef.current?.seekTo(0);
+    setCurrentPos(0);
     playerRef.current?.play();
   }, []);
 
-  const advanceLearningListenTrack = useCallback(() => {
-    const queue = readPlaybackQueue();
-    const targetId = queue?.mode === "listen"
-      ? advancePlaybackQueue(queue, video?.id || "")
-      : nextListenTrackRef.current?.id || null;
-    if (targetId && targetId !== video?.id) {
-      if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: targetId });
-      diagnosticsRef.current?.event("next_requested", {
-        state: targetId,
-        transition: "learning_repeat_complete",
-        repeatCount: learningListenRepeatCountRef.current,
-      }, undefined, currentPosRef.current);
-      navigate(`/watch/${targetId}?mode=listen&autoplay=1&fresh=1${offlineQuery}`, { replace: true });
-      return;
-    }
-    restartVideo();
-  }, [navigate, offlineQuery, restartVideo, video?.id]);
-
-  const handleNativeLearningLoop = useCallback(() => {
-    if (playbackModeRef.current !== "listen" || video?.seriesType !== "learning") return;
-    const completed = Math.min(
-      learningListenRepeatCountRef.current - 1,
-      completedLearningListenPlaysRef.current + 1,
-    );
-    completedLearningListenPlaysRef.current = completed;
-    setCompletedLearningListenPlays(completed);
-  }, [video?.seriesType]);
-
   const handlePlayerState = useCallback((state: PlayerState) => {
     playerStateRef.current = state;
-    if (state !== "PLAYING") {
-      progressBaselineRef.current = null;
-      playbackConfirmedRef.current = false;
-    }
     setIsPlaying(state === "PLAYING");
     const diagnosticEvent = ({ READY: "player_ready", PLAYING: "playing", PAUSED: "paused", BUFFERING: "buffering", ENDED: "ended" } as const)[state];
     diagnosticsRef.current?.event(diagnosticEvent, {
@@ -1294,9 +1183,6 @@ export function WatchPage() {
       bufferingDiagnosticTimerRef.current = null;
     }
     if (state === "PLAYING") {
-      setPlaybackBlockedMessage("");
-      setHasStartedPlayback(true);
-      completionHandledRef.current = false;
       if (video?.mediaUrl?.startsWith("blob:") && !navigator.onLine) rememberOfflineView(video.id, playbackMode);
       else void syncOfflineViews();
       setIsEnded(false);
@@ -1308,33 +1194,14 @@ export function WatchPage() {
       }
       void ensureSession();
     } else if (state === "ENDED") {
-      if (completionHandledRef.current) return;
-      completionHandledRef.current = true;
-      trimEndingRef.current = false;
       setIsEnded(true);
       setPausePrompts([]);
       setEndPrompts(getRandomThinkingPrompts(5));
-      const isLearningListen = playbackModeRef.current === "listen" && video?.seriesType === "learning";
-      const completedLearningPlays = isLearningListen
-        ? completedLearningListenPlaysRef.current + 1
-        : 0;
-      const shouldRepeatLearningListen = isLearningListen
-        && completedLearningPlays < learningListenRepeatCountRef.current;
-      void flushTracking(shouldRepeatLearningListen ? "active" : "ended");
+      void flushTracking("ended");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
       playingStartPositionRef.current = null;
-      if (isLearningListen) {
-        if (shouldRepeatLearningListen) {
-          completedLearningListenPlaysRef.current = completedLearningPlays;
-          setCompletedLearningListenPlays(completedLearningPlays);
-          restartVideo();
-        } else {
-          completedLearningListenPlaysRef.current = 0;
-          setCompletedLearningListenPlays(0);
-          advanceLearningListenTrack();
-        }
-      } else if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
+      if (playbackModeRef.current === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
         setTimeUp(true);
       } else if (video?.seriesType === "learning") {
         // 學習系列：重複播放當前的內容
@@ -1354,74 +1221,56 @@ export function WatchPage() {
         }
       }
     } else if (state === "PAUSED") {
-      if (trimEndingRef.current) return;
       if (modeSwitchingRef.current) return;
       void flushTracking("active");
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
       playingStartPositionRef.current = null;
       const cur = playerRef.current?.getCurrentTime() || 0;
-      if (!cleanPause && cur > 2) {
+      if (cur > 2) {
         setPausePrompts(getRandomThinkingPrompts(5));
       }
     }
-  }, [advanceLearningListenTrack, cleanPause, ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
+  }, [ensureSession, flushTracking, navigate, offlineQuery, playbackMode, restartVideo, video?.id, video?.mediaType, video?.mediaUrl, video?.seriesType]);
 
   const handleYouTubePlaylistVideoChange = useCallback((youtubeVideoId: string) => {
-    if (modeSwitchingRef.current) return;
     if (!usesYouTubeListenPlaylistRef.current || youtubeVideoId === video?.youtubeVideoId) return;
-
-    // Guard: Only allow playlist-driven video transition if the current video has actually played through.
-    // If YouTube reports a mismatched video on initial startup/buffering, it is an unintended playlist reset/skip.
-    const hasNaturallyEnded = completionHandledRef.current
-      || (totalDuration > 0 && currentPosRef.current >= totalDuration - 2)
-      || accumulatedPlayMsRef.current >= 5000;
-
-    if (!hasNaturallyEnded) {
-      diagnosticsRef.current?.event("youtube_playlist_reset_prevented", {
-        reportedVideoId: youtubeVideoId,
-        expectedVideoId: video?.youtubeVideoId,
-      }, undefined, currentPosRef.current);
-      if (video?.youtubeVideoId) {
-        playerRef.current?.switchToVideo?.(video.youtubeVideoId, rangeStartRef.current || 0, isPlaying);
-      }
-      return;
-    }
-
     const target = categoryVideos.find((item) => item.youtubeVideoId === youtubeVideoId);
     if (!target) return;
-    const targetRange = getPlaybackRange(target);
-    rangeStartRef.current = targetRange.startSeconds;
-    rangeEndRef.current = target.playbackEndSeconds ?? null;
-    playerRef.current?.seekTo(targetRange.startSeconds);
     const queue = readPlaybackQueue();
     if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: target.id });
     diagnosticsRef.current?.event("next_requested", { state: target.id, transition: "youtube_playlist" }, undefined, currentPosRef.current);
     navigate(`/watch/${target.id}?mode=listen&autoplay=1&fresh=1${offlineQuery}`, { replace: true });
-  }, [categoryVideos, isPlaying, navigate, offlineQuery, totalDuration, video?.youtubeVideoId]);
+  }, [categoryVideos, navigate, offlineQuery, video?.youtubeVideoId]);
 
+  const baselineProgressRef = useRef<number | null>(null);
+  const baselineProgressConfirmedRef = useRef(false);
+  useEffect(() => {
+    baselineProgressRef.current = null;
+    baselineProgressConfirmedRef.current = false;
+  }, [videoId, playbackMode]);
+  const observeBaselineProgress = useCallback((time: number) => {
+    // Diagnostic evidence only; do not drive readiness, retries or controls.
+    if (playerStateRef.current === "PLAYING") {
+      if (baselineProgressRef.current === null || time < baselineProgressRef.current) baselineProgressRef.current = time;
+      if (!baselineProgressConfirmedRef.current && time - baselineProgressRef.current >= 0.25) {
+        baselineProgressConfirmedRef.current = true;
+        diagnosticsRef.current?.event("playback_confirmed", { recoveryEvidence: "timeline_advanced" }, undefined, time);
+      }
+    }
+  }, []);
   const handleNativeProgress = useCallback((time: number, duration: number) => {
-    confirmPlaybackProgress(time);
+    observeBaselineProgress(time);
     if (!isDragging) setCurrentPos(time);
     if (duration > 0) setTotalDuration((previous) => previous === duration ? previous : duration);
-  }, [confirmPlaybackProgress, isDragging]);
+  }, [isDragging, observeBaselineProgress]);
 
   useEffect(() => {
-    if (!video) return;
-    const range = getPlaybackRange({ ...video, durationSeconds: totalDuration || video.durationSeconds });
-    rangeStartRef.current = range.startSeconds;
-    rangeEndRef.current = video.playbackEndSeconds ?? null;
-  }, [totalDuration, video]);
-
-  useEffect(() => {
-    if (timeUp || parentPaused || outsideWindow) {
-      autoRetryActiveRef.current = false;
-      setAutoRetryActive(false);
-      setPlayerAutoPlay(false);
+    if (timeUp) {
       playerRef.current?.pause();
       void flushTracking("active");
     }
-  }, [timeUp, parentPaused, outsideWindow, flushTracking]);
+  }, [timeUp, flushTracking]);
 
   // Timed edge mask lifecycle: cleanly starts a 5-second countdown on isPlaying===true
   useEffect(() => {
@@ -1441,17 +1290,10 @@ export function WatchPage() {
       if (playerStateRef.current === "PLAYING") {
         if (playerRef.current) {
           const time = playerRef.current.getCurrentTime();
-          confirmPlaybackProgress(time);
+          observeBaselineProgress(time);
           if (!isDragging) setCurrentPos(time);
           const dur = playerRef.current.getDuration();
           if (dur > 0 && dur !== totalDuration) setTotalDuration(dur);
-          const end = rangeEndRef.current;
-          if (end !== null && time >= end - 0.2 && !trimEndingRef.current) {
-            trimEndingRef.current = true;
-            playerRef.current.pause();
-            handlePlayerState("ENDED");
-            if (usesYouTubeListenPlaylistRef.current) playerRef.current.nextVideo?.();
-          }
         }
       }
     }, 500);
@@ -1477,7 +1319,7 @@ export function WatchPage() {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
     };
-  }, [confirmPlaybackProgress, drainQueue, flushTracking, handlePlayerState, isDragging, totalDuration]);
+  }, [drainQueue, flushTracking, isDragging, observeBaselineProgress, totalDuration]);
 
   const togglePlay = () => {
     if (!device?.authorized || parentPaused || outsideWindow) return;
@@ -1487,13 +1329,8 @@ export function WatchPage() {
     }
     diagnosticsRef.current?.event("play_requested", { state: playerStateRef.current }, undefined, currentPosRef.current);
     if (playerStateRef.current === "PLAYING") {
-      autoRetryActiveRef.current = false;
-      setAutoRetryActive(false);
-      setPlayerAutoPlay(false);
       playerRef.current?.pause();
     } else {
-      if (autoRetryActiveRef.current) retryPlayIntentRef.current = true;
-      setPlaybackBlockedMessage("");
       playerRef.current?.play();
     }
   };
@@ -1552,25 +1389,31 @@ export function WatchPage() {
       window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
 
       if (video.source === "youtube" && video.youtubeVideoId) {
-        if (shouldResume) {
+        const playlist = categoryVideos
+          .filter((item) => item.source === "youtube" && !!item.youtubeVideoId)
+          .map((item) => item.youtubeVideoId!);
+        if (nextMode === "listen" && video.seriesType === "leisure" && playlist.length > 1) {
+          playerRef.current?.switchToPlaylist?.(playlist, video.youtubeVideoId, position, shouldResume);
+        } else if (previousMode === "listen" && video.seriesType === "leisure") {
+          playerRef.current?.switchToVideo?.(video.youtubeVideoId, position, shouldResume);
+        } else if (shouldResume) {
           playerRef.current?.play();
         }
       }
     } finally {
-      setTimeout(() => {
-        modeSwitchingRef.current = false;
-        setIsSwitchingMode(false);
-      }, 500);
+      modeSwitchingRef.current = false;
+      setIsSwitchingMode(false);
     }
   }, [accessState, applyAccessState, categoryVideos, flushTracking, isSwitchingMode, preferOffline, video]);
 
   const seekRelative = useCallback((delta: number) => {
     const current = playerRef.current?.getCurrentTime() ?? currentPos;
-    const target = clampPlaybackPosition({ ...video!, durationSeconds: totalDuration || video?.durationSeconds }, current + delta);
+    const max = totalDuration > 0 ? totalDuration : 999999;
+    const target = Math.max(0, Math.min(max, current + delta));
     playerRef.current?.seekTo(target);
     setCurrentPos(target);
     diagnosticsRef.current?.event("seeked", { state: delta < 0 ? "backward_10" : "forward_10" }, undefined, target);
-  }, [currentPos, totalDuration, video]);
+  }, [currentPos, totalDuration]);
 
   useEffect(() => {
     const handleKeyboardSeek = (event: KeyboardEvent) => {
@@ -1595,42 +1438,26 @@ export function WatchPage() {
   };
 
   const handleSliderCommit = (val: number) => {
-    const target = clampPlaybackPosition({ ...video!, durationSeconds: totalDuration || video?.durationSeconds }, val);
     setIsDragging(false);
-    playerRef.current?.seekTo(target);
-    setCurrentPos(target);
-    diagnosticsRef.current?.event("seeked", { state: "scrubber" }, undefined, target);
+    playerRef.current?.seekTo(val);
+    setCurrentPos(val);
+    diagnosticsRef.current?.event("seeked", { state: "scrubber" }, undefined, val);
   };
 
   if (!video && !loadError) return <main className="watch-page watch-loading"><LoadingCard label="正在準備播放器…" /></main>;
   if (loadError === "DEVICE_AUTH_REQUIRED") return (
     <main className="kid-shell"><div className="limit-card"><span className="ended-badge">🔐</span><h1>請家長先授權這台裝置</h1><p>授權一次後，孩子不需要登入，觀看紀錄與時間會自動同步。</p><Link className={buttonVariants({ size: "large" })} to="/parent/settings">前往家長設定</Link></div></main>
   );
-  if (loadErrorCode === "LEARNING_VIDEO_LOCKED") return (
-    <main className="kid-shell">
-      <div className="limit-card" role="alert">
-        <span className="ended-badge" aria-hidden="true">🔒</span>
-        <h1>這一部還沒開放</h1>
-        <p>{loadError}</p>
-        <div className="limit-actions">
-          <Button size="large" variant="secondary" onClick={() => navigate(-1)}><ArrowLeft />回上一頁</Button>
-          <Link className={buttonVariants({ size: "large" })} to="/">孩子首頁</Link>
-        </div>
-      </div>
-    </main>
-  );
   if (loadError) return <main className="kid-shell"><Link to="/parent/downloads">家長離線下載</Link>　<Link to="/">孩子首頁</Link><KidError message={loadError} retry={() => void load()} /></main>;
   if (!video) return <Navigate to="/" replace />;
 
   const activePos = isDragging ? dragPos : currentPos;
-  const playbackRange = getPlaybackRange({ ...video, durationSeconds: totalDuration || video.durationSeconds });
-  const relativePos = relativePlaybackPosition({ ...video, durationSeconds: totalDuration || video.durationSeconds }, activePos);
-  const progressPercent = playbackRange.durationSeconds ? Math.min(100, Math.max(0, (relativePos / playbackRange.durationSeconds) * 100)) : 0;
+  const progressPercent = totalDuration > 0 ? Math.min(100, Math.max(0, (activePos / totalDuration) * 100)) : 0;
   const isYouTube = video.source === "youtube";
   const hasPlayableSource = isYouTube ? !!video.youtubeVideoId : !!video.mediaUrl && !!video.mediaType;
 
   return (
-    <main className="watch-page">
+    <main className="watch-page" data-playback-baseline="2026-09-06@59bcc15">
       <section className="player-surface">
         <div className={cn("player-stage", !isYouTube && "player-stage-local", playbackMode === "listen" && "player-stage-listen")}>
           {/* Keep the selected player mounted so playback and reminder timing stay continuous. */}
@@ -1646,12 +1473,6 @@ export function WatchPage() {
               playlistStartIndex={usesYouTubeListenPlaylist ? youtubeListenPlaylist.indexOf(video.youtubeVideoId) : 0}
               onVideoChange={handleYouTubePlaylistVideoChange}
               onStateChange={handlePlayerState}
-              onAutoplayBlocked={() => {
-                diagnosticsRef.current?.event("autoplay_blocked", { state: "youtube_autoplay_blocked" }, "YT_AUTOPLAY_BLOCKED", currentPosRef.current);
-                playerStateRef.current = "PAUSED";
-                setIsPlaying(false);
-                setPlaybackBlockedMessage("播放尚未開始，請點一下播放繼續。");
-              }}
               onError={(code) => {
                 setPlayerError(true);
                 diagnosticsRef.current?.event("youtube_error", { youtubeErrorCode: code || 0 }, `YT_ERROR_${code || "UNKNOWN"}`, currentPosRef.current);
@@ -1659,7 +1480,7 @@ export function WatchPage() {
             />
           ) : video.mediaUrl && video.mediaType ? (
             <NativeMediaPlayer
-              key={playbackMode}
+              key={`${mediaRetryKey}:${playbackMode}`}
               ref={playerRef}
               src={withMediaRetry(video.mediaUrl, mediaRetryKey)}
               mediaType={playbackMode === "listen" ? "audio" : video.mediaType}
@@ -1668,26 +1489,12 @@ export function WatchPage() {
               volume={volume}
               playbackRate={playbackRate}
               autoPlay={playerAutoPlay}
-              loopPlayback={video.seriesType === "learning"
-                && playbackRange.startSeconds === 0
-                && video.playbackEndSeconds == null
-                && (playbackMode !== "listen" || completedLearningListenPlays < learningListenRepeatCount - 1)}
-              onLoop={handleNativeLearningLoop}
+              loopPlayback={video.seriesType === "learning"}
               onStateChange={handlePlayerState}
               onProgress={handleNativeProgress}
               onError={handleMediaError}
-              onPlayable={handleMediaPlayable}
-              onDiagnostic={(type, detail, errorCode) => {
-                diagnosticsRef.current?.event(type, detail, errorCode, currentPosRef.current);
-                if (detail.state === "system_resume_recovery_failed") {
-                  setPlaybackBlockedMessage("音訊尚未恢復，請點一下播放繼續。");
-                }
-                if (detail.state === "system_pause") {
-                  autoRetryActiveRef.current = false;
-                  setAutoRetryActive(false);
-                  setPlayerAutoPlay(false);
-                }
-              }}
+              onReady={handleMediaReady}
+              onDiagnostic={(state, detail) => diagnosticsRef.current?.event("native_media_event", { ...detail, state }, undefined, currentPosRef.current)}
             />
           ) : null}
 
@@ -1695,10 +1502,11 @@ export function WatchPage() {
             <div className="listen-cover" aria-label="純聽模式">
               <Headphones aria-hidden="true" />
               <strong>純聽模式</strong>
+              <small data-testid="playback-baseline-label">9/6 驗證版 · 59bcc15</small>
               <span>{video.parentLabel}</span>
               <small>
                 {video.seriesType === "learning"
-                  ? `學習系列 · 正在播放第 ${Math.min(learningListenRepeatCount, completedLearningListenPlays + 1)} / ${learningListenRepeatCount} 次（播滿自動換下一集 🔁）`
+                  ? "學習系列 · 重複播放當前內容 🔁"
                   : "休閒系列 · 自動接續下一集 ⏭️"}
               </small>
             </div>
@@ -1715,14 +1523,11 @@ export function WatchPage() {
           {isYouTube && <div className={cn("player-edge-top", !showEdgeMasks && "player-edge-hidden")} aria-hidden="true" />}
           {isYouTube && <div className={cn("player-edge-bottom", !showEdgeMasks && "player-edge-hidden")} aria-hidden="true" />}
 
-          {/* Opaque poster: covers the entire iframe when not playing (except cleanPause categories where pause shows the live frame) */}
+          {/* Opaque poster: covers the entire iframe when not playing */}
           <div
-            className={cn(
-              "poster-overlay",
-              (isPlaying || isEnded || (cleanPause && hasStartedPlayback)) && "poster-hidden"
-            )}
+            className={cn("poster-overlay", (isPlaying || isEnded) && "poster-hidden")}
             onClick={togglePlay}
-            aria-hidden={isPlaying || isEnded || (cleanPause && hasStartedPlayback)}
+            aria-hidden={isPlaying || isEnded}
           >
             <img
               src={video.thumbnailUrl}
@@ -1880,15 +1685,15 @@ export function WatchPage() {
             </div>
           )}
 
-          {(playerError || !hasPlayableSource || playbackBlockedMessage) && (
+          {(playerError || !hasPlayableSource) && (
             <div className="player-error" role="alert">
-              <p>{playbackBlockedMessage || (isYouTube
+              <p>{isYouTube
                 ? "影片暫時載入不了。"
                 : autoRetryActive
                   ? `正在重新連線，最多再試 ${autoRetrySecondsLeft} 秒…`
-                  : "目前連不到家裡的影片。請確認 Mac 與 Tailscale 都在線上。")}</p>
-              <Button variant="secondary" onClick={playbackBlockedMessage ? togglePlay : isYouTube ? () => window.location.reload() : retryMediaNow}>
-                <RotateCcw />{playbackBlockedMessage ? "繼續播放" : autoRetryActive ? "立即再試" : "再試一次"}
+                  : "目前連不到家裡的影片。請確認 Mac 與 Tailscale 都在線上。"}</p>
+              <Button variant="secondary" onClick={isYouTube ? () => window.location.reload() : retryMediaNow}>
+                <RotateCcw />{autoRetryActive ? "立即再試" : "再試一次"}
               </Button>
             </div>
           )}
@@ -1896,12 +1701,12 @@ export function WatchPage() {
 
         <div className="kid-player-controls" role="region" aria-label="影片播放控制">
           <div className="kid-scrubber-row">
-            <span className="time-text">{formatPosition(relativePos)}</span>
+            <span className="time-text">{formatPosition(activePos)}</span>
             <div className="scrubber-wrapper">
               <input
                 type="range"
-                min={playbackRange.startSeconds}
-                max={playbackRange.endSeconds ?? (totalDuration > 0 ? totalDuration : playbackRange.startSeconds + 100)}
+                min={0}
+                max={totalDuration > 0 ? totalDuration : 100}
                 step={0.5}
                 value={activePos}
                 className="kid-slider"
@@ -1919,7 +1724,7 @@ export function WatchPage() {
                 }}
               />
             </div>
-            <span className="time-text">{playbackRange.durationSeconds !== null ? formatPosition(playbackRange.durationSeconds) : "--:--"}</span>
+            <span className="time-text">{totalDuration > 0 ? formatPosition(totalDuration) : "--:--"}</span>
           </div>
 
           <footer className="player-actions">
@@ -1939,11 +1744,7 @@ export function WatchPage() {
                 <select
                   id="playback-speed-select"
                   value={playbackRate}
-                  onChange={(event) => {
-                    const nextPlaybackRate = Number(event.target.value);
-                    setPlaybackRate(nextPlaybackRate);
-                    saveSeriesPlayerPreferences(playerPreferenceSeriesId(video), { playbackRate: nextPlaybackRate });
-                  }}
+                  onChange={(e) => setPlaybackRate(Number(e.target.value))}
                   className="speed-select"
                   aria-label="播放速度"
                 >
@@ -2022,11 +1823,7 @@ export function WatchPage() {
                 value={volume}
                 className="volume-slider"
                 aria-label="音量"
-                onChange={(event) => {
-                  const nextVolume = Number(event.target.value);
-                  setVolume(nextVolume);
-                  saveSeriesPlayerPreferences(playerPreferenceSeriesId(video), { volume: nextVolume });
-                }}
+                onChange={(event) => setVolume(Number(event.target.value))}
               />
               <span>{Math.round(volume * 100)}%</span>
             </div>
