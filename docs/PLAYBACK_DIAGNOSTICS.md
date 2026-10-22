@@ -55,3 +55,10 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 - 自動重試共用一次 60 秒期限，正常間隔 4 秒。metadata 不算重試成功；有播放意圖時須等位置前進，尚未按播放時則可在 `canplay` 完成準備。手動「立即再試」不延長當輪期限；到期後明確按「再試一次」才開新一輪。重試沿用同一個 media element。
 - Mac 探測依「開始」或「失敗」合併進行，同一類別 4 秒內不重複執行，也不新增持續健康檢查。
 - 沿用每台成功 100 次、錯誤詳情 30 天的保存方式。排查時先確認診斷版本，依序比較 `visibility_hidden`、`ended`、`next_requested`、下一個 Session 的 source/ready/buffering，以及恢復可見後是否出現 `playback_confirmed`。
+
+### 2026-10-22：鎖屏恢復不再清空音訊緩衝（REG-063）
+
+- iPad 重開後的實測 Session `e29a8194-96b4-4dc0-87eb-eef7a3056d33`：台北時間 22:24:10 系統暫停成功；22:24:12 系統播放觸發舊版重新載入，原有約 684 秒緩衝歸零，接著 `readyState=1`、`pendingPlay=true`、`stalled`，最後回報 `BUFFERING_OVER_8S`。
+- 鎖屏／背景收到系統播放時，改為沿用目前音訊，事件為 `native_media_event.state=system_resume_preserve_source`。此路徑不得呼叫 `load()`、重綁來源或重建元素；前景原有修復路徑仍保留，事件為 `system_resume_rebind_source`。
+- 不新增健康輪詢，也不修改 YouTube、額度、下一首或紀錄規則。未收到系統按鍵事件不代表已證明 iPad 原生播放程序殘留；仍可能有暫停送出診斷等因素。
+- 驗證：`npx playwright test e2e/regressions/lock-screen-resume-buffer.spec.ts e2e/regressions/listen-background-audio.spec.ts`。測試可防止背景重載和進度卡住，不能直接證明喇叭有聲音；部署後仍需實體 iPad 驗證同一操作。

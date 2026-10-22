@@ -251,18 +251,25 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
 
         if (remotePauseRef.current) {
           remotePauseRef.current = false;
-          const position = Math.max(0, element.currentTime || 0);
-          const activeSource = element.getAttribute("src") || src;
-          // WebKit can resolve play() and advance currentTime while the PWA's
-          // audio output remains silent after a lock-screen pause. Rebinding
-          // the source immediately before remote play reattaches native audio.
-          element.setAttribute("src", activeSource);
-          element.load();
-          const restorePosition = () => {
-            if (Math.abs(element.currentTime - position) > 0.25) element.currentTime = position;
-          };
-          element.addEventListener("loadedmetadata", restorePosition, { once: true });
-          try { element.currentTime = position; } catch { /* restored after metadata */ }
+          if (document.hidden) {
+            // The iPad can load metadata but stall fetching playable data in
+            // the background. Do not discard a healthy buffer or native audio
+            // session just because the lock-screen Play action was pressed.
+            diagnostic("system_resume_preserve_source");
+          } else {
+            diagnostic("system_resume_rebind_source");
+            const position = Math.max(0, element.currentTime || 0);
+            const activeSource = element.getAttribute("src") || src;
+            // Keep the existing foreground repair for a silent native audio
+            // output, where WebKit can actually finish loading the resource.
+            element.setAttribute("src", activeSource);
+            element.load();
+            const restorePosition = () => {
+              if (Math.abs(element.currentTime - position) > 0.25) element.currentTime = position;
+            };
+            element.addEventListener("loadedmetadata", restorePosition, { once: true });
+            try { element.currentTime = position; } catch { /* restored after metadata */ }
+          }
         }
         playElement(element);
       };
