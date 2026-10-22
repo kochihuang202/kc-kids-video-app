@@ -329,6 +329,14 @@ export function HomePage() {
         </aside>
       )}
 
+      {!isOutsideWindow && (
+        <aside className="learning-timer-reminder" role="note" aria-label="學習計時提醒">
+          <span className="reminder-icon" aria-hidden="true">⏱️</span>
+          <span className="reminder-tag">學習小提醒</span>
+          <span className="reminder-text">在學習時，請務必記得要「<strong>計時</strong>」喔！</span>
+        </aside>
+      )}
+
       {!isOutsideWindow && resume && (
         <section className="resume-section" aria-label="繼續觀看">
           <div className="resume-header"><span className="resume-tag">{resume.playbackMode === "listen" ? <Headphones /> : <Play />}{resume.playbackMode === "listen" ? "繼續聽" : "繼續看"}</span></div>

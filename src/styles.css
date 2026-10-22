@@ -45,7 +45,7 @@ svg { flex: 0 0 auto; }
   padding: max(34px, env(safe-area-inset-top)) 0 max(44px, env(safe-area-inset-bottom));
 }
 
-.home-header { margin-bottom: clamp(34px, 5.5vw, 68px); }
+.home-header { margin-bottom: clamp(24px, 4vw, 42px); }
 .home-header-bar {
   display: flex;
   align-items: center;
@@ -1165,6 +1165,60 @@ svg { flex: 0 0 auto; }
 .device-name-block { flex: 1; min-width: 0; }
 .device-name-block input { width: min(100%, 300px); }
 /* ── Phase 2: Kid UI Extensions ────────────────────────────────────────── */
+.learning-timer-reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff9e6;
+  border: 1.5px solid #ffe89e;
+  border-radius: 16px;
+  padding: 10px 18px;
+  margin-bottom: 22px;
+  box-shadow: 0 2px 10px rgba(184, 134, 11, 0.06);
+  color: #734d00;
+  font-size: 15px;
+  font-weight: 750;
+  max-width: 100%;
+}
+.learning-timer-reminder .reminder-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.learning-timer-reminder .reminder-tag {
+  display: inline-block;
+  background: #ffe082;
+  color: #633e00;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.learning-timer-reminder .reminder-text {
+  line-height: 1.4;
+}
+.learning-timer-reminder .reminder-text strong {
+  color: #4d3300;
+  font-weight: 900;
+}
+@media (max-width: 600px) {
+  .learning-timer-reminder {
+    padding: 8px 12px;
+    font-size: 13.5px;
+    gap: 8px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+  }
+  .learning-timer-reminder .reminder-icon {
+    font-size: 17px;
+  }
+  .learning-timer-reminder .reminder-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
 .resume-section { margin-bottom: 24px; }
 .resume-header { margin-bottom: 8px; }
 .resume-tag { display: inline-flex; align-items: center; gap: 6px; background: #e3f0e6; color: #2f543e; font-weight: 800; font-size: 15px; padding: 4px 12px; border-radius: 999px; }
