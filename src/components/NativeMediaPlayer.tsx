@@ -281,16 +281,6 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
 
     useEffect(() => {
       const element = elementRef.current;
-      if (!element) return;
-      element.autoplay = autoPlay;
-      if (autoPlay) {
-        playRequestedRef.current = true;
-        if (readySentRef.current) playElement(element);
-      }
-    }, [autoPlay]);
-
-    useEffect(() => {
-      const element = elementRef.current;
       if (element) element.loop = loopPlayback;
       if (visualVideoRef.current) visualVideoRef.current.loop = loopPlayback;
     }, [loopPlayback]);
@@ -324,6 +314,24 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       element.playbackRate = playbackRate;
       if (visualVideoRef.current) visualVideoRef.current.playbackRate = playbackRate;
     }, [playbackRate]);
+
+    useEffect(() => {
+      const element = elementRef.current;
+      if (!element) return;
+      element.autoplay = autoPlay;
+      if (autoPlay) {
+        playRequestedRef.current = true;
+        // Register continuation while the new source is being selected, not
+        // only after loadedmetadata. A background iPad can remain at metadata
+        // readiness until the page is visible again. Keep the same element
+        // and one pending play request; do not reload or poll for readiness.
+        // Run after the volume/rate effects so a saved mute is respected.
+        if (mediaType === "audio" || readySentRef.current) {
+          if (!readySentRef.current) diagnostic("source_autoplay_requested");
+          playElement(element);
+        }
+      }
+    }, [autoPlay, mediaType, src]);
 
     useEffect(() => {
       if (mediaType !== "audio" || typeof navigator === "undefined" || !("mediaSession" in navigator)) return;

@@ -71,3 +71,10 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 - 明確暫停、拖曳、頁面播放、換來源、離開頁面會取消待處理檢查；舊 play promise 不得在較新的操作後回報錯誤。這不是持續 polling，背景不反覆強制 play，也不新增健康探測。
 - 可取得時附 `audioSessionState`、`audioSessionType`、`systemPlaybackState`、`userActivationActive`。依 [W3C Audio Session 草案](https://www.w3.org/TR/audio-session/) 的狀態語義讀取；僅作診斷，不設定實驗性 AudioSession type、不要求麥克風權限，也不以 active 當成有聲音的證明。
 - 仍需實機驗證前景恢復是否獲 iPad 允許；自動化測試不能聽取實體裝置喇叭。若無聲時真正的 media currentTime 持續前進，此機制無法直接識別音訊輸出失效。滑掉 PWA 後仍有聲音的系統層原因也尚未確認。
+
+### 2026-10-22：下一集在背景卡於 0:00（REG-065）
+
+- Session `9a3ad6d7-d23e-47e2-bc8a-e56b3e8a7342`：台北時間 23:24:12 已換成 `ml2-070`，但仍隱藏時 `readyState=1`、緩衝為 0、`play()` 待處理、實際位置為 0；23:24:46 解鎖才出現 canplay/playing，23:24:47 才有實際位置前進。這不同於 REG-064 的「已有完整緩衝、play 已成功，但時間凍結」。
+- 改動僅提早註冊原生音訊的自動接續請求：新來源設定完成便呼叫一次 play，不等 metadata；相同待處理 promise 不重複呼叫。不新增來源重載、第二個播放器、下一集媒體預抓或持續健康探測。
+- `native_media_event.state=source_autoplay_requested` 表示在 metadata 前提出請求；換集時父子 effect 的先後可能讓該事件落在前一個診斷 Session，應搭配新 Session 的 page_opened、sourceGeneration、readyState、pendingPlay 和 playback_confirmed 比對，不能只看事件名稱判斷成功。
+- 驗證：`npx playwright test e2e/regressions/native-listen-source-start.spec.ts e2e/regressions/listen-background-audio.spec.ts`。桌面測試可確認播放請求先於 metadata、兩次換集的實際時間前進與原元素未重建；不能保證 iPad 喇叭或 WebKit 背景下載已恢復。仍需實機鎖屏換集驗收，尚未找到原始回歸的確切版本。
