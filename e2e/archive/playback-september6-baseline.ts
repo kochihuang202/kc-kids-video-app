@@ -1,3 +1,6 @@
+// Retired experiment, 2026-10-23: user approved restoring d1e3d2a playback.
+// Keep the original comparison assertions for an explicit future baseline run.
+// This is not a current regression spec; modern playback regressions remain active.
 import { expect, test, type Page } from "@playwright/test";
 import { finishMediaForTest, getMediaLoadCount, getMediaSourceRemovalCount, installDeterministicMedia, invokeMediaSessionAction, mockAuthorizedWatchApi, TEST_VIDEO_ID } from "../support/watch-page";
 

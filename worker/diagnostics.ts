@@ -8,6 +8,8 @@ const EVENT_TYPES = new Set([
   "media_probe", "media_error", "youtube_error", "autoplay_blocked", "visibility_hidden",
   "visibility_visible", "next_requested", "route_left", "javascript_error",
   "native_media_event", "playback_confirmed", "youtube_playlist_reset_prevented",
+  // Accept pending batches from the temporary September 6 comparison client.
+  "playback_baseline", "baseline_metadata_ready",
 ]);
 const ERROR_EVENTS = new Set(["retry_exhausted", "media_error", "youtube_error", "autoplay_blocked", "javascript_error"]);
 

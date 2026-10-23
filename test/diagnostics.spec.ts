@@ -49,6 +49,58 @@ beforeEach(async () => {
 });
 
 describe("playback diagnostics", () => {
+  it("REG-066 accepts and replays complete baseline batches without losing startup or failure evidence", async () => {
+    const device = await pairedDevice();
+    const response = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "self_hosted", playbackMode: "listen", userAgent: "iPhone Safari",
+      }),
+    });
+    expect(response.status).toBe(201);
+    const { id } = await response.json<{ id: string }>();
+    const occurredAt = new Date().toISOString();
+    const startup = [
+      { seq: 1, type: "page_opened", occurredAt, detail: { diagnosticVersion: "playback-v2" } },
+      { seq: 2, type: "player_created", occurredAt },
+      { seq: 3, type: "playback_baseline", occurredAt, detail: { state: "2026-09-06@59bcc15" } },
+      { seq: 4, type: "player_ready", occurredAt },
+      { seq: 5, type: "baseline_metadata_ready", occurredAt, detail: { retryNumber: 1 } },
+      { seq: 6, type: "play_requested", occurredAt },
+      { seq: 7, type: "playing", occurredAt },
+      { seq: 8, type: "native_media_event", occurredAt, errorCode: "NATIVE_RESUME_STALLED", detail: {
+        state: "system_resume_stalled", sourceKind: "blob", documentHidden: true, currentTime: 12,
+      } },
+    ];
+    const write = (events: unknown[]) => call(`/api/diagnostics/sessions/${id}/events`, {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events }),
+    });
+    // A pending batch from an older PWA must be accepted as a whole and stay idempotent.
+    expect((await write(startup)).status).toBe(200);
+    expect((await write(startup)).status).toBe(200);
+    const exported = await call(`/api/diagnostics/export?sessionId=${id}`, {
+      headers: { authorization: "Bearer test-read-only-diagnostics-token" },
+    });
+    expect(exported.status).toBe(200);
+    const payload = await exported.json<{ events: Array<{ seq: number; type: string; errorCode: string | null }> }>();
+    expect(payload.events.map(({ seq, type }) => ({ seq, type })))
+      .toEqual(startup.map(({ seq, type }) => ({ seq, type })));
+    expect(payload.events[7].errorCode).toBe("NATIVE_RESUME_STALLED");
+    const outcome = async () => (await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?")
+      .bind(id).first<{ outcome: string }>())?.outcome;
+    expect(await outcome()).toBe("error");
+    expect((await write([{ seq: 9, type: "baseline_metadata_ready", occurredAt }])).status).toBe(200);
+    expect(await outcome()).toBe("error");
+    expect((await write([{ seq: 10, type: "playback_confirmed", occurredAt, positionSeconds: 13 }])).status).toBe(200);
+    expect(await outcome()).toBe("recovered");
+    expect((await write([{ seq: 11, type: "unsupported_event_typo", occurredAt }])).status).toBe(400);
+    expect((await env.DB.prepare("SELECT COUNT(*) AS count FROM diagnostic_events WHERE diagnostic_session_id = ?")
+      .bind(id).first<{ count: number }>())?.count).toBe(10);
+    expect((await call(`/api/diagnostics/sessions/${id}`, {
+      method: "PATCH", headers: { cookie: device.cookie }, body: JSON.stringify({ outcome: "success" }),
+    })).status).toBe(200);
+    expect(await outcome()).toBe("recovered");
+  });
+
   it("keeps an idempotent device timeline and marks retry success as recovered", async () => {
     const device = await pairedDevice();
     const start = await call("/api/diagnostics/sessions", {

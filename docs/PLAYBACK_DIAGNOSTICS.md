@@ -46,6 +46,14 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 
 診斷失敗不得阻斷播放；前端暫時送不出的批次只在本機保留最近 20 批，之後使用相同事件序號重送，D1 以 `(diagnostic_session_id, event_seq)` 去重。
 
+## 2026-10-23：對照版結束與診斷批次相容（REG-066）
+
+- 現行播放器已依使用者同意恢復到退版前 `d1e3d2a`，不再顯示「9/6 驗證版」。完整範圍與歷史對照見 `docs/PLAYBACK_BASELINE_2026-09-06.md`。
+- 後端仍接受舊對照版的 `playback_baseline`、`baseline_metadata_ready`。這兩種事件先前不在允許清單，導致整批啟動事件被拒收；實際紀錄因此可能從 seq 13 或 15 才開始。允許清單修正後，仍在本機 pending 佇列中的批次可沿用原序號補送、去重；已被本機保存上限淘汰的資料無法承諾還原。
+- 不能以沒有錯誤碼當作播放正常：先檢查事件序號是否完整，對照模式、`sourceKind`、背景切換、系統按鍵、緩衝與真正的播放位置。`playing`、`play()` 成功和系統顯示進度都不能直接證明喇叭出聲。
+- UA 回報的 OS 數字可能不同於「設定」中的實際版本；本次手機 browserVersion 為 27.0.1，但 osVersion 仍顯示 18.7。保留原始回報，不把該欄當成實際 OS 的唯一依據；使用者提供的系統版本另外對照。
+- 驗證：`npx vitest run test/diagnostics.spec.ts`，其中 REG-066 保護整批接收、pending 重送、唯讀匯出、錯誤保留與恢復判定，不放寬未知事件驗證。
+
 ## 2026-10-22：背景播放與重試診斷 v2
 
 - 新紀錄的 `page_opened.detailJson.diagnosticVersion` 為 `playback-v2`；每筆事件附頁面可見性、來源種類（`blob` 本機下載、`remote` 串流、`youtube`）、當前位置、播放意圖與重試剩餘時間。
