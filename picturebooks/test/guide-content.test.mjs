@@ -6,10 +6,11 @@ const catalog = JSON.parse(await readFile(new URL('catalog.json', publicDir)));
 const guidedBooks = catalog.books.filter(book => book.guide !== false);
 test('image-only releases explicitly opt out of guides and retain all previous guided books', async () => {
   const imageOnly = catalog.books.filter(book => book.guide === false);
-  assert.deepEqual(imageOnly.map(book => Number(book.number)), Array.from({ length: 10 }, (_, i) => i + 19));
-  assert.equal(imageOnly.reduce((sum, book) => sum + book.pages.length, 0), 125);
-  assert.equal(catalog.books.length, 28);
-  assert.equal(catalog.books.reduce((sum, book) => sum + book.pages.length, 0), 369);
+  assert.deepEqual(imageOnly.map(book => Number(book.number)), Array.from({ length: 72 }, (_, i) => i + 19));
+  assert.equal(imageOnly.filter(book => Number(book.number) <= 28).reduce((sum, book) => sum + book.pages.length, 0), 125);
+  assert.equal(imageOnly.filter(book => Number(book.number) >= 29).reduce((sum, book) => sum + book.pages.length, 0), 724);
+  assert.equal(catalog.books.length, 90);
+  assert.equal(catalog.books.reduce((sum, book) => sum + book.pages.length, 0), 1093);
   for (const book of imageOnly) {
     await assert.rejects(readFile(new URL(`guides/${book.id}.json`, publicDir)), { code: 'ENOENT' });
   }

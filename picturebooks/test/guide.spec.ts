@@ -120,6 +120,8 @@ test('slow speed persists after reopening and malformed guide preferences do not
 });
 
 test('every published book opens its matching guide and wrong guide data stays recoverable', async ({ page }) => {
+  // Check all 90 books, including real image decoding; allow for production network latency.
+  test.setTimeout(120_000);
   const catalog = await (await page.request.get('/catalog.json')).json();
   for (const book of catalog.books) {
     await page.goto(`/#book/${book.id}?page=${book.pages.length}`);

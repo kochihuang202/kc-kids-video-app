@@ -342,6 +342,7 @@ Only important bugs that have occurred in the real app belong here.
 - Root cause: The reader previously assumed every book offered a guide, so image-only books exposed a button that would load missing content.
 - Intended behavior update: The user requested new books without guides on 2026-10-12 and confirmed uploading new source images on 2026-10-14. Guide coverage tests now apply to guide-enabled books; the original 18 books/244 guided pages remain required. New books 19–28 are explicitly image-only, not silently missing guides.
 - Regression test: `picturebooks/test/reading.spec.ts` (`image-only books hide the guide, turn pages and resume while existing guides remain available`), with all-book matching in `guide.spec.ts` and explicit release coverage in `guide-content.test.mjs`.
+- Release coverage update (2026-10-23): User requested uploading the next source batch, books 29–90 (62 books/724 pages), with the existing image-only preference. Catalog coverage now requires 90 books/1,093 pages, retaining the original 19–28 batch's 125 pages and all 18 guided books/244 pages. The all-book browser test allows 120 seconds for checking 90 books, including image decoding over the production network.
 
 ## REG-043 — Novel reading position shifts when changing text size
 
