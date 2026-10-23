@@ -13,11 +13,21 @@ const pending = [...images];
 async function checkImages() {
   while (pending.length) {
     const url = pending.shift();
-    const response = await fetch(`${baseURL}${url}`);
-    if (!response.ok || !response.headers.get('content-type')?.startsWith('image/webp')) throw new Error(`Image failed: ${url} (${response.status})`);
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    if (new TextDecoder().decode(bytes.slice(0, 4)) !== 'RIFF' || new TextDecoder().decode(bytes.slice(8, 12)) !== 'WEBP') throw new Error(`Invalid image bytes: ${url}`);
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const response = await fetch(`${baseURL}${url}`);
+        if (!response.ok || !response.headers.get('content-type')?.startsWith('image/webp')) throw new Error(`Image failed: ${url} (${response.status})`);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (new TextDecoder().decode(bytes.slice(0, 4)) !== 'RIFF' || new TextDecoder().decode(bytes.slice(8, 12)) !== 'WEBP') throw new Error(`Invalid image bytes: ${url}`);
+        break;
+      } catch (error) {
+        // Large batches can encounter a reset connection; never skip a failed asset.
+        if (attempt >= 3 || !error.cause) throw new Error(`Verification failed: ${url}`, { cause: error });
+        await new Promise(resolve => setTimeout(resolve, attempt * 300));
+      }
+    }
     verified++;
+    if (verified % 100 === 0) console.log(`Checked ${verified}/${images.length} images.`);
   }
 }
 await Promise.all([checkImages(), checkImages(), checkImages(), checkImages()]);
