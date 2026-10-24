@@ -4,7 +4,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 ## 執行
 
-可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.4)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.4/CaptureWorkbench.exe)。
+可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.5)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.5/CaptureWorkbench.exe)。
 
 執行 `artifacts/release/CaptureWorkbench.exe`。獨立發行版內含 .NET 執行環境，不需要安裝 SDK。
 
@@ -48,7 +48,9 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 視窗 X、最小化按鈕或「縮到通知區」都收到右下角，快捷鍵持續有效，分頁與編輯留在原視窗。雙擊圖示恢復，右鍵可擷取或「離開」；「離開」保存後才真正結束。捲動擷取中離開會先結束並保留已擷取內容。再執行同一程式也可恢復視窗。視窗、執行檔、通知區使用同一個自製截圖圖示。
 
-「選項 → 程式設定 → 一般」提供「登入 Windows 時自動執行」，預設不勾選。勾選並保存後，透過目前使用者的 Windows Run 項目，以 `--tray` 啟動並收在通知區。移動執行檔位置後請重新取消／勾選此設定。
+「選項 → 程式設定 → 一般」提供「登入 Windows 時自動執行」，預設不勾選。勾選並保存後，透過目前使用者的 Windows Run 項目，以 `--tray` 啟動並收在通知區。每次按「確定」都會核對目前執行檔的路徑；已勾選時，從新位置啟動也會自動修復缺失或過期的登錄，不必反覆取消／勾選。寫入後會讀回核對，失敗時提示錯誤，不會假裝設定成功。
+
+`文件\CaptureWorkbench\startup.log` 保留有大小上限的本機啟動紀錄，包括啟動路徑、手動／`--tray` 模式與初始化結果；不記錄圖片內容，也不自動上傳。若下次登入仍沒有通知區圖示，可由紀錄區分 Windows 未呼叫程式與程式初始化失敗。實際開機啟動仍需登入 Windows 驗證，程式內測試不取代此步驟。
 
 ## 第一版的範圍
 

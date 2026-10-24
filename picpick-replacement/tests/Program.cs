@@ -194,6 +194,9 @@ Test("closing saves edits and clears the open-document list", () => {
 Test("startup command quotes the executable and opens in the notification area", () => {
     Check(StartupRegistration.CommandFor(@"C:\Apps With Spaces\CaptureWorkbench.exe") == "\"C:\\Apps With Spaces\\CaptureWorkbench.exe\" --tray", "Startup command breaks paths containing spaces");
 });
+Test("saving enabled startup repairs missing and stale executable registration", StartupUserFlows.ReapplyEnabled);
+Test("launching an enabled app repairs its Windows startup registration", StartupUserFlows.StartupRepair);
+Test("failed startup registration is verified, reported and rolled back without changing preferences", StartupUserFlows.FailedRegistration);
 Test("capture clipboard preference defaults on for existing settings and remembers opt-out", () => {
     string path = Path.Combine(Path.GetTempPath(), "CaptureWorkbench-clipboard-settings-" + Guid.NewGuid().ToString("N"), "settings.json");
     var defaults = AppSettings.Load(path);

@@ -435,6 +435,14 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-067 — Checked login startup retains an obsolete executable or a missing Run entry
+
+- Scope: `picpick-replacement/StartupRegistration.cs`, `WorkbenchForm.cs`, `Program.cs`, `StartupLog.cs`.
+- Reproduction: Save `StartWithWindows=true`, move to another executable location (or remove the Windows Run entry), then save the still-checked setting. Previously the checkbox comparison skipped all registry writes, leaving the old command or no command at all.
+- Local evidence, 2026-10-24: The user runs `artifacts/release/CaptureWorkbench.exe`, while the actual current-user Run entry referred to `artifacts/edge-drop-build/captureworkbench.exe`. The old file still existed and had the same SHA256 as release; no matching Windows disabled entry or crash event was found. This proves a synchronization defect but does not establish the sole reason for the reported missing tray icon after login.
+- Fix: Compare the desired quoted command plus `--tray` against Windows every time settings are saved; reconcile on launch when enabled. Read back writes, report failures and roll back registration when preference saving fails. Keep bounded local startup evidence for the next real login, without uploading it or recording images.
+- Tests: `StartupUserFlows.ReapplyEnabled`, `StartupRepair`, `FailedRegistration` exercise the actual form settings handler with isolated registry delegates, unchanged checked preferences, absent/stale/correct entries, moved executable paths, disabled preferences, ignored/throwing writes and settings-save rollback. The old condition was observed failing the missing/stale command assertion before the fix. All 34 native checks pass. No reboot/logoff is performed during diagnosis; actual next-login success remains to be confirmed.
+
 ## REG-062 — Titlebar close exits instead of retaining the editor in the notification area
 
 - User-approved behavior change, 2026-10-19: Window X, Alt+F4 and minimize hide to the tray, retaining the current tabs and pending edits. Only the explicit tray Exit action ends the session and saves/forgets tabs. This supersedes REG-048's earlier interpretation of titlebar close; explicit document close and final-save tests remain unchanged.

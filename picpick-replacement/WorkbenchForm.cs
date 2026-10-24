@@ -21,6 +21,9 @@ public sealed class WorkbenchForm : Form
     readonly ToolStripLabel currentNumberLabel = new("圖章現用") { Visible = false }, nextNumberLabel = new("下一個") { Visible = false };
     bool syncingStyle;
     readonly string settingsPath;
+    readonly Func<string?> readStartup;
+    readonly Action<string?> writeStartup;
+    readonly string executablePath;
     AppSettings settings;
     ShortcutBinding? activeShortcut;
     CancellationTokenSource? captureCancellation;
@@ -35,7 +38,10 @@ public sealed class WorkbenchForm : Form
     ImageCanvas? Canvas => tabs.SelectedTab?.Tag as ImageCanvas;
     public WorkbenchForm(string[] args) : this(args, null, null) { }
     internal WorkbenchForm(string[] args, DocumentStore? documentStore, AppSettings? initialSettings)
+        : this(args, documentStore, initialSettings, StartupRegistration.Read, StartupRegistration.Write, Environment.ProcessPath!) { }
+    internal WorkbenchForm(string[] args, DocumentStore? documentStore, AppSettings? initialSettings, Func<string?> readStartup, Action<string?> writeStartup, string executablePath)
     {
+        this.readStartup = readStartup; this.writeStartup = writeStartup; this.executablePath = executablePath;
         Text = "截圖工作台 · Capture Workbench"; Width = 1220; Height = 840; MinimumSize = new Size(850, 580);
         StartPosition = FormStartPosition.CenterScreen; BackColor = Color.FromArgb(242, 245, 250);
         Font = new Font("Microsoft JhengHei UI", 10); KeyPreview = true;
@@ -120,10 +126,13 @@ public sealed class WorkbenchForm : Form
         Resize += (_, _) => { if (!capturing && WindowState == FormWindowState.Minimized) MinimizeToTray(); };
         Shown += (_, _) => {
             RegisterShortcut();
+            string? startupError = ReconcileStartup();
+            if (startupError != null) { StartupLog.Record(startupError); SetStatus(startupError); tray.ShowBalloonTip(8000, "開機自動執行未套用", startupError, ToolTipIcon.Warning); }
             foreach (var path in args.Where(File.Exists)) Safe(() => Import(path));
             _ = ListenForOpenRequests();
             if (settingsError != null) SetStatus("設定檔無法讀取，已使用預設值：" + settingsError);
             if (args.Contains("--tray")) MinimizeToTray();
+            StartupLog.Record(args.Contains("--tray") ? "通知區啟動完成" : "編輯器啟動完成");
         };
         FormClosing += (_, e) => {
             if (!exitRequested && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; MinimizeToTray(); return; }
@@ -157,6 +166,11 @@ public sealed class WorkbenchForm : Form
     }
     void RefreshShortcutLabel() { shortcutButton.Text = hotkeyRegistered ? "快捷鍵 " + activeShortcut!.Display + "…" : "快捷鍵被占用…"; shortcutButton.ToolTipText = hotkeyRegistered && activeShortcut != settings.Shortcut ? "設定為 " + settings.Shortcut.Display + "，目前被其他程式占用，暫用 " + activeShortcut!.Display + "。按此修改。" : "按此修改擷取快捷鍵"; }
     void ShowSettings(bool shortcut) { using var dialog = new SettingsForm(settings, shortcutButton.ToolTipText ?? "", candidate => ApplySettings(candidate, shortcut), shortcut); dialog.ShowDialog(this); }
+    string? ReconcileStartup() {
+        if (!settings.StartWithWindows) return null;
+        try { StartupRegistration.Reconcile(true, executablePath, readStartup, writeStartup); return null; }
+        catch (Exception error) { return "無法設定開機自動執行：" + error.Message; }
+    }
     string? ApplySettings(AppSettings candidate, bool retryShortcut) {
         var previous = activeShortcut; bool wasRegistered = hotkeyRegistered;
         string? previousStartup = null; bool startupChanged = false;
@@ -171,9 +185,10 @@ public sealed class WorkbenchForm : Form
                 if (!hotkeyRegistered) { RestoreShortcut(); return candidate.Shortcut.Display + " 已被其他程式占用，請換一組按鍵。原設定仍保留。"; }
                 activeShortcut = candidate.Shortcut;
             }
-            if (candidate.StartWithWindows != settings.StartWithWindows) { previousStartup = StartupRegistration.Read(); StartupRegistration.Write(candidate.StartWithWindows ? StartupRegistration.CommandFor(Environment.ProcessPath!) : null); startupChanged = true; }
+            previousStartup = readStartup();
+            startupChanged = StartupRegistration.Reconcile(candidate.StartWithWindows, executablePath, readStartup, writeStartup);
             candidate.Save(settingsPath); settings = candidate; store.OutputRoot = settings.OutputFolder; RefreshShortcutLabel(); SetStatus("設定已保存"); return null;
-        } catch (Exception error) { if (startupChanged) StartupRegistration.Write(previousStartup); if (changeShortcut) { if (hotkeyRegistered) Native.UnregisterHotKey(Handle, 42); RestoreShortcut(); } return error.Message; }
+        } catch (Exception error) { string rollbackError = ""; if (startupChanged) { try { writeStartup(previousStartup); } catch (Exception rollback) { rollbackError = "；開機項目還原失敗：" + rollback.Message; } } if (changeShortcut) { if (hotkeyRegistered) Native.UnregisterHotKey(Handle, 42); RestoreShortcut(); } return error.Message + rollbackError; }
         void RestoreShortcut() { activeShortcut = previous; hotkeyRegistered = wasRegistered && previous != null && Native.RegisterHotKey(Handle, 42, previous.Modifiers, (uint)previous.Key); RefreshShortcutLabel(); }
     }
     protected override void WndProc(ref Message m) { if (m.Msg == 0x312 && m.WParam == 42 && !capturing) { _ = StartCapture(false); return; } base.WndProc(ref m); }
