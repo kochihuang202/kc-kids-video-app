@@ -49,6 +49,44 @@ beforeEach(async () => {
 });
 
 describe("playback diagnostics", () => {
+  it("REG-068 accepts YouTube initialization phases and retains the error until real progress", async () => {
+    const device = await pairedDevice();
+    const response = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "youtube", playbackMode: "video", userAgent: "Safari",
+      }),
+    });
+    expect(response.status).toBe(201);
+    const { id } = await response.json<{ id: string }>();
+    const occurredAt = new Date().toISOString();
+    const events = [
+      { seq: 1, type: "player_created", occurredAt, detail: { state: "youtube_api_requested", errorOperation: "youtube_initialization" } },
+      { seq: 2, type: "youtube_error", occurredAt, errorCode: "YT_API_TIMEOUT", detail: { state: "youtube_initialization_failed", retryRemainingMs: 50000 } },
+      { seq: 3, type: "retry_started", occurredAt, detail: { state: "youtube_api_requested", retryNumber: 1 } },
+      { seq: 4, type: "player_created", occurredAt, detail: { state: "youtube_api_ready" } },
+      { seq: 5, type: "player_created", occurredAt, detail: { state: "youtube_iframe_requested" } },
+      { seq: 6, type: "player_created", occurredAt, detail: { state: "youtube_iframe_ready" } },
+      { seq: 7, type: "player_ready", occurredAt },
+    ];
+    const write = (batch: unknown[]) => call(`/api/diagnostics/sessions/${id}/events`, {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events: batch }),
+    });
+    expect((await write(events)).status).toBe(200);
+    expect((await write(events)).status).toBe(200);
+    const outcome = async () => (await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?")
+      .bind(id).first<{ outcome: string }>())?.outcome;
+    expect(await outcome()).toBe("error");
+    const exported = await call(`/api/diagnostics/export?sessionId=${id}`, {
+      headers: { authorization: "Bearer test-read-only-diagnostics-token" },
+    });
+    expect(exported.status).toBe(200);
+    const payload = await exported.json<{ events: Array<{ seq: number; type: string; detailJson: string | null }> }>();
+    expect(payload.events.map(({ seq, type }) => ({ seq, type }))).toEqual(events.map(({ seq, type }) => ({ seq, type })));
+    expect(JSON.parse(payload.events[1].detailJson!)).toMatchObject({ state: "youtube_initialization_failed", retryRemainingMs: 50000 });
+    expect((await write([{ seq: 8, type: "playback_confirmed", occurredAt, positionSeconds: 1 }])).status).toBe(200);
+    expect(await outcome()).toBe("recovered");
+  });
+
   it("REG-066 accepts and replays complete baseline batches without losing startup or failure evidence", async () => {
     const device = await pairedDevice();
     const response = await call("/api/diagnostics/sessions", {

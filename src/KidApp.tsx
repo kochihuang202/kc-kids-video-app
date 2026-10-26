@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-r
 import { NativeMediaPlayer, type NativePlaybackError } from "./components/NativeMediaPlayer";
 import { localMedia, managedVideo } from "./lib/downloads";
 import { rememberOfflineView, syncOfflineViews } from "./lib/offlineViews";
-import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle } from "./components/YouTubePlayer";
+import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle, type YouTubeInitialization } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
 import { advancePlaybackQueue, buildYouTubeListenPlaylist, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
@@ -765,6 +765,7 @@ export function WatchPage() {
   const rangeEndRef = useRef<number | null>(null);
 
   const [playerError, setPlayerError] = useState(false);
+  const [youtubeInitialization, setYouTubeInitialization] = useState<YouTubeInitialization | null>(null);
   const [playbackBlockedMessage, setPlaybackBlockedMessage] = useState("");
   const [mediaRetryKey, setMediaRetryKey] = useState(0);
   const [autoRetryActive, setAutoRetryActive] = useState(false);
@@ -966,6 +967,7 @@ export function WatchPage() {
     window.addEventListener("unhandledrejection", onUnhandled);
     window.addEventListener("pagehide", onPageHide);
     const autoplayTimer = isAutoplay ? window.setTimeout(() => {
+      if (video.source === "youtube" && playerRef.current?.getDebugState?.().initializationState !== "ready") return;
       if (!diagnostics.hasPlayedSuccessfully() && !diagnostics.hasPlaybackProblem()) diagnostics.event(
         "autoplay_blocked", { state: playerStateRef.current }, "AUTOPLAY_NOT_STARTED", currentPosRef.current,
       );
@@ -1480,6 +1482,7 @@ export function WatchPage() {
   }, [confirmPlaybackProgress, drainQueue, flushTracking, handlePlayerState, isDragging, totalDuration]);
 
   const togglePlay = () => {
+    if (video?.source === "youtube" && youtubeInitialization && youtubeInitialization.state !== "ready") return;
     if (!device?.authorized || parentPaused || outsideWindow) return;
     if (playbackMode === "video" && video?.seriesType === "leisure" && remainingSecsRef.current <= 0) {
       setTimeUp(true);
@@ -1646,6 +1649,10 @@ export function WatchPage() {
               playlistStartIndex={usesYouTubeListenPlaylist ? youtubeListenPlaylist.indexOf(video.youtubeVideoId) : 0}
               onVideoChange={handleYouTubePlaylistVideoChange}
               onStateChange={handlePlayerState}
+              onInitializationChange={setYouTubeInitialization}
+              onDiagnostic={(type, detail, errorCode) => {
+                diagnosticsRef.current?.event(type, detail, errorCode, currentPosRef.current);
+              }}
               onAutoplayBlocked={() => {
                 diagnosticsRef.current?.event("autoplay_blocked", { state: "youtube_autoplay_blocked" }, "YT_AUTOPLAY_BLOCKED", currentPosRef.current);
                 playerStateRef.current = "PAUSED";
@@ -1880,6 +1887,19 @@ export function WatchPage() {
             </div>
           )}
 
+          {isYouTube && youtubeInitialization && youtubeInitialization.state !== "ready" && !parentPaused && !outsideWindow && !timeUp && (
+            <div className="player-error" data-testid="youtube-initialization" role={youtubeInitialization.state === "exhausted" ? "alert" : "status"}>
+              <p>{youtubeInitialization.state === "exhausted"
+                ? "暫時連不上 YouTube，請確認網路後再試一次。"
+                : youtubeInitialization.state === "retrying"
+                  ? `正在重新連線 YouTube，最多再試 ${youtubeInitialization.remainingSeconds} 秒…`
+                  : "正在準備 YouTube 播放器…"}</p>
+              {youtubeInitialization.state === "exhausted" && (
+                <Button variant="secondary" onClick={() => playerRef.current?.retryInitialization?.()}><RotateCcw />再試一次</Button>
+              )}
+            </div>
+          )}
+
           {(playerError || !hasPlayableSource || playbackBlockedMessage) && (
             <div className="player-error" role="alert">
               <p>{playbackBlockedMessage || (isYouTube
@@ -1978,6 +1998,7 @@ export function WatchPage() {
               <Button
                 type="button"
                 className={cn("main-play-btn", isPlaying ? "btn-playing" : "btn-paused")}
+                disabled={isYouTube && !!youtubeInitialization && youtubeInitialization.state !== "ready"}
                 aria-label={isPlaying ? "暫停" : "播放"}
                 onClick={togglePlay}
               >

@@ -46,6 +46,15 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 
 診斷失敗不得阻斷播放；前端暫時送不出的批次只在本機保留最近 20 批，之後使用相同事件序號重送，D1 以 `(diagnostic_session_id, event_seq)` 去重。
 
+## 2026-10-26：YouTube 初始化限時恢復（REG-068）
+
+- 17:08 的 iPhone PWA Session `67d8a17b-f04d-4b22-af5d-3601ffa7b211` 有九次播放請求，沒有 YouTube ready 或實際進度；重新開啟後同一影片可播。舊紀錄無法判定是 API 腳本或 iframe 哪一段沒完成，不能直接歸因於 iOS。
+- 初始化每段最多等 10 秒、重試間隔 4 秒，整輪最多 60 秒；online 事件不得延長期限或重疊請求。到期顯示手動重試，離開頁面取消；正常 ready 的播放器不重建。官方 API 有 bootstrap 與 widget 兩段腳本，後者失敗時重試已取得的官方 widget URL，不改私有 YT loading 旗標。
+- 沿用已接受的事件型別，以 `player_created.detail.state` 區分 `youtube_api_requested`、`youtube_api_ready`、`youtube_iframe_requested`、`youtube_iframe_ready`。`youtube_error` 保留 `YT_API_LOAD_FAILED`、`YT_API_TIMEOUT`、`YT_PLAYER_READY_TIMEOUT`、`YT_PLAYER_CREATE_FAILED`；到期記錄 `retry_exhausted` / `YT_INITIALIZATION_EXHAUSTED`。附 `errorOperation=youtube_initialization`、次數與剩餘毫秒，不加入後端未知事件名稱。
+- iframe ready 不是重試成功或有聲證明，仍以原有實際進度確認恢復。影片刪除／私人／禁止嵌入及真正 autoplay blocked 不啟動初始化重試。位置、系列音量與速度保持原設定；可能仍需使用者點播放以滿足瀏覽器權限。
+- `e2e/regressions/youtube-initialization-recovery.spec.ts` 保護完整失敗／恢復流程；`test/diagnostics.spec.ts` REG-068 驗證真正 Worker 的整批接收、重送去重與恢復判定。未修改原生音訊、鎖屏五次換集、離線資料或 Service Worker。
+- 驗證：7 項新的 YouTube UI 流程及 7 項診斷 API 測試通過，TypeScript／production build 通過。完整 49 項瀏覽器測試首輪 46 通過：既有鎖定提示文字差異仍失敗，另下載流程總逾時及原生重連提示有不固定失敗；不改 assertion 的單獨重跑，下載／原生重連共 5 項在目前版與唯讀 HEAD 對照版都通過。保留原測試，不宣稱完整 suite 全綠；實機出聲尚需使用者驗證。
+
 ## 2026-10-23：對照版結束與診斷批次相容（REG-066）
 
 - 現行播放器已依使用者同意恢復到退版前 `d1e3d2a`，不再顯示「9/6 驗證版」。完整範圍與歷史對照見 `docs/PLAYBACK_BASELINE_2026-09-06.md`。

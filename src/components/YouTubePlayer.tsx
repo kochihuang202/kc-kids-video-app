@@ -39,23 +39,76 @@ declare global {
 }
 
 let apiPromise: Promise<YouTubeNamespace> | null = null;
+let widgetApiRetryUrl: string | null = null;
+const API_URL = "https://www.youtube.com/iframe_api";
+const INIT_TIMEOUT_MS = 10_000;
+const INIT_BUDGET_MS = 60_000;
+const INIT_RETRY_MS = 4_000;
+
+class YouTubeInitializationError extends Error {
+  constructor(readonly code: string) { super(code); }
+}
+
+export interface YouTubeInitialization {
+  state: "loading" | "retrying" | "ready" | "exhausted";
+  remainingSeconds: number;
+}
 
 function loadYouTubeApi() {
   if (window.YT?.Player) return Promise.resolve(window.YT);
   if (apiPromise) return apiPromise;
-  apiPromise = new Promise((resolve) => {
+  const pending = new Promise<YouTubeNamespace>((resolve, reject) => {
+    const requestUrl = widgetApiRetryUrl || API_URL;
+    const script = document.querySelector<HTMLScriptElement>(`script[src="${requestUrl}"]`) || document.createElement("script");
     const previous = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      previous?.();
-      if (window.YT) resolve(window.YT);
+    const rememberUnreadyWidget = () => {
+      // iframe_api is a bootstrap: its internal loading flag prevents a second
+      // copy from fetching a failed www-widgetapi script. Retry that exact
+      // official script instead of mutating YT's private loading flags.
+      const widget = document.querySelector<HTMLScriptElement>("script#www-widgetapi-script[src]");
+      if (!widget || window.YT?.Player) return;
+      const url = new URL(widget.src);
+      if (url.origin === "https://www.youtube.com" && url.pathname.endsWith("/www-widgetapi.js")) {
+        widgetApiRetryUrl = widget.src;
+        widget.remove();
+      }
     };
-    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
-      const script = document.createElement("script");
-      script.src = "https://www.youtube.com/iframe_api";
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      script.removeEventListener("error", failed);
+      if (window.onYouTubeIframeAPIReady === ready) window.onYouTubeIframeAPIReady = previous;
+    };
+    const failed = () => {
+      rememberUnreadyWidget();
+      cleanup();
+      script.remove();
+      reject(new YouTubeInitializationError("YT_API_LOAD_FAILED"));
+    };
+    const ready = () => {
+      if (!window.YT?.Player) return;
+      cleanup();
+      widgetApiRetryUrl = null;
+      resolve(window.YT);
+      try { previous?.(); } catch { /* Another consumer cannot strand our loader. */ }
+    };
+    const timeout = window.setTimeout(() => {
+      if (window.YT?.Player) { ready(); return; }
+      rememberUnreadyWidget();
+      cleanup();
+      script.remove();
+      reject(new YouTubeInitializationError("YT_API_TIMEOUT"));
+    }, INIT_TIMEOUT_MS);
+    window.onYouTubeIframeAPIReady = ready;
+    script.addEventListener("error", failed, { once: true });
+    if (!script.isConnected) {
+      script.src = requestUrl;
       script.async = true;
       document.head.appendChild(script);
     }
   });
+  // Never cache a failed/pending-forever attempt for the lifetime of the App.
+  apiPromise = pending;
+  void pending.catch(() => { if (apiPromise === pending) apiPromise = null; });
   return apiPromise;
 }
 
@@ -71,6 +124,7 @@ export interface YouTubePlayerHandle {
   switchToPlaylist?(videoIds: string[], videoId: string, seconds: number, play: boolean): void;
   switchToVideo?(videoId: string, seconds: number, play: boolean): void;
   nextVideo?(): void;
+  retryInitialization?(): void;
 }
 
 interface YouTubePlayerProps {
@@ -85,10 +139,12 @@ interface YouTubePlayerProps {
   onStateChange?: (state: PlayerState) => void;
   onError?: (code?: number) => void;
   onAutoplayBlocked?: () => void;
+  onInitializationChange?: (initialization: YouTubeInitialization) => void;
+  onDiagnostic?: (type: string, detail: PlayerDebugInfo, errorCode?: string) => void;
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  ({ videoId, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, playlist = [], playlistStartIndex = 0, onVideoChange, onStateChange, onError, onAutoplayBlocked }, ref) => {
+  ({ videoId, startAt = 0, volume = 1, playbackRate = 1, autoPlay = false, playlist = [], playlistStartIndex = 0, onVideoChange, onStateChange, onError, onAutoplayBlocked, onInitializationChange, onDiagnostic }, ref) => {
     const hostRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<PlayerInstance | null>(null);
     const loadedVideoIdRef = useRef(videoId);
@@ -98,11 +154,19 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
     const blockedCallbackRef = useRef(onAutoplayBlocked);
     const videoChangeCallbackRef = useRef(onVideoChange);
     const volumeRef = useRef(volume);
+    const rateRef = useRef(playbackRate);
+    const playlistRef = useRef({ playlist, playlistStartIndex });
+    const initializationCallbacksRef = useRef({ onInitializationChange, onDiagnostic });
+    const retryInitializationRef = useRef<() => void>(() => {});
+    const initializationStateRef = useRef<YouTubeInitialization["state"]>("loading");
     stateCallbackRef.current = onStateChange;
     errorCallbackRef.current = onError;
     blockedCallbackRef.current = onAutoplayBlocked;
     videoChangeCallbackRef.current = onVideoChange;
     volumeRef.current = volume;
+    rateRef.current = playbackRate;
+    playlistRef.current = { playlist, playlistStartIndex };
+    initializationCallbacksRef.current = { onInitializationChange, onDiagnostic };
     requestedVideoRef.current = { videoId, startAt, autoPlay };
 
     useEffect(() => {
@@ -165,6 +229,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         playerVideoId: playerRef.current?.getVideoData?.().video_id,
         volume: playerRef.current?.getVolume?.(),
         muted: playerRef.current?.isMuted?.(),
+        initializationState: initializationStateRef.current,
       }),
       switchToPlaylist: (videoIds, activeVideoId, seconds, play) => {
         const player = playerRef.current;
@@ -184,14 +249,90 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         else player.cueVideoById(activeVideoId, Math.max(0, seconds));
       },
       nextVideo: () => playerRef.current?.nextVideo?.(),
+      retryInitialization: () => retryInitializationRef.current(),
     }), [startAt]);
 
     useEffect(() => {
       let cancelled = false;
       let player: PlayerInstance | null = null;
-      void loadYouTubeApi().then((YT) => {
-        if (cancelled || !hostRef.current) return;
-        player = new YT.Player(hostRef.current, {
+      let generation = 0;
+      let attempts = 0;
+      let deadline = 0;
+      let ready = false;
+      let phase: YouTubeInitialization["state"] = "loading";
+      let lastAttemptAt = 0;
+      let readyTimer: number | undefined;
+      let retryTimer: number | undefined;
+      let deadlineTimer: number | undefined;
+      let ticker: number | undefined;
+      const report = (state: YouTubeInitialization["state"]) => {
+        phase = state;
+        initializationStateRef.current = state;
+        initializationCallbacksRef.current.onInitializationChange?.({
+          state, remainingSeconds: Math.max(0, Math.ceil((deadline - Date.now()) / 1000)),
+        });
+      };
+      const diagnostic = (type: string, state: string, errorCode?: string) => {
+        initializationCallbacksRef.current.onDiagnostic?.(type, {
+          state, sourceKind: "youtube", retryNumber: Math.max(0, attempts - 1),
+          retryRemainingMs: Math.max(0, deadline - Date.now()),
+          errorOperation: "youtube_initialization",
+        }, errorCode);
+      };
+      const clearTimers = () => {
+        window.clearTimeout(readyTimer);
+        window.clearTimeout(retryTimer);
+        window.clearTimeout(deadlineTimer);
+        window.clearInterval(ticker);
+      };
+      const destroyUnreadyPlayer = () => {
+        playerRef.current = null;
+        try { player?.destroy(); } catch { /* An incompletely created iframe may already be gone. */ }
+        player = null;
+        hostRef.current?.replaceChildren();
+      };
+      const exhausted = () => {
+        if (cancelled || ready || phase === "exhausted") return;
+        generation++;
+        clearTimers();
+        destroyUnreadyPlayer();
+        report("exhausted");
+        diagnostic("retry_exhausted", "youtube_initialization_exhausted", "YT_INITIALIZATION_EXHAUSTED");
+      };
+      const failed = (code: string) => {
+        if (cancelled || ready || phase === "exhausted") return;
+        generation++;
+        window.clearTimeout(readyTimer);
+        destroyUnreadyPlayer();
+        diagnostic("youtube_error", "youtube_initialization_failed", code);
+        if (Date.now() >= deadline) { exhausted(); return; }
+        report("retrying");
+        window.clearTimeout(retryTimer);
+        retryTimer = window.setTimeout(attempt, INIT_RETRY_MS);
+      };
+      function attempt() {
+        if (cancelled || ready || phase === "exhausted") return;
+        if (Date.now() >= deadline) { exhausted(); return; }
+        window.clearTimeout(retryTimer);
+        retryTimer = undefined;
+        lastAttemptAt = Date.now();
+        const currentGeneration = ++generation;
+        attempts++;
+        report(attempts === 1 ? "loading" : "retrying");
+        diagnostic(attempts === 1 ? "player_created" : "retry_started", "youtube_api_requested");
+        void loadYouTubeApi().then((YT) => {
+          if (cancelled || currentGeneration !== generation || !hostRef.current) return;
+          if (Date.now() >= deadline) { exhausted(); return; }
+          diagnostic("player_created", "youtube_api_ready");
+          // YT replaces its host node. Keep React's outer container intact so
+          // only a failed initialization can create a fresh mount point.
+          const mount = document.createElement("div");
+          hostRef.current.replaceChildren(mount);
+          const { videoId, startAt } = requestedVideoRef.current;
+          diagnostic("player_created", "youtube_iframe_requested");
+          readyTimer = window.setTimeout(() => failed("YT_PLAYER_READY_TIMEOUT"),
+            Math.min(INIT_TIMEOUT_MS, deadline - Date.now()));
+          player = new YT.Player(mount, {
           videoId,
           playerVars: {
             autoplay: 0,
@@ -208,13 +349,21 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           },
           events: {
             onReady: (event: PlayerEvent) => {
+              if (cancelled || currentGeneration !== generation || ready) return;
+              if (Date.now() >= deadline) { exhausted(); return; }
+              ready = true;
+              clearTimers();
               playerRef.current = event.target;
               loadedVideoIdRef.current = videoId;
               const initialVolume = Math.round(Math.min(1, Math.max(0, volumeRef.current)) * 100);
               event.target.setVolume(initialVolume);
               if (initialVolume === 0) event.target.mute();
               else event.target.unMute();
+              (event.target as PlayerInstance & { setPlaybackRate?: (rate: number) => void }).setPlaybackRate?.(rateRef.current);
+              report("ready");
+              diagnostic("player_created", "youtube_iframe_ready");
               const requested = requestedVideoRef.current;
+              const { playlist, playlistStartIndex } = playlistRef.current;
               const activePlaylist = playlist.length > 1 && playlist.includes(requested.videoId) ? playlist : [];
               if (activePlaylist.length && event.target.cuePlaylist && event.target.loadPlaylist) {
                 const requestedIndex = activePlaylist.indexOf(requested.videoId);
@@ -243,6 +392,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
               stateCallbackRef.current?.("READY");
             },
             onStateChange: (event: PlayerEvent) => {
+              if (cancelled || currentGeneration !== generation) return;
               const state: PlayerState | undefined = ({ 0: "ENDED", 1: "PLAYING", 2: "PAUSED", 3: "BUFFERING" } as Record<number, PlayerState>)[event.data];
               if (state === "PLAYING") {
                 const intendedVolume = Math.round(Math.min(1, Math.max(0, volumeRef.current)) * 100);
@@ -257,15 +407,55 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
               }
               if (state) stateCallbackRef.current?.(state);
             },
-            onError: (event: PlayerEvent) => errorCallbackRef.current?.(event.data),
-            onAutoplayBlocked: () => blockedCallbackRef.current?.(),
+            onError: (event: PlayerEvent) => {
+              if (cancelled || currentGeneration !== generation) return;
+              // Real video errors (private/deleted/not embeddable) are not a
+              // transport initialization failure and must not cause reload loops.
+              ready = true;
+              clearTimers();
+              playerRef.current = event.target;
+              report("ready");
+              errorCallbackRef.current?.(event.data);
+            },
+            onAutoplayBlocked: () => {
+              if (!cancelled && currentGeneration === generation) blockedCallbackRef.current?.();
+            },
           },
         });
-      });
+        }).catch((error: unknown) => {
+          if (!cancelled && currentGeneration === generation) {
+            failed(error instanceof YouTubeInitializationError ? error.code : "YT_PLAYER_CREATE_FAILED");
+          }
+        });
+      }
+      const startCycle = () => {
+        if (cancelled || ready) return;
+        clearTimers();
+        deadline = Date.now() + INIT_BUDGET_MS;
+        attempts = 0;
+        phase = "loading";
+        deadlineTimer = window.setTimeout(exhausted, INIT_BUDGET_MS);
+        ticker = window.setInterval(() => {
+          if (Date.now() >= deadline) exhausted();
+          else report(phase);
+        }, 1000);
+        attempt();
+      };
+      retryInitializationRef.current = () => { if (phase === "exhausted") startCycle(); };
+      const online = () => {
+        // Online events never extend the deadline or overlap an active attempt.
+        if (phase === "retrying" && retryTimer !== undefined && Date.now() - lastAttemptAt >= INIT_RETRY_MS) attempt();
+      };
+      window.addEventListener("online", online);
+      startCycle();
       return () => {
         cancelled = true;
+        generation++;
+        clearTimers();
+        window.removeEventListener("online", online);
+        retryInitializationRef.current = () => {};
         playerRef.current = null;
-        player?.destroy();
+        try { player?.destroy(); } catch { /* A partial iframe may already be removed. */ }
       };
     }, []);
 
