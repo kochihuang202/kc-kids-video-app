@@ -53,8 +53,9 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 - 沿用 `native_media_event`，新增階段 `loop_seek_requested`、`loop_seek_completed`、`loop_boundary_accepted`、`loop_boundary_ignored`。明細保留 `previousTime`、`currentTime`、`duration`、`initialStartAt`、`loopStartLimit`、`loopEndThreshold`、`loopArmed`、`loopSeekPending`、`loopReason`、`sourceGeneration`；Worker 白名單已同步增加 primitive 欄位，未增加未知事件型別。
 - 原生循環只接受 `loopReason=end_to_start`；`explicit_seek`、`not_armed`、`not_playing` 表示略過候選邊界。略過的相同原因會去重，正常每次 timeupdate 不另寫診斷、不新增輪詢。接著的 `learning_listen_loop.repeatCount` 是已完成次數；對照前一筆 accepted 的前後位置，不能再把單純「位在片尾」視為一輪。真正 `ended` 另記 `learning_listen_completion` / `loopReason=media_ended`（包含第五次結束，以及有起訖區間而無原生 loop 的影片）。
 - `loopArmed` 是事件記錄當下的資格狀態：接受邊界時先清除，再呼叫計數回呼，故 accepted 紀錄可能為 false，表示該邊界已消耗。短暫 waiting 不會阻止已確認的自然邊界；明確停止播放則不計。
-- 純聽五次換首的來源準備、孩子隔離、音量／速度與觀看紀錄規則不變。驗證集中在計數與既有播放流程；實機鎖屏出聲仍需使用者確認。
+- 純聽五次換首的來源準備、孩子隔離、音量／速度與觀看紀錄規則不變。部署時的自動驗證集中在計數與既有播放流程；後續使用者實機回報見下方。
 - 驗證：五項新計數流程由失敗轉為通過，另十三項診斷／播放區間 API 與單元測試通過。完整六十一項瀏覽器測試六十項通過，唯一失敗仍是既有「先從前五部選擇」／「尚未解鎖」文案差異；鍵盤快轉、來源準備、鎖屏模擬、觀看紀錄、下載及 YouTube 流程通過。未改任何既有測試斷言。
+- **2026-10-26 使用者實機回報：目前測試看來正常，並明確確認「鎖屏五次後會換下一首」。** 將 `b2f26e4`（包含 `3035a9b` 的來源準備）標為重播計數與鎖屏五次換首目前已獲使用者確認的檢查點。此更新取代這兩項流程先前的「待使用者驗收」狀態；不擴大宣稱所有裝置、OS 或鎖屏暫停／恢復情境皆已驗收。保留既有診斷與回歸測試，之後改動須維持這兩項已確認行為。
 
 ## 2026-10-26：學習純聽指定次數換集（REG-069）
 
