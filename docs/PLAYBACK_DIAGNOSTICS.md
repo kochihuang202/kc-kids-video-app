@@ -46,6 +46,16 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 
 診斷失敗不得阻斷播放；前端暫時送不出的批次只在本機保留最近 20 批，之後使用相同事件序號重送，D1 以 `(diagnostic_session_id, event_seq)` 去重。
 
+## 2026-10-26：重播計數誤判與判斷證據（REG-070）
+
+- 實機已捕捉到「時間持續往前、完成次數卻連加」：Session `fd928dbc-8004-42c7-8477-ff9685212eb4`，19:06:47 台北時間，266.19／266.44／266.69 秒被誤算成三次循環。初始續播位置 268 秒略大於原生片長 267.84 秒，舊 `startAt + 1` 判定讓片尾和開頭範圍重疊。
+- 原生計數改為先觀察真正播放到片尾，且必須從片尾向後回到接近零的位置才消耗一次循環；開頭／結尾窗口皆最多兩秒，短片則各佔片長四分之一，不受續播位置影響。初始化、手動 seek、前景來源重綁均清除循環資格。
+- 沿用 `native_media_event`，新增階段 `loop_seek_requested`、`loop_seek_completed`、`loop_boundary_accepted`、`loop_boundary_ignored`。明細保留 `previousTime`、`currentTime`、`duration`、`initialStartAt`、`loopStartLimit`、`loopEndThreshold`、`loopArmed`、`loopSeekPending`、`loopReason`、`sourceGeneration`；Worker 白名單已同步增加 primitive 欄位，未增加未知事件型別。
+- 原生循環只接受 `loopReason=end_to_start`；`explicit_seek`、`not_armed`、`not_playing` 表示略過候選邊界。略過的相同原因會去重，正常每次 timeupdate 不另寫診斷、不新增輪詢。接著的 `learning_listen_loop.repeatCount` 是已完成次數；對照前一筆 accepted 的前後位置，不能再把單純「位在片尾」視為一輪。真正 `ended` 另記 `learning_listen_completion` / `loopReason=media_ended`（包含第五次結束，以及有起訖區間而無原生 loop 的影片）。
+- `loopArmed` 是事件記錄當下的資格狀態：接受邊界時先清除，再呼叫計數回呼，故 accepted 紀錄可能為 false，表示該邊界已消耗。短暫 waiting 不會阻止已確認的自然邊界；明確停止播放則不計。
+- 純聽五次換首的來源準備、孩子隔離、音量／速度與觀看紀錄規則不變。驗證集中在計數與既有播放流程；實機鎖屏出聲仍需使用者確認。
+- 驗證：五項新計數流程由失敗轉為通過，另十三項診斷／播放區間 API 與單元測試通過。完整六十一項瀏覽器測試六十項通過，唯一失敗仍是既有「先從前五部選擇」／「尚未解鎖」文案差異；鍵盤快轉、來源準備、鎖屏模擬、觀看紀錄、下載及 YouTube 流程通過。未改任何既有測試斷言。
+
 ## 2026-10-26：學習純聽指定次數換集（REG-069）
 
 - 使用者已同意實作提前準備下一首。只影響自家學習系列的自動純聽換集；不改 YouTube、休閒觀看的結束規則、學習次數設定或鎖屏系統暫停／播放修復。

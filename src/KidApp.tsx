@@ -1396,7 +1396,7 @@ export function WatchPage() {
     );
     completedLearningListenPlaysRef.current = completed;
     setCompletedLearningListenPlays(completed);
-    diagnosticsRef.current?.event("native_media_event", { state: "learning_listen_loop", repeatCount: completed }, undefined, currentPosRef.current);
+    diagnosticsRef.current?.event("native_media_event", { state: "learning_listen_loop", repeatCount: completed, loopReason: "end_to_start" }, undefined, currentPosRef.current);
   }, [video?.seriesType]);
 
   const handlePlayerState = useCallback((state: PlayerState) => {
@@ -1453,6 +1453,9 @@ export function WatchPage() {
       playingStartWallRef.current = null;
       playingStartPositionRef.current = null;
       if (isLearningListen) {
+        if (video?.source === "self_hosted") diagnosticsRef.current?.event("native_media_event", {
+          state: "learning_listen_completion", repeatCount: completedLearningPlays, loopReason: "media_ended",
+        }, undefined, currentPosRef.current);
         if (shouldRepeatLearningListen) {
           completedLearningListenPlaysRef.current = completedLearningPlays;
           setCompletedLearningListenPlays(completedLearningPlays);

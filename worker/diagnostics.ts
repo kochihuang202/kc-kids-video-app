@@ -52,6 +52,7 @@ function sanitizeDetail(value: unknown) {
     "youtubePlayerState", "playerVideoId", "retryRemainingMs", "recoveryEvidence",
     "transition", "repeatCount", "reportedVideoId", "expectedVideoId", "sourceGeneration",
     "audioSessionState", "audioSessionType", "systemPlaybackState", "userActivationActive",
+    "previousTime", "initialStartAt", "loopStartLimit", "loopEndThreshold", "loopArmed", "loopSeekPending", "loopReason",
   ];
   const output: JsonObject = {};
   for (const key of allowed) {

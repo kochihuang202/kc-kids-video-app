@@ -49,6 +49,41 @@ beforeEach(async () => {
 });
 
 describe("playback diagnostics", () => {
+  it("REG-070 stores the exact loop decision and seek evidence without losing replayed batches", async () => {
+    const device = await pairedDevice();
+    const response = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "self_hosted", playbackMode: "listen", userAgent: "iPhone Safari",
+      }),
+    });
+    expect(response.status).toBe(201);
+    const { id } = await response.json<{ id: string }>();
+    const occurredAt = new Date().toISOString();
+    const events = [
+      { seq: 1, type: "native_media_event", occurredAt, detail: { state: "source_changed", initialStartAt: 268, previousTime: 0, loopArmed: false, sourceGeneration: 1 } },
+      { seq: 2, type: "native_media_event", occurredAt, detail: { state: "loop_seek_requested", previousTime: 267.6, currentTime: 0, loopReason: "explicit_seek", loopSeekPending: true } },
+      { seq: 3, type: "native_media_event", occurredAt, detail: { state: "loop_boundary_ignored", previousTime: 267.6, currentTime: 0, loopReason: "not_armed" } },
+      { seq: 4, type: "native_media_event", occurredAt, detail: {
+        state: "loop_boundary_accepted", previousTime: 267.6, currentTime: 0.1, duration: 267.84,
+        loopStartLimit: 2, loopEndThreshold: 265.84, loopReason: "end_to_start", loopArmed: false,
+      } },
+      { seq: 5, type: "native_media_event", occurredAt, detail: { state: "learning_listen_loop", repeatCount: 1, loopReason: "end_to_start" } },
+      { seq: 6, type: "native_media_event", occurredAt, detail: { state: "learning_listen_completion", repeatCount: 5, loopReason: "media_ended" } },
+    ];
+    for (let replay = 0; replay < 2; replay++) {
+      expect((await call(`/api/diagnostics/sessions/${id}/events`, {
+        method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events }),
+      })).status).toBe(200);
+    }
+    const exported = await call(`/api/diagnostics/export?sessionId=${id}`, {
+      headers: { authorization: "Bearer test-read-only-diagnostics-token" },
+    });
+    expect(exported.status).toBe(200);
+    const payload = await exported.json<{ events: Array<{ seq: number; detailJson: string }> }>();
+    expect(payload.events.map((event) => ({ seq: event.seq, detail: JSON.parse(event.detailJson) })))
+      .toEqual(events.map(({ seq, detail }) => ({ seq, detail })));
+  });
+
   it("REG-069 preserves prepared-next and repeat evidence without treating readiness as recovery", async () => {
     const device = await pairedDevice();
     const started = await call("/api/diagnostics/sessions", {

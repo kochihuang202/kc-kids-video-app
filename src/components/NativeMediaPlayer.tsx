@@ -45,7 +45,10 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     const playRequestedRef = useRef(autoPlay);
     const pendingPlayRef = useRef<Promise<void> | null>(null);
     const remotePauseRef = useRef(false);
-    const lastCurrentTimeRef = useRef(startAt);
+    const lastCurrentTimeRef = useRef(0);
+    const loopArmedRef = useRef(false);
+    const loopSeekPendingRef = useRef(false);
+    const lastLoopRejectionRef = useRef<string | null>(null);
     const sourceGenerationRef = useRef(0);
     const systemResumeRef = useRef<{
       element: HTMLMediaElement; generation: number; position: number;
@@ -77,12 +80,23 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         bufferedAheadSeconds: Math.max(0, bufferedEnd - position),
         playIntent: playRequestedRef.current, pendingPlay: !!pendingPlayRef.current,
         sourceGeneration: sourceGenerationRef.current,
+        previousTime: lastCurrentTimeRef.current, initialStartAt: settingsRef.current.startAt,
+        loopArmed: loopArmedRef.current, loopSeekPending: loopSeekPendingRef.current,
         muted: element?.muted, volume: element?.volume, playbackRate: element?.playbackRate,
         mediaErrorCode: element?.error?.code || 0,
         ...audioSessionState(),
       };
     };
-    const diagnostic = (state: string, errorCode?: string) => callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), state }, errorCode);
+    const diagnostic = (state: string, errorCode?: string, detail: PlayerDebugInfo = {}) => callbacksRef.current.onDiagnostic?.("native_media_event", { ...debugState(), ...detail, state }, errorCode);
+
+    function resetLoopForSeek(position: number, reason: string) {
+      const previousTime = lastCurrentTimeRef.current;
+      loopArmedRef.current = false;
+      loopSeekPendingRef.current = true;
+      lastLoopRejectionRef.current = null;
+      lastCurrentTimeRef.current = position;
+      diagnostic("loop_seek_requested", undefined, { previousTime, currentTime: position, loopReason: reason });
+    }
 
     function audioSessionState(): PlayerDebugInfo {
       try {
@@ -223,7 +237,9 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         const element = elementRef.current;
         if (!element) return;
         const duration = Number.isFinite(element.duration) ? element.duration : Number.MAX_SAFE_INTEGER;
-        element.currentTime = Math.max(0, Math.min(seconds, duration));
+        const position = Math.max(0, Math.min(seconds, duration));
+        resetLoopForSeek(position, "explicit_seek");
+        element.currentTime = position;
         if (visualVideoRef.current) visualVideoRef.current.currentTime = element.currentTime;
       },
       setPlaybackRate: (rate: number) => {
@@ -240,7 +256,10 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       playingRef.current = false;
       playRequestedRef.current = settingsRef.current.autoPlay;
       pendingPlayRef.current = null;
-      lastCurrentTimeRef.current = startAt;
+      lastCurrentTimeRef.current = 0;
+      loopArmedRef.current = false;
+      loopSeekPendingRef.current = false;
+      lastLoopRejectionRef.current = null;
       const element = elementRef.current;
       if (!element) return;
       // StrictMode replays effect cleanup/setup without re-rendering the DOM.
@@ -366,6 +385,7 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
           } else {
             diagnostic("system_resume_rebind_source");
             const position = Math.max(0, element.currentTime || 0);
+            resetLoopForSeek(position, "system_resume_rebind");
             const activeSource = element.getAttribute("src") || src;
             // Keep the existing foreground repair for a silent native audio
             // output, where WebKit can actually finish loading the resource.
@@ -436,7 +456,9 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
       if (!element || readySentRef.current) return;
       if (startAt > 0) {
         const duration = Number.isFinite(element.duration) ? element.duration : Number.MAX_SAFE_INTEGER;
-        element.currentTime = Math.min(startAt, duration);
+        const position = Math.min(startAt, duration);
+        resetLoopForSeek(position, "initial_position");
+        element.currentTime = position;
       }
       readySentRef.current = true;
       reportProgress();
@@ -466,13 +488,40 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         const master = elementRef.current;
         const currentTime = Math.max(0, master?.currentTime || 0);
         const duration = master && Number.isFinite(master.duration) ? master.duration : 0;
-        if (
-          loopPlayback
-          && duration > 0
-          && lastCurrentTimeRef.current >= duration - 2
-          && currentTime <= Math.max(2, startAt + 1)
-        ) {
-          onLoop?.();
+        const previousTime = lastCurrentTimeRef.current;
+        // Native loop always returns near zero, never to a saved resume point.
+        // Quarter-duration windows stay disjoint even for very short clips.
+        const windowSize = Math.min(2, duration / 4);
+        const loopStartLimit = windowSize;
+        const loopEndThreshold = duration - windowSize;
+        const explicitSeek = loopSeekPendingRef.current;
+        if (explicitSeek && !master?.seeking) {
+          loopSeekPendingRef.current = false;
+          loopArmedRef.current = false;
+        }
+        const crossedBoundary = duration > 0 && previousTime >= loopEndThreshold
+          && currentTime <= loopStartLimit && previousTime > currentTime + Math.min(0.1, duration / 10);
+        if (loopPlayback && crossedBoundary) {
+          const reason = explicitSeek ? "explicit_seek" : !loopArmedRef.current ? "not_armed"
+            // The tail was observed playing when armed. Native looping may
+            // briefly emit waiting before its first new playing event.
+            : !playRequestedRef.current ? "not_playing" : "end_to_start";
+          const detail = { previousTime, currentTime, duration, loopStartLimit, loopEndThreshold, loopReason: reason };
+          if (reason === "end_to_start") {
+            // Consume before calling React: duplicate events cannot count twice.
+            loopArmedRef.current = false;
+            lastLoopRejectionRef.current = null;
+            diagnostic("loop_boundary_accepted", undefined, detail);
+            onLoop?.();
+          } else if (lastLoopRejectionRef.current !== reason) {
+            lastLoopRejectionRef.current = reason;
+            diagnostic("loop_boundary_ignored", undefined, detail);
+          }
+        }
+        if (loopPlayback && duration > 0 && !explicitSeek && !master?.seeking
+          && readySentRef.current && playingRef.current && playRequestedRef.current
+          && currentTime >= loopEndThreshold && currentTime > previousTime) {
+          loopArmedRef.current = true;
         }
         lastCurrentTimeRef.current = currentTime;
         reportProgress();
@@ -482,6 +531,12 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
         }
       },
       onSeeked: () => {
+        if (loopSeekPendingRef.current) {
+          loopSeekPendingRef.current = false;
+          loopArmedRef.current = false;
+          lastCurrentTimeRef.current = Math.max(0, elementRef.current?.currentTime || 0);
+          diagnostic("loop_seek_completed");
+        }
         reportProgress();
         syncVisualVideo(playRequestedRef.current);
       },
