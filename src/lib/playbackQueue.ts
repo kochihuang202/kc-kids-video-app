@@ -39,10 +39,15 @@ export function syncPlaybackQueue(categoryId: string, mode: PlaybackMode, videos
   return queue;
 }
 
-export function advancePlaybackQueue(queue: PlaybackQueue, currentVideoId: string) {
+export function nextPlaybackQueueVideoId(queue: PlaybackQueue, currentVideoId: string) {
   const currentIndex = queue.videoIds.indexOf(currentVideoId);
   if (currentIndex < 0 || queue.videoIds.length < 2) return null;
-  const nextVideoId = queue.videoIds[(currentIndex + 1) % queue.videoIds.length];
+  return queue.videoIds[(currentIndex + 1) % queue.videoIds.length];
+}
+
+export function advancePlaybackQueue(queue: PlaybackQueue, currentVideoId: string) {
+  const nextVideoId = nextPlaybackQueueVideoId(queue, currentVideoId);
+  if (!nextVideoId) return null;
   savePlaybackQueue({ ...queue, currentVideoId: nextVideoId });
   return nextVideoId;
 }

@@ -311,9 +311,15 @@ export const NativeMediaPlayer = forwardRef<YouTubePlayerHandle, NativeMediaPlay
     useEffect(() => {
       const element = elementRef.current;
       if (!element) return;
+      // A new resource resets playbackRate to defaultPlaybackRate, even when
+      // this series' saved rate prop has not changed between episodes.
+      element.defaultPlaybackRate = playbackRate;
       element.playbackRate = playbackRate;
-      if (visualVideoRef.current) visualVideoRef.current.playbackRate = playbackRate;
-    }, [playbackRate]);
+      if (visualVideoRef.current) {
+        visualVideoRef.current.defaultPlaybackRate = playbackRate;
+        visualVideoRef.current.playbackRate = playbackRate;
+      }
+    }, [playbackRate, src]);
 
     useEffect(() => {
       const element = elementRef.current;

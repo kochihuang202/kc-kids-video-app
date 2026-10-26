@@ -49,6 +49,40 @@ beforeEach(async () => {
 });
 
 describe("playback diagnostics", () => {
+  it("REG-069 preserves prepared-next and repeat evidence without treating readiness as recovery", async () => {
+    const device = await pairedDevice();
+    const started = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "self_hosted", playbackMode: "listen", userAgent: "iPad Safari",
+      }),
+    });
+    expect(started.status).toBe(201);
+    const { id } = await started.json<{ id: string }>();
+    const occurredAt = new Date().toISOString();
+    const events = [
+      { seq: 1, type: "autoplay_blocked", occurredAt, errorCode: "AUTOPLAY_NOT_STARTED" },
+      { seq: 2, type: "native_media_event", occurredAt, detail: { state: "next_source_preparing", transition: "next-lesson" } },
+      { seq: 3, type: "native_media_event", occurredAt, detail: { state: "next_source_prepared", sourceKind: "blob", documentHidden: false } },
+      { seq: 4, type: "native_media_event", occurredAt, detail: { state: "learning_listen_loop", repeatCount: 4 } },
+      { seq: 5, type: "native_media_event", occurredAt, detail: { state: "next_source_claimed", transition: "next-lesson", documentHidden: true } },
+      { seq: 6, type: "next_requested", occurredAt, detail: { transition: "learning_repeat_complete", repeatCount: 5 } },
+    ];
+    const write = (batch: unknown[]) => call(`/api/diagnostics/sessions/${id}/events`, {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events: batch }),
+    });
+    expect((await write(events)).status).toBe(200);
+    expect((await write(events)).status).toBe(200);
+    const rows = await env.DB.prepare("SELECT event_seq, detail_json FROM diagnostic_events WHERE diagnostic_session_id = ? ORDER BY event_seq")
+      .bind(id).all<{ event_seq: number; detail_json: string | null }>();
+    expect(rows.results.map((row) => row.event_seq)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(JSON.parse(rows.results[4].detail_json!)).toMatchObject({ state: "next_source_claimed", transition: "next-lesson", documentHidden: true });
+    const outcome = async () => (await env.DB.prepare("SELECT outcome FROM diagnostic_sessions WHERE id = ?")
+      .bind(id).first<{ outcome: string }>())?.outcome;
+    expect(await outcome()).toBe("error");
+    expect((await write([{ seq: 7, type: "playback_confirmed", occurredAt, positionSeconds: 1 }])).status).toBe(200);
+    expect(await outcome()).toBe("recovered");
+  });
+
   it("REG-068 accepts YouTube initialization phases and retains the error until real progress", async () => {
     const device = await pairedDevice();
     const response = await call("/api/diagnostics/sessions", {

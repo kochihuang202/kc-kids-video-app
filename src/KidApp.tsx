@@ -7,11 +7,11 @@ import { rememberOfflineView, syncOfflineViews } from "./lib/offlineViews";
 import { YouTubePlayer, type PlayerState, type YouTubePlayerHandle, type YouTubeInitialization } from "./components/YouTubePlayer";
 import { Button, buttonVariants } from "./components/ui/button";
 import { activityRepository, ApiError, contentRepository, deviceRepository } from "./data/repositories";
-import { advancePlaybackQueue, buildYouTubeListenPlaylist, modeForVideo, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
+import { advancePlaybackQueue, buildYouTubeListenPlaylist, modeForVideo, nextPlaybackQueueVideoId, readPlaybackQueue, savePlaybackQueue, syncPlaybackQueue } from "./lib/playbackQueue";
 import { playerPreferenceSeriesId, readSeriesPlayerPreferences, saveSeriesPlayerPreferences } from "./lib/playerPreferences";
 import { PlaybackDiagnostics } from "./lib/playbackDiagnostics";
 import { clampPlaybackPosition, getPlaybackRange, relativePlaybackPosition } from "../shared/playbackRange";
-import { setStoredActiveChildId } from "./lib/activeChild";
+import { getStoredActiveChildId, setStoredActiveChildId } from "./lib/activeChild";
 import { cn, formatPosition } from "./lib/utils";
 import type {
   Category, ChildAccessState, DeviceStatus, PlaybackMode, RecentVideo, ResumeInfo, TodayPick,
@@ -726,6 +726,22 @@ function reminderRemainingForVideo(access: ChildAccessState, video: VideoFixture
 interface Capability { id: string; writeToken: string }
 interface PendingHeartbeat { sessionId: string; payload: UpdateViewSessionInput; keepalive: boolean }
 
+interface PreparedLearningSource {
+  fromVideoId: string;
+  childId: string | null;
+  deviceId: string;
+  video: VideoFixture;
+  categoryVideos: VideoFixture[];
+  objectUrl: string | null;
+  claimed: boolean;
+}
+
+function releasePreparedLearningSource(prepared: PreparedLearningSource | null) {
+  if (!prepared?.objectUrl) return;
+  URL.revokeObjectURL(prepared.objectUrl);
+  prepared.objectUrl = null;
+}
+
 export function WatchPage() {
   const { videoId = "" } = useParams();
   const navigate = useNavigate();
@@ -802,6 +818,13 @@ export function WatchPage() {
   const [pausePrompts, setPausePrompts] = useState<Array<{ icon: string; text: string; shortText: string; prompt: string }>>([]);
   const [endPrompts, setEndPrompts] = useState<Array<{ icon: string; text: string; shortText: string; prompt: string }>>(() => getRandomThinkingPrompts(5));
   const remainingSecsRef = useRef<number>(999999);
+  const preparedNextRef = useRef<PreparedLearningSource | null>(null);
+  const preparedHandoffRef = useRef<PreparedLearningSource | null>(null);
+  const loadGenerationRef = useRef(0);
+  const loadedChildIdRef = useRef<string | null | undefined>(undefined);
+  const activeChildId = getStoredActiveChildId();
+  const watchContextRef = useRef({ device, accessState });
+  watchContextRef.current = { device, accessState };
 
   const nextTrack = useMemo(() => {
     if (!categoryVideos.length || !video) return null;
@@ -870,16 +893,33 @@ export function WatchPage() {
   }, [playbackMode]);
 
   const load = useCallback(async () => {
+    const generation = ++loadGenerationRef.current;
+    const requestChildId = getStoredActiveChildId();
+    const handoff = preparedHandoffRef.current;
+    preparedHandoffRef.current = null;
+    const context = watchContextRef.current;
+    const prepared = isAutoplay && requestedMode === "listen" && handoff?.video.id === videoId
+      && handoff.childId === requestChildId && loadedChildIdRef.current === requestChildId
+      && context.device?.authorized && handoff.deviceId === context.device.device?.id
+      ? handoff : null;
+    if (handoff && !prepared) releasePreparedLearningSource(handoff);
+    let ownedObjectUrl = prepared?.objectUrl || null;
     setLoadError("");
     setLoadErrorCode("");
     try {
-      const nextDevice = await deviceRepository.status(preferOffline).catch(() => ({ authorized: false, device: null }));
+      // Claiming a prepared source must not await background GETs/OPFS after
+      // ended. Authorization/access remain those of this active child/device;
+      // ordinary entries still use the normal validated loading path.
+      const nextDevice = prepared ? context.device! : await deviceRepository.status(preferOffline).catch(() => ({ authorized: false, device: null }));
+      if (generation !== loadGenerationRef.current || requestChildId !== getStoredActiveChildId()) return;
       setDevice(nextDevice);
       if (!nextDevice.authorized) {
         setLoadError("DEVICE_AUTH_REQUIRED");
         return;
       }
-      const [nextVideo, rawAccess] = await Promise.all([
+      const [nextVideo, rawAccess]: [VideoFixture, ChildAccessState | null] = prepared
+        ? [prepared.video, context.accessState]
+        : await Promise.all([
         contentRepository.getVideo(videoId, preferOffline),
         contentRepository.getAccessState(preferOffline).catch(() => null),
       ]);
@@ -887,21 +927,27 @@ export function WatchPage() {
         if (nextVideo.isSelectable === false) {
           throw new ApiError("這部學習影片尚未解鎖，請先觀看前面的集數。", 403, "LEARNING_VIDEO_LOCKED");
         }
-        const file = await localMedia(nextVideo.id);
-        if (file) {
-          nextVideo.mediaUrl = URL.createObjectURL(file);
-        } else if (managedVideo(nextVideo.id) && !confirm("這部影片尚未下載或已被清除。要使用網路串流嗎？這會消耗流量。")) {
-          setLoadError("請家長到管理中心的「離線下載」重新下載影片。");
-          return;
+        if (!prepared) {
+          const file = await localMedia(nextVideo.id);
+          if (file) {
+            ownedObjectUrl = URL.createObjectURL(file);
+            nextVideo.mediaUrl = ownedObjectUrl;
+          } else if (managedVideo(nextVideo.id) && !confirm("這部影片尚未下載或已被清除。要使用網路串流嗎？這會消耗流量。")) {
+            setLoadError("請家長到管理中心的「離線下載」重新下載影片。");
+            return;
+          }
         }
       }
       const initialMode: PlaybackMode = nextVideo.mediaType === "audio" || requestedMode === "listen" ? "listen" : "video";
       const playerPreferences = readSeriesPlayerPreferences(playerPreferenceSeriesId(nextVideo));
       let nextCategoryVideos: VideoFixture[] = [];
       if (nextVideo.categoryId) {
-        nextCategoryVideos = await contentRepository.getVideos(nextVideo.categoryId, preferOffline).catch(() => []);
+        nextCategoryVideos = prepared?.categoryVideos
+          || await contentRepository.getVideos(nextVideo.categoryId, preferOffline).catch(() => []);
+        if (generation !== loadGenerationRef.current || requestChildId !== getStoredActiveChildId()) return;
         syncPlaybackQueue(nextVideo.categoryId, initialMode, nextCategoryVideos, nextVideo.id);
       }
+      if (generation !== loadGenerationRef.current || requestChildId !== getStoredActiveChildId()) return;
       // Load the category queue before mounting YouTube. Pure-listening mode
       // can then cue the complete playlist before the child's first play tap.
       setCategoryVideos(nextCategoryVideos);
@@ -909,7 +955,9 @@ export function WatchPage() {
       setPlaybackRate(playerPreferences.playbackRate);
       setPlaybackMode(initialMode);
       setPlayerAutoPlay(isAutoplay);
+      loadedChildIdRef.current = requestChildId;
       setVideo(nextVideo);
+      ownedObjectUrl = null; // The mounted video's existing cleanup now owns it.
       const resumePosition = forceFreshStart || !hasExplicitResumePosition
         ? getPlaybackRange(nextVideo).startSeconds
         : clampPlaybackPosition(nextVideo, rawInitialPos);
@@ -930,8 +978,11 @@ export function WatchPage() {
         }
       }
     } catch (error) {
+      if (generation !== loadGenerationRef.current || requestChildId !== getStoredActiveChildId()) return;
       setLoadError(error instanceof Error ? error.message : "影片暫時載入不了。");
       setLoadErrorCode(error instanceof ApiError ? error.code || "" : "");
+    } finally {
+      if (ownedObjectUrl) URL.revokeObjectURL(ownedObjectUrl);
     }
   }, [forceFreshStart, hasExplicitResumePosition, isAutoplay, preferOffline, rawInitialPos, requestedMode, videoId]);
 
@@ -943,6 +994,55 @@ export function WatchPage() {
     const src = video?.mediaUrl;
     return () => { if (src?.startsWith("blob:")) URL.revokeObjectURL(src); };
   }, [video?.mediaUrl]);
+
+  useEffect(() => () => {
+    loadGenerationRef.current++;
+    releasePreparedLearningSource(preparedNextRef.current);
+    releasePreparedLearningSource(preparedHandoffRef.current);
+    preparedNextRef.current = null;
+    preparedHandoffRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!hasStartedPlayback || playbackMode !== "listen" || video?.source !== "self_hosted"
+      || video.seriesType !== "learning" || video.id !== videoId || loadedChildIdRef.current !== activeChildId
+      || !device?.authorized || !device.device) return;
+    const queue = readPlaybackQueue();
+    const targetId = queue?.mode === "listen"
+      ? nextPlaybackQueueVideoId(queue, video.id) : nextListenTrackRef.current?.id;
+    const candidate = categoryVideos.find((item) => item.id === targetId);
+    if (!candidate || candidate.isSelectable === false || candidate.source !== "self_hosted" || !candidate.mediaUrl) return;
+    let cancelled = false;
+    let prepared: PreparedLearningSource | null = null;
+    diagnosticsRef.current?.event("native_media_event", { state: "next_source_preparing", transition: candidate.id });
+    // Metadata is already in the validated category queue. Open at most one
+    // local file while the current media session is active; never download or
+    // create a second audio player just to prepare the next lesson.
+    void localMedia(candidate.id).then((file) => {
+      if (cancelled || getStoredActiveChildId() !== activeChildId) return;
+      if (!file && managedVideo(candidate.id)) {
+        diagnosticsRef.current?.event("native_media_event", { state: "next_source_unavailable", transition: candidate.id });
+        return; // Keep the existing missing-download confirmation at entry.
+      }
+      const objectUrl = file ? URL.createObjectURL(file) : null;
+      prepared = {
+        fromVideoId: video.id, childId: activeChildId, deviceId: device.device!.id,
+        video: { ...candidate, mediaUrl: objectUrl || candidate.mediaUrl },
+        categoryVideos, objectUrl, claimed: false,
+      };
+      preparedNextRef.current = prepared;
+      diagnosticsRef.current?.event("native_media_event", {
+        state: "next_source_prepared", transition: candidate.id, sourceKind: file ? "blob" : "remote",
+      });
+    }).catch(() => {
+      if (!cancelled) diagnosticsRef.current?.event("native_media_event", { state: "next_source_unavailable", transition: candidate.id });
+    });
+    return () => {
+      cancelled = true;
+      if (preparedNextRef.current === prepared) preparedNextRef.current = null;
+      if (prepared && !prepared.claimed) releasePreparedLearningSource(prepared);
+    };
+  }, [activeChildId, categoryVideos, device?.authorized, device?.device?.id, hasStartedPlayback, playbackMode, video?.id, video?.seriesType, video?.source, videoId]);
 
   useEffect(() => {
     if (!video || !device?.authorized) return;
@@ -1155,16 +1255,30 @@ export function WatchPage() {
     if (!video || !device?.authorized) return null;
     if (capabilityRef.current) return capabilityRef.current;
     if (!sessionPromiseRef.current) {
-      sessionPromiseRef.current = activityRepository.startViewSession(video.id, clientSessionIdRef.current, playbackMode)
+      const clientSessionId = clientSessionIdRef.current;
+      const request = activityRepository.startViewSession(video.id, clientSessionId, playbackMode)
         .then(({ id, writeToken }) => {
-          capabilityRef.current = { id, writeToken };
-          return capabilityRef.current;
+          const capability = { id, writeToken };
+          if (clientSessionId === clientSessionIdRef.current) capabilityRef.current = capability;
+          return capability;
         })
-        .catch(() => {
+        .catch((error: unknown) => {
+          if (clientSessionId !== clientSessionIdRef.current) return null;
+          // Prepared metadata accelerates handoff, but never overrides an
+          // explicit server denial. Network/offline failures still retain the
+          // existing local-view fallback, without inventing online watch time.
+          if (error instanceof ApiError && [401, 403, 410].includes(error.status)) {
+            playerRef.current?.pause();
+            setPlayerAutoPlay(false);
+            setLoadErrorCode(error.code || "");
+            setLoadError(error.code === "DEVICE_AUTH_REQUIRED" ? "DEVICE_AUTH_REQUIRED" : error.message);
+            return null;
+          }
           if (video.mediaUrl?.startsWith("blob:")) rememberOfflineView(video.id, playbackMode);
           return null;
         })
-        .finally(() => { sessionPromiseRef.current = null; });
+        .finally(() => { if (sessionPromiseRef.current === request) sessionPromiseRef.current = null; });
+      sessionPromiseRef.current = request;
     }
     return sessionPromiseRef.current;
   }, [device?.authorized, playbackMode, video]);
@@ -1251,6 +1365,17 @@ export function WatchPage() {
       ? advancePlaybackQueue(queue, video?.id || "")
       : nextListenTrackRef.current?.id || null;
     if (targetId && targetId !== video?.id) {
+      const prepared = preparedNextRef.current;
+      const context = watchContextRef.current;
+      if (prepared && prepared.fromVideoId === video?.id && prepared.video.id === targetId
+        && prepared.childId === getStoredActiveChildId()
+        && context.device?.authorized && prepared.deviceId === context.device.device?.id
+        && context.accessState?.state !== "PAUSED_BY_PARENT" && context.accessState?.state !== "OUTSIDE_WINDOW") {
+        prepared.claimed = true;
+        preparedHandoffRef.current = prepared;
+        preparedNextRef.current = null;
+        diagnosticsRef.current?.event("native_media_event", { state: "next_source_claimed", transition: targetId });
+      }
       if (queue) savePlaybackQueue({ ...queue, mode: "listen", currentVideoId: targetId });
       diagnosticsRef.current?.event("next_requested", {
         state: targetId,
@@ -1271,6 +1396,7 @@ export function WatchPage() {
     );
     completedLearningListenPlaysRef.current = completed;
     setCompletedLearningListenPlays(completed);
+    diagnosticsRef.current?.event("native_media_event", { state: "learning_listen_loop", repeatCount: completed }, undefined, currentPosRef.current);
   }, [video?.seriesType]);
 
   const handlePlayerState = useCallback((state: PlayerState) => {

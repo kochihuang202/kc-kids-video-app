@@ -46,6 +46,15 @@ npx playwright test e2e/features/playback-diagnostics.spec.ts e2e/regressions/me
 
 診斷失敗不得阻斷播放；前端暫時送不出的批次只在本機保留最近 20 批，之後使用相同事件序號重送，D1 以 `(diagnostic_session_id, event_seq)` 去重。
 
+## 2026-10-26：學習純聽指定次數換集（REG-069）
+
+- 使用者已同意實作提前準備下一首。只影響自家學習系列的自動純聽換集；不改 YouTube、休閒觀看的結束規則、學習次數設定或鎖屏系統暫停／播放修復。
+- `native_media_event.state` 新增 `next_source_preparing`、`next_source_prepared`、`next_source_unavailable`、`next_source_claimed`、`learning_listen_loop`，沿用 Worker 既有事件型別及白名單欄位。`transition` 是目標影片 ID，`repeatCount` 是已完成循環數；原有 `next_requested` 保留 `transition=learning_repeat_complete` 與家長設定總次數。事件不含完整影音 URL。
+- 應依序觀察目前 Session 的 prepared → 四次 loop → claimed / next_requested，再看新 Session 的 source_changed / source_autoplay_requested → canplay / playing → playback_confirmed。ready 或已 claim 不能當作有聲音、重試成功的證據。
+- 前一集的延遲 Session 回覆不能覆蓋新一集的寫入授權或暫停新一集；新一集自身的明確授權／鎖定拒絕仍停止播放。準備來源不建立觀看紀錄、不下載串流、不新增定期探測；下載項目最多保留目前及下一首的 blob URL。
+- 實機驗收：連網載入新版後，用原本出問題的裝置／系列開純聽，鎖屏播滿五次，確認下一首確實有聲；若仍失敗，提供裝置、約略時間與系列，比對來源是否已提前準備及卡在何種 readiness。這輪不混入 `audioSession.type` 實驗。
+- 驗證：7 項新 UI 流程及 38 項診斷／起訖／學習休閒／多孩子 API 與單元測試通過。完整 56 項瀏覽器測試首輪 54 通過；既有「先從前五部選擇」／「尚未解鎖」文案斷言仍失敗，另鍵盤快轉首輪未前進、原樣單獨重跑通過，偶發原因尚未確認。未更改或略過任何舊 assertion，不宣稱單次完整 suite 全綠。
+
 ## 2026-10-26：YouTube 初始化限時恢復（REG-068）
 
 - 17:08 的 iPhone PWA Session `67d8a17b-f04d-4b22-af5d-3601ffa7b211` 有九次播放請求，沒有 YouTube ready 或實際進度；重新開啟後同一影片可播。舊紀錄無法判定是 API 腳本或 iframe 哪一段沒完成，不能直接歸因於 iOS。
