@@ -49,6 +49,43 @@ beforeEach(async () => {
 });
 
 describe("playback diagnostics", () => {
+  it("REG-071 preserves download catalogue quota evidence without creating watch history", async () => {
+    const device = await pairedDevice();
+    const before = await env.DB.prepare("SELECT COUNT(*) AS count FROM view_sessions").first<{ count: number }>();
+    const response = await call("/api/diagnostics/sessions", {
+      method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({
+        clientSessionId: crypto.randomUUID(), source: "self_hosted", playbackMode: "video",
+        videoLabel: "離線下載：下載清單", isStandalone: true, userAgent: "iPhone Safari",
+      }),
+    });
+    expect(response.status).toBe(201);
+    const { id } = await response.json<{ id: string }>();
+    const detail = {
+      diagnosticVersion: "download-v1", errorOperation: "catalogue_refresh", errorName: "QuotaExceededError",
+      localStorageBytes: 5_200_000, downloadCatalogueBytes: 1_000_000, requiredCatalogueBytes: 1_100_000,
+      storageUsageBytes: 100_000_000, storageQuotaBytes: 1_000_000_000, downloadedMediaBytes: 90_000_000,
+    };
+    const event = { seq: 1, type: "javascript_error", occurredAt: new Date().toISOString(), errorCode: "DOWNLOAD_CATALOGUE_QUOTA", detail };
+    for (let replay = 0; replay < 2; replay++) {
+      expect((await call(`/api/diagnostics/sessions/${id}/events`, {
+        method: "POST", headers: { cookie: device.cookie }, body: JSON.stringify({ events: [event] }),
+      })).status).toBe(200);
+    }
+    expect((await call(`/api/diagnostics/sessions/${id}`, {
+      method: "PATCH", headers: { cookie: device.cookie }, body: JSON.stringify({ outcome: "error" }),
+    })).status).toBe(200);
+    const exported = await call(`/api/diagnostics/export?sessionId=${id}`, {
+      headers: { authorization: "Bearer test-read-only-diagnostics-token" },
+    });
+    expect(exported.status).toBe(200);
+    const payload = await exported.json<{ sessions: Array<{ outcome: string }>; events: Array<{ errorCode: string; detailJson: string }> }>();
+    expect(payload.sessions[0].outcome).toBe("error");
+    expect(payload.events).toHaveLength(1);
+    expect(payload.events[0].errorCode).toBe(event.errorCode);
+    expect(JSON.parse(payload.events[0].detailJson)).toEqual(detail);
+    expect(await env.DB.prepare("SELECT COUNT(*) AS count FROM view_sessions").first()).toEqual(before);
+  });
+
   it("REG-070 stores the exact loop decision and seek evidence without losing replayed batches", async () => {
     const device = await pairedDevice();
     const response = await call("/api/diagnostics/sessions", {

@@ -53,6 +53,7 @@ function sanitizeDetail(value: unknown) {
     "transition", "repeatCount", "reportedVideoId", "expectedVideoId", "sourceGeneration",
     "audioSessionState", "audioSessionType", "systemPlaybackState", "userActivationActive",
     "previousTime", "initialStartAt", "loopStartLimit", "loopEndThreshold", "loopArmed", "loopSeekPending", "loopReason",
+    "storageUsageBytes", "storageQuotaBytes", "localStorageBytes", "downloadCatalogueBytes", "requiredCatalogueBytes", "downloadedMediaBytes",
   ];
   const output: JsonObject = {};
   for (const key of allowed) {

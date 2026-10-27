@@ -26,13 +26,34 @@ YouTube 不提供下載。若某部影片曾屬於下載系列，但裝置檔案
 - 呼叫持久儲存申請並顯示結果；程式不設定期限、不主動清除，但使用者清除網站資料或作業系統回收儲存空間後仍需重新下載。
 - iOS／iPadOS 需要 26 或以上才能使用目前採用的 OPFS 串流寫入能力。
 
+### 清單配額與影音配額（REG-071）
+
+「點離線下載頁籤就出現 The quota has been exceeded」可能發生在更新文字清單，尚未開始寫入影音。不能只依這句訊息判定手機容量已滿，或把網站總配額估計當作手機實際剩餘容量。
+
+- `kids-downloads-v1` 保存已下載系列的影片資料、完成檔案大小與 MIME。以這份目錄作為離線影片及分類快照的備援，不再於下載或更新清單時另外複製每部影片的完整快照。
+- 更新目錄成功後移除該系列重複的影片／分類 API 快照；這些資料可由目錄提供。一般連網讀取仍可快取最新 API 回應。
+- 目錄寫入遇到 `QuotaExceededError` 時，只移除可重建的影片／分類影片列表 API 快照，重試一次。保留根分類、裝置授權與可播放狀態快照，以及下載目錄、OPFS 影片、縮圖、音量／速度、待同步看過標記與診斷事件。不得使用 `localStorage.clear()`、自動刪除影片或要求重裝 App。
+- 若目錄本身仍放不下，保留舊目錄，以中文說明清單空間不足；頁面仍顯示已下載系列與刪除入口。清單更新或網路載入失敗不得把整個管理列表藏掉。
+- 失敗時透過既有授權裝置診斷 API 回報一次，無持續輪詢。`diagnosticVersion=download-v1`、`errorOperation=catalogue_refresh|catalogue_save|media_storage` 區分階段，另記錄 localStorage／目錄估計位元組、嘗試儲存的目錄大小、已標記完成的影音位元組，以及 Storage API 使用量／上限。`DOWNLOAD_CATALOGUE_QUOTA` 與 `DOWNLOAD_MEDIA_QUOTA` 不混用。這些是診斷 Session，不新增觀看 Session 或計時；延用錯誤明細 30 天的保留政策。診斷失敗不阻塞管理畫面，也不嘗試寫入已滿的文字儲存空間。
+
+平台參考：[WebKit 儲存政策](https://webkit.org/blog/14403/updates-to-storage-policy/) 說明主畫面 Web App 配額，以及 `estimate()` 的上限不保證等於實際可寫入容量。真機是哪一階段失敗，須依診斷確認。
+
 ## 維護與驗證
 
 - 主要程式：`src/lib/downloads.ts`
 - 畫面：`src/components/Downloads.tsx`
 - 離線外殼：`scripts/offline-shell.ts`
 - 完整流程測試：`e2e/features/download-series.spec.ts`
+- 配額回歸：`e2e/regressions/download-catalogue-quota.spec.ts`；真實 localStorage 配額壓力 → 點頁籤 → 清單可管理 → 保留檔案／設定 → 離線播放，另覆蓋重試後仍不足的提示、刪除入口與診斷。
+- 診斷契約：`test/diagnostics.spec.ts` 的 REG-071，驗證 Worker 實際寫入／重播／匯出，不新增觀看歷史。
 - 一般測試：`npx playwright test e2e/features/download-series.spec.ts`
 - 含離線重開的 production build 測試：先以 `dist/client` 啟動 preview，再設定 `PLAYWRIGHT_BASE_URL` 與 `PLAYWRIGHT_TEST_OFFLINE_SHELL=1` 執行同一測試。
 
 Mac 媒體伺服器必須允許正式 App Origin 的 CORS，並暴露 `Content-Length`／`Content-Type`。下載時應回傳完整檔案（HTTP 200）；HTTP 206 不會被當成完成檔案。
+
+### 2026-10-27 配額修正驗證
+
+- 新增的兩個 REG-071 流程在修改前均於點頁籤後失敗；修改後通過。
+- `test/diagnostics.spec.ts` 與 `test/offline-shell.spec.ts` 共 11 項通過；production build 通過。
+- 完整 Playwright 63 項中 62 項通過。既存的 `e2e/features/learning-leisure-flow.spec.ts:90` 要求「🔒 先從前五部選擇」，現行 HEAD 的畫面文字為「🔒 尚未解鎖」，仍失敗；未刪除、跳過或放寬斷言。
+- production build preview 啟用 `PLAYWRIGHT_TEST_OFFLINE_SHELL=1`，下載／續傳／縮圖／離線重開及兩個配額流程共 3 項通過。瀏覽器測試確認實際 OPFS 檔案與時間前進，不能代替實體 iPhone 的音訊與儲存狀態驗收。

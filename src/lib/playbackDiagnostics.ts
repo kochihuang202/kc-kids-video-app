@@ -1,5 +1,6 @@
 import { diagnosticRepository, type DiagnosticEventInput } from "../data/repositories";
-import type { DeviceStatus, PlaybackMode, VideoFixture } from "../types";
+import type { Category, DeviceStatus, PlaybackMode, VideoFixture } from "../types";
+import { DownloadStorageError, savedSeries } from "./downloads";
 
 const PENDING_KEY = "kid_diagnostic_pending_v1";
 
@@ -27,6 +28,40 @@ function clientInfo() {
       || (navigator as Navigator & { standalone?: boolean }).standalone === true,
     networkType: connection?.effectiveType || null,
   };
+}
+
+// Failure-only, one-shot reporting. No playback Session, polling or localStorage
+// writes: diagnostics must still work when the catalogue's storage is full.
+export async function reportDownloadStorageFailure(error: unknown, operation: string, category?: Category) {
+  try {
+    const detail: NonNullable<DiagnosticEventInput["detail"]> = {
+      diagnosticVersion: "download-v1", state: "download_storage_failure", errorOperation: operation,
+      networkOnline: navigator.onLine, message: error instanceof Error ? error.message : String(error),
+    };
+    if (error instanceof DownloadStorageError) {
+      detail.errorOperation = error.operation;
+      detail.requiredCatalogueBytes = error.requiredCatalogueBytes;
+      detail.errorName = error.originalError instanceof Error ? error.originalError.name : "unknown";
+    } else detail.errorName = error instanceof Error ? error.name : "unknown";
+    try {
+      detail.localStorageBytes = Object.keys(localStorage).reduce((bytes, key) => bytes + (key.length + (localStorage.getItem(key)?.length || 0)) * 2, 0);
+      detail.downloadCatalogueBytes = (localStorage.getItem("kids-downloads-v1")?.length || 0) * 2;
+      const completed = new Map(savedSeries().flatMap(item => Object.entries(item.completed)));
+      detail.downloadedMediaBytes = [...completed.values()].reduce((sum, bytes) => sum + bytes, 0);
+    } catch { /* A storage access error must not suppress the original failure. */ }
+    try {
+      const space = await navigator.storage?.estimate();
+      detail.storageUsageBytes = space?.usage;
+      detail.storageQuotaBytes = space?.quota;
+    } catch { /* Estimates are optional and are not physical free disk space. */ }
+    const { id } = await diagnosticRepository.start({
+      clientSessionId: crypto.randomUUID(), videoLabel: `離線下載：${category?.name || "下載清單"}`.slice(0, 200),
+      categoryId: category?.id, source: "self_hosted", playbackMode: "video", ...clientInfo(),
+    });
+    await diagnosticRepository.events(id, [{ seq: 1, type: "javascript_error", occurredAt: new Date().toISOString(),
+      errorCode: error instanceof DownloadStorageError ? error.code : "DOWNLOAD_FAILED", detail }]);
+    await diagnosticRepository.finish(id, "error");
+  } catch { /* Never block storage management because telemetry is unavailable. */ }
 }
 
 function savePending(item: Record<string, unknown>) {

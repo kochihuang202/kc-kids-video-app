@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { contentRepository, deviceRepository } from "../data/repositories";
 import { downloadSeries, localMedia, refreshSavedSeriesMetadata, removeSeries, savedSeries, type DownloadSeries } from "../lib/downloads";
+import { reportDownloadStorageFailure } from "../lib/playbackDiagnostics";
 import type { Category, DeviceStatus, VideoFixture } from "../types";
 import { Button } from "./ui/button";
 
@@ -50,12 +51,13 @@ function SeriesDownloadManager({ category, videos, authorized }: ManagedSeries &
     controller.current = task;
     try {
       if (!navigator.storage?.getDirectory || !navigator.locks) throw new Error("這個瀏覽器不支援下載儲存，請使用新版 Safari／Chrome／Edge。");
-      const persistent = await navigator.storage.persist?.();
+      const persistent = await navigator.storage.persist?.().catch(() => false);
       setStorageMessage(persistent ? "已啟用持久儲存" : "瀏覽器未核准持久儲存，檔案仍可能被系統回收");
       await downloadSeries(category, videos, task.signal, setMessage);
       await refresh();
     } catch (error) {
       setMessage(task.signal.aborted ? "下載已暫停；完成的影片會保留。" : error instanceof Error ? error.message : "下載失敗，請重試。");
+      if (!task.signal.aborted) void reportDownloadStorageFailure(error, "download", category);
     } finally {
       controller.current = null;
       setBusy(false);
@@ -107,15 +109,28 @@ export function ParentDownloadsPage() {
     setError("");
     try {
       const [categories, nextDevice] = await Promise.all([contentRepository.getCategories(), deviceRepository.status()]);
+      setDevice(nextDevice);
       const remote = await Promise.all(categories.map(async (category) => ({ category, videos: await contentRepository.getVideos(category.id) })));
-      for (const item of remote) refreshSavedSeriesMetadata(item.category, item.videos);
+      let refreshError: unknown;
+      let failedCategory: Category | undefined;
+      for (const item of remote) {
+        try { refreshSavedSeriesMetadata(item.category, item.videos); }
+        catch (failure) { if (!refreshError) { refreshError = failure; failedCategory = item.category; } }
+      }
       const downloadable = remote.filter((item) => item.videos.some((video) => video.source === "self_hosted"));
       const savedOnly = savedSeries()
         .filter((item) => !downloadable.some((remoteItem) => remoteItem.category.id === item.category.id))
         .map((item) => ({ category: item.category, videos: item.videos }));
       setSeries([...downloadable, ...savedOnly]);
-      setDevice(nextDevice);
-    } catch (loadError) { setError(loadError instanceof Error ? loadError.message : "離線下載資料暫時載入不了。"); }
+      if (refreshError) {
+        setError(refreshError instanceof Error ? refreshError.message : "下載清單暫時無法更新；已下載的影片仍保留。");
+        void reportDownloadStorageFailure(refreshError, "catalogue_refresh", failedCategory);
+      }
+    } catch (loadError) {
+      setSeries(savedSeries().map(item => ({ category: item.category, videos: item.videos })));
+      setError(loadError instanceof Error ? loadError.message : "離線下載資料暫時載入不了。");
+      void reportDownloadStorageFailure(loadError, "downloads_page_load");
+    }
   }, []);
 
   useEffect(() => { void load(); }, [load]);

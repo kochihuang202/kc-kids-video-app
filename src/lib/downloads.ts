@@ -7,14 +7,61 @@ export function rememberOffline(path: string, value: unknown) {
   try { localStorage.setItem(SNAPSHOT + path, JSON.stringify(value)); } catch { /* Online use must survive storage quota failures. */ }
 }
 export function offlineSnapshot<T>(path: string): T | undefined {
-  try { const raw = localStorage.getItem(SNAPSHOT + path); return raw ? JSON.parse(raw) : undefined; } catch { return undefined; }
+  try { const raw = localStorage.getItem(SNAPSHOT + path); if (raw) return JSON.parse(raw); } catch { /* Fall back to the download catalogue. */ }
+  // The catalogue already contains downloaded metadata. Do not require a second
+  // copy in the expendable online cache to open a verified offline file.
+  const category = path.match(/^\/api\/content\/categories\/([^/]+)\/videos$/);
+  const video = path.match(/^\/api\/content\/videos\/([^/]+)$/);
+  try {
+    const all = category || video ? savedSeries() : [];
+    if (category) return all.find(item => item.category.id === decodeURIComponent(category[1]))?.videos as T | undefined;
+    if (video) return all.flatMap(item => item.videos).find(item => item.id === decodeURIComponent(video[1])) as T | undefined;
+  } catch { /* Malformed request paths have no saved metadata. */ }
+  return undefined;
 }
 export interface DownloadSeries { category: Category; videos: VideoFixture[]; completed: Record<string, number>; mimeTypes?: Record<string, string> }
 export function savedSeries(): DownloadSeries[] {
   try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
 }
-function save(series: DownloadSeries[]) {
-  localStorage.setItem(KEY, JSON.stringify(series));
+export function isStorageQuotaError(error: unknown) {
+  return error instanceof DOMException && (error.name === "QuotaExceededError" || error.code === 22 || error.code === 1014);
+}
+export class DownloadStorageError extends Error {
+  readonly code: string;
+  constructor(public operation: string, public originalError: unknown, public requiredCatalogueBytes?: number) {
+    const catalogue = operation.startsWith("catalogue_");
+    super(catalogue
+      ? "這台裝置的下載清單儲存空間不足，暫時無法更新清單；已下載的影片仍保留，可在下方管理。"
+      : "這台裝置的影音儲存空間不足；已完成的影片會保留，請先刪除不需要的下載系列再試。");
+    this.name = "DownloadStorageError";
+    this.code = catalogue ? "DOWNLOAD_CATALOGUE_QUOTA" : "DOWNLOAD_MEDIA_QUOTA";
+  }
+}
+function discardRebuildableContentCache() {
+  // Never clear the catalogue, files, thumbnails, authorization, preferences,
+  // offline view outbox, learned/favorite state, or pending diagnostic events.
+  const keys = Object.keys(localStorage).filter(key => key.startsWith(`${SNAPSHOT}/api/content/videos/`)
+    || key.startsWith(`${SNAPSHOT}/api/content/categories/`) && key.endsWith("/videos"));
+  for (const key of keys) localStorage.removeItem(key);
+}
+function discardDuplicateSnapshots(categoryId: string, videos: VideoFixture[]) {
+  localStorage.removeItem(`${SNAPSHOT}/api/content/categories/${encodeURIComponent(categoryId)}/videos`);
+  for (const video of videos) localStorage.removeItem(`${SNAPSHOT}/api/content/videos/${encodeURIComponent(video.id)}`);
+}
+function save(series: DownloadSeries[], operation = "catalogue_save") {
+  const encoded = JSON.stringify(series);
+  if (localStorage.getItem(KEY) === encoded) return;
+  try { localStorage.setItem(KEY, encoded); }
+  catch (error) {
+    if (!isStorageQuotaError(error)) throw error;
+    discardRebuildableContentCache();
+    // One retry, not a polling loop. The old catalogue stays intact if it fails.
+    try { localStorage.setItem(KEY, encoded); }
+    catch (retryError) {
+      if (isStorageQuotaError(retryError)) throw new DownloadStorageError(operation, retryError, encoded.length * 2);
+      throw retryError;
+    }
+  }
   window.dispatchEvent(new Event("downloads-changed"));
 }
 export function refreshSavedSeriesMetadata(category: Category, videos: VideoFixture[]) {
@@ -23,9 +70,9 @@ export function refreshSavedSeriesMetadata(category: Category, videos: VideoFixt
   if (!previous) return;
   const byId = new Map(videos.map((video) => [video.id, video]));
   const refreshed = previous.videos.map((video) => byId.get(video.id) || video);
-  for (const video of refreshed) rememberOffline(`/api/content/videos/${encodeURIComponent(video.id)}`, video);
-  rememberOffline(`/api/content/categories/${encodeURIComponent(category.id)}/videos`, videos);
-  save(all.map((item) => item.category.id === category.id ? { ...item, category, videos: refreshed } : item));
+  save(all.map((item) => item.category.id === category.id ? { ...item, category, videos: refreshed } : item), "catalogue_refresh");
+  // Only remove duplicates after the authoritative catalogue was saved.
+  discardDuplicateSnapshots(category.id, refreshed);
 }
 async function directory() {
   return (await navigator.storage.getDirectory()).getDirectoryHandle("kids-media-v1", { create: true });
@@ -90,7 +137,11 @@ async function removeSeriesFiles(id: string) {
 export async function downloadSeries(category: Category, videos: VideoFixture[], signal: AbortSignal, progress: (message: string) => void) {
   return navigator.locks.request("kids-download-write", { ifAvailable: true }, async lock => {
     if (!lock) throw new Error("另一個頁面正在下載，請先暫停該下載。");
-    return downloadSeriesFiles(category, videos, signal, progress);
+    try { return await downloadSeriesFiles(category, videos, signal, progress); }
+    catch (error) {
+      if (isStorageQuotaError(error)) throw new DownloadStorageError("media_storage", error);
+      throw error;
+    }
   });
 }
 async function downloadSeriesFiles(category: Category, videos: VideoFixture[], signal: AbortSignal, progress: (message: string) => void) {
@@ -99,9 +150,8 @@ async function downloadSeriesFiles(category: Category, videos: VideoFixture[], s
   const all = savedSeries();
   const previous = all.find(s => s.category.id === category.id);
   const series: DownloadSeries = { category, videos: eligible, completed: previous?.completed || {}, mimeTypes: previous?.mimeTypes || {} };
-  for (const video of eligible) rememberOffline(`/api/content/videos/${encodeURIComponent(video.id)}`, video);
-  rememberOffline(`/api/content/categories/${encodeURIComponent(category.id)}/videos`, videos);
   save([...all.filter(s => s.category.id !== category.id), series]);
+  discardDuplicateSnapshots(category.id, eligible);
   const dir = await directory();
   let missingThumbnails = 0;
   for (let i = 0; i < eligible.length; i++) {
