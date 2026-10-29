@@ -2,6 +2,7 @@ using System.Drawing.Imaging;
 using CaptureWorkbench;
 
 var failures = new List<string>(); int testCount = 0;
+if (args.Length == 2 && args[0] == "--render-tabs") { TabClosingUserFlows.RenderPreview(args[1]); return 0; }
 if (args.Length == 2 && args[0] == "--replay") {
     using var partial = new Bitmap(Path.Combine(args[1], "partial.png"));
     using var next = new Bitmap(Path.Combine(args[1], "unaligned-frame.png"));
@@ -251,5 +252,9 @@ Test("rounded frames retain editable geometry, custom stroke and persisted tool 
 Test("mosaic uses finer averaged cells and preserves selection boundaries and undo", EditorPolishFlows.FineMosaic);
 Test("window X and minimize retain tabs in tray until explicit exit saves them", EditorPolishFlows.TrayLifecycle);
 Test("line width accepts typed decimals and rejects invalid values without edits", EditorPolishFlows.ManualWidth);
+Test("close-all toolbar saves every tab and leaves a reusable editor with Ctrl+W", TabClosingUserFlows.CloseAll);
+Test("each tab X closes only that document and supports cancelling a close press", TabClosingUserFlows.HeaderX);
+Test("close all stops on save failure, retains pending tabs and can retry", TabClosingUserFlows.FailureAndRetry);
+Test("tab X commits the pending typed style before its automatic final save", TabClosingUserFlows.PendingStyle);
 Console.WriteLine($"{testCount - failures.Count}/{testCount} checks passed");
 return failures.Count == 0 ? 0 : 1;

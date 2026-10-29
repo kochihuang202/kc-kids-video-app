@@ -435,6 +435,14 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-072 — Bulk and tab-header close must save the intended document and retain failed tabs
+
+- Scope: `picpick-replacement/DocumentTabs.cs`, `WorkbenchForm.cs`.
+- User-requested flow, 2026-10-29: Add a toolbar close-all button and a right-edge X on every tab, retaining the existing close-time autosave rule.
+- Correct behavior: Close the clicked document, preserving the active tab when another tab's X is clicked. Apply pending typed style before closing the selected document. Close all saves each document, stops and selects the first failed one while retaining pending content and remaining tabs, and leaves a reusable empty editor after success. Titlebar X/minimize still hide to the notification area.
+- Implementation regression: Removing an earlier tab before native handle creation can leave the cached selected index outside the remaining collection. Guard canvas lookup and explicitly preserve/select a valid page after removal. Intercept the X before the native tab control changes selection; release outside X or a rapid double-click must not close the next tab underneath.
+- Tests: `TabClosingUserFlows.CloseAll`, `HeaderX`, `FailureAndRetry`, `PendingStyle` exercise the actual toolbar handler, native mouse messages, inactive/active/last-page close, cancellation, saved PNG pixels/open metadata, Ctrl+W, locked-file failure/retry and pending width. All 38 native checks pass, including REG-048/049/062/067. Isolated control rendering is available via `--render-tabs`; no user images are used or published.
+
 ## REG-067 — Checked login startup retains an obsolete executable or a missing Run entry
 
 - Scope: `picpick-replacement/StartupRegistration.cs`, `WorkbenchForm.cs`, `Program.cs`, `StartupLog.cs`.

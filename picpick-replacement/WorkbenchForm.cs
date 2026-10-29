@@ -8,7 +8,8 @@ namespace CaptureWorkbench;
 public sealed class WorkbenchForm : Form
 {
     readonly DocumentStore store;
-    readonly TabControl tabs = new() { Dock = DockStyle.Fill, Padding = new Point(18, 7), DrawMode = TabDrawMode.OwnerDrawFixed, SizeMode = TabSizeMode.Fixed, ItemSize = new Size(132, 34), ShowToolTips = true };
+    readonly DocumentTabs tabs = new();
+    readonly ToolStripButton closeAllButton = new("關閉全部分頁") { Enabled = false, AccessibleName = "關閉全部分頁", ToolTipText = "逐張保存並關閉所有圖片；保存失敗時保留分頁" };
     readonly ToolStripStatusLabel status = new() { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
     readonly Label welcome = new() { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.FromArgb(85, 101, 125), Text = "截圖工作台\n\n擷取的每張圖片，都有自己的分頁。\n\n按「開始擷取」或全域快捷鍵開始\n框選範圍 → 一般／捲動擷取 → 自動保存\n\n捲動中按 Esc 結束；到底後也會自動完成。" };
     readonly NotifyIcon tray;
@@ -35,7 +36,7 @@ public sealed class WorkbenchForm : Form
     StampDefinition stamp = StampDefinition.NumberStyles[0];
     Color ink = Color.FromArgb(230, 52, 68);
     float stroke = 3;
-    ImageCanvas? Canvas => tabs.SelectedTab?.Tag as ImageCanvas;
+    ImageCanvas? Canvas => tabs.SelectedIndex >= 0 && tabs.SelectedIndex < tabs.TabCount ? tabs.TabPages[tabs.SelectedIndex].Tag as ImageCanvas : null;
     public WorkbenchForm(string[] args) : this(args, null, null) { }
     internal WorkbenchForm(string[] args, DocumentStore? documentStore, AppSettings? initialSettings)
         : this(args, documentStore, initialSettings, StartupRegistration.Read, StartupRegistration.Write, Environment.ProcessPath!) { }
@@ -59,7 +60,8 @@ public sealed class WorkbenchForm : Form
         file.DropDownItems.Add("從檔案貼上…", null, (_, _) => Safe(PasteFile));
         file.DropDownItems.Add("另存圖片…", null, (_, _) => Export());
         file.DropDownItems.Add("保存  Ctrl＋S", null, (_, _) => Safe(SaveCurrent));
-        file.DropDownItems.Add("關閉目前分頁", null, (_, _) => CloseTab());
+        file.DropDownItems.Add("關閉目前分頁", null, (_, _) => Safe(CloseTab));
+        file.DropDownItems.Add("關閉全部分頁", null, (_, _) => Safe(CloseAllTabs));
         file.DropDownItems.Add("縮到通知區", null, (_, _) => MinimizeToTray());
         menu.Items.Add(file);
         var options = new ToolStripMenuItem("選項"); options.DropDownItems.Add("程式設定（含開機自動執行）…", null, (_, _) => ShowSettings(false)); options.DropDownItems.Add("快捷鍵…", null, (_, _) => ShowSettings(true)); menu.Items.Add(options); MainMenuStrip = menu;
@@ -100,6 +102,7 @@ public sealed class WorkbenchForm : Form
         View("縮小", () => Canvas?.SetZoom(Canvas.Zoom / 1.2f)); View("100%", () => Canvas?.SetZoom(1)); View("放大", () => Canvas?.SetZoom(Canvas.Zoom * 1.2f));
         View("符合視窗", Fit); View("旋轉 90°", () => Canvas?.Rotate90()); View("畫布大小", ResizeCanvasSize); View("縮放圖片", ResizeImage);
         View("關閉分頁", CloseTab);
+        closeAllButton.Click += (_, _) => Safe(CloseAllTabs); view.Items.Add(closeAllButton);
         view.Items.Add(new ToolStripSeparator()); view.Items.Add(currentNumberLabel); view.Items.Add(currentNumber); view.Items.Add(nextNumberLabel); view.Items.Add(nextNumber);
         nextNumber.KeyDown += (_, e) => { if (e.KeyCode != Keys.Enter) return; e.SuppressKeyPress = true; ApplyNumberFields(); Canvas?.Focus(); };
         currentNumber.KeyDown += (_, e) => { if (e.KeyCode != Keys.Enter) return; e.SuppressKeyPress = true; Safe(ApplyNumberFields); Canvas?.Focus(); };
@@ -109,13 +112,7 @@ public sealed class WorkbenchForm : Form
         workspace.Controls.Add(tabs); workspace.Controls.Add(welcome); welcome.BringToFront();
         foreach (var target in new Control[] { this, workspace, tabs, welcome }) ImageFileDrop.Attach(target, DropImages, () => !capturing);
         tabs.SelectedIndexChanged += (_, _) => { UpdateTools(); SetStatus(SaveStatus()); };
-        tabs.DrawItem += (_, e) => {
-            if (e.Index < 0 || e.Index >= tabs.TabCount) return;
-            var page = tabs.TabPages[e.Index]; var canvas = (ImageCanvas)page.Tag!; bool dirty = canvas.IsEditing || canvas.Document.Pending;
-            using var background = new SolidBrush(e.Index == tabs.SelectedIndex ? Color.White : Color.FromArgb(240, 243, 247)); e.Graphics.FillRectangle(background, e.Bounds);
-            using var dot = new SolidBrush(dirty ? Color.FromArgb(219, 67, 76) : Color.FromArgb(36, 158, 92)); e.Graphics.FillEllipse(dot, e.Bounds.X + 9, e.Bounds.Y + (e.Bounds.Height - 10) / 2, 10, 10);
-            TextRenderer.DrawText(e.Graphics, page.Text, Font, new Rectangle(e.Bounds.X + 26, e.Bounds.Y, e.Bounds.Width - 29, e.Bounds.Height), Color.FromArgb(30, 51, 78), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
-        };
+        tabs.CloseRequested += page => Safe(() => ClosePage(page));
         Controls.Add(workspace); Controls.Add(view); Controls.Add(tools); Controls.Add(actions); Controls.Add(menu); Controls.Add(footer);
         var trayMenu = new ContextMenuStrip(); trayMenu.Items.Add("開啟編輯器", null, (_, _) => RestoreFromTray());
         trayMenu.Items.Add("開始擷取", null, async (_, _) => await StartCapture(false));
@@ -192,7 +189,7 @@ public sealed class WorkbenchForm : Form
         void RestoreShortcut() { activeShortcut = previous; hotkeyRegistered = wasRegistered && previous != null && Native.RegisterHotKey(Handle, 42, previous.Modifiers, (uint)previous.Key); RefreshShortcutLabel(); }
     }
     protected override void WndProc(ref Message m) { if (m.Msg == 0x312 && m.WParam == 42 && !capturing) { _ = StartCapture(false); return; } base.WndProc(ref m); }
-    void SetStatus(string message) { status.Text = Canvas == null ? message : $"{message}   ·   {Canvas.Document.Image.Width} × {Canvas.Document.Image.Height}   ·   {Canvas.Document.OutputPath}"; tabs.Invalidate(); mergeButton.Enabled = Canvas?.Document.Marks.Count > 0; UpdateNumberFields(); }
+    void SetStatus(string message) { status.Text = Canvas == null ? message : $"{message}   ·   {Canvas.Document.Image.Width} × {Canvas.Document.Image.Height}   ·   {Canvas.Document.OutputPath}"; tabs.Invalidate(); closeAllButton.Enabled = tabs.TabCount > 0; mergeButton.Enabled = Canvas?.Document.Marks.Count > 0; UpdateNumberFields(); }
     void UpdateNumberFields() { bool visible = Canvas != null && (tool == EditTool.Stamp || Canvas.SelectedMark is { Kind: EditTool.Stamp } selected && selected.StampSymbol.StartsWith("number")); currentNumber.Visible = nextNumber.Visible = currentNumberLabel.Visible = nextNumberLabel.Visible = visible; if (!nextNumber.Focused) nextNumber.Text = (Canvas?.NextStampNumber ?? 1).ToString(); currentNumber.Enabled = Canvas?.SelectedMark is { Kind: EditTool.Stamp } mark && mark.StampSymbol.StartsWith("number"); if (!currentNumber.Focused) currentNumber.Text = currentNumber.Enabled ? Canvas!.SelectedMark!.Text : ""; }
     void ApplyNumberFields() {
         if (Canvas == null) return;
@@ -298,9 +295,30 @@ public sealed class WorkbenchForm : Form
     }
     void CloseTab()
     {
-        if (Canvas == null) return; var canvas = Canvas; var page = tabs.SelectedTab!;
-        canvas.Document.CloseAndSave(); tabs.TabPages.Remove(page); page.Dispose(); canvas.Document.Dispose();
+        if (tabs.SelectedTab is { } page) ClosePage(page);
+    }
+    void ClosePage(TabPage page)
+    {
+        if (!tabs.TabPages.Contains(page)) return;
+        var selected = tabs.SelectedIndex >= 0 && tabs.SelectedIndex < tabs.TabCount ? tabs.TabPages[tabs.SelectedIndex] : null;
+        if (selected == page) { if (!ApplyStrokeWidth()) return; ApplyNumberFields(); }
+        int index = tabs.TabPages.IndexOf(page);
+        var canvas = (ImageCanvas)page.Tag!;
+        canvas.Document.CloseAndSave(); tabs.TabPages.Remove(page);
+        if (selected != null && selected != page && tabs.TabPages.Contains(selected)) tabs.SelectedTab = selected;
+        else tabs.SelectedIndex = tabs.TabCount == 0 ? -1 : Math.Min(index, tabs.TabCount - 1);
+        page.Dispose(); canvas.Document.Dispose();
         welcome.Visible = tabs.TabCount == 0; SetStatus("已關閉分頁，圖片仍保存在輸出資料夾");
+    }
+    void CloseAllTabs()
+    {
+        if (Canvas == null) return;
+        if (!ApplyStrokeWidth()) return; ApplyNumberFields();
+        foreach (var page in tabs.TabPages.Cast<TabPage>().ToArray()) {
+            try { ClosePage(page); }
+            catch { tabs.SelectedTab = page; throw; }
+        }
+        SetStatus("已保存並關閉全部分頁，圖片仍保存在輸出資料夾");
     }
     void Fit() { if (Canvas == null) return; Canvas.SetZoom(Math.Min(1, Math.Min((Canvas.ClientSize.Width - 64f) / Canvas.Document.Image.Width, (Canvas.ClientSize.Height - 72f) / Canvas.Document.Image.Height))); }
     void ResizeImage()

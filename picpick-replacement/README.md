@@ -4,13 +4,13 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 ## 執行
 
-可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.5)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.5/CaptureWorkbench.exe)。
+可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.6)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.6/CaptureWorkbench.exe)。
 
 執行 `artifacts/release/CaptureWorkbench.exe`。獨立發行版內含 .NET 執行環境，不需要安裝 SDK。
 
 更新版本時，請先從右下角通知區右鍵「離開」舊版，再開啟新執行檔；單一實例運作中，再執行 exe 只會恢復現有版本。
 
-先前的 `artifacts/v2` 與本輪測試的 `artifacts/v3` 同步到相同版本；以 `release` 為主要入口。
+日常使用與開機啟動請固定以 `artifacts/release` 為入口；其他 artifacts 子目錄可能保留較舊的測試建置。
 
 - `Alt+2` 叫出上方擷取工具列，可當場切換框選與捲動。
 - 如果 PicPick 已占用 `Alt+2`，會自動嘗試 `Ctrl+Alt+2`；也可以直接按「開始擷取」。關閉占用快捷鍵的程式後，按快捷鍵按鈕重新註冊。
@@ -21,6 +21,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 - 每次擷取加入獨立 Tab，標題只顯示時間。綠點表示已保存，紅點表示修改中或尚未保存。捲動中保留綠色範圍框，框線在擷取矩形外側。
 - 「選項 → 程式設定 → 一般」可設定「截圖後自動複製到剪貼簿」，預設開啟，舊設定也沿用此預設。一般與捲動截圖完成後會複製完整圖片，可直接 Ctrl+V 貼上；取消勾選後不會替換剪貼簿。編輯、開檔及拖入圖片不觸發自動複製。剪貼簿複製失敗時，已保存的圖片與分頁仍保留，狀態列提示可按 Ctrl+C 重試。
 - `Ctrl+W` 關閉分頁並保存。視窗 X、Alt+F4 和最小化只收到通知區，保留目前分頁與未保存編輯；通知區右鍵「離開」才保存並真正結束，下次啟動空白，不重開舊分頁。
+- 每個分頁最右側有 X，可直接保存並關閉該圖片；關閉未選中的分頁時，維持目前正在編輯的分頁。工具列「關閉全部分頁」或「檔案 → 關閉全部分頁」會逐張保存後關閉，保留空白工作台繼續擷取。保存失敗時停下並選中失敗分頁，其內容及後續分頁仍保留，可修正問題後再試。
 
 ## 編輯與保存
 

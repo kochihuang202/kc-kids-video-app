@@ -1,5 +1,12 @@
 # Windows 實機驗證 · 2026-10-16
 
+## 關閉全部分頁與分頁 X · 2026-10-29
+
+- 新增工具列「關閉全部分頁」及每頁右側 X，保留時間標題與綠／紅保存狀態點。以實際控制項放入隔離 fixture 視窗渲染，已檢視三分頁版面：每個 X 在最右側，標題、狀態點與按鈕均清楚可見；未操作使用者既有視窗或圖片。
+- 重現新測試在舊程式失敗；完成後 38/38 原生檢查通過。測試透過真實 ToolStripButton.PerformClick 和 TabControl 的原生滑鼠訊息，驗證單頁／全部關閉、非目前分頁 X 不切換活躍頁、拖離取消、Ctrl+W、保存後輸出像素與開啟狀態、保存失敗保留及重試，並檢查未按 Enter 的線寬也會保存。
+- 隔離渲染：`dotnet run --project tests/CaptureWorkbench.Tests.csproj -- --render-tabs artifacts/tab-controls-preview.png`。圖片使用自製內容，僅留本機 artifacts，不上傳 GitHub。這是隔離控制項渲染及原生訊息測試，沒有宣稱已在使用者目前執行的舊版本測試新功能。
+- 正式 release exe 已更新，保留原執行中的程序及圖片；需從通知區離開後再執行新版。SHA256：`bef435d8be228c99b3f6a1db56b00bdebc6782583f18c637126c41da9c8b87df`。
+
 ## 開機登錄診斷與修復 · 2026-10-24
 
 - 本機設定 `StartWithWindows=true`，Run 項目卻仍指向 `edge-drop-build`。舊檔案仍存在，且與原 release SHA256 相同；未查得對應的 Windows 停用項目或 Application 崩潰事件，不能據此斷言舊路徑就是本次缺少通知區圖示的唯一原因。
