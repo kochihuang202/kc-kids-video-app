@@ -1,50 +1,83 @@
-# M0/M1 驗證報告
+# M0/M1：資料庫、共享附件與版本分支測試報告
 
-日期：2026-10-30。所有結果限定於下列已執行範圍。
+日期：2026-10-30。本輪只在隔離工作目錄及私人資料庫副本測試，未patch原版、變更正式設定或還原正式資料。原版ASAR調查前後SHA相同：d635fc44f4467be28375ac0fa0ed4280c7d8b80cd49734e15cf85d6e900a7ed1。
 
-## 已執行
+## 已完成的三類驗證
 
-| 驗證 | 結果 | 限制 |
-|---|---|---|
-| 開始前 git pull | codex/phase-1b 已與 origin 同步 | 保留其他專案未提交變更 |
-| docs/REGRESSIONS.md 相關搜尋 | flexnote / whiteboard / mindmap 無命中 | 沒有修改既有產品程式；未跑無關全站 Playwright |
-| 本機版本／檔案配置 | 1.1.65、Electron 封裝、8 空間庫、main.db、獨立 files/backup 路徑 | 未推定精確 Electron/renderer 框架 |
-| MCP 連線檢查 | enabled=false；127.0.0.1:39125 TCP 連線失敗 | 未更改開關、未認證、未 tools/list、未建立正式測試內容 |
-| REA session | rea-agents 6.5.0，Windows x64，SQLite 工具可執行 | Ghidra 未設定，macOS 工具不可用；未反編譯原版核心 |
-| REA SQLite inventory | 一個隔離快照取得 88 個 table inventory | 含虛擬／可能 shadow 表；不是全庫語義分析；證據 ID 見 FEATURE_MATRIX |
-| 真實資料 JSON 往返 | 8 個庫，268 次 allowlist 表比較，共 10,362 列全欄位 multiset 一致；來源 snapshot 與回建庫 integrity_check 均 ok | 不含附件二進位、所有資料表、所有索引／trigger、原版 UI；不是完整遷移驗收 |
-| 人工合成自動化整合測試 | `python -m unittest discover -s flexnote-assessment -p test_probe.py -v`：1 個整合測試通過 | 驗證 Unicode、富文本字串、BLOB、64-bit integer、共享卡片跨板、來源 SHA 不變、users 不輸出 JSON、拒絕覆寫既有輸出；不替代產品 E2E |
+1. **正式資料唯讀調查**：9庫用途／schema／migration／journal。均DELETE；main.db的8個catalog ID均對應8庫，其中6工作區isTrashed，未刪任何資料。
+2. **9個私人真實資料庫副本的native Backup實驗**：使用隨附SQLite3.44.2，source copy→snapshot→restored；9/9完整DB影像hash相同、schema相同、integrity_check=ok、source copy hash不變。包含歷史BLOB、FTS及vec0 shadow pages，不需逐列翻譯。
+3. **共享asset／版本管理原型**：11項Node整合測試通過，最後一次11 pass / 0 fail，約4.63秒（合成小型資料，不是性能基準）。
 
-第一輪 probe 在遇到 vec0 虛擬表的 PRAGMA 時失敗；修正為明確略過虛擬表，不載入未知擴充。第二輪全部上述 allowlist 表通過。失敗輸出仍在私人目錄保留，不拿它作有效完整輸出。初次 REA 呼叫以 row_limit=0 被 schema 拒絕，改用不帶 table 的 inventory 請求，沒有藉此讀私人內容。
+## 11項原型測試
 
-主資料庫的非零覆蓋：1,955 筆正文、994 卡片實例、352 連線、185 Mindmap 節點、724 檔案 metadata、37 白板、40 白板實例、41 歷史布局等。觀察到 23 張卡片跨多塊白板。逐列不變保障本次已選欄位及引用值保留，但沒有判定來源的引用圖本來是否全部有效。
+| 測試 | 結果與驗證內容 |
+|---|---|
+| 原生Backup API | 通過：sqlite_master／索引、正文、歷史BLOB、標籤、FTS查詢及同卡跨兩板ID一致，來源hash不變 |
+| 無變更與共用資產 | 通過：重複Ctrl+S／timer／close請求不新增快照；只改DB時asset物件仍只有一份；交換根僅snapshots/assets |
+| flush完成順序 | 通過：await模擬的延遲editor寫入後才備份，快照包含最後內容；不靠固定sleep |
+| 舊版附件還原 | 通過：同邏輯路徑改內容產生兩個hash；載舊版恢復舊bytes及DB，新快照仍完整；載入後無變更不重存 |
+| 發布中斷 | 通過：after-assets／after-database／after-manifest三處注入例外，舊版hash不變；未完成版不能載入，完整已發布版不刪 |
+| 到達順序與壞檔 | 通過：manifest/DB先到、asset缺失為incomplete；placeholder callback為pending；齊全後complete；錯hash為invalid |
+| A/B延遲分支 | 通過：A、B同V1各生V2；B較晚建立但A更晚送到，兩支皆保留；手選A前先保存B未備份修改，後續parent為A |
+| 載入失敗回復 | 通過：after-swap注入例外，原工作DB、asset及本機state復原，當前未備份修改已留保護快照 |
+| WAL保護 | 通過：隔離WAL來源在3.44.2被拒絕online backup，沒有擅改其journal模式 |
+| 清冊漏引用 | 通過：即使重算manifest fingerprint，漏掉DB files所需附件仍被交叉驗證拒絕 |
+| 不相容版本 | 通過：未知app版本拒絕載入，當前資料不變 |
 
-## 私人資料與可重現性
+這些是程式化故障注入／合成資料測試，不是真實斷電、實體雙電腦或OneDrive客戶端驗證。PNG樣本僅作原始bytes還原，沒有宣稱圖像解碼／白板渲染驗收。
 
-原型：`probe_data.py`。輸入必須是資料庫所在目錄，輸出必須是全新私人目錄；勿指定 repository，快照可能含私人內容及帳號表。其 JSON 僅輸出 allowlist，完整 SQLite snapshot 仍屬敏感資料。不要把快照、JSON、回建庫或完整設定上傳 Git。
+## 9庫私人副本結果
 
-本次私人位置：`C:\Users\ji3cp\.codex\visualizations\2026\10\29\01a1886a-23bf-75e2-85c6-b497ce388c5e\flexnote-private-probe-v2`。summary.json 有各表列數、schema 與快照 SHA-256。使用 SQLite online backup 取得每庫一致快照；不是從運作中的 DB/WAL 直接檔案複製，也不宣稱多庫與附件原子快照。
+| 別名 | bytes | schema objects | DB影像回建／integrity |
+|---|---:|---:|---|
+| catalog | 319488 | 10 | 相同／ok |
+| W0 | 987136 | 216 | 相同／ok |
+| W1 | 987136 | 216 | 相同／ok |
+| W2 | 1019904 | 216 | 相同／ok |
+| W3 | 89964544 | 224 | 相同／ok |
+| W4 | 1019904 | 216 | 相同／ok |
+| W5 | 987136 | 216 | 相同／ok |
+| W6 | 483328 | 106 | 相同／ok |
+| W7 | 1024000 | 224 | 相同／ok |
 
-## 尚未執行，不能算通過
+schema objects含tables/indexes等，與ARCHITECTURE表數不是同一指標。八個空間來源是前輪穩定私人副本；catalog另以標準SQLite read-only Backup API取得私人副本。這是逐庫API可行性，**不是9個庫同時點的完整工作區快照**。
 
-官方 FlexNote 對新格式重新開啟；全類型富文本／塊嵌入／雙向連結語義；附件完整下載及 hash；PDF 頁定位；原版 Undo/Redo；MCP 工具契約；白板渲染 profiling；100/300/500 卡片基準；真實 OneDrive 雙機、崩潰與分支衝突；本機 Xmind 選取／編輯／IME 對照。
+## 工具及重現
 
-## 白板性能驗收提案（事前鎖定後才測）
+- snapshot-prototype.cjs：自寫native wrapper及隔離SnapshotPrototype。由FLEXNOTE_SQLITE_BINDING指定私人擷取的原版node_sqlite3.node；不散布該binary或FlexNote程式碼。
+- snapshot-prototype.test.cjs：Node內建test；FLEXNOTE_PROTOTYPE_OUTPUT指定私人測試輸出，working必須有isolated-prototype marker。
+- audit-native-backup.cjs：讀私人sources.json，寫全新輸出目錄，驗9庫source不變／完整影像／schema／integrity。
+- inventory_databases.py：mode=ro查正式庫metadata/journal/counts，不讀筆記正文或改journal。
+- 原有probe_data.py／test_probe.py：8庫、268次allowlist表比較、10,362列JSON往返；1項Python整合測試先前通過，保留但不冒充全量遷移。
 
-使用同一 Windows 硬體、顯示器解析度／縮放、電源模式、FlexNote 版本、資料與自動化腳本；記錄 CPU、RAM、GPU、驅動、螢幕更新率。100/300/500 卡片各含正文、圖片、PDF、影音來源、Mindmap 與連線，固定數量比例及實際檔案 hash。原版與候選交錯執行，區分冷／暖讀取、附件已下載／placeholder。
+執行新測試：設定FLEXNOTE_SQLITE_BINDING為私人native addon絕對路徑，再執行node --test flexnote-assessment/snapshot-prototype.test.cjs。未提供binding則明確失敗，不偷換系統SQLite引擎。
 
-量測開板至可互動及穩定幀的時間、拖曳／選取／建立／刪除的輸入至呈現延遲、平移／縮放幀時間 p50/p95/p99 與超出刷新預算比例、程序樹 private bytes／working set 峰值、重複開關後的記憶體趨勢。外部輸入及畫面量測用相同方法，不把未取得內部 performance marks 的估算標成精確 renderer CPU。
+私人證據根：C:\Users\ji3cp\.codex\visualizations\2026\10\29\01a1886a-23bf-75e2-85c6-b497ce388c5e。
 
-**候選門檻，需架構確認時鎖定**：熱身後每案例 10 次，冷啟動 5 次，原版和候選相同樣本；載入／互動 p95 不高於基準 110%，峰值記憶體不高於 115%；60 分鐘重複操作末段不得持續成長，回收後記憶體不高於原版相同場景 115%。這些是本評估提出的驗收值，尚未測量，應先確認量測噪音可分辨差異；未得到結果前不得宣稱達標。硬門檻另為無資料遺失、無引用錯接、無 crash。
+- flexnote-nine-db-inventory.json：9庫用途／狀態／schema／migration與真實工作區ID映射。
+- native-backup-audit-result/report.json：9庫native實驗摘要；snapshot/restored是真實私人內容，不提交Git。
+- snapshot-prototype-tests：全部合成工作目錄、不可變assets、分支與故障輸出。
+- flexnote-editor-persistence、flexnote-mindmap/module-slices：實際延遲／fire-and-forget函式與AST receipts。
+- flexnote-reverse-boundaries-evidence.json與FEATURE_MATRIX的REA IDs：靜態逆向證據；partial coverage不等於全產品已證實。
 
-## 最小風險導向測試集
+## 遇到的問題及修正
 
-| 層 | 核心案例 | 何時必跑 |
-|---|---|---|
-| 單元 | ID 穩定、富文本未知欄位、Markdown 投影、路徑映射、Mindmap 結構與組字狀態機 | 對應模型／解析器變更 |
-| 整合 | 跨板共享、附件 hash、索引刪除重建、版本回復、Undo 交易、保存每階段中斷恢復 | 儲存／命令／索引變更 |
-| 少量 UI | 混合白板重開、跨板編輯反映、PDF 定位、連續鍵盤建節點 | UI seam／載入契約變更 |
-| 同步 | manifest 先到、物件未到、placeholder、斷網、兩機同 parent 分支、損壞檔 | 同步協定變更；發布前真實雙機 |
-| 性能 | 100/300/500，固定平移縮放及混合媒體，長時間循環 | renderer／read model／載入／快取變更 |
+最初8項測試因SQLite3.44.2的FTS5 inverted-index檢查嘗試在readonly candidate寫入而失敗；查看真實錯誤後，把integrity_check限於可寫的私人candidate/staging，正式來源維持readonly。沒有跳過FTS或弱化檢查，重跑11項全過。
 
-模擬測試只驗證狀態轉移；真實 OneDrive 到達順序、衝突副本、佔位檔及 Windows 檔案占用必須在真實環境補驗。沒有第二台裝置的結果就標未驗，不以本機複製資料夾代替。
+先前REA整個background語義分析60秒timeout，改用AST小切片；有node上限／動態關係／未選依賴的partial限制。Python原型遇vec0虛擬表時明確排除該表的行級JSON轉換；本輪原生Backup不轉換schema，已保留全部DB影像。
+
+## 尚未完成，不能當通過
+
+- 真實原版editor／多窗／中文IME flush與commit ACK；原型flush callback不是原版實機結果。
+- 正式全mutation／內部job／附件寫入屏障及capture revision追蹤；timer、Ctrl+S、正常退出與休眠hook均未安裝。
+- main.db選定工作區catalog與syncConflictArchive的同屏障擷取／套用；原型目前只載入單工作DB＋受管files。
+- 真實OneDrive／Windows placeholder／多磁碟還原、程序被殺／突然斷電後自動load-intent recovery、實際Knex多pool及媒體handle重開。
+- vec0查詢／索引重建、完整Markdown／語義JSON匯出、遠端URL／useLink收集、原版UI重開及白板100/300/500性能。
+
+因此M1第一批資料安全條件已有實證；還不是正式可部署同步器。WAL-reset的未重現不能作安全證明；現況DELETE且原型拒絕WAL online。官方條件與修補版本見[SQLite WAL說明](https://sqlite.org/wal.html)。
+
+## 最小後續測試
+
+接入一個真實editor後，立即輸入→Ctrl+S→載入副本應含最後字；中文組字中不截斷、不偽報保存。加入10分鐘／close／background/suspend請求合併與保存失敗測試。載入管理再驗真實OneDrive亂序／placeholder及受控重開。跨版本先在staging跑原版migration，舊snapshot保留，不默默降版。
+
+渲染核心未改，後續只改manifest／外部restore時重跑這些資料測試及代表性原版重開；只有renderer/read model或載入相依改變才擴大白板回歸。首次原版與還原後按同硬體、固定100/300/500混合板記錄樣本數、範圍、中位數、p95、記憶體及長時間趨勢；目前沒有可宣稱的白板效能數值。

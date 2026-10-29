@@ -1,4 +1,6 @@
 __pycache__/
 private*/
 snapshot*
+!snapshot-prototype.cjs
+!snapshot-prototype.test.cjs
 restored*

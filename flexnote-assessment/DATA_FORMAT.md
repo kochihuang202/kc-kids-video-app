@@ -1,48 +1,96 @@
-# 明碼格式與遷移規則（提案，尚未定版）
+# 快照／共享不可變附件格式與恢復契約
 
-## 本次已驗證的最小格式
+日期：2026-10-30。保留原SQLite權威儲存，不以Markdown/JSON取代Knex。OneDrive交換區只有snapshots/及共用assets/，不上傳進度監控、不共寫latest指標。下面標明原型已實作與正式整合待辦。
 
-`probe_data.py` 對 allowlist 表輸出 UTF-8 JSON：table、原表 ddl、columns、rows。每一 cell 都帶型別 tag，BLOB 用 base64；保留 NULL、64-bit integer、字串及原始富文本 JSON 字串，不把正文硬轉 Markdown。重新讀取 JSON 後，在隔離 SQLite 建原表、插入並用含重複列計數的全列比較驗證。這是資料列 losslessness，不是正式檔案儲存引擎或完整備份。
-
-本次 8 庫、268 次表比較、10,362 列通過，含主要庫的 1,955 noteCards、994 noteCardInstances、352 connections、185 mindMapNodes、724 files metadata、41 whiteboardContentVersions。未遷移所有表、schema index/trigger、全域 main.db、附件二進位；空表的通過只證明格式處理。vec0 虛擬索引沒有載入。
-
-## 正式格式候選
+## 目錄（原型已實作）
 
 ```text
-vault.json                         # formatVersion、vaultId
-objects/<cardId>.json               # 正文完整區塊樹、類型、屬性、擴充欄位
-notes/<cardId>.md                   # 可編輯 Markdown 投影，先保證可還原再升為權威
-boards/<boardId>.json               # instance、座標、連線、視角、容器
-mindmaps/<mapId>.json               # 節點 ID、child IDs、卡片引用、布局屬性
-relations/*.json                    # 標籤、屬性 schema/值、塊關聯、收藏及其他重要結構
-assets/<assetId>/<original-file>     # 原始 PDF、圖像、影音；manifest 記 SHA-256
-revisions/<revisionId>/...          # 不可變交易物件
-commits/<revisionId>.json           # parent、deviceId、完整清冊與雜湊
+exchange/
+  snapshots/<workspaceId>/<UUID snapshotId>/
+    database.sqlite3
+    manifest.json
+  assets/<sha256前兩碼>/<sha256>.<小寫ext>
+
+各機本地，不同步：
+  working/db_<workspaceId>.sqlite3
+  working/files/...
+  state.json
+  staging/...
+  rollback-.../
+  load-intent.json
 ```
 
-這是邏輯提案，不是從原版逆向得到的官方 schema。objects 與 Markdown 不可同時各自當權威：未能表示的格式以完整 JSON 為權威；外部 Markdown 修改須有明確 import 規則與衝突檢查。任何未知欄位保留在 versioned extensions，不能默默刪除。BLOB 歷史需解碼成開放 JSON 才算符合最終 P1；目前 base64 僅保障原始位元組，沒有達成可理解的歷史格式。
+snapshot UUID與電腦來源分開；時間不當ID或勝負依據。每個snapshot目錄只建立一次。資產原始bytes不轉碼，同hash/ext重用；內容改變產生新路徑，舊版本繼續存在。第一階段所有snapshot、asset、失敗staging均不自動清理，沒有GC。
 
-## 完整性規則
+本機state.json記目前base snapshot及最後完整fingerprint，不是OneDrive共享latest。原型另要求working/isolated-prototype.json標記，拒絕把一般目錄當測試工作區；沒有正式安裝／接管命令。
 
-- 保留卡片、instance、board、mindmap、node、asset、block ID；跨板只引用同一 cardId，不複製內容。
-- 校驗每個引用目標，缺失項保留為明確 dangling reference，與來源庫既有缺失分開，不能擅自丟棄或生成假目標。
-- PDF 頁碼、矩形／座標系、來源文件版本；影音時間、截幀來源；塊引用與嵌入須保留種類，不能只抽文字。
-- 圖像、PDF、影音保留原檔，大小／hash 驗證；useLink、rawPath、remotePath 要分類，本機外鏈與遠端媒體不能宣稱已離線收齊。
-- 使用穩定 ID 建檔名；處理 Windows 保留字、大小寫碰撞、Unicode、長路徑、非法字元。rename 只改 displayName；內容重名不碰 ID。
-- formatVersion 升級採讀舊寫新、升級前 checkpoint、可逆回復；未知新版先唯讀，不自動降版。
+## Manifest v1（已實作欄位）
 
-## 存檔及 OneDrive 一致性（I：待實作設計）
+```json
+{
+  "formatVersion": 1,
+  "workspaceId": "synthetic-workspace",
+  "snapshotId": "UUID",
+  "sourceComputerId": "computer-A",
+  "createdAt": "ISO-8601 UTC",
+  "parentVersionId": "UUID or null",
+  "reason": "ctrl-s / timer / before-load / close",
+  "appVersion": "1.1.65",
+  "sqliteVersion": "3.44.2",
+  "schema": {"fingerprint": "SHA-256", "migrations": []},
+  "database": {"path": "database.sqlite3", "sha256": "SHA-256", "bytes": 123},
+  "assets": [
+    {"fileId": "id", "logicalPath": "files/source.png", "objectPath": "assets/ab/<hash>.png", "sha256": "SHA-256", "bytes": 456}
+  ],
+  "fingerprint": "SHA-256 of database hash and asset bindings"
+}
+```
 
-單檔寫 tmp、flush、同磁碟 atomic replace 只能處理本機單檔替換，不能當跨機交易。每次多物件變更寫入不可變 revision，清冊列出全部內容 hash，最後發布獨立 commit。讀端只接納父版本已知、所有檔案下載且 hash 通過的 commit；到達順序錯亂時顯示等待，沿用最後完整版本。HEAD 只當提示，不能是唯一提交證據。
+上例UUID/SHA/bytes為說明佔位，不是可載入的實際manifest。schema fingerprint由sqlite_master定義產生，migration列表獨立記錄。原型拒絕不同app/engine或不同當前schema的載入；不默默跑migration。
 
-每個裝置的本機鎖只能擋同機多程序，不能可靠阻止離線雙機。離線兩機基於相同 parent 寫入會形成分支；保留兩個 commit 及全部檔案，標記衝突、停止自動覆蓋，讓使用者選擇或合併。不能拿檔案時間當勝負。單寫模式需要 A 關閉／存檔並確認同步後才到 B；同步完成提示必須有真實 OneDrive 狀態及接收端驗證，單靠本機檔案存在不足。
+capture fingerprint涵蓋完整DB影像及排序後的asset綁定；不含每次都不同的snapshotId、建立時間與parent，所以不會因備份本身產生無意義新版本。全DB包括索引變化也會保守視為有變更；尚未實作正式userDataRevision／快篩。
 
-遇 Files On-Demand placeholder，先完整取得必要檔案，再驗證；未下載不能當空檔或刪除。索引／縮圖／WAL 放 `%LOCALAPPDATA%` 的裝置私有目錄，不進 vault。檔案監聽去抖與批次提交，UI 不逐張等待磁碟；讀取按 board manifest 預取，快取失效按 ID/revision，避免開板掃整個 vault。
+## 建立一致性版本
 
-Undo/Redo 由命令交易記錄處理；外部改動形成新版本而非偷偷接入舊 undo stack。崩潰時捨棄未提交暫存，啟動重驗 commit；hash 不符先隔離保留，再用前版復原。先建立完整有效備份，再做不可達 revision 的清理，不能立即刪除可能尚未傳完的檔案。
+正式協調器須先等待所有編輯器flush與已提交的持久化Promise，再暫停新的完整mutation與內部／附件寫入。僅await一條SQL或固定等待300ms不夠。
 
-OneDrive 不作備份：另建獨立、版本化、含 manifest/hash 的備份目的地，定期還原到空資料夾驗證；不可只依賴官方白板布局歷史或 OneDrive 垃圾桶。
+原型的capture在呼叫者提供的withBarrier內：flush → node-sqlite3 Backup API讀取工作庫並寫私人candidate → candidate integrity_check → 從candidate files表取清單 → 收齊資產、計hash並發布CAS物件 → DB副本寫入新UUID目錄 → manifest最後發布 → 更新本機state。
 
-## 遷移驗收順序
+資產複製後重新驗證hash，既有同名CAS物件若損壞直接報錯，不覆寫。若失敗，前一代及local base保留。manifest已發布但state尚未更新時留下完整版本，rescan能發現，不用時間戳自動決定採用。
 
-來源唯讀備份 → schema/類型清冊 → 完整 ID／引用／附件圖 → 明碼輸出 → 重建本機索引 → 全圖語義與 hash 比對 → 隔離原版或新 adapter 開啟 → 真實 UI 與重開 → 版本還原。來源不覆蓋，失敗保留證據並可回到原庫。完成這條路徑前，不把新格式設定成正式資料來源。
+SQLite Backup API提供單庫一致性；資產和main.db對應metadata需要另受同一capture屏障保護。原型測試由合成flush/barrier callback提供，不等於原版已具備。正式版的不可變asset revision應在匯入／改寫時固定，長時間複製/hash應移worker；不可為縮短屏障而讓DB引用與原檔跨版本。
+
+## 掃描與完整性
+
+- 掃描是唯讀、可手動重做；不追蹤OneDrive上傳、不寫共享head。
+- 檢查manifest格式／工作區／ID／版本、DB hash/bytes/schema及全部asset hash/bytes；另從DB files表交叉檢查清冊，不能靠一份漏檔manifest自己證明完整。
+- 缺檔、manifest先到、availability callback回未下載：incomplete。hash或schema不符：本次invalid，重掃可重新判定，絕不刪掉該版本。
+- graph按parent分類current/newer-in-chain/older-in-chain/branch；缺父節點時unknown-lineage，不把無法證實的鏈當最新。
+- 來源電腦、時間顯示在清單，但不作分支勝負；父鏈不同的兩份均保留。
+- Windows真實placeholder辨識尚未接入。原型availability hook與亂序檔案測試只驗證協定，不是實體OneDrive結果。
+
+## 手動載入與還原
+
+原型load：在同一序列／barrier中flush → 必要保護快照 → 重新驗證目標及所有必要資產 → staging以Backup API回建DB及原邏輯附件路徑 → integrity_check → closeWorking → 留load-intent與rollback → 換入staging → reopenWorking → 更新本機base。發生可捕捉例外會回復整個舊working及state。載入某分支後下一快照parent為所選版本，其他分支不動。
+
+FTS5在隨附SQLite3.44.2的integrity_check需要可寫的臨時副本；原型只對candidate/staging開RW做驗證，正式來源與已發布snapshot都不因此開寫。不得把readonly FTS驗證錯誤當成資料已壞，也不能跳過完整性檢查。
+
+原型未完成：原版連線／背景jobs／多視窗flush接入、真實跨磁碟切換、斷電後自動load-intent復原、正式catalog metadata套用、vec0重建及GUI。close/reopen只是介面；目前測試工作DB與附件同在隔離working，不假裝已驗證Roaming和外部附件根目錄的實際分離配置。
+
+## main.db與原版格式
+
+main.db保存spaces及syncConflictArchive等；8個空間庫靠spaces.id與檔名／spaceId相接。正式每工作區manifest還需同屏障擷取對應catalog和必要衝突歸檔，載入只套用該工作區，不整庫覆蓋其他空間。此catalog整合尚未在原型完成；9庫Backup實驗已證明每庫schema與完整DB影像可保存。
+
+原生DB包含歷史、索引、所有未知欄位/BLOB，保留ID與跨板引用。vec0必須用相容擴充查詢／重建；不因前綴ai_就刪除AI對話、課程與進度等使用者資料。獨立原檔useLink／遠端URL需明確收集；原型對useLink拒絕標完整。
+
+main.db與8個庫均標準SQLite可讀；原版實際Knex3.1.0、sqlite3 5.1.7、SQLite3.44.2，非分析工具的3.53.3。各庫migration數58／82／87不一，app版本不能代替schema檢查。
+
+## WAL與備份規則
+
+9庫現況均DELETE。隨附3.44.2在WAL＋並行write/checkpoint時有已知WAL-reset風險；原型拒絕WAL online，沒有在來源執行checkpoint或改journal。修補版本及條件見[SQLite官方WAL說明](https://sqlite.org/wal.html)，API一致性邊界見[SQLite Backup API](https://sqlite.org/backup.html)。
+
+## 資料自主與備份
+
+原生快照＋原檔是精確回復的基礎。完整語義JSON／Markdown匯出另作可攜保障，保留富文本樹、板座標連線、Mindmap階層、標籤／屬性、PDF/媒體位置、歷史、引用及未知欄位；Markdown不能表示的部分由JSON保留。此全格式exporter尚未完成，不把既有10,362列allowlist原型稱完整遷移。
+
+OneDrive以外另留版本化備份。快照／asset沒有自動GC；以後若加入清理，必須先計所有保留分支、祖先、快照與載入中的asset引用，再處理未引用物件，不能按檔案年齡直接刪除。
