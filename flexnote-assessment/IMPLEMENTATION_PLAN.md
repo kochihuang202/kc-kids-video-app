@@ -2,6 +2,8 @@
 
 日期：2026-10-30。最新要求為保留原schema／Knex／白板、運行中按需快照及手動版本載入；不監控OneDrive上傳，交換區為snapshots/＋共用assets/。本輪已完成隔離資料安全原型，未修改原版或正式資料。
 
+Gemini第二階段審查的逐項採納／反證、補充實驗及新的階段門檻見[GEMINI_DISPOSITION.md](GEMINI_DISPOSITION.md)。目前不能確認純外部工具能要求原版全域editor flush；M2是待驗證的接入方向，不是已有可部署hook。先完成隔離啟動與一個真實editor的commit ACK，再擴大整合。
+
 | 階段 | 交付／驗收 | 現況 |
 |---|---|---|
 | M0 資料庫與程式邊界 | 9庫用途／journal／migration、編輯器延遲、Backup API、引用／附件／索引相依 | 已完成本輪唯讀與靜態調查；不是完整runtime追蹤 |
@@ -31,4 +33,4 @@
 
 ## 下一個可驗收切片
 
-先在原版的隔離測試工作區接入一個真實editor的flush/commit ACK及barrier，驗證輸入後立即Ctrl+S不丟最後文字、組字與多窗安全；再納入其他editor與內部job。資料層11項測試作保護網，既有原版核心不改。未證明這個切片前，不把timer掛到正式庫。
+先證明測試啟動不會讀寫正式profile、附件、protocol或轉送到正式instance；只加--user-data-dir不足以證明隔離。確認可信的官方入口或可維護的程式內bridge後，才在隔離副本驗一個真實editor的flush/commit ACK，核對立即觸發保存後的最後文字、延遲IPC、錯誤與IME，再逐步納入其他editor、視窗及直接Knex的內部job。不能用固定延遲、三秒quiet期或假設退出必flush替代確認。資料層11項測試作保護網；未證明此切片前，不把timer掛到正式庫。無可信bridge時，純外部方案只能標為「已提交DB版本備份」，無法完整滿足運行中保存需求。

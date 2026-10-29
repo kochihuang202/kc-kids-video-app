@@ -81,3 +81,19 @@ schema objects含tables/indexes等，與ARCHITECTURE表數不是同一指標。�
 接入一個真實editor後，立即輸入→Ctrl+S→載入副本應含最後字；中文組字中不截斷、不偽報保存。加入10分鐘／close／background/suspend請求合併與保存失敗測試。載入管理再驗真實OneDrive亂序／placeholder及受控重開。跨版本先在staging跑原版migration，舊snapshot保留，不默默降版。
 
 渲染核心未改，後續只改manifest／外部restore時重跑這些資料測試及代表性原版重開；只有renderer/read model或載入相依改變才擴大白板回歸。首次原版與還原後按同硬體、固定100/300/500混合板記錄樣本數、範圍、中位數、p95、記憶體及長時間趨勢；目前沒有可宣稱的白板效能數值。
+
+## Gemini第二階段審查核對（2026-10-30）
+
+核對基線01f4036；詳見[GEMINI_DISPOSITION.md](GEMINI_DISPOSITION.md)。既有Node suite本輪重跑11/11通過，2815.3798ms；未重跑9庫實驗或完整REA，未啟動原版、改正式資料／設定，snapshot-prototype.cjs保持不變。
+
+新增review-probes.cjs，僅對新建私人合成目錄使用隨附SQLite3.44.2，實驗全部斷言通過：
+
+| 問題 | 本輪實測 | 限制 |
+|---|---|---|
+| data_version快速判斷 | writer自己commit仍1；持續observer 1→2；每次新開reader前後皆1 | 重新連線比較可漏變更；asset-only與未dispatch的合成記憶體狀態均不反映於該值 |
+| 任意open必擋rename | Node fs.open持有時rename成功 | 不等於原版SQLite／worker的handle可安全熱換 |
+| 禁止delete-sharing的實體鎖 | load拒絕EPERM；原working存在、DB hash不變、值仍preserve-this | 已有catch有效，但未證明原版pool已關閉、斷電恢復或所有失敗路徑 |
+
+原始輸出在私人根gemini-review-probes/review-89BF8Z/report.json；既有suite新輸出在gemini-review-isolated-tests。重現probe須設定FLEXNOTE_SQLITE_BINDING及FLEXNOTE_REVIEW_OUTPUT，再執行node flexnote-assessment/review-probes.cjs。它不啟動FlexNote、不讀正式DB或設定，Windows鎖實驗只啟動隱藏的私人FileStream holder。
+
+後續新增門檻：完整啟動隔離證明→一個真實editor的flush及commit ACK→包含直接Knex writer的屏障與dirty追蹤→同一流程接Ctrl+S／10分鐘。無變更的低I/O驗收應檢查backup/hash呼叫數，不僅檢查created=false。真實OneDrive placeholder與原版重開仍是未驗風險，不能以目前11項合成測試代替。

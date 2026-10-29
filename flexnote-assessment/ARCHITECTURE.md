@@ -122,3 +122,9 @@ A、B由V1分出V2-A、V2-B時，各自UUID永不共寫，兩份均保留；使�
 保留DB讓歷史、查詢、索引與跨視窗通知沿用原路徑；新增的主要成本是flush/barrier、版本清冊、資產版本、掃描與安全載入。重建Markdown/JSON權威儲存還要替換大量直接Knex與語義，已無必要。完整Markdown＋語義JSON匯出仍保留作資料自主保障，尚未完成全格式轉換器。
 
 原版核心未公開source/build及開源license（官方README已確認）；自寫原型不重用其程式碼，正式hook接入方式與可維護授權仍需確認。此次沒有patch原版，亦不需要重寫CanvasKit或資料庫。
+
+## 第二階段審查後的整合門檻
+
+逐項處置見[GEMINI_DISPOSITION.md](GEMINI_DISPOSITION.md)。目前只有資料層安全原型，沒有原版全域flush／commit ACK。19311的host adapter與34883的元件內flush不是已驗證的對外擴充API；只攔renderer IPC也不能覆蓋79507等直接Knex writer。正式屏障須允許自己的flush批次完成，再固定DB、catalog與asset revision，避免先禁止所有寫入而與flush互相等待。
+
+純外部工具可按鍵／計時觸發已提交DB備份，但三秒無DB寫入、data_version或正常退出均不足以證明editor記憶體已保存。data_version僅能同一連線前後比較，不能每次重連後用儲存的值判斷無變更。若找不到可信的官方或程式內bridge，完整運行中保存需求仍未成立；不以固定延遲替代。
