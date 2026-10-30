@@ -73,7 +73,8 @@ test('switching cards while a real commit ACK is delayed keeps the latest editor
     await clickInstance(page,'instance-0');await page.evaluate(()=>window.__inkbridgeTest.setAckDelay(250));
     await page.getByRole('textbox',{name:'卡片富文本內容',exact:true}).fill('切換時必須保存的文字龍');
     await clickInstance(page,'instance-1');
-    await expect(page.getByLabel('編輯卡片標題',{exact:true})).toHaveValue('留一點空白');
+    // Confirmed original NoteCard uses one AST; title is derived metadata.
+    await expect(page.getByRole('textbox',{name:'卡片富文本內容',exact:true})).toContainText('留一點空白');
     await expect(page.locator('#persistence-status')).not.toContainText('Cannot read');
     const graph=await page.evaluate(()=>window.__inkbridgeTest.load());expect(graph.contents.find(c=>c.id==='content-0').body).toContain('文字龍');expect(errors).toEqual([]);
   }finally{await app.close();}

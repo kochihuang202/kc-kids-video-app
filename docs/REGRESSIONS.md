@@ -672,3 +672,33 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Reproduction: Ctrl+S/autosave/close overlap while a second dirty batch is queued. One Flush drains the new batch, but another awaiting only the first transaction returns revision 1 before revision 2 commits.
 - Fix: Serialize full Flush operations, including editor flush and draining all pending batches. A failed operation does not poison explicit retries; latest drafts still win over a failed older batch.
 - Test: `inkbridge/tests/persistence.test.mjs` gates two commit promises and requires both overlapping Flush callers stay pending until the second commit, then both return revision 2. Failed before the fix; existing failure retention, editor gate and newer-edit tests remain unchanged. Real SQLite visibility and normal-close flows are covered by desktop/database suites.
+
+## REG-081 — InkBridge drops soft breaks and blank paragraphs in display mode
+
+- Reproduction: Real `Alpha`, Shift+Enter, `Beta` saves `Alpha\nBeta` and a Lexical linebreak, but Skia draw/measurement feed `AlphaBeta`. Leading blank blocks also disappear. Both previous methods independently walked direct text children.
+- Fix: Single AST semantics, block/runs projection, and shared Skia NoteLayout for draw and measurement. Title is derived metadata, consistent with original NoteCard evidence; legacy title/body/JSON are retained through an idempotent adapter.
+- Tests: `inkbridge/tests/desktop/editor.spec.cjs` uses real Enter/Shift+Enter and verifies leading/trailing/blank blocks in actual shared Skia layout and saved AST. Failed before fix. `tests/rich-document.test.mjs` verifies lossless normalization and public Lexical serialization round trips.
+
+## REG-082 — InkBridge auto-height editor silently scrolls away long text
+
+- Reproduction: 35 real paragraphs yield scrollHeight910, clientHeight691, scrollTop219. DOM 21px line-height + 5px paragraph margin disagreed with separate Skia measurement while root height was a percentage of card height.
+- Fix: Intrinsic auto-height root with visible overflow, shared measured block typography/bounds, geometry/index/transaction updates outside rendering. Canvas wrapper is not a hidden scroll container. Unconfirmed original general caret auto-pan is explicitly an InkBridge fallback.
+- Tests: `inkbridge/tests/desktop/editor.spec.cjs` requires 35 paragraphs with zero root/wrapper scrollTop and adequate clientHeight, then deletion shrinks the card. Bold mixed text checks DOM/Skia block bounds within 2px and stable edit transitions. Original long-text test failed before fix; no claim of all-glyph pixel parity.
+
+## REG-083 — InkBridge discards the clicked character when entering an editor
+
+- Reproduction: Canvas sends only instance ID and focus() chooses a generic start/end; clicking character offset5 returns14 or0.
+- Fix: Carry client click coordinates to an owned editor session; after DOM mounts apply the actual caret DOM range to Lexical selection and retain its format/style.
+- Tests: `inkbridge/tests/desktop/editor.spec.cjs` clicks a visible, unobscured character at50/100/150%, requires offset5, types a character and verifies its exact insertion in SQLite. Test waits for actual overlay transform, not a fixed delay. Failed before fix.
+
+## REG-084 — Unknown persisted rich nodes must not turn into empty notes
+
+- Behavior: Keep complete AST/attributes in SQLite and projection; preflight unsupported node types before binding the editor root, show a clear error and preserve source. Lexical parse validation also happens before DOM binding.
+- Tests: `inkbridge/tests/desktop/editor.spec.cjs` writes a future-node fixture to its isolated SQLite through the real IPC, restarts, attempts editing, verifies original JSON byte-equivalent as structured data, and can still edit/save another note. Unknown-node support is not claimed.
+- Authorized expectation change: User asked to rebuild from Gemini PRD and confirmed original evidence on2026-10-30. The separate title-input assertion in the historical switching-card test changes to the single AST textbox content, reflecting original NoteCard rather than preserving an invented input. Other save, close, IME, geometry and failure assertions stay intact.
+
+## REG-085 — Editing note text and paper use different stacking orders
+
+- Visual reproduction: Expand the first note until it overlaps a later image card. DOM text stays above the image, while its Canvas paper remains behind the image, making the text appear over another card.
+- Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
+- Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.

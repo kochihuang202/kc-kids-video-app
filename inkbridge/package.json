@@ -1,14 +1,14 @@
 {
   "name": "inkbridge",
   "productName": "InkBridge",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "InkBridge 墨橋 — independent CanvasKit whiteboard",
   "private": true,
   "main": "src/main/main.cjs",
   "scripts": {
     "build": "node scripts/build.cjs",
     "start": "npm run build && node scripts/start.cjs",
-    "test:unit": "node --test tests/core.test.mjs tests/persistence.test.mjs tests/database.test.cjs",
+    "test:unit": "node --test tests/core.test.mjs tests/persistence.test.mjs tests/database.test.cjs tests/rich-document.test.mjs",
     "test:desktop": "npm run build && playwright test",
     "test": "npm run test:unit && npm run test:desktop",
     "package:win": "npm run build && node scripts/package.cjs",

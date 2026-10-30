@@ -1,6 +1,8 @@
 import {screenToWorld,worldToScreen,zoomAt,visibleBounds,lodFor,intersects,clamp} from './geometry.mjs';
 import {createScene} from './model.mjs';
 import {SkiaResources} from './skia-resources.mjs';
+import {NoteLayout} from './note-layout.mjs';
+import {DEFAULT_TYPOGRAPHY} from './rich-document.mjs';
 
 export class CanvasEngine {
   constructor(K,canvas,fontManager,onChange){
@@ -11,6 +13,7 @@ export class CanvasEngine {
     this.onChange=onChange;this.model=createScene();this.view={x:70,y:100,zoom:1};
     this.selectedId=null;this.editingId=null;this.tool='select';this.space=false;this.gesture=null;this.cache=new Map();
     this.resources=new SkiaResources();this.resources.own(fontManager,'FontManager');
+    this.noteLayout=new NoteLayout(this);
     this.paint=this.resources.own(new K.Paint(),'Paint');this.paint.setAntiAlias(true);this.colors=new Map();this.frame=0;
     // Experimental deferral is deliberately OFF: measured worse on the baseline machine.
     this.lastPictures=new Map();this.deferPictures=false;this.recordBudgetMs=4;this.interaction=null;
@@ -63,7 +66,7 @@ export class CanvasEngine {
     if(this.canvas.hasPointerCapture(event.pointerId))this.canvas.releasePointerCapture(event.pointerId);
     if(gesture?.kind==='drag'){
       const point=this.point(event),distance=Math.hypot(point.x-gesture.screen.x,point.y-gesture.screen.y);
-      if(distance<4)this.onEditRequest?.(gesture.id);else this.onMutation?.({kind:'move',id:gesture.id});
+      if(distance<4)this.onEditRequest?.(gesture.id,{x:event.clientX,y:event.clientY});else this.onMutation?.({kind:'move',id:gesture.id});
     }else if(gesture?.kind==='pan')this.onMutation?.({kind:'view'});
   }
   setTool(tool){this.tool=tool;this.canvas.classList.toggle('pan',tool==='pan');}
@@ -99,72 +102,11 @@ export class CanvasEngine {
       paragraph.layout(width);canvas.drawParagraph(paragraph,x,y);
     }finally{this.resources.release(paragraph);this.resources.release(builder);}
   }
-  richParagraph(canvas,content,x,y,width,maxLines,colorNormal,colorBold){
-    if(this.profile)this.profile.paragraphs++;
-    const style=new this.K.ParagraphStyle({maxLines,ellipsis:'…',textStyle:{color:colorNormal,fontSize:14,fontFamilies:this.fontFamilies,fontStyle:{weight:this.K.FontWeight?.Normal||400}}});
-    let builder,paragraph;
-    try{
-      builder=this.resources.own(this.K.ParagraphBuilder.Make(style,this.fontManager),'ParagraphBuilder');
-      const doc=content.document;
-      if(doc?.root?.children?.length){
-        let added=false;
-        for(let pIdx=0;pIdx<doc.root.children.length;pIdx++){
-          const p=doc.root.children[pIdx];
-          if(added)builder.addText('\n');
-          let lineHasText=false;
-          if(Array.isArray(p.children)){
-            for(const child of p.children){
-              if(child.type==='text'&&child.text){
-                const isBold=(child.format&1)!==0,isItalic=(child.format&2)!==0,isUnderline=(child.format&8)!==0;
-                const textStyle=new this.K.TextStyle({
-                  color:isBold?colorBold:colorNormal,fontSize:14,fontFamilies:this.fontFamilies,
-                  fontStyle:{weight:isBold?(this.K.FontWeight?.Bold||700):(this.K.FontWeight?.Normal||400),slant:isItalic?this.K.FontSlant.Italic:this.K.FontSlant.Upright},
-                  decoration:isUnderline?this.K.UnderlineDecoration:0
-                });
-                builder.pushStyle(textStyle);builder.addText(child.text);builder.pop();
-                lineHasText=true;added=true;
-              }
-            }
-          }
-          if(!lineHasText&&pIdx<doc.root.children.length-1&&added)builder.addText(' ');
-        }
-      }else{
-        builder.addText(content.body||'');
-      }
-      paragraph=this.resources.own(builder.build(),'Paragraph');
-      paragraph.layout(width);canvas.drawParagraph(paragraph,x,y);
-    }finally{this.resources.release(paragraph);this.resources.release(builder);}
+  richParagraph(canvas,content,x,y,width,maxLines){
+    return this.noteLayout.layout(content,width,{maxLines,draw:(paragraph,box)=>canvas.drawParagraph(paragraph,x,y+box.top)});
   }
-  measureText(content, width){
-    const style=new this.K.ParagraphStyle({maxLines:9999,ellipsis:'…',textStyle:{fontSize:14,fontFamilies:this.fontFamilies,fontStyle:{weight:this.K.FontWeight?.Normal||400}}});
-    let builder,paragraph;
-    try{
-      builder=this.resources.own(this.K.ParagraphBuilder.Make(style,this.fontManager),'ParagraphBuilder');
-      const doc=content.document;
-      if(doc?.root?.children?.length){
-        let added=false;
-        for(let pIdx=0;pIdx<doc.root.children.length;pIdx++){
-          const p=doc.root.children[pIdx];
-          if(added)builder.addText('\n');
-          let lineHasText=false;
-          if(Array.isArray(p.children)){
-            for(const child of p.children){
-              if(child.type==='text'&&child.text){
-                builder.addText(child.text);
-                lineHasText=true;added=true;
-              }
-            }
-          }
-          if(!lineHasText&&pIdx<doc.root.children.length-1&&added)builder.addText(' ');
-        }
-      }else{
-        builder.addText(content.body||'');
-      }
-      paragraph=this.resources.own(builder.build(),'Paragraph');
-      paragraph.layout(width);
-      return paragraph.getHeight();
-    }finally{this.resources.release(paragraph);this.resources.release(builder);}
-  }
+  measureText(content,width){return this.noteLayout.layout(content,width).height;}
+  measureNote(content,width){return this.noteLayout.bounds(content,width);}
   picture(instance,lod){
     const content=this.model.contents.get(instance.contentId),key=`${content.id}|${content.revision}|${instance.width}|${instance.height}|${lod}`;
     if(this.cache.has(key)){const item=this.cache.get(key);this.cache.delete(key);this.cache.set(key,item);this.stats.cacheHits++;return item.picture;}
@@ -189,7 +131,7 @@ export class CanvasEngine {
       this.rectangle(canvas,0,0,w,h,this.color('#fffefb'),12);
       this.rectangle(canvas,0,0,w,7,this.color(tone[0]),5);
       if(lod!=='skeleton'){
-        this.paragraph(canvas,content.title,18,21,w-36,lod==='low'?21:18,this.color('#253c32'),lod==='low'?2:1,true);
+        if(content.kind==='image'||lod==='low')this.paragraph(canvas,content.title,18,21,w-36,lod==='low'?21:18,this.color('#253c32'),lod==='low'?2:1,true);
         if(lod==='high'||lod==='medium'){
           if(content.kind==='image'){
             canvas.save();canvas.clipRRect(K.RRectXY(K.XYWHRect(18,57,w-36,78),6,6),K.ClipOp.Intersect,true);
@@ -199,9 +141,9 @@ export class CanvasEngine {
             this.paint.setColor(this.color('#fff3cf'));canvas.drawCircle(199,78,12,this.paint);
             canvas.restore();
           }else{
-            this.richParagraph(canvas, content, 18, 59, w-36, lod==='high'?9999:2, this.color('#6d786e'), this.color('#253c32'));
+            this.richParagraph(canvas,content,DEFAULT_TYPOGRAPHY.padding,DEFAULT_TYPOGRAPHY.padding+DEFAULT_TYPOGRAPHY.topPadding,w-DEFAULT_TYPOGRAPHY.padding*2,lod==='high'?9999:3);
           }
-          this.paragraph(canvas,content.kind==='image'?'CANVASKIT · VECTOR':'INKBRIDGE · NOTE',18,h-25,w-36,9.5,this.color(tone[1]),1);
+          if(content.kind==='image')this.paragraph(canvas,'CANVASKIT · VECTOR',18,h-25,w-36,9.5,this.color(tone[1]),1);
         }
       }else{
         this.rectangle(canvas,20,29,w*.65,17,this.color(tone[0]),5);
@@ -231,7 +173,10 @@ export class CanvasEngine {
     canvas.translate(this.view.x,this.view.y);canvas.scale(this.view.zoom,this.view.zoom);
     const viewport=visibleBounds(this.view,this.width,this.height,0),query=visibleBounds(this.view,this.width,this.height,80);
     const queryStarted=performance.now();
-    const instances=this.model.index.query(query).map(id=>this.model.instances.get(id)).filter(i=>i.boardId===this.model.boardId).sort((a,b)=>a.z-b.z);
+    // The DOM text of the editing note is above the canvas. Paint its paper in
+    // the same active layer, without changing the persisted document z-order.
+    const instances=this.model.index.query(query).map(id=>this.model.instances.get(id)).filter(i=>i.boardId===this.model.boardId)
+      .sort((a,b)=>Number(a.id===this.editingId)-Number(b.id===this.editingId)||a.z-b.z);
     this.profile.queryMs=performance.now()-queryStarted;
     for(const instance of instances){
       canvas.save();canvas.translate(instance.x,instance.y);

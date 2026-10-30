@@ -9,5 +9,6 @@ function scan(directory){for(const entry of fs.readdirSync(directory,{withFileTy
 scan(path.join(appRoot,'src'));
 for(const name of ['package.json','build/editor.mjs','node_modules/canvaskit-wasm/bin/full/canvaskit.wasm'])files['resources/app/'+name]=hash(path.join(appRoot,name));
 const manifest={product:build.product,version:build.version,executable:path.relative(root,build.executable).split(path.sep).join('/'),exeSha256:hash(build.executable),createdAt:build.createdAt,files};
-fs.writeFileSync(path.join(root,'docs/benchmarks/m2-build-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
+const filename=build.version==='0.2.0'?'m2-build-manifest.json':`build-${build.version}-manifest.json`;
+fs.writeFileSync(path.join(root,'docs/benchmarks',filename),JSON.stringify(manifest,null,2)+'\n');
 console.log(JSON.stringify({executable:manifest.executable,exeSha256:manifest.exeSha256,components:Object.keys(files).length}));

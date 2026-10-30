@@ -8,7 +8,7 @@
 <body>
   <header class="topbar">
     <div class="brand"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M5 28V16M31 28V16M5 23C10 6 26 6 31 23M12 15v13M24 15v13M4 28h28"/></svg><span>InkBridge<small>墨橋</small></span></div>
-    <div class="breadcrumb">我的工作空間<span>/</span><strong>靈感白板</strong><span class="version">M2</span></div>
+    <div class="breadcrumb">我的工作空間<span>/</span><strong>靈感白板</strong><span class="version">0.3</span></div>
     <button id="save-workspace" title="Ctrl+S 保存到本機 SQLite">保存</button>
     <button id="add-card" class="primary"><span>＋</span> 新增卡片</button>
   </header>
@@ -33,7 +33,6 @@
             <button id="editor-undo" aria-label="復原" title="復原 (Ctrl+Z)">↶</button>
             <button id="editor-redo" aria-label="重做" title="重做 (Ctrl+Y)">↷</button>
           </div>
-          <input id="editor-title" aria-label="編輯卡片標題" maxlength="120" placeholder="卡片標題">
           <div id="rich-editor" role="textbox" aria-label="卡片富文本內容" aria-multiline="true" contenteditable="true"></div>
         </div>
         <div class="tools" aria-label="白板工具"><button id="select-tool" class="active" title="選取卡片" aria-label="選取工具">↖</button><button id="pan-tool" title="平移白板" aria-label="平移工具">✥</button><div></div><button id="fit" title="顯示所有卡片" aria-label="顯示全部">⛶</button></div>
