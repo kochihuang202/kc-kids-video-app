@@ -42,7 +42,8 @@ test('500-card culling, LOD and repeatable real frame measurements',async()=>{
   await expect.poll(async()=>(await inspect()).stats.lod).toBe('skeleton');
   await page.locator('#zoom-reset').click();
   const report=await page.evaluate(()=>window.__inkbridgeTest.runBenchmark(60));expect(report.results).toHaveLength(36);
-  for(const result of report.results){expect(result.cpuSubmitMs.samples).toBe(60);expect(result.frameIntervalMs.p95).toBeGreaterThan(0);expect(result.cacheSize).toBeLessThanOrEqual(256);}
+  // M2's measured dense working set requires a larger, still bounded cache.
+  for(const result of report.results){expect(result.cpuSubmitMs.samples).toBe(60);expect(result.frameIntervalMs.p95).toBeGreaterThan(0);expect(result.cacheSize).toBeLessThanOrEqual(1024);}
   const artifacts=path.resolve(__dirname,'../../artifacts');await fs.mkdir(artifacts,{recursive:true});
   await fs.writeFile(path.join(artifacts,'benchmark.json'),JSON.stringify(report,null,2));
   await page.getByRole('button',{name:'示範',exact:true}).click();await page.locator('summary').click();await page.getByRole('button',{name:'顯示全部'}).click();

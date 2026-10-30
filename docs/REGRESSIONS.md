@@ -625,9 +625,50 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Root cause: The download catalogue, category API caches and per-video snapshots duplicated complete metadata. Page loading wrote more optional snapshots before saving the critical catalogue; a catalogue quota exception aborted the page before `setSeries`/`setDevice`. The estimate for OPFS downloads did not cover this separate text-storage failure. The browser repro confirms this code path; it does not by itself establish the original physical phone's storage distribution or an iOS-version-specific defect.
 - Regression tests: `e2e/regressions/download-catalogue-quota.spec.ts` runs actual download → leave → real localStorage pressure → tap tab → preserved completion/preferences/view outbox → offline category/lesson → advancing local playback without another media fetch; the second flow injects a persistent catalogue-write quota error, verifies a usable list, stage-specific diagnostic evidence and explicit deletion. Both page assertions failed before the fix. `test/diagnostics.spec.ts` REG-071 verifies real Worker ingestion, replay, exact storage-detail export, error outcome and no new watch history. Historical download/thumbnail/offline/playback assertions remain unchanged. Physical iPhone retest remains required.
 
-## REG-072 — InkBridge marks its blank CanvasKit board ready before its first frame succeeds
+## REG-073 — InkBridge marks its blank CanvasKit board ready before its first frame succeeds
 
 - Scope: `inkbridge/src/core/canvas-engine.mjs`, `inkbridge/src/renderer/app.mjs`.
 - Reproduction: Start independent InkBridge M1 with CanvasKit 0.42.0. The WebGL surface exists but passing an unnormalized paragraph style throws `Missing field: disableHinting`; the loading message disappears and no cards render.
 - Correct behavior: Normalize styles with CanvasKit's public `ParagraphStyle` constructor and finish one real frame before hiding the loading state or reporting readiness. Rendering failure stays visible; an empty canvas is not a successful startup.
 - Tests: `inkbridge/tests/desktop/whiteboard.spec.cjs` launches the actual Electron app, requires a nonzero visible-card count, adds a Chinese card, drags/pans/zooms, exercises LOD and performs the 500-card scene. These tests failed before the initialization fix. Packaged-executable checks reuse the same startup and interaction flows.
+
+## REG-074 — InkBridge Lexical JSON cannot commit and blocks normal close
+
+- Reproduction: Edit Chinese rich text in public Lexical 0.53.0, save or close. Native dialog reports `Invalid JSON value` and keeps the window open. `EditorState.toJSON()` can contain optional undefined `root.textFormat` / `root.textStyle`; structured cloning preserves them and strict DB validation rejects them.
+- Fix: Standard JSON serialization at the editor boundary omits optional undefined properties; SQLite validation stays strict. Save success still requires a real COMMIT ACK.
+- Tests: `inkbridge/tests/persistence.test.mjs` uses actual public Lexical, retains Chinese and bold formatting, and validates JSON normalization. `tests/desktop/persistence.spec.cjs` types the last character, saves, reads SQLite independently, appends more text, normally closes and restarts with full JSON/styles retained. Chromium IME composition blocks ACK until committed; physical Windows IME remains unverified.
+
+## REG-075 — InkBridge Skia exception, resize and dispose ownership gaps
+
+- Fix: Explicit owned GrDirectContext/Surface lifecycle, finally-release paragraph/builder/recorder, bounded picture LRU, idempotent dispose. Borrowed Canvas is not deleted.
+- Tests: `inkbridge/tests/desktop/resources.spec.cjs` injects layout failure, compares live resources, resizes 16 times, checks one context, disposes twice and requires all owned counts/GL contexts zero. Bounded long-operation memory samples are separate evidence, not proof of no possible leak.
+
+## REG-076 — Dense InkBridge scene thrashes the per-card picture cache
+
+- Reproduction: 500 dense cards at 50% expose more than 256 visible pictures. Original LRU records 9,600 pictures in 30 selection frames; single-card drag also needlessly rebuilds paragraphs.
+- Fix: Bound cache at 1024 for the supported 500-card / two-LOD working set; retain eviction and explicit delete. M1 historical capacity expectation intentionally changes; no functional test is removed.
+- Tests: `inkbridge/tests/desktop/resources.spec.cjs` warms dense scenes and requires zero picture misses/paragraph builds during selection and drag. Compare raw pre/post timing reports; continuous zoom still has measurable frame spikes.
+
+## REG-077 — InkBridge asynchronous editor close races with opening another card
+
+- Reproduction: Delay delivery of a real commit ACK, click another card while pointerdown and edit-request both close the old editor. Repeated dispose/null access loses the requested editor.
+- Fix: Share the current close Promise and use an edit sequence to discard stale open requests; preserve latest drafts.
+- Test: `inkbridge/tests/desktop/persistence.spec.cjs` delays ACK after real SQLite commit and verifies old text persisted, correct new editor, and no page error. The test failed before the fix.
+
+## REG-078 — InkBridge draw changes card geometry without persisting or updating its index
+
+- Reproduction: Create a 40-line text card; render auto-height changes it from 178 to 854 while SQLite remains 178. The same object is then compared to itself, skipping index update/resize notification. LOD/cache recording also changes varied-size benchmark geometry.
+- Fix: Measure and stage geometry explicitly during create/edit together with index updates; picture recording never mutates document geometry. Preserve the user's existing databases and original FlexNote.
+- Tests: `inkbridge/tests/desktop/persistence.spec.cjs` failed on 178 vs 854 before the fix, then passes Canvas/SQLite/restart equality across zoom changes. `resources.spec.cjs` also checks dense/varied-size benchmark geometry stays unchanged.
+
+## REG-079 — InkBridge close timeout leaves a stale closing state
+
+- Reproduction: A real commit ACK arrives after the main-process close deadline. The native error keeps the window open, but renderer still has the old close attempt and may reject subsequent editing/saving.
+- Fix: Main sends an explicit cancellation with request ID; renderer restores editing and drops late replies belonging to the cancelled close. Production timeout remains 10 seconds; the isolated failure test shortens it without changing ACK semantics.
+- Test: `inkbridge/tests/desktop/persistence.spec.cjs` delays a real ACK, observes the timeout, edits/saves new text and requires the window still open after the late old ACK. It failed before the fix. Only the error-dialog presentation is stubbed in this fixture; SQLite and lifecycle messages remain real.
+
+## REG-080 — Concurrent InkBridge Flush callers return an older Commit ACK
+
+- Reproduction: Ctrl+S/autosave/close overlap while a second dirty batch is queued. One Flush drains the new batch, but another awaiting only the first transaction returns revision 1 before revision 2 commits.
+- Fix: Serialize full Flush operations, including editor flush and draining all pending batches. A failed operation does not poison explicit retries; latest drafts still win over a failed older batch.
+- Test: `inkbridge/tests/persistence.test.mjs` gates two commit promises and requires both overlapping Flush callers stay pending until the second commit, then both return revision 2. Failed before the fix; existing failure retention, editor gate and newer-edit tests remain unchanged. Real SQLite visibility and normal-close flows are covered by desktop/database suites.

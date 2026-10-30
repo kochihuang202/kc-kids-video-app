@@ -5,7 +5,7 @@ export function distribution(values){const sorted=[...values].sort((a,b)=>a-b);c
 export async function acceptanceLab(engine,{samples=90,counts=[100,300,500],scales=[.2,.5,1],sizes=['uniform'],actions=['pan','zoom','select','drag']}={}){
   const saved={model:engine.model,view:{...engine.view},selectedId:engine.selectedId};
   const report={time:new Date().toISOString(),kind:'real Electron RAF + instrumented draw; not GPU completion',results:[]};
-  const runtime=await window.inkbridge.info();report.hardware=runtime.hardware;report.webgl=engine.webgl;
+  const runtime=await window.inkbridge.info();report.version=runtime.version;report.runtime=runtime.versions;report.hardware=runtime.hardware;report.webgl=engine.webgl;
   engine.benchmarking=true;if(engine.frame){cancelAnimationFrame(engine.frame);engine.frame=0;}
   try{
     for(const count of counts)for(const size of sizes)for(const scale of scales){
@@ -16,6 +16,7 @@ export async function acceptanceLab(engine,{samples=90,counts=[100,300,500],scal
       if(size==='dense')for(const [n,item]of [...model.instances.values()].entries()){
         Object.assign(item,{x:(n%20)*120,y:Math.floor(n/20)*90});model.index.upsert(item);
       }
+      const geometry=new Map([...model.instances].map(([id,item])=>[id,{width:item.width,height:item.height}]));
       engine.setScene(model);engine.view={x:60,y:80,zoom:scale};
       for(let n=0;n<15;n++){await frame();engine.draw();}
       for(const action of actions){
@@ -36,7 +37,8 @@ export async function acceptanceLab(engine,{samples=90,counts=[100,300,500],scal
         const after=await window.inkbridge.info();report.results.push({count,size,scale,action,cpu:distribution(cpu),frame:distribution(interval),
           query:distribution(query),record:distribution(record),flush:distribution(flush),paragraphs:paragraphs.reduce((a,b)=>a+b,0),misses:misses.reduce((a,b)=>a+b,0),
           settle:distribution(settle),fps:1000/(interval.reduce((a,b)=>a+b,0)/interval.length),memory:after.memory,cpuUsage:after.cpu,
-          memoryBefore:before.memory,visible:engine.stats.visible,cacheSize:engine.cache.size,raw:{cpu,interval,query,record,flush,paragraphs,misses}});
+          memoryBefore:before.memory,visible:engine.stats.visible,cacheSize:engine.cache.size,
+          geometryChanged:[...model.instances].some(([id,item])=>item.width!==geometry.get(id).width||item.height!==geometry.get(id).height),raw:{cpu,interval,query,record,flush,paragraphs,misses}});
         engine.view=base;model.move(item.id,initial.x,initial.y);
       }
     }

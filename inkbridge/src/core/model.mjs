@@ -32,3 +32,9 @@ export function createScene(count=6){
   }
   return model;
 }
+export function modelFromGraph(graph){
+  const model=new BoardModel();model.boardId=graph.boards[0]?.id||'board-main';
+  for(const content of graph.contents)model.contents.set(content.id,{...content});
+  for(const instance of graph.instances){model.instances.set(instance.id,{...instance});model.index.upsert(instance);}
+  model.revision=graph.revision;return model;
+}

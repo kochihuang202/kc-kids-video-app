@@ -2,13 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
-  <title>InkBridge 墨橋</title><link rel="stylesheet" href="styles.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+  <title>InkBridge 墨橋</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="editor.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M5 28V16M31 28V16M5 23C10 6 26 6 31 23M12 15v13M24 15v13M4 28h28"/></svg><span>InkBridge<small>墨橋</small></span></div>
-    <div class="breadcrumb">我的工作空間<span>/</span><strong>靈感白板</strong><span class="version">M1</span></div>
+    <div class="breadcrumb">我的工作空間<span>/</span><strong>靈感白板</strong><span class="version">M2</span></div>
+    <button id="save-workspace" title="Ctrl+S 保存到本機 SQLite">保存</button>
     <button id="add-card" class="primary"><span>＋</span> 新增卡片</button>
   </header>
   <div class="layout">
@@ -16,21 +17,34 @@
       <div class="workspace-icon">墨</div><h1>想法，在這裡相遇</h1><p class="aside-description">給尚未成形的靈感，<br>一個可以自由延伸的地方。</p>
       <div class="section-label">白板</div><div class="board-link"><span>▦</span> 靈感白板 <b id="sidebar-count">6</b></div>
       <div class="section-label inspector-label">卡片</div><div id="inspector" class="inspector">選取卡片，查看位置。</div>
-      <div class="sidebar-bottom"><span class="status-dot"></span> 獨立開發版本 <p>M1 · 本次內容暫存在記憶體<br>關閉後不會保留。</p></div>
+      <div class="sidebar-bottom"><span class="status-dot"></span> InkBridge SQLite <p id="persistence-status">正在載入…</p></div>
     </aside>
     <main class="board-area">
       <div class="board-heading"><div><span class="eyebrow">YOUR SPACE TO THINK</span><h2>靈感白板<span>無限延伸，從一張卡片開始。</span></h2></div><div class="engine-label"><i></i> CanvasKit / WebGL</div></div>
       <div class="canvas-wrap">
         <canvas id="board" tabindex="0" aria-label="無限白板：新增、選取、拖曳卡片，空格拖曳平移，滾輪縮放"></canvas>
         <div id="loading" role="status">正在準備白板…</div>
+        <div id="card-editor" class="card-editor" hidden>
+          <div class="editor-toolbar">
+            <button id="format-bold" aria-label="粗體" title="粗體 (Ctrl+B)"><b>B</b></button>
+            <button id="format-italic" aria-label="斜體" title="斜體 (Ctrl+I)"><i>I</i></button>
+            <button id="format-underline" aria-label="底線" title="底線 (Ctrl+U)"><u>U</u></button>
+            <div class="toolbar-divider"></div>
+            <button id="editor-undo" aria-label="復原" title="復原 (Ctrl+Z)">↶</button>
+            <button id="editor-redo" aria-label="重做" title="重做 (Ctrl+Y)">↷</button>
+          </div>
+          <input id="editor-title" aria-label="編輯卡片標題" maxlength="120" placeholder="卡片標題">
+          <div id="rich-editor" role="textbox" aria-label="卡片富文本內容" aria-multiline="true" contenteditable="true"></div>
+        </div>
         <div class="tools" aria-label="白板工具"><button id="select-tool" class="active" title="選取卡片" aria-label="選取工具">↖</button><button id="pan-tool" title="平移白板" aria-label="平移工具">✥</button><div></div><button id="fit" title="顯示所有卡片" aria-label="顯示全部">⛶</button></div>
         <div class="canvas-help">雙擊新增 <span>·</span> 空格＋拖曳平移 <span>·</span> 滾輪縮放</div>
         <div class="zoom-controls"><button id="zoom-out" aria-label="縮小">−</button><button id="zoom-reset" title="回到 100%">100%</button><button id="zoom-in" aria-label="放大">＋</button></div>
       </div>
+      <div id="scratch-notice" hidden>效能測試場景，不寫入筆記資料庫。 <button id="return-workspace">回到我的白板</button></div>
       <footer class="statusbar"><div><b id="card-count">6</b> 張卡片 <span>·</span> <b id="visible-count">0</b> 張可見 <span>·</span> <span id="lod">high</span></div><div id="render-stat">等待第一幀</div></footer>
     </main>
   </div>
   <details class="performance-panel"><summary>效能實驗室 <span>↗</span></summary><div class="performance-content"><p>測試場景 · 文字與程序化圖形</p><div class="scene-buttons"><button data-scene="100">100 張</button><button data-scene="300">300 張</button><button data-scene="500">500 張</button><button data-scene="6">示範</button></div><button id="benchmark" class="benchmark-button">執行可重複測試</button><div id="benchmark-status" role="status">100／300／500 張 × 3 種縮放 × 4 種操作</div><button id="download-report" hidden>匯出測試 JSON</button></div></details>
   <dialog id="new-card-dialog"><form id="new-card-form"><span class="eyebrow">A NEW THOUGHT</span><h2>新增一張卡片</h2><label for="card-title">標題</label><input id="card-title" name="title" maxlength="120" required placeholder="你正在想什麼？"><label for="card-body">內容</label><textarea id="card-body" name="body" rows="4" maxlength="2000" placeholder="先記下一點想法…"></textarea><div class="dialog-actions"><button type="button" id="cancel-card">取消</button><button type="submit" class="primary">放上白板</button></div></form></dialog>
-  <script src="vendor/canvaskit.js"></script><script type="module" src="app.mjs"></script>
+  <script src="vendor/canvaskit.js"></script><script type="module" src="workspace.mjs"></script>
 </body></html>

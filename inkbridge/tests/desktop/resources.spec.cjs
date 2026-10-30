@@ -13,3 +13,14 @@ test('Skia exception paths, repeated resizes and dispose release owned WASM reso
     expect(await page.evaluate(()=>window.__inkbridgeTest.dispose())).toEqual(disposed);
   }finally{await app.close();}
 });
+test('dense visible working set does not record every card again on selection or single-card drag',async()=>{
+  const env={...process.env,INKBRIDGE_TEST:'1',INKBRIDGE_TEST_DATA:await fs.mkdtemp(path.join(require('node:os').tmpdir(),'inkbridge-dense-'))};delete env.ELECTRON_RUN_AS_NODE;
+  const app=await _electron.launch({args:[path.resolve(__dirname,'../..')],executablePath:require('electron'),env});
+  try{
+    const page=await app.firstWindow();await page.waitForFunction(()=>window.__inkbridgeTest?.ready);
+    const report=await page.evaluate(()=>window.__inkbridgeTest.lab({counts:[500],sizes:['dense'],scales:[.5],samples:30,actions:['select','drag']}));
+    for(const row of report.results){expect(row.visible).toBeGreaterThan(256);expect(row.misses).toBe(0);expect(row.paragraphs).toBe(0);expect(row.geometryChanged).toBe(false);}
+    const varied=await page.evaluate(()=>window.__inkbridgeTest.lab({counts:[100],sizes:['varied'],scales:[1],samples:3,actions:['select']}));
+    expect(varied.results[0].geometryChanged).toBe(false);
+  }finally{await app.close();}
+});

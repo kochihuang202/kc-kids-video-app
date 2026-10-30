@@ -1,0 +1,31 @@
+{
+  "product": "InkBridge",
+  "version": "0.2.0",
+  "executable": "release/0.2.0-07d70c58/InkBridge-win32-x64/InkBridge.exe",
+  "exeSha256": "2aac4a38149dfaaf422bb7f85724ed51d18f9c8506184b4ef1bdbea5f47149ea",
+  "createdAt": "2026-10-30T04:30:26.055Z",
+  "files": {
+    "resources/app/src/core/acceptance-lab.mjs": "a9d5bc8dd94cee856b0b1cfb624631ecbb712116449ba9b28e8d0c507b7839dc",
+    "resources/app/src/core/benchmark.mjs": "628c997e837cebe565b725d63f2782c3a169cb5ed8549f0f372217a1e80711fe",
+    "resources/app/src/core/canvas-engine.mjs": "d95b9d37c71290326fcca11ec4c675fc6db72a7febb5cb41a4997aca60ea381d",
+    "resources/app/src/core/editor-state.mjs": "a553ffd98bdbf878dd6d7140930a7f6a49e058be952cb31c1ef295d5158041ac",
+    "resources/app/src/core/geometry.mjs": "c0e4f5f849c49ad8e13b538d02d5ec7a98e6f27651f932830032f0641d39bee2",
+    "resources/app/src/core/model.mjs": "3fb0f734a0a4e33f2cfff0410c44f5f4c313764851383e8151fa2d553a7eed58",
+    "resources/app/src/core/persistence-coordinator.mjs": "0e4e8a0bab402b03fabfe4af943648ca859b9d54db44b76bc7e0468abc8665fd",
+    "resources/app/src/core/skia-resources.mjs": "bfc91aa65fd431568acc3fa42f040ed6ba73ee889783ec1cb8b167da7b9a8855",
+    "resources/app/src/core/spatial-index.mjs": "e455131d759d71d3b260ff75a7f700d385bec5acc7896e68bef84480365e8425",
+    "resources/app/src/editor/lexical-editor.mjs": "32656a3aefe0f179f226af2b55591266a414c812169bf75821cb1967a55367c3",
+    "resources/app/src/main/database-client.cjs": "81375a7ed7e2003320bb3ce0b2588ae43417b47ff3ce8c048a29c661cde11970",
+    "resources/app/src/main/database-worker.cjs": "6559a6506c98c52b13fcd5cf46b5f607206caace84d5b2c5d538f6e761799573",
+    "resources/app/src/main/database.cjs": "2c50175196f7f358d9b7969a0019d89d9ea68f3e3ed84a5ab9193c4d252bf928",
+    "resources/app/src/main/main.cjs": "263f9b654f629f6204c08dcb0b3ea66334d5bdf4eb10307750d89f3d2a679b7e",
+    "resources/app/src/main/preload.cjs": "7197b26c8449b4f5c7b7ef9b7335574eafe57b78a4a431ac35401b268af5aca7",
+    "resources/app/src/renderer/editor.css": "c87937506154fa940d5c7c4920cf45351b9579aa2766585d4bb33595c9e3774c",
+    "resources/app/src/renderer/index.html": "884ca0137f1547d2ad3fa56c3a6f8ac89d2b0cce9c8a2c318784228a65378639",
+    "resources/app/src/renderer/styles.css": "3f5e899fb439bd45c802f7707ad7be5af7d27600c90d9b02ced56ffdc298e591",
+    "resources/app/src/renderer/workspace.mjs": "51a7a782d711762d046aeb3819f16d66f88433100bbfeff32dcfe29b63448510",
+    "resources/app/package.json": "d3731c864c34629071cca36dfc746ca7d4b56034faaa09c44f78c594bfa53af9",
+    "resources/app/build/editor.mjs": "a48c136996b1313ec509e666cdb2d6a964f9006bc85f2d3ec1fc9d78c186ae03",
+    "resources/app/node_modules/canvaskit-wasm/bin/full/canvaskit.wasm": "aca7fa6019f95d3de98d4a49ae60a3d66a09e9d5ca74091fbc369b9be959f959"
+  }
+}

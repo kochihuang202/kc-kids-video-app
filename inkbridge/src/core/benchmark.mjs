@@ -28,7 +28,7 @@ export async function runBenchmark(engine,progress=()=>{},samples=60){
         engine.view=base;engine.model.move(item.id,initial.x,initial.y);
       }
     }
-    return {product:'InkBridge',version:'0.1.0',date:new Date().toISOString(),backend:engine.stats.backend,
+    return {product:'InkBridge',version:runtime.version,date:new Date().toISOString(),backend:engine.stats.backend,
       scene:'deterministic text and procedural vector cards; no imported image/PDF',sampleType:'requestAnimationFrame interval and CPU+submission; not GPU completion',
       environment:{hardware:runtime.hardware,gpuFeatures:runtime.gpu,gpuInfo:runtime.gpuInfo,webgl:engine.webgl,electron:runtime.versions.electron,chromium:runtime.versions.chrome,fontFamily:engine.family,memoryUnit:'KiB; Electron app metrics, not only JS heap'},results};
   }finally{engine.setScene(saved.model);engine.view=saved.view;engine.selectedId=saved.selectedId;engine.benchmarking=false;engine.invalidate();}
