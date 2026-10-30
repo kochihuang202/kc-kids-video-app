@@ -21,7 +21,7 @@
 
 桌面驗證由 Playwright 操作真正的 Windows Electron 視窗，不是 browser mock。開發版及成品測試 profile 都不使用 FlexNote 路徑。Renderer 沒有 `require`，開啟 context isolation 與 sandbox；主程序只提供限定資源 protocol 與診斷 IPC，沒有 OS 預設協定註冊或自動更新。
 
-首次實測發現 CanvasKit 0.42 段落樣式未經公開 constructor 正規化會拋錯，造成空白畫面；已修正並要求完成首幀才回報 ready，登錄 REG-072。沒有跳過或刪除失敗斷言。
+首次實測發現 CanvasKit 0.42 段落樣式未經公開 constructor 正規化會拋錯，造成空白畫面；已修正並要求完成首幀才回報 ready，登錄 REG-073（M2 整理時修正與其他專案重複的 REG-072 編號）。沒有跳過或刪除失敗斷言。
 
 ## 首次可重複效能基準
 

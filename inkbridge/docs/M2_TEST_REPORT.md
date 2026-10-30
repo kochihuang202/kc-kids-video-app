@@ -18,9 +18,11 @@
 | Electron 桌面 | **12/12 通過**（約 1.1 分鐘） | 新增／選取／拖曳／平移／縮放；文字格式／Undo/Redo；最後中文字符 Ctrl+S；獨立 SQLite reader；正常關閉補存／重開；組字等待；scratch 隔離；快切卡；50/100/150% overlay 邊界；長卡片；逾時恢復；Skia 例外／resize／dispose；36 組 benchmark |
 | 新封裝 EXE | **9/9 通過**（18.2s） | 直接啟動上列 EXE，重用啟動／建立拖曳與 7 個 M2 流程，沒有用開發版替代成品驗收 |
 | 最新效能矩陣 | **108 組完成**，各 90 幀，另 8 組各 180 幀重測 | 真實 RAF / drawing CPU／query／record／flush，100/300/500、uniform/varied/dense、不同縮放和四種操作；不是 GPU 完成或輸入延遲 |
-| 最新 10 分鐘 soak | 執行中；完成後補記 raw 結果 | 不將舊測試或進行中樣本冒充最新版完成結果 |
+| 最新 10 分鐘 soak | **600.706 秒完成，33 次取樣** | 500 卡循環 varied/dense / 平移縮放選取拖曳；renderer private 245.07–254.79 MiB（first 254.30 / last 247.63），WASM capacity 固定 128MiB；82,275 pictures 與 114,164 paragraph/builder 均對應釋放，dispose 後 live={} / GL=0 / errors=[] |
 
 桌面與封裝測試都是 InkBridge 自己的實際 Electron renderer＋IPC＋worker＋SQLite。只有 timeout fixture 用可控 ACK 延遲及較短失敗 deadline，且 stub native error-dialog 的呈現，交易仍真實完成；不是用固定等待當保存成功。
+
+最新版 soak 原始樣本見 [m2-final-soak.json](benchmarks/m1-integration/m2-final-soak.json)，與 M1 舊 soak 分開保留。這輪未見持續 memory 增長，不能推論所有情境零洩漏；沒有做過夜、真實大量附件或持續 IME 編輯耐久測試。
 
 ## 實際修正與防回歸
 

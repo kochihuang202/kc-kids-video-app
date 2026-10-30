@@ -4,3 +4,11 @@ snapshot*
 !snapshot-prototype.cjs
 !snapshot-prototype.test.cjs
 restored*
+
+# Private original-code REA excerpts: keep locally; do not publish with InkBridge.
+GEMINI_CROSSCHECK.md
+GEMINI_INDEPENDENT_REA.md
+GEMINI_INKBRIDGE_REVIEW.md
+GEMINI_M1_DELTA.md
+GEMINI_M2_REA.md
+M2_HANDOFF_GEMINI.md

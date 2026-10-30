@@ -53,7 +53,7 @@ Varied/dense 72 組每組完整 p95/p99/CPU/memory 均在 raw 檔。所有組 `g
 
 舊 `soak-cache1024.json` 跑 615.956 秒、34 樣本：renderer private 209.06–214.42 MiB，first 211.32 / last 210.83，WASM capacity 128MiB；84,768 pictures、117,623 paragraph/builder 均已對應 delete，GL=0。這是 Gemini 後續富文本／多字型變更前的測量，**不冒充最新版 soak**。
 
-最新版另以 `m2-final-soak.json` 記錄；結果見 [M2_TEST_REPORT.md](M2_TEST_REPORT.md)。每輪量測 pre-GC/private bytes、明確 CDP GC 後 JS heap、owned ledger、GPU cache、WASM capacity。GC 用來觀察 retained memory，不代表真實使用時自動 GC 的時機；10 分鐘有界測試不是所有記憶體洩漏的證明，也不是過夜耐久驗收。
+最新版 `m2-final-soak.json` 跑 600.706 秒、33 樣本：renderer private 245.07–254.79 MiB，first 254.30 / last 247.63；WASM capacity 128MiB；82,275 pictures、114,164 paragraph/builder 均對應 delete，dispose 後 owned={} / GL=0 / errors=[]。每輪量測 pre-GC/private bytes、明確 CDP GC 後 JS heap、owned ledger、GPU cache、WASM capacity。GC 用來觀察 retained memory，不代表真實使用時自動 GC 的時機；10 分鐘有界測試不是所有記憶體洩漏的證明，也不是過夜耐久驗收。
 
 ## 未取得的對照
 
