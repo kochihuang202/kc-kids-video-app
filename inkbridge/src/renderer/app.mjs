@@ -2,6 +2,7 @@ import {CanvasEngine} from '../core/canvas-engine.mjs';
 import {createScene} from '../core/model.mjs';
 import {zoomAt,screenToWorld} from '../core/geometry.mjs';
 import {runBenchmark} from '../core/benchmark.mjs';
+import {acceptanceLab} from '../core/acceptance-lab.mjs';
 const $=selector=>document.querySelector(selector);
 let engine,report,addPoint=null,lastStatus=0;
 function update(snapshot){
@@ -38,7 +39,11 @@ async function initialize(){
     finally{for(const button of document.querySelectorAll('button'))button.disabled=false;}
   });
   $('#download-report').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='inkbridge-benchmark.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
-  if(info.isTest)window.__inkbridgeTest={inspect:()=>engine.inspect(),runBenchmark:(samples)=>runBenchmark(engine,()=>{},samples),getReport:()=>report,info,ready:true};
+  if(info.isTest)window.__inkbridgeTest={inspect:()=>engine.inspect(),runBenchmark:(samples)=>runBenchmark(engine,()=>{},samples),lab:options=>acceptanceLab(engine,options),
+    resources:()=>engine.resourceState(),dispose:()=>engine.dispose(),setDefer:enabled=>{engine.deferPictures=enabled;},
+    probeFailure:()=>{const item=engine.model.instances.values().next().value,content=engine.model.contents.get(item.contentId),before=engine.resourceState(),policy=engine.deferPictures;content.revision++;engine.failNextLayout=true;engine.deferPictures=false;let error;
+      try{engine.picture(item,'high');}catch(e){error=e.message;}finally{content.revision--;engine.failNextLayout=false;engine.deferPictures=policy;}
+      return {before,after:engine.resourceState(),error};},getReport:()=>report,info,ready:true};
   window.addEventListener('beforeunload',()=>engine.dispose(),{once:true});
 }
 function openCard(point=null){addPoint=point;$('#new-card-form').reset();$('#new-card-dialog').showModal();$('#card-title').focus();}

@@ -39,9 +39,10 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     const os=require('node:os');
     ipcMain.handle('inkbridge:info',async event=>{
       if(!event.senderFrame.url.startsWith('inkbridge://app/'))throw Error('Unexpected sender');
+      const metrics=app.getAppMetrics();
       return {product:'InkBridge',version:app.getVersion(),isTest,dataRoot,versions:process.versions,gpu:app.getGPUFeatureStatus(),gpuInfo:await app.getGPUInfo('basic'),
         hardware:{cpu:os.cpus()[0]?.model,logicalCpus:os.cpus().length,totalMemoryMiB:Math.round(os.totalmem()/1048576),osRelease:os.release(),arch:os.arch()},
-        memory:app.getAppMetrics().map(p=>({type:p.type,...p.memory}))};
+        memory:metrics.map(p=>({type:p.type,...p.memory})),cpu:metrics.map(p=>({type:p.type,...p.cpu}))};
     });
     window=new BrowserWindow({width:1440,height:960,minWidth:960,minHeight:640,title:'InkBridge 墨橋',backgroundColor:'#f4f3ee',autoHideMenuBar:true,
       webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
