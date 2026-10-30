@@ -1,5 +1,7 @@
 # 保留原庫的版本化快照架構與最小原型
 
+> 2026-10-30 方向修正：本文保留作 FlexNote 技術研究與原型紀錄。InkBridge 已改為獨立原始碼專案，不以修改／啟動 FlexNote 或沿用其 schema 為前提；現行實作與里程碑見 [InkBridge](../inkbridge/README.md)。
+
 日期：2026-10-30。本版依最新要求取代「只在退出後快照」與「每代重複附件」提案。保留FlexNote原schema、Knex及CanvasKit；OneDrive只作檔案運送，不追蹤上傳進度。本輪只讀調查及隔離原型，沒有修改原版程式、設定或正式資料。
 
 ## 結論與完成界線

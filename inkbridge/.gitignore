@@ -1,0 +1,16 @@
+private*/
+build*/
+__pycache__/
+*.log
+*.node
+*.exe
+*.dll
+*.asar
+*.sqlite3*
+*.db*
+node_modules/
+release/
+test-results/
+playwright-report/
+artifacts/
+.inkbridge-dev/

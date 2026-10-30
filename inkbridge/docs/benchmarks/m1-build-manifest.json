@@ -1,0 +1,20 @@
+{
+  "product": "InkBridge",
+  "version": "0.1.0",
+  "executable": "release/0.1.0-ca73ff22/InkBridge-win32-x64/InkBridge.exe",
+  "exeSha256": "23ca234e14961d418b3e78833189c13604e4373a272ad4d06ef9188f3db1267c",
+  "files": {
+    "resources/app/src/core/benchmark.mjs": "cda414d6d12ec8277d6ec50ec1a2cf01060285cd9c1a0027ae4828615b1f2db8",
+    "resources/app/src/core/canvas-engine.mjs": "c592bf27d28b426c7bb2ffdbc9c6d090d82446754dda4aff9c9a0ee0ee25c9b7",
+    "resources/app/src/core/geometry.mjs": "c0e4f5f849c49ad8e13b538d02d5ec7a98e6f27651f932830032f0641d39bee2",
+    "resources/app/src/core/model.mjs": "a29cc00e685bb596aba973b3567e1e1af574ee805aeee172cf4fa7ced11979f7",
+    "resources/app/src/core/spatial-index.mjs": "e455131d759d71d3b260ff75a7f700d385bec5acc7896e68bef84480365e8425",
+    "resources/app/src/main/main.cjs": "f48664729de3b55a7e6e6c0feb800eb83258672857132e5b659b9914e0c416cf",
+    "resources/app/src/main/preload.cjs": "d45654bc5c1ba7541fdaffff00c55a7c9e8ceff62a93136ea99a278f3be091d2",
+    "resources/app/src/renderer/app.mjs": "6672fde6089425286b67aa4a85a1d138acf079b0da501c34af7cb7bb9f9c7228",
+    "resources/app/src/renderer/index.html": "d7485a9bf308ca2f69ef10a3057247935e2deff162808f6c2940b7e98084e6bd",
+    "resources/app/src/renderer/styles.css": "3f5e899fb439bd45c802f7707ad7be5af7d27600c90d9b02ced56ffdc298e591",
+    "resources/app/package.json": "f5a91c6da1c458014f059e57ad01c4d82832f9f2444efa6d1f7cd5d3d08fc151",
+    "resources/app/node_modules/canvaskit-wasm/bin/full/canvaskit.wasm": "aca7fa6019f95d3de98d4a49ae60a3d66a09e9d5ca74091fbc369b9be959f959"
+  }
+}

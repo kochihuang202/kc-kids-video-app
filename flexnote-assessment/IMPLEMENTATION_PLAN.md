@@ -1,5 +1,7 @@
 # 最小修改與原型里程碑
 
+> 2026-10-30 方向修正：以下為先前 FlexNote 保存整合的歷史計畫，保留供研究，不再是 InkBridge 的開發順序。InkBridge 獨立實作 M1–M5 見 [FOUNDATION.md](../inkbridge/docs/FOUNDATION.md)。
+
 日期：2026-10-30。最新要求為保留原schema／Knex／白板、運行中按需快照及手動版本載入；不監控OneDrive上傳，交換區為snapshots/＋共用assets/。本輪已完成隔離資料安全原型，未修改原版或正式資料。
 
 Gemini第二階段審查的逐項採納／反證、補充實驗及新的階段門檻見[GEMINI_DISPOSITION.md](GEMINI_DISPOSITION.md)。目前不能確認純外部工具能要求原版全域editor flush；M2是待驗證的接入方向，不是已有可部署hook。先完成隔離啟動與一個真實editor的commit ACK，再擴大整合。
