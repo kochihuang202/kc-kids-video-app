@@ -2,7 +2,7 @@
 
 自行撰寫的 Windows 筆記／無限白板專案。當前版本 **0.3.0 / 編輯核心重整**：Electron 45.1.0、CanvasKit 0.42.0、Lexical 0.53.0、Node 內建 SQLite，沒有 FlexNote 程式或資料依賴。M1 與 0.2.0 整合版原始碼、成品保留。
 
-產品目標是盡可能忠實重製 FlexNote 的功能與體驗。固定流程為「先查原版／REA、確認後重製；確認查不到才自行設計」，詳見 [開發流程](docs/DEVELOPMENT_WORKFLOW.md) 與本專案 [AGENTS.md](AGENTS.md)。
+產品目標是盡可能完整拷貝／重用 FlexNote 的既有程式與細節，形成獨立可修改、可重建的產品。固定流程為「先確認來源與依賴，優先完整重用；黑盒先REA拆解，確實追不到先討論，不自行另寫一套」，詳見 [開發流程](docs/DEVELOPMENT_WORKFLOW.md) 與本專案 [AGENTS.md](AGENTS.md)。目前0.3.0的實際來源狀態仍以上述版本說明為準，規則更新不表示已完成原模組整合。
 
 ## 執行
 
