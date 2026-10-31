@@ -167,7 +167,7 @@ class WorkspaceDatabase {
       const graph = {
         workspaceId: this.workspaceId,
         revision: this.revision(),
-        boards: this.statement('SELECT id,title,view_json FROM boards ORDER BY id').all().map(row => ({ id: row.id, title: row.title, view: JSON.parse(row.view_json) })),
+        boards: this.statement("SELECT b.id,b.title,b.view_json,m.value AS attributes FROM boards b LEFT JOIN meta m ON m.key='board:'||b.id ORDER BY b.id").all().map(row => ({ id: row.id, title: row.title, view: JSON.parse(row.view_json),...(row.attributes?{attributes:JSON.parse(row.attributes)}:{}) })),
         contents: this.statement('SELECT * FROM contents ORDER BY id').all().map(row => ({
           id: row.id, title: row.title, body: row.body, document: row.document_json === null ? null : JSON.parse(row.document_json), kind: row.kind, tone: row.tone, revision: row.revision
         })),
@@ -249,6 +249,12 @@ class WorkspaceDatabase {
           if (!old || old.title !== title || old.view_json !== view) {
             this.statement('INSERT INTO boards(id,title,view_json) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,view_json=excluded.view_json').run(id, title, view);
             changed = true;
+          }
+          if(data.attributes!==undefined){
+            check(data.attributes&&typeof data.attributes==='object'&&!Array.isArray(data.attributes),'Invalid board attributes');
+            const attributes=canonicalJSON(data.attributes);check(Buffer.byteLength(attributes)<=65536,'Board attributes too large');
+            const key='board:'+id,previous=this.statement('SELECT value FROM meta WHERE key=?').get(key);
+            if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else throw new PersistenceError('INVALID_REQUEST', 'Unknown commit operation');
       }

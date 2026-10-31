@@ -703,6 +703,13 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-090 — Native board management must preserve camera, attributes and referenced content
+
+- Authorized behavior change: User asked to continue original whiteboard create/rename/delete integration on2026-10-31. The previous check-shell expectation that management is disabled now checks the original menu is available; this does not delete the save/composition/restart assertions.
+- Use original64744.rb creation and74582 rename/delete confirmation. Adapt source fields to one SQLite transaction; preserve view and soft-delete with isTrashed, retaining all content/instances. Query trashed targets with the native findTargetsByCardIdAndType contract.
+- Confirmed/fixed: meta JOIN used + instead of SQLite||, losing attributes on read; home overlay intercepted the original modal until canvas-wrap received a stacking context. Entirely trashed workspaces now reopen at readonly home and can create a new board without reseeding old notes.
+- Targeted tests: `inkbridge/tests/board-management.test.cjs` and related database file10/10; actual `scripts/original-reuse/check-board-management.cjs` covers create/rename/view/cancel/trash/preservation/target lookup/all-trashed restart/new board recovery. Original tab stale-title fallback after trash is documented, not called fixed. Restore GUI and nested board/folder lifecycle are not claimed.
+
 ## REG-089 — Original shell components require their real parent providers and portal targets
 
 - Confirmed integration failures: Closing the last original history tab first failed with React200 because the home portal target had been inserted before its anchor existed; mounting original41.nk without its original32367.w Card parent failed with useCardContext undefined. Neither issue was fixed by replacing the original component.

@@ -39,7 +39,7 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   // Repeated original navigation must not create more React roots/providers.
   for(const name of ['Alpha board','Beta board','Alpha board','Beta board']){await list.getByText(name,{exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().boardId)).toBe(name.startsWith('Alpha')?'board-main':'board-two');}
   assert.equal(await page.locator('#original-zoom-controls [aria-label="zoom-in"]').count(),1);
-  await list.getByText('Alpha board',{exact:true}).click({button:'right'});await expect(page.locator('#board-navigation-status')).toContainText('管理操作尚未接入');assert.equal(await page.getByRole('dialog').count(),0);
+  await list.getByText('Alpha board',{exact:true}).click({button:'right'});const renameLabel=await page.evaluate(()=>window.__originalRequire(1643).ag.t('Rename',{ns:'common'}));await expect(page.getByRole('button',{name:renameLabel,exact:true})).toBeVisible();await page.keyboard.press('Escape');
   await page.evaluate(()=>window.__inkbridgeIntegrated.flush());const expected=await page.evaluate(()=>window.inkbridge.load());
   assert.equal(expected.boards.find(b=>b.id==='board-main').title,'Alpha board');assert.equal(expected.boards.find(b=>b.id==='board-two').title,'Beta board');
   await tabs.locator('[data-active]').filter({hasText:'Alpha board'}).click({button:'middle'});
@@ -55,7 +55,7 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   await app.close();app=await launch();page=await app.firstWindow();await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{},{timeout:30000});
   const actual=await page.evaluate(()=>window.inkbridge.load());assert.deepEqual(actual,expected);
   const historyAfter=await page.evaluate(()=>window.inkbridge.history({method:'getHistoryTabs'}));assert.equal(historyAfter.data[0].id,historyBefore.data[0].id);
-  const result={originalList:true,originalZoom:true,originalHistoryTabs:true,originalOutline:true,outlineSearch:true,outlineSelect:true,tabSwitch:true,inactiveTabClose:true,lastTabHome:true,tabReopen:true,persistedTabIdentity:true,zoomPreset:true,fitView:true,navigateWhileEditing:true,compositionWaitsBeforeSwitch:true,repeatSwitch:true,unsupportedManagementGuard:true,restartExact:true,errors:await page.evaluate(()=>window.__inkbridgeIntegrated.errors)};
+  const result={originalList:true,originalZoom:true,originalHistoryTabs:true,originalOutline:true,outlineSearch:true,outlineSelect:true,tabSwitch:true,inactiveTabClose:true,lastTabHome:true,tabReopen:true,persistedTabIdentity:true,zoomPreset:true,fitView:true,navigateWhileEditing:true,compositionWaitsBeforeSwitch:true,repeatSwitch:true,managementMenu:true,restartExact:true,errors:await page.evaluate(()=>window.__inkbridgeIntegrated.errors)};
   assert.deepEqual(result.errors,[]);await fs.writeFile(path.join(root,'private-original-editor/original-shell-result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
  }catch(error){const page=await app.firstWindow();await page.screenshot({path:path.join(root,'private-original-editor/shell-failure.png')});console.log(JSON.stringify({errors:await page.evaluate(()=>window.__inkbridgeIntegrated),buttons:await page.getByRole('button').allTextContents()}));await app.evaluate(({app})=>app.exit(1));throw error;}finally{await app.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -29,9 +29,10 @@ app.whenReady().then(async()=>{
         html=html.replace(/<canvas id="board"[^>]*><\/canvas>/,'<div id="board" role="application" aria-label="InkBridge 原版白板" style="position:absolute;inset:0;width:100%;height:100%"></div>');
         html=html.replace(/<div class="board-link">.*?<\/div>/,'<div id="original-board-list" aria-label="白板清單"></div><small id="board-navigation-status" role="status"></small><b id="sidebar-count" hidden></b>');
         html=html.replace('<div class="breadcrumb">','<div id="original-history-tabs" style="flex:1;min-width:0"></div><div class="breadcrumb" style="display:none" hidden>');
+        html=html.replace('<button id="save-workspace"','<button id="create-whiteboard" title="新增白板">＋ 白板</button><button id="save-workspace"');
         html=html.replace('</main>','</main><aside id="original-flow-outline" aria-label="卡片列表" style="width:280px;min-width:280px;background:white;border-left:1px solid #e1e4dc;display:flex;min-height:0"></aside>');
         html=html.replace('<div class="zoom-controls">','<div id="original-board-home" style="display:contents"></div><div id="original-zoom-controls"></div><div class="zoom-controls" hidden>');
-        html=html.replace('</head>','<style>#original-board-list{max-height:45vh;overflow:auto;margin:0 -16px}#board-navigation-status{display:block;color:#a54235;font-size:11px}#original-zoom-controls{display:contents}.zoom-controls[hidden]{display:none}.sidebar .inspector-label{margin-top:18px}.board-heading h2{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head>');
+        html=html.replace('</head>','<style>.canvas-wrap{isolation:isolate}#original-board-list{max-height:45vh;overflow:auto;margin:0 -16px}#board-navigation-status{display:block;color:#a54235;font-size:11px}#original-zoom-controls{display:contents}.zoom-controls[hidden]{display:none}.sidebar .inspector-label{margin-top:18px}.board-heading h2{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head>');
         html=html.replace('<script src="vendor/canvaskit.js"></script><script type="module" src="workspace.mjs"></script>',originalScripts+'<script type="module" src="/integration/board.mjs"></script>');
         response.end(html);return;
       }

@@ -17,9 +17,10 @@ async function boot(){
   if(!CanvasProvider)throw Error('Apply the recorded original integration patches first');
   const kit=r(37757),K=await kit.zj();kit.nY(K);const fonts=r(65857).fO;await new Promise((resolve,reject)=>fonts.init(K,resolve).catch(reject));
   const graph=await window.inkbridge.load(),info=await window.inkbridge.info(),contents=new Map(graph.contents.map(content=>[content.id,content])),instances=new Map(graph.instances.map(instance=>[instance.id,instance]));
-  let boardId=graph.boards[0]?.id||'board-main',navigationChanging=false,navigationTail=Promise.resolve(),shell;
+  r(19281).YH.init('inkbridge-local',graph.workspaceId);
+  let boardId=graph.boards.find(board=>!board.attributes?.isTrashed)?.id||graph.boards[0]?.id||'board-main',navigationChanging=false,navigationTail=Promise.resolve(),shell;
   const boards=new Map(graph.boards.map(board=>[board.id,board])),originalStore=r(23).gt,editors=new Map(),helpers=r(45828),engine=r(66597).L;
-  function stageBoardView(view,id=boardId){if(navigationChanging||!boards.has(id))return;const board={...boards.get(id),view};boards.set(id,board);coordinator.stage({type:'putBoard',data:board});}
+  function stageBoardView(view,id=boardId){if(state.home||navigationChanging||!boards.has(id))return;const board={...boards.get(id),view};boards.set(id,board);coordinator.stage({type:'putBoard',data:board});}
   const graphContext=()=>({CanvasKit:K,fontMgr:fonts.getFontMgr(),view:originalStore.getState().view,theme:'light',locale:'zh-TW'});
   const bodyFromEditor=editor=>editor.read(()=>({document:JSON.parse(JSON.stringify(editor.getEditorState().toJSON())),body:r(41570).GvG().getTextContent()}));
   function putContent(content,body){
@@ -65,7 +66,7 @@ async function boot(){
   function navigate(operation){const task=navigationTail.catch(()=>{}).then(operation);navigationTail=task;return task;}
   function updateBoardTitle(){const title=boards.get(boardId)?.title||'';$('.breadcrumb strong').textContent=title;$('.board-heading h2').firstChild.textContent=title;}
   function switchBoard(id){return navigate(async()=>{
-    if(id===boardId&&!state.home)return;if(!boards.has(id))throw Error('白板不存在');
+    if(!boards.has(id)||boards.get(id).attributes?.isTrashed)throw Error('白板不存在或已移至回收站');if(id===boardId&&!state.home)return;
     $('#board-navigation-status').textContent='正在保存並切換…';
     try{
       await coordinator.flush();
@@ -75,9 +76,17 @@ async function boot(){
       await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
-  function showHome(){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();shell.homeSelected();ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);});});}
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),switchBoard,showHome,getActiveBoardId:()=>boardId,onError:report});
-  shell.hydrate(graph);await shell.ready;await shell.selected();updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
+  function showHome(){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected();ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);});});}
+  function writeWhiteboard(payload,{create=false,trash=false}={}){return navigate(async()=>{
+    await coordinator.flush();const id=typeof payload==='string'?payload:payload.id,previous=boards.get(id);
+    if(create&&previous)throw Error('白板ID已存在');if(!create&&!previous)throw Error('白板不存在');
+    const {id:_,name,...attributes}=typeof payload==='string'?{}:payload;
+    const board={id,title:create?name:name??previous.title,view:previous?.view||{x:0,y:0,zoom:1},attributes:{...previous?.attributes,...attributes,...(trash?{isTrashed:true}:{}),lastEditedTime:new Date().toISOString()}};
+    coordinator.stage({type:'putBoard',data:board});await coordinator.flush();boards.set(id,board);
+    if(id===boardId)updateBoardTitle();return board;
+  });}
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),switchBoard,showHome,writeWhiteboard,getActiveBoardId:()=>boardId,onError:report});
+  shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
     React.useEffect(()=>()=>{const editor=editorRef.current;if(editor){try{const value=bodyFromEditor(editor);acceptDocument(props.nodeId,value.document,value.body);}catch(error){report(error);}if(editors.get(props.nodeId)===editor)editors.delete(props.nodeId);}},[props.nodeId]);
@@ -86,9 +95,10 @@ async function boot(){
   function App(){
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes);const [mode,setMode]=React.useState('move');state.setMode=setMode;state.controls=r(23).wf();
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
-    const [home,setHome]=React.useState(false);state.renderHome=setHome;
+    const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
+    React.useEffect(()=>{$('#add-card').disabled=home;$('#board').inert=home;$('#original-flow-outline').inert=home;$('#original-zoom-controls').inert=home;},[home]);
     return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
-      React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
+      React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
         onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
         onNodeDragEnd:(node,affected)=>{for(const item of affected?.length?affected:[node])persistGeometry(item);},
         onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
@@ -102,6 +112,7 @@ async function boot(){
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   $('#save-workspace').addEventListener('click',()=>coordinator.flush().catch(report));
+  $('#create-whiteboard').addEventListener('click',()=>window.dispatchEvent(new CustomEvent(r(39641).GO)));
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();coordinator.flush().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
@@ -109,6 +120,6 @@ async function boot(){
   $('.performance-panel')?.setAttribute('hidden','');
   window.inkbridge.onCloseRequested(async request=>{try{await navigationTail.catch(()=>{});await coordinator.flush();await shell.settle();window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
   window.inkbridge.onCloseCancelled(request=>report(Error(request.message)));
-  await coordinator.flush();
+  await coordinator.flush();coordinator.status();
 }
 boot().catch(error=>{state.errors.push({message:error.message,stack:error.stack});$('#loading').textContent='原版白板接入失敗：'+error.message;});

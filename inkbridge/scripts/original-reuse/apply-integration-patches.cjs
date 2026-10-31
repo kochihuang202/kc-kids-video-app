@@ -13,4 +13,6 @@ patch('34883','id: u, onBlur: J, editorBlocks: n','id: u, onEditorReady: e.onEdi
 patch('58850','let p = (e, t) => (0, o.d)()', 'let p = (e, t) => globalThis.__inkbridgeServices?.has(e) ? globalThis.__inkbridgeServices.call(e, t) : (0, o.d)()', 'Delegate explicitly supported original service calls to the real InkBridge data boundary');
 patch('23733','Tabbar: function () { return e5; }','InkBridgeHistoryTabs: function () { return eR; }, Tabbar: function () { return e5; }','Expose the complete original history-tab strip without substituting its logic');
 patch('41','n: function () { return iV; }','InkBridgeFlowOutline: function () { return nk; }, n: function () { return iV; }','Expose the complete original flow card-list/search component');
+patch('64744','InkBridgeCanvasHostProvider: function () { return ov; },','InkBridgeCreateWhiteboard: function () { return rb; }, InkBridgeCanvasHostProvider: function () { return ov; },','Expose the complete original whiteboard creation dialog');
+patch('36339','"flexnote://".concat(r.YH.spaceId','"inkbridge://".concat(r.YH.spaceId','Use the InkBridge scheme in the original link formatter; no OS registration changed');
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));

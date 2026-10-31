@@ -10,6 +10,7 @@
 | 縮放、預設比例與檢視全圖 | 46979.OO | cba922d999fccbb9b3df078b7b7e368262a6785adc15da51b67c2e2d978682f8 | 整個原元件，直接使用原23.wf控制現有原Canvas。 |
 | 上方分頁條 | 23733內部eR | 1c5ca2a3e6b56728b7634895b87bd27f2e08eeeeedf722c7207ea6e680634743 | 僅增加InkBridgeHistoryTabs匯出；完整沿用原分頁、切換、關閉、排序邏輯與90561原Redux reducer。 |
 | 右側卡片列表／搜尋 | 41內部nk | 9d3c61e54ba643d39f879b80bd489702e659d917f0d946392b0a6f91470a408f | 僅增加InkBridgeFlowOutline匯出；使用原32367.w父Card及原23的節點、選取、定位API。 |
+| 新增白板對話框 | 64744內部rb | 1d8f82892a4f9f855a3debae02119c0927a5b8d566b86758607bdfde9aac42d8 | 僅增加匯出；原事件39641.GO、原表單／驗證／DataGen／refresh鏈完整執行。 |
 
 這兩個factory的`locallyModified`均為false。沒有以新DOM類別、幾個SVG或參數模仿它們。
 
@@ -39,11 +40,22 @@ board/content/instance資料沿用現有SQLite schema；切板不重新建一套
 
 ## 明確未接入
 
-- 清單這輪只開啟／切換白板。原右鍵選單同時包含圖示、複製FlexNote連結、刪除等未接服務，因此整個管理入口由宿主明確停用並顯示說明；不留下半接的假操作。清單排序使用原name排序，也關閉需要folder schema的拖曳整理。
-- 新增白板、改名、刪除、資料夾與其他側欄功能仍未完成。原分頁內的新增入口會帶出尚未接入的多種卡片服務，因此目前明確停用該入口並說明；使用白板清單開啟的分頁已可切換／關閉／恢復。既有新增卡片與原Flow編輯不受此限制。
+- 本次後續更新已接通新增／改名／軟刪除（詳下節），右鍵管理入口已啟用。資料夾／拖曳整理仍未接入；保持原name排序，不假造folder或board-instance資料。
+- 原分頁內的新增入口會帶出尚未接入的多種卡片服務，目前仍明確停用並說明；使用白板清單開啟的分頁已可切換／關閉／恢復。既有新增卡片與原Flow編輯不受此限制。
 - 右側元件的圖譜模式、所有特殊卡片、雙擊詳細頁與外開視窗尚未驗收；不將它們當成功能完成。外殼仍保留既有InkBridge布局，本次不是整個應用程式或Gemini分支的整體完成宣告。
 - 沒有合入Gemini的私人樣本、24張縮圖、假同步／更新提示、另一套store、舊Canvas或舊編輯器入口。Gemini工作樹未修改。
 
 ## 重複執行
 
 已準備好既有私人原始factory的工作區：執行`node scripts/original-reuse/apply-integration-patches.cjs`、`node scripts/original-reuse/collect.cjs`，再雙擊`Start-InkBridge.bat`。本輪沒有封裝EXE。
+
+## 後續：白板管理的原邏輯接入（2026-10-31）
+
+- 原碼證據：background.js約882104為updateBoard、882272為deleteWhiteboard、後續createWhiteboard。原刪除是isTrashed=true，保留卡片；引用查詢ft的Whiteboard分支依ID讀取，包含已移入回收站的白板。前端繼續使用原74582右鍵選單、原改名／確認對話框與64744.rb新增對話框。
+- 只適配本機資料邊界：name映射既有boards.title，view保留原值；其餘原欄位保存至既有meta表board:<id>的JSON，與putBoard在同一個原有Commit交易中寫入。不重建筆記Schema、不用localStorage作權威、不回假成功。原DataGen.init使用InkBridge自己的工作區UUID與本機身分。
+- createWhiteboard／updateBoard／deleteWhiteboard及findTargetsByCardIdAndType的Whiteboard、NoteCard分支，均讀寫真實本機資料。其他尚未接入的引用類型會明確拒絕。這是Node SQLite適配，沒有聲稱原Knex主程式整包移植或使用原帳號授權服務。
+- 原連結格式器只將flexnote://產品scheme改為inkbridge://，保留參數邏輯；沒有變更Windows協定註冊，也未驗收系統外部開啟連結。
+- 新增的check-board-management真Electron流程通過：原表單新增→原選單改名→保留view→縮放後名稱不回退→取消刪除→原確認後軟刪除→卡片／實例完整保留→查到已刪除目標→全部移入回收站後重開→禁止編輯舊白板→可再用原表單新增。已檢視失敗截圖並修正宿主圖層，沒有使用force click跳過。
+- 單元及直接相關database測試10/10通過；本次沒有全套Playwright／效能／封裝重測。結果另存private-original-editor/board-management-result.json。
+- 新測試曾抓到meta JOIN誤用+而無法讀回屬性，以及首頁z-index攔截原確認按鈕；已改正SQLite串接與canvas-wrap stacking context。既有check-shell管理入口預期依本次啟用功能改為原選單可見。
+- 已知界線：原48677的缺失目標hydration沒有Whiteboard分支，移入回收站後分頁可能顯示建立時保存的舊標題；真實target查詢與DB仍保留新名稱。保留此原fallback並記錄，未冒稱所有分頁名稱同步。回收站復原GUI、資料夾／巢狀白板與圖示／完整背景操作仍未驗收。
