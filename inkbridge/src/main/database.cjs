@@ -175,6 +175,9 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z
         }))
       };
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:']]){
+        const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
+      }
       this.db.exec('COMMIT');
       return graph;
     } catch (error) {
@@ -256,6 +259,12 @@ class WorkspaceDatabase {
             const key='board:'+id,previous=this.statement('SELECT value FROM meta WHERE key=?').get(key);
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
+        } else if(operation.type==='putCatalog'){
+          check(['folder','whiteboard-instance'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
+          else {const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
+          const value=canonicalJSON(data),key=operation.kind+':'+id,old=this.statement('SELECT value FROM meta WHERE key=?').get(key);
+          if(old?.value!==value){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,value);changed=true;}
         } else throw new PersistenceError('INVALID_REQUEST', 'Unknown commit operation');
       }
       const revision = current + (changed ? 1 : 0);

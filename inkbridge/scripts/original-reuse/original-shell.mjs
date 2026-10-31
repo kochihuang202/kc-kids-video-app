@@ -1,6 +1,6 @@
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
-export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,switchBoard,showHome,writeWhiteboard,getActiveBoardId,onError}){
+export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
   const ListView=r(74582).ListView,ZoomControls=r(46979).OO,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
   if(!HistoryTabs)throw Error('Apply the original history-tab export patch first');
   const tabActions=r(90561),historyNames=new Set(['getHistoryTabs','createHistoryTab','touchHistoryTab','deleteHistoryTab','updateHistoryTab','updateHistoryTabsOrder']);
@@ -9,12 +9,16 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   async function settle(){while(pendingHistory.size)await Promise.all([...pendingHistory]);}
   const actions=r(17070),folderActions=r(39044);
   const records=graph=>graph.boards.filter(board=>!board.attributes?.isTrashed).map(board=>({color:'white',icon:null,...board.attributes,id:board.id,name:board.title}));
-  const catalog=graph=>{const boards=records(graph);return {folders:[],whiteboardInstances:[],whiteboardList:boards,allWhiteboardInstances:[],allWhiteboards:boards,unAttachedWhiteboards:boards};};
-  function hydrate(graph){const data=catalog(graph);redux.dispatch(folderActions.Tc(data.folders));redux.dispatch(actions.Dq({boardList:data.whiteboardList,instances:[],allWhiteboardInstances:[],allWhiteboards:data.allWhiteboards,unAttachedWhiteboards:data.unAttachedWhiteboards}));}
-  const management=new Set(['createWhiteboard','updateBoard','deleteWhiteboard']);
-  globalThis.__inkbridgeServices={has:name=>name==='getFolders'||name==='getWhiteboard'||name==='findTargetsByCardIdAndType'||management.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  const catalog=graph=>{const boards=records(graph),folders=[...(graph.folders||[])].sort((a,b)=>(a.order||0)-(b.order||0)),ids=new Set(folders.flatMap(folder=>folder.whiteboardInstanceIds)),refs=graph.whiteboardInstances||[],live=refs.filter(ref=>!ref.isTrashed),attached=refs.filter(ref=>ids.has(ref.id)),boardIds=new Set(attached.map(ref=>ref.whiteboardId));return {folders,whiteboardInstances:attached,whiteboardList:boards.filter(board=>boardIds.has(board.id)),allWhiteboardInstances:live,allWhiteboards:boards,unAttachedWhiteboards:boards.filter(board=>!ids.has(board.id)&&!live.some(ref=>ref.whiteboardId===board.id))};};
+  function hydrate(graph){const data=catalog(graph);redux.dispatch(folderActions.Tc(data.folders));redux.dispatch(actions.Dq({boardList:data.whiteboardList,instances:data.whiteboardInstances,allWhiteboardInstances:data.allWhiteboardInstances,allWhiteboards:data.allWhiteboards,unAttachedWhiteboards:data.unAttachedWhiteboards}));}
+  const management=new Set(['createWhiteboard','updateBoard','deleteWhiteboard','addBoard','restoreWhiteboard']);
+  const catalogServices=new Set(['addFolder','updateFolder','updateFoldersOrder','createWhiteboardInstance','updateWhiteboardInstance']);
+  globalThis.__inkbridgeServices={has:name=>['getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
     if(name==='getFolders'){await flush();return catalog(await window.inkbridge.load());}
     if(name==='getWhiteboard'){await flush();const board=(await window.inkbridge.load()).boards.find(board=>board.id===payload);if(!board)throw Error('白板不存在');return {whiteboard:{color:'white',icon:null,...board.attributes,id:board.id,name:board.title}};}
+    if(name==='getTrash'){await flush();const graph=await window.inkbridge.load();return {noteCards:[],mindMaps:[],pdfCards:[],highlights:[],videoHighlights:[],audioHighlights:[],noteHighlights:[],mediaCards:[],websiteCards:[],whiteboards:graph.boards.filter(board=>board.attributes?.isTrashed).map(board=>({...board.attributes,id:board.id,name:board.title}))};}
+    if(name==='restoreCard'){if(payload.type!=='Whiteboard')throw Error('尚未接入此類型的復原');await writeWhiteboard(payload.id,{restore:true});hydrate(await window.inkbridge.load());return {success:true};}
+    if(catalogServices.has(name)){await writeCatalog(name,payload);if(name==='createWhiteboardInstance')return {success:true,relatedWhiteboards:records(await window.inkbridge.load()).filter(board=>board.id===payload.whiteboardId)};return true;}
     if(name==='findTargetsByCardIdAndType'){
       await flush();const graph=await window.inkbridge.load(),ids=new Set(payload.cardIds);
       if(payload.cardType==='Whiteboard')return graph.boards.filter(board=>ids.has(board.id)).map(board=>({...board.attributes,id:board.id,name:board.title}));
@@ -22,7 +26,7 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
       throw Error('尚未接入此引用類型：'+payload.cardType);
     }
     if(management.has(name)){
-      try{await writeWhiteboard(payload,{create:name==='createWhiteboard',trash:name==='deleteWhiteboard'});hydrate(await window.inkbridge.load());if(name==='deleteWhiteboard'&&payload===getActiveBoardId())await showHome();return true;}
+      try{const result=await writeWhiteboard(name==='addBoard'?payload.board:payload,{create:name==='createWhiteboard'||name==='addBoard',trash:name==='deleteWhiteboard',restore:name==='restoreWhiteboard',folderId:name==='addBoard'?payload.folderId:undefined});hydrate(await window.inkbridge.load());if(name==='deleteWhiteboard'&&payload===getActiveBoardId())await showHome();return name==='addBoard'?{boardInstance:result.boardInstance}:true;}
       catch(error){hydrate(await window.inkbridge.load());onError(error);throw error;}
     }
     if(historyNames.has(name)){await flush();return history(name,payload);}
@@ -34,18 +38,22 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     const url=new URL(typeof destination==='string'?destination:destination.pathname+'?'+new URLSearchParams(destination.query),location.origin);
     const id=url.searchParams.get('whiteboardId');
     if(/\/home\/?$/.test(url.pathname)){try{await showHome();return true;}catch(error){onError(error);return false;}}
+    if(/\/trash\/?$/.test(url.pathname)){try{await showHome('trash');return true;}catch(error){onError(error);return false;}}
     if(!/\/(?:flow)\/?$/.test(url.pathname)||!id)throw Error('This original route is not connected: '+url.pathname);
     try{await switchBoard(id);return true;}catch(error){onError(error);return false;}
   };
-  function ShellPortals({home}){return React.createElement(React.Fragment,null,
+  function TrashView(){const root=React.useRef(null);React.useLayoutEffect(()=>{const disable=()=>{const t=key=>r(1643).ag.t(key,{ns:'common'});for(const button of root.current.querySelectorAll('button'))if(button.getAttribute('aria-label')===t('deletePermanently')||button.textContent.trim()===t('emptyTrash')){button.disabled=true;button.title='本階段只提供復原，永久刪除尚未接入';}};disable();const observer=new MutationObserver(disable);observer.observe(root.current,{childList:true,subtree:true});return ()=>observer.disconnect();},[]);return React.createElement('div',{ref:root,className:'h-full'},React.createElement(r(69193).default));}
+  const createInFolder=folderId=>window.dispatchEvent(new CustomEvent(r(39641).GO,{detail:{folderId}}));
+  function ShellPortals({home,page}){return React.createElement(React.Fragment,null,
     ReactDOM.createPortal(React.createElement('div',{onClickCapture:event=>{const button=event.target.closest('[aria-label]');if(button?.getAttribute('aria-label')===r(1643).ag.t('newTab',{ns:'common'})){event.preventDefault();event.stopPropagation();document.querySelector('#board-navigation-status').textContent='新增分頁的其他卡片服務尚未接入；可從清單開啟白板。';}}},React.createElement(HistoryTabs)),document.querySelector('#original-history-tabs')),
     React.createElement(r(64744).InkBridgeCreateWhiteboard),
-    home?ReactDOM.createPortal(React.createElement('div',{style:{position:'absolute',inset:0,zIndex:300,overflow:'auto',background:'white'}},React.createElement(ListView,{hideOperation:true,sortBy:'name',sortOrder:'asc'})),document.querySelector('#original-board-home')):null,
-    ReactDOM.createPortal(React.createElement(ListView,{compact:true,hideOperation:true,sortBy:'name',sortOrder:'asc',classNames:{root:'inkbridge-original-board-tree'}}),document.querySelector('#original-board-list')),
+    React.createElement(r(64744).InkBridgeCreateFolder),
+    home?ReactDOM.createPortal(React.createElement('div',{style:{position:'absolute',inset:0,zIndex:300,overflow:'auto',background:'white'}},page==='trash'?React.createElement(TrashView):React.createElement(ListView,{hideOperation:true,onAddWhiteboard:createInFolder,sortBy:'default'})),document.querySelector('#original-board-home')):null,
+    ReactDOM.createPortal(React.createElement(ListView,{compact:true,hideOperation:true,onAddWhiteboard:createInFolder,sortBy:'default',classNames:{root:'inkbridge-original-board-tree'}}),document.querySelector('#original-board-list')),
     ReactDOM.createPortal(React.createElement(r(32367).w,{className:'h-full w-full rounded-none bg-transparent shadow-none'},React.createElement(FlowOutline)),document.querySelector('#original-flow-outline')),
     ReactDOM.createPortal(React.createElement(ZoomControls),document.querySelector('#original-zoom-controls')));
   }
-  function homeSelected(){Object.assign(router.state,{pathname:'/home',route:'/home',asPath:'/zh-TW/home'});}
+  function homeSelected(page='home'){Object.assign(router.state,{pathname:'/'+page,route:'/'+page,asPath:'/zh-TW/'+page});}
   async function selected(){router.query.whiteboardId=getActiveBoardId();Object.assign(router.state,{pathname:'/flow',route:'/flow',asPath:'/zh-TW/flow?whiteboardId='+encodeURIComponent(getActiveBoardId())});const graph=await window.inkbridge.load(),board=graph.boards.find(board=>board.id===getActiveBoardId());
     const value=r(19281).YH.newTab({title:board.title,type:r(81638).R.Whiteboard,sourceId:board.id,parentTabId:'',tabGroupId:'default',icon:'',color:''});
     const result=await history('createHistoryTab',value);if(result.deletedTabId)redux.dispatch(tabActions.ff(result.deletedTabId));redux.dispatch(tabActions.AO(result.tab));

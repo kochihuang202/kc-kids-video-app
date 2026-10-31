@@ -14,7 +14,7 @@
 
 這兩個factory的`locallyModified`均為false。沒有以新DOM類別、幾個SVG或參數模仿它們。
 
-`original-shell.mjs`只處理必要邊界：自己的SQLite boards映射到原元件欄位／Redux action；原清單的getFolders回傳真實本機DB清單（目前本機schema沒有folders／board-instances，該兩集合確實為空）；原flow路由轉成InkBridge工作區切換。不是原版資料庫或原Electron main的替代啟動。
+`original-shell.mjs`只處理必要邊界：自己的SQLite boards映射到原元件欄位／Redux action；原清單的getFolders回傳真實本機DB清單；原flow路由轉成InkBridge工作區切換。初版沒有folders／board-instances，後續已接入，詳末節。不是原版資料庫或原Electron main的替代啟動。
 
 58850原服務gateway增加一個明確註冊的委派入口，目前接getFolders、getWhiteboard及六個historyTabs服務；未接服務保持原有行為，不回假成功。原碼patch工具、hash與.before-inkbridge備份沿用既有機制。原版元件與所有依賴留在Git忽略的本機來源目錄；Git只管理接線、patch工具、測試與來源雜湊。
 
@@ -40,7 +40,7 @@ board/content/instance資料沿用現有SQLite schema；切板不重新建一套
 
 ## 明確未接入
 
-- 本次後續更新已接通新增／改名／軟刪除（詳下節），右鍵管理入口已啟用。資料夾／拖曳整理仍未接入；保持原name排序，不假造folder或board-instance資料。
+- 本次後續更新已接通新增／改名／軟刪除、分組及分組間拖曳（詳末節），右鍵管理入口已啟用。清單使用原default排序，讓原DnD處理器工作。
 - 原分頁內的新增入口會帶出尚未接入的多種卡片服務，目前仍明確停用並說明；使用白板清單開啟的分頁已可切換／關閉／恢復。既有新增卡片與原Flow編輯不受此限制。
 - 右側元件的圖譜模式、所有特殊卡片、雙擊詳細頁與外開視窗尚未驗收；不將它們當成功能完成。外殼仍保留既有InkBridge布局，本次不是整個應用程式或Gemini分支的整體完成宣告。
 - 沒有合入Gemini的私人樣本、24張縮圖、假同步／更新提示、另一套store、舊Canvas或舊編輯器入口。Gemini工作樹未修改。
@@ -59,3 +59,15 @@ board/content/instance資料沿用現有SQLite schema；切板不重新建一套
 - 單元及直接相關database測試10/10通過；本次沒有全套Playwright／效能／封裝重測。結果另存private-original-editor/board-management-result.json。
 - 新測試曾抓到meta JOIN誤用+而無法讀回屬性，以及首頁z-index攔截原確認按鈕；已改正SQLite串接與canvas-wrap stacking context。既有check-shell管理入口預期依本次啟用功能改為原選單可見。
 - 已知界線：原48677的缺失目標hydration沒有Whiteboard分支，移入回收站後分頁可能顯示建立時保存的舊標題；真實target查詢與DB仍保留新名稱。保留此原fallback並記錄，未冒稱所有分頁名稱同步。回收站復原GUI、資料夾／巢狀白板與圖示／完整背景操作仍未驗收。
+
+## 後續：分組與白板回收站復原（2026-10-31）
+
+本批基線為d62727b。完整重用64744.rw分組表單、74582.ListView行內改名與HTML5拖曳處理器、69193.default回收站頁面（原factory SHA-256：10f53d6e84ad31b1c7fdebef8e0b9785eef912acf5806dfc08a147d2febb4691）。64744只新增InkBridgeCreateFolder匯出，原表單／驗證／事件鏈保留；沒有合入Gemini的另一套分組類別。
+
+- 來源核對：同一份私人background-reference.js的addFolder約877588、updateFolder878221、updateWhiteboardInstance878884、updateFoldersOrder879070、getFolders879140、getTrash951657、restoreCard958810。restoreCard的Whiteboard分支呼叫restoreWhiteboard，復原白板、其引用及原分組關係。
+- SQLite適配：既有meta表保存folder:<id>與whiteboard-instance:<id>原欄位，不換筆記Schema。分組內新建、軟刪除、復原的board／WBI／folder操作同一交易提交；回傳真實Commit ACK。卡片內容及畫布實例不因回收站操作刪除。
+- 首輪實測抓到19281.newWhiteboardInstance會固定containerType="whiteboard"，忽略傳入folder；已依原background的分組引用格式在邊界明確寫folder與rank，沒有修改原DataGen或另寫樹狀互動。
+- 真Electron：新增分組→行內改名→組內新建白板→保存卡片→軟刪除→原回收站復原→卡片與引用完整→拖往第二分組→關閉重開完整graph一致，page errors為空。結果與已檢視截圖在private-original-editor/folders-trash-result.json及folders-trash-success.png。
+- 針對性測試：catalog、database、board-management共11/11；既有check-board-management與check-shell均通過，包含組字等待、切板、歷史分頁與最後一頁返回首頁。未全套重測、未重跑效能、未封裝EXE。
+
+仍未完成：永久刪除與清空回收站按鈕明確停用；只有白板復原已接入，其他類型沒有假資料。多個不同分組同時引用同一白板時，原第一匹配分組清理／復原規則尚待確認，本機先拒絕該刪除／復原以保留資料，此拒絕分支尚未做端到端驗收。分組刪除、Canvas巢狀白板顯示仍未接入。原DnD會分次呼叫數個服務，目前每次服務各自交易；整個跨分組拖曳的進程中斷恢復尚未驗證，不宣稱具備快照級原子性。原history標題fallback等前節限制仍保留。

@@ -703,6 +703,12 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-091 — Folder board references must retain folder type through trash and restore
+
+- Reproduction: Original19281.newWhiteboardInstance ignores a supplied containerType and always returns whiteboard. Using it unadapted for a sidebar folder creates a visible reference but restoration cannot reattach it to the folder.
+- Fix: Match the original background folder-reference record at the SQLite boundary: explicit containerType=folder and rank; preserve the original ListView/form/trash logic. Board, reference and folder changes for create/trash/restore share one commit; referenced note data remains intact.
+- Targeted tests: catalog transaction persistence/rollback/reopen plus directly related database and board-management tests11/11. Actual Electron check-folders-trash covers original folder create/rename, create-in-folder, soft trash, native restore, same reference identity and card contents, HTML5 drag to another folder, exact SQLite graph after restart. Existing check-board-management and check-shell pass. Permanent deletion is explicitly disabled; multi-parent restore and whole-drag crash recovery are not claimed.
+
 ## REG-090 — Native board management must preserve camera, attributes and referenced content
 
 - Authorized behavior change: User asked to continue original whiteboard create/rename/delete integration on2026-10-31. The previous check-shell expectation that management is disabled now checks the original menu is available; this does not delete the save/composition/restart assertions.

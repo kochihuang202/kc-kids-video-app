@@ -72,20 +72,38 @@ async function boot(){
       await coordinator.flush();
       ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();
       navigationChanging=true;boardId=id;
-      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.get(item.contentId)?.kind==='text').sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);});
+      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.get(item.contentId)?.kind==='text').sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
       await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
-  function showHome(){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected();ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);});});}
-  function writeWhiteboard(payload,{create=false,trash=false}={}){return navigate(async()=>{
+  function showHome(page='home'){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected(page);ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page=page;state.renderPage(page);});});}
+  const catalogOperation=(kind,data)=>({type:'putCatalog',kind,data:JSON.parse(JSON.stringify(data))});
+  function writeCatalog(method,payload){return navigate(async()=>{
+    await coordinator.flush();const current=await window.inkbridge.load(),folders=current.folders||[],refs=current.whiteboardInstances||[],now=new Date().toISOString();let ops=[];
+    if(method==='updateFoldersOrder'){ops=payload.map((id,order)=>{const folder=folders.find(folder=>folder.id===id);if(!folder)throw Error('分組不存在');return catalogOperation('folder',{...folder,order,lastEditedTime:now});});}
+    else{const kind=method.includes('Folder')?'folder':'whiteboard-instance',rows=kind==='folder'?folders:refs,previous=rows.find(row=>row.id===payload.id);
+      if((method==='addFolder'||method==='createWhiteboardInstance')&&previous)throw Error('目錄ID已存在');
+      if((method==='updateFolder'||method==='updateWhiteboardInstance')&&!previous)throw Error('目錄項目不存在');
+      ops=[catalogOperation(kind,{...previous,...payload,lastEditedTime:now})];}
+    for(const operation of ops)coordinator.stage(operation);await coordinator.flush();return true;
+  });}
+  function writeWhiteboard(payload,{create=false,trash=false,restore=false,folderId}={}){return navigate(async()=>{
     await coordinator.flush();const id=typeof payload==='string'?payload:payload.id,previous=boards.get(id);
     if(create&&previous)throw Error('白板ID已存在');if(!create&&!previous)throw Error('白板不存在');
+    const current=await window.inkbridge.load(),folders=current.folders||[],refs=current.whiteboardInstances||[],affected=refs.filter(ref=>ref.whiteboardId===id),ops=[];
+    if((trash||restore)&&new Set(affected.filter(ref=>ref.containerType==='folder').map(ref=>ref.containerId)).size>1)throw Error('此白板有多個分組引用，復原規則尚未驗證；未變更資料。');
     const {id:_,name,...attributes}=typeof payload==='string'?{}:payload;
-    const board={id,title:create?name:name??previous.title,view:previous?.view||{x:0,y:0,zoom:1},attributes:{...previous?.attributes,...attributes,...(trash?{isTrashed:true}:{}),lastEditedTime:new Date().toISOString()}};
-    coordinator.stage({type:'putBoard',data:board});await coordinator.flush();boards.set(id,board);
-    if(id===boardId)updateBoardTitle();return board;
+    const now=new Date().toISOString(),board={id,title:create?name:name??previous.title,view:previous?.view||{x:0,y:0,zoom:1},attributes:{...previous?.attributes,...attributes,...(trash||restore?{isTrashed:trash}:{}),lastEditedTime:now}};let boardInstance;
+    ops.push({type:'putBoard',data:board});
+    if(create&&folderId){const folder=folders.find(folder=>folder.id===folderId);if(!folder)throw Error('分組不存在');boardInstance={...r(19281).YH.newWhiteboardInstance({whiteboardId:id,containerId:folderId,width:600,height:400,x:0,y:0}),containerType:'folder',rank:refs.length};ops.push(catalogOperation('whiteboard-instance',boardInstance),catalogOperation('folder',{...folder,whiteboardInstanceIds:[...folder.whiteboardInstanceIds,boardInstance.id],lastEditedTime:now}));}
+    if(trash||restore){for(const ref of affected)ops.push(catalogOperation('whiteboard-instance',{...ref,isTrashed:trash,lastEditedTime:now}));
+      const ids=new Set(affected.map(ref=>ref.id));
+      if(trash){const folder=folders.find(folder=>folder.whiteboardInstanceIds.some(id=>ids.has(id)));if(folder)ops.push(catalogOperation('folder',{...folder,whiteboardInstanceIds:folder.whiteboardInstanceIds.filter(id=>!ids.has(id)),lastEditedTime:now}));}
+      else{const ref=affected.find(ref=>ref.containerType==='folder');if(ref){const folder=folders.find(folder=>folder.id===ref.containerId);if(!folder)throw Error('原分組不存在；未變更資料');ops.push(catalogOperation('folder',{...folder,whiteboardInstanceIds:[...folder.whiteboardInstanceIds,ref.id],lastEditedTime:now}));}}}
+    for(const operation of ops)coordinator.stage(operation);await coordinator.flush();boards.set(id,board);
+    if(id===boardId)updateBoardTitle();return {board,boardInstance};
   });}
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),switchBoard,showHome,writeWhiteboard,getActiveBoardId:()=>boardId,onError:report});
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
@@ -96,6 +114,7 @@ async function boot(){
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes);const [mode,setMode]=React.useState('move');state.setMode=setMode;state.controls=r(23).wf();
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
     const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
+    const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
     React.useEffect(()=>{$('#add-card').disabled=home;$('#board').inert=home;$('#original-flow-outline').inert=home;$('#original-zoom-controls').inert=home;},[home]);
     return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
       React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
@@ -105,7 +124,7 @@ async function boot(){
         onNodesDelete:nodes=>{for(const node of nodes){const id=typeof node==='string'?node:node.id;instances.delete(id);coordinator.stage({type:'deleteInstance',id});}},
         onDoubleClick:(_event,point)=>addCard('新卡片','',point),
         onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
-      }),React.createElement(shell.ShellPortals,{home}))))));
+      }),React.createElement(shell.ShellPortals,{home,page}))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
@@ -113,6 +132,8 @@ async function boot(){
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   $('#save-workspace').addEventListener('click',()=>coordinator.flush().catch(report));
   $('#create-whiteboard').addEventListener('click',()=>window.dispatchEvent(new CustomEvent(r(39641).GO)));
+  $('#create-folder').addEventListener('click',()=>window.dispatchEvent(new CustomEvent(r(39641).hr)));
+  $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();coordinator.flush().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
