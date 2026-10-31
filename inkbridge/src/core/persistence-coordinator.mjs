@@ -5,7 +5,7 @@ export class PersistenceCoordinator {
     this.pending=new Map();this.inflight=null;this.timer=null;this.lastAck=null;this.error=null;
     this.flushTail=Promise.resolve();
   }
-  key(op){return `${op.type==='deleteInstance'?'putInstance':op.type}:${op.id||op.data.id}`;}
+  key(op){return `${op.type==='deleteInstance'?'putInstance':op.type==='deleteCatalog'?'putCatalog':op.type}${op.type==='putCatalog'||op.type==='deleteCatalog'?':'+op.kind:''}:${op.id||op.data.id}`;}
   stage(op){
     this.pending.set(this.key(op),structuredClone(op));this.error=null;this.status();
     clearTimeout(this.timer);this.timer=setTimeout(()=>{this.flush().catch(()=>{});},this.autoDelay);

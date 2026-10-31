@@ -1,5 +1,23 @@
 # Regression Memory
 
+## REG-095 — Original card-library refresh, modal saves and shared placements must persist
+
+- Source: full57152 page,64744.nC modal chain,31167.TS creation,84974 picker and94700.sE placement. Native refreshCardList only updates IDs already loaded; flexnote:cards-changed reloads the query.
+- Fix: reuse full original UI; adapt its DTOs to InkBridge SQLite, read actual Lexical state, await composition/COMMIT before closing, remove only the host's uncancellable trailing throttle, and issue native reload after successful membership/create/delete/restore commits. Catalog keys include kind so card metadata and remark with the same ID cannot replace each other.
+- Tests: check-library uses real Electron/SQLite for Chinese modal edit, standalone creation, search, grid/list, empty filter, soft trash/restore, add-to-board, original duplicate rejection/Toast, exact restart. Database/catalog/query/persistence18/18. Physical Windows IME, all rich content types, properties/history/backlinks and full filter GUI coverage are not claimed. Existing check-compact-shell now asserts missing-tag null from the new real read service, replacing the earlier intentional absence-of-service assertion; its layout/exclusion checks remain intact.
+
+## REG-096 — Deleted-folder restoration must not hide the restored board
+
+- Confirmed source bug:885255 removes folder and trashes its boards/references; original restore untrashes then dereferences missing folder without transaction, allowing orphan live references to hide the board.
+- Fix: atomic folder/board/reference delete transaction; missing-folder references remain trashed on restoration, so the board reappears at root. Card contents/placements are preserved. Multiple-folder restore remains guarded.
+- Tests: catalog transaction failure leaves the entire graph unchanged; check-board-dashboard drives original grouped creation, rename=1 breadcrumb rename, inline folder editing (Enter moves to description; blur commits), cancel/delete, root restoration and exact restart. Existing check-folders-trash passes its normal-folder restore and drag assertions. No claim that all dashboard drag operations are crash-atomic.
+
+## REG-097 — Empty workspaces must not regenerate demonstration cards
+
+- Reproduction: after all card placements are deleted, the host's !instances.size initializer would create a new demonstration card on every reopen.
+- Fix: demonstration seeding only for a new revision=0 workspace with no contents or instances.
+- Test: check-library deletes both cards using the original context menu/confirmation, requires zero placements with retained trashed contents, closes normally and compares the complete graph after reopen; no new content/revision appears.
+
 ## Playback restoration status — 2026-10-23
 
 The user ended the temporary September 6 comparison and approved restoring the pre-comparison playback version `d1e3d2a`. The three player files are restored exactly to that commit; configured learning-repeat advancement, range enforcement, player preferences and REG-063/064/065 paths are active again. No database, viewing history, learned/favorite state, downloads, service-worker logic or unrelated workspace files are rolled back. The temporary baseline tests are preserved unchanged (apart from an archival comment) in `e2e/archive/playback-september6-baseline.ts`; they describe the retired experiment, not current behavior. All modern regression assertions remain active and unchanged. See `docs/PLAYBACK_BASELINE_2026-09-06.md` for the experiment and its closure. Neither this restoration nor the user's improvement after an iPhone update proves the native audio root cause or guarantees physical-device sound.

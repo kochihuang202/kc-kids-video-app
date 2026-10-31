@@ -2,6 +2,18 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {PersistenceCoordinator} from '../src/core/persistence-coordinator.mjs';
 import {serializeEditorState} from '../src/core/editor-state.mjs';
 import {createEditor,$getRoot,$createParagraphNode,$createTextNode} from 'lexical';
+
+test('catalog kinds with the same content ID commit together and folder deletion supersedes pending update',async()=>{
+  let operations;
+  const coordinator=new PersistenceCoordinator({autoDelay:60000,commit:async request=>{operations=request.operations;return {requestId:request.requestId,revision:1};}});
+  try{
+    coordinator.stage({type:'putCatalog',kind:'card',data:{id:'same',isTrashed:false}});
+    coordinator.stage({type:'putCatalog',kind:'remark',data:{id:'same',content:'keep remark'}});
+    coordinator.stage({type:'putCatalog',kind:'folder',data:{id:'folder'}});
+    coordinator.stage({type:'deleteCatalog',kind:'folder',id:'folder'});
+    await coordinator.flush();assert.deepEqual(operations.map(op=>[op.type,op.kind]),[['putCatalog','card'],['putCatalog','remark'],['deleteCatalog','folder']]);
+  }finally{coordinator.dispose();}
+});
 test('public Lexical optional undefined fields normalize to JSON without losing Chinese text or rich formatting',()=>{
   const editor=createEditor({namespace:'serialization-regression',onError:error=>{throw error;}});
   editor.update(()=>{$getRoot().append($createParagraphNode().append($createTextNode('中文龍').toggleFormat('bold')));},{discrete:true});

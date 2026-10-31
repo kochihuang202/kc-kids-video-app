@@ -171,11 +171,11 @@ class WorkspaceDatabase {
         contents: this.statement('SELECT * FROM contents ORDER BY id').all().map(row => ({
           id: row.id, title: row.title, body: row.body, document: row.document_json === null ? null : JSON.parse(row.document_json), kind: row.kind, tone: row.tone, revision: row.revision
         })),
-        instances: this.statement('SELECT * FROM instances ORDER BY z,id').all().map(row => ({
-          id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z
+        instances: this.statement("SELECT instances.*,meta.value AS attributes FROM instances LEFT JOIN meta ON meta.key='instance:'||instances.id ORDER BY z,id").all().map(row => ({
+          id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:']]){
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -227,6 +227,8 @@ class WorkspaceDatabase {
             this.statement(`INSERT INTO contents(id,title,body,document_json,kind,tone,revision) VALUES (?,?,?,?,?,?,?)
               ON CONFLICT(id) DO UPDATE SET title=excluded.title,body=excluded.body,document_json=excluded.document_json,kind=excluded.kind,tone=excluded.tone,revision=excluded.revision`).run(id, title, body, document, kind, tone, revision);
             changed = true;
+            const key='card:'+id,record=this.statement('SELECT value FROM meta WHERE key=?').get(key),metadata=record?JSON.parse(record.value):{},now=new Date().toISOString();
+            this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,canonicalJSON({...metadata,id,createdTime:metadata.createdTime??(old?null:now),lastEditedTime:now}));
           }
           Object.defineProperty(contentRevisions, id, { value: revision, enumerable: true, writable: true, configurable: true });
         } else if (operation.type === 'putInstance') {
@@ -244,6 +246,8 @@ class WorkspaceDatabase {
         } else if (operation.type === 'deleteInstance') {
           const result = this.statement('DELETE FROM instances WHERE id=?').run(identifier(operation.id, 'instance ID'));
           changed ||= Number(result.changes) > 0;
+          const metadata = this.statement('DELETE FROM meta WHERE key=?').run('instance:'+operation.id);
+          changed ||= Number(metadata.changes) > 0;
         } else if (operation.type === 'putBoard') {
           const data = operation.data;
           check(data && typeof data === 'object', 'Missing board');
@@ -259,10 +263,18 @@ class WorkspaceDatabase {
             const key='board:'+id,previous=this.statement('SELECT value FROM meta WHERE key=?').get(key);
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
+        } else if(operation.type==='deleteCatalog'){
+          check(operation.kind==='folder','Unsupported catalog deletion');
+          const result=this.statement('DELETE FROM meta WHERE key=?').run('folder:'+identifier(operation.id,'folder ID'));
+          changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['folder','whiteboard-instance'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
           if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
-          else {const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
+          else if(operation.kind==='whiteboard-instance'){const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
+          else if(['card','remark'].includes(operation.kind))check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Catalog content is missing');
+          else if(operation.kind==='instance')check(!!this.statement('SELECT id FROM instances WHERE id=?').get(id),'Catalog instance is missing');
+          else if(operation.kind==='tag')text(data.name,'tag name',255);
+          else if(operation.kind==='card-tag'){identifier(data.cardId,'tagged card ID');identifier(data.tagId,'tag ID');}
           const value=canonicalJSON(data),key=operation.kind+':'+id,old=this.statement('SELECT value FROM meta WHERE key=?').get(key);
           if(old?.value!==value){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,value);changed=true;}
         } else throw new PersistenceError('INVALID_REQUEST', 'Unknown commit operation');

@@ -1,5 +1,7 @@
 # 原版清單與縮放整合 — 2026-10-31
 
+白板總覽與卡片庫最新接入、來源與未完成範圍見 [ORIGINAL_BOARD_LIBRARY_INTEGRATION.md](ORIGINAL_BOARD_LIBRARY_INTEGRATION.md)。較早階段的限制，以該文件逐項更新結果為準。
+
 ## 最新截圖對齊修正（基線be86a0d）
 
 使用者再次指出左上導覽、分頁／面板銜接與右列表圖示差距。先以真Electron check-shell-parity重現：右面板280px、history起點x44、原導覽群組0個按鈕、列表圖示rgb(255,255,255)。

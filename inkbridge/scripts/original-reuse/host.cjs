@@ -30,7 +30,7 @@ app.whenReady().then(async()=>{
         html=html.replace(/<aside class="sidebar">[\s\S]*?<\/aside>/,'<aside class="original-sidebar flex min-h-0 shrink-0 flex-col border-r border-default-200 bg-content1 p-2" style="width:280px"><div id="original-board-list" class="min-h-0 flex-1" aria-label="白板清單"></div><small id="board-navigation-status" role="status"></small><button id="open-trash" class="mt-2 rounded-md px-2 py-1 text-left text-xs text-default-600" title="回收站">回收站</button><div id="persistence-status" class="px-2 py-1 text-xs text-default-500">正在載入…</div><b id="sidebar-count" hidden></b><div id="inspector" hidden></div></aside>');
         const brand=html.match(/<div class="brand">[\s\S]*?<\/div>/)?.[0];if(!brand)throw Error('InkBridge brand not found');html=html.replace(brand,'<div id="original-navigation-controls"></div>');
         html=html.replace(/<button id="add-card"[\s\S]*?<\/button>/,'<button id="toggle-outline" aria-label="切換卡片列表" aria-expanded="false" title="卡片列表">☷</button>');
-        html=html.replace('<div id="original-board-list"','<div class="sidebar-brand-row">'+brand+'<button id="add-card" aria-label="新增卡片" title="新增卡片">＋</button></div><div id="original-sidebar-navigation"></div><div id="original-board-list"');
+        html=html.replace('<div id="original-board-list"','<div class="sidebar-brand-row">'+brand+'<button id="add-card" aria-label="新增卡片" title="新增卡片">＋</button><span id="original-new-card-launcher"></span></div><div id="original-sidebar-navigation"></div><div id="original-board-list"');
         const save=html.match(/<button id="save-workspace"[^>]*>[\s\S]*?<\/button>/)?.[0];html=html.replace(save,'');html=html.replace('<div id="persistence-status"',save+'<div id="persistence-status"');
         html=html.replace('<button id="open-trash"','<div class="sidebar-footer"><button id="open-trash"').replace('正在載入…</div><b id="sidebar-count"','正在載入…</div></div><b id="sidebar-count"');
         html=html.replace('<div class="breadcrumb">','<div id="original-history-tabs" style="flex:1;min-width:0"></div><div class="breadcrumb" style="display:none" hidden>');
@@ -54,6 +54,9 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-ui/styles.css')file=path.join(project,'src/renderer/styles.css');
     else if(pathname==='/inkbridge-core/persistence-coordinator.mjs')file=path.resolve(own,'../../src/core/persistence-coordinator.mjs');
     else if(pathname==='/inkbridge-core/rich-document.mjs')file=path.resolve(own,'../../src/core/rich-document.mjs');
+    else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
+    else if(pathname==='/inkbridge-core/original-note-writes.mjs')file=path.resolve(own,'../../src/core/original-note-writes.mjs');
+    else if(pathname==='/inkbridge-core/original-folder-writes.mjs')file=path.resolve(own,'../../src/core/original-folder-writes.mjs');
     else if(pathname==='/runtime.js'||pathname==='/register-original.js')file=path.join(root,path.basename(pathname));
     else{
       const assetRoot=path.join(root,'vendor/app');file=path.resolve(assetRoot,'.'+pathname);
