@@ -703,6 +703,13 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-093 — Compact shell must preserve canvas area and native UI styling
+
+- User change: put InkBridge branding in the sidebar; replace the tall header/board title with a compact tab strip; port the visible core UI first. AI, account, shortcuts settings, cloud backup/sync and database import are out of current scope.
+- Baseline: actual Electron check-compact-shell fails because the logo remains outside the sidebar. Earlier shell also loads global legacy svg{fill:none}, hiding the original filled highlighter icon.
+- Fix: own36px window/title/tab container, native window controls, no default Electron menu, sidebar logo, original native navigation JSX, full original creation panels in explicit UI-only mode, native caption and undo UI. Right outline starts hidden and is toggled explicitly. Remove the old global stylesheet from this host; scope own styles to layout/branding/legacy card dialog. Unconnected tools stay disabled; UI-only mode does not mount the hidden web/PDF/file import forms and does not fake getTag responses.
+- Targeted tests: check-compact-shell verifies1200x960 => canvas(x280,y36,w920,h924), logo placement, UI panels, sidebar/outline toggles, excluded entries absent, real add-card dialog, pending tools disabled, native SVG fill, no runtime errors/menu and1280x720 toolbar fit. Existing check-sidebar-header, check-shell and check-folders-trash cover the related create/navigation/save/restore flows; check-shell explicitly opens the now-collapsed outline before retaining all old assertions. No full suite, performance or packaging rerun.
+
 ## REG-092 — Port the original whiteboard sidebar parent, not only its list child
 
 - User evidence: the original whiteboard/favorites view tabs and search/collapse/create-board/create-group toolbar were absent. The host retained an early custom sidebar and topbar create button even though74582.ListView itself was original. Earlier persistence tests did not validate this parent UI.

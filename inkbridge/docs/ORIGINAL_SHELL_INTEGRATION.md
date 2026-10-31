@@ -1,5 +1,21 @@
 # 原版清單與縮放整合 — 2026-10-31
 
+## 最新：緊湊工作區與 UI 優先
+
+基線86b9ada；使用者要求先移植相關UI，功能分批接入，將Logo移入側欄，拿掉頂部浪費的空間。AI、線上備份／同步、資料庫匯入、帳號及快捷鍵設定本階段略過；既有研究與資料不刪除。
+
+- 視窗：自己的Electron host使用原生titleBarOverlay，36px分頁／拖曳區與Windows視窗按鈕共用一列，移除預設File/Edit選單。Logo放入280px側欄，舊大標題、說明、頁尾統計與白板外邊距不再佔據畫布；右側原列表預設收起，可按需開關。
+- 原版78507（factory SHA-256 a8bc497f46376b93877529207fde43cd180af5b561dcde8bef9e01f87a727b0c）：以TypeScript AST擷取aE中的完整導覽Tabs JSX，沿用aN六項資料、圖示、翻譯與樣式。這是明確的UI切片，沒有啟動整個aE的帳號、update IPC、同步或匯入生命週期。白板導覽可開首頁，其餘待接路由停用；同一原生UI可用水平模式顯示頂部四項檢視入口，卡片庫入口切換現有右列表，其餘停用。不是整個aE功能已移植。
+- 原版48626（factory SHA-256 4e77403d2a30f02126c6ec8afd3c0c9b6fe79f3d77df9d59988bb3cc371fc7de）：匯出既有nZ建立／模式工具面板、n0白板浮動標題、iS復原／重做／歷史UI。新增inkbridgeUiOnly明確組合模式，保留nZ前兩個原面板，避免掛載關閉中的PDF／網頁／檔案匯入表單。待接工具放在disabled fieldset中，不能意外呼叫未接服務；沒有用假的getTag等資料回應。底部原縮放、既有新增卡片對話框、編輯與Commit協定仍可用。Undo／Redo／歷史只是UI，不算新功能完成。
+- 板名浮標getBoardListByIds讀真實InkBridge SQLite，保留原碼回傳形狀。Logo／容器／既有自寫新增卡片對話框使用自己的compact-shell.css，其他元件使用原CSS。移除早期全域樣式，解決svg{fill:none}隱藏原版高亮圖示的問題；不再拿全域input／dialog規則改寫原元件。
+- 所有私人factory保留baseline/hash/.before-inkbridge。apply-integration-patches重跑13項均already applied；collect可重建3737模組，沒有新增黑盒、複製原EXE或改正式FlexNote。
+
+實測：check-compact-shell於修改前因Logo不在側欄失敗；修改後1200×960的renderer中，Canvas為x280/y36/920×924，高度924/960=96.25%。驗證導覽／工具面板／浮標／歷史UI、側欄與右列表開關、無排除入口、既有新增卡片對話框、待接按鈕停用、原高亮圖示fill、沒有getTag假服務／runtime error／預設Electron選單；1280×720時工具列仍在可視區。原版FlexNote效能沒有重新比較。
+
+相關check-sidebar-header、check-shell及check-folders-trash通過，涵蓋原header新增／取消／搜尋、分組、拖曳、復原、切板、分頁、原編輯器保存與正常重開。check-shell只新增先打開預設收起的右列表步驟，其餘斷言保留。移除舊CSS後針對相關check-shell與check-folders-trash再次驗證；沒有全套Playwright、效能或EXE封裝重測。
+
+結果及已檢視截圖：private-original-editor/compact-shell-result.json、compact-shell-success.png。仍有待接功能，這次是可操作的緊湊布局與UI切片，不宣稱整個FlexNote功能已完成。
+
 ## 使用者截圖修正：完整白板側欄父元件
 
 本節取代下文較早的「清單原元件即足夠」驗收範圍。fc113c4保留早期InkBridge自製側欄與新增按鈕，只嵌入原74582子元件，缺少使用者截圖中的收藏／白板分頁及四個工具入口；資料流程通過不代表整段側欄porting完成。

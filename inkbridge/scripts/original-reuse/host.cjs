@@ -1,5 +1,5 @@
 // Isolated host for original modules; never starts the original Electron main.
-const {app,BrowserWindow,session,ipcMain,dialog}=require('electron');
+const {app,BrowserWindow,session,ipcMain,dialog,Menu}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const crypto=require('node:crypto');
 const {createDatabaseClient}=require('../../src/main/database-client.cjs');
@@ -25,12 +25,20 @@ app.whenReady().then(async()=>{
       if(boardMode){
         let html=fs.readFileSync(path.join(project,'src/renderer/index.html'),'utf8');
         html=html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/,'').replace('href="styles.css"','href="/inkbridge-ui/styles.css"').replace('<link rel="stylesheet" href="editor.css">','');
-        html=html.replace('<link rel="stylesheet" href="/inkbridge-ui/styles.css">','<link rel="stylesheet" href="/_next/static/css/0a3dd850c67b254e.css"><link rel="stylesheet" href="/inkbridge-ui/styles.css">');
+        html=html.replace('<link rel="stylesheet" href="/inkbridge-ui/styles.css">','<link rel="stylesheet" href="/_next/static/css/0a3dd850c67b254e.css">');
         html=html.replace(/<canvas id="board"[^>]*><\/canvas>/,'<div id="board" role="application" aria-label="InkBridge 原版白板" style="position:absolute;inset:0;width:100%;height:100%"></div>');
         html=html.replace(/<aside class="sidebar">[\s\S]*?<\/aside>/,'<aside class="original-sidebar flex min-h-0 shrink-0 flex-col border-r border-default-200 bg-content1 p-2" style="width:280px"><div id="original-board-list" class="min-h-0 flex-1" aria-label="白板清單"></div><small id="board-navigation-status" role="status"></small><button id="open-trash" class="mt-2 rounded-md px-2 py-1 text-left text-xs text-default-600" title="回收站">回收站</button><div id="persistence-status" class="px-2 py-1 text-xs text-default-500">正在載入…</div><b id="sidebar-count" hidden></b><div id="inspector" hidden></div></aside>');
+        const brand=html.match(/<div class="brand">[\s\S]*?<\/div>/)?.[0];if(!brand)throw Error('InkBridge brand not found');html=html.replace(brand,'<button id="toggle-sidebar" aria-label="切換側邊欄" title="切換側邊欄">☰</button>');
+        html=html.replace(/<button id="add-card"[\s\S]*?<\/button>/,'<button id="toggle-outline" aria-label="切換卡片列表" aria-expanded="false" title="卡片列表">☷</button>');
+        html=html.replace('<div id="original-board-list"','<div class="sidebar-brand-row">'+brand+'<button id="add-card" aria-label="新增卡片" title="新增卡片">＋</button></div><div id="original-sidebar-navigation"></div><div id="original-board-list"');
+        const save=html.match(/<button id="save-workspace"[^>]*>[\s\S]*?<\/button>/)?.[0];html=html.replace(save,'');html=html.replace('<div id="persistence-status"',save+'<div id="persistence-status"');
+        html=html.replace('<button id="open-trash"','<div class="sidebar-footer"><button id="open-trash"').replace('正在載入…</div><b id="sidebar-count"','正在載入…</div></div><b id="sidebar-count"');
         html=html.replace('<div class="breadcrumb">','<div id="original-history-tabs" style="flex:1;min-width:0"></div><div class="breadcrumb" style="display:none" hidden>');
+        html=html.replace('<button id="toggle-outline"','<div id="original-top-views"></div><button id="toggle-outline"');
         html=html.replace('</main>','</main><aside id="original-flow-outline" aria-label="卡片列表" style="width:280px;min-width:280px;background:white;border-left:1px solid #e1e4dc;display:flex;min-height:0"></aside>');
-        html=html.replace('<div class="zoom-controls">','<div id="original-board-home" style="display:contents"></div><div id="original-zoom-controls"></div><div class="zoom-controls" hidden>');
+        html=html.replace('<div class="zoom-controls">','<div id="original-board-home" style="display:contents"></div><div id="original-board-caption"></div><div id="original-native-tools"></div><div id="original-undo-controls"></div><div id="original-zoom-controls"></div><div class="zoom-controls" hidden>');
+        html=html.replace('id="original-flow-outline"','id="original-flow-outline" hidden');
+        html=html.replace('</head>','<link rel="stylesheet" href="/integration/compact-shell.css"></head>');
         html=html.replace('</head>','<style>.canvas-wrap{isolation:isolate}#board-navigation-status{display:block;color:#a54235;font-size:11px}#original-zoom-controls{display:contents}.zoom-controls[hidden]{display:none}.board-heading h2{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head>');
         html=html.replace('<script src="vendor/canvaskit.js"></script><script type="module" src="workspace.mjs"></script>',originalScripts+'<script type="module" src="/integration/board.mjs"></script>');
         response.end(html);return;
@@ -38,7 +46,8 @@ app.whenReady().then(async()=>{
       response.end('<!doctype html><html lang="zh-TW"><meta charset="utf-8"><title>InkBridge — original module isolation probe</title><link rel="stylesheet" href="/_next/static/css/0a3dd850c67b254e.css"><style>body{margin:20px;background:#eee;font-family:sans-serif}#editor-host{width:520px;background:white;min-height:300px}canvas{background:white;margin-top:20px}#status{white-space:pre-wrap}</style><body><h1>InkBridge 原版模組隔離驗證</h1><pre id="status">正在載入原版模組…</pre><div id="editor-host"></div><canvas id="original-canvas" width="620" height="1400"></canvas>'+originalScripts+'<script src="/probe.js"></script></body></html>');return;
     }
     let file;
-    if(pathname==='/probe.js')file=path.join(own,'probe.js');
+    if(pathname==='/integration/compact-shell.css')file=path.join(own,'compact-shell.css');
+    else if(pathname==='/probe.js')file=path.join(own,'probe.js');
     else if(pathname.startsWith('/integration/')&&pathname.endsWith('.mjs')){
       file=path.resolve(own,'.'+pathname.slice('/integration'.length));if(!file.startsWith(own+path.sep)){response.writeHead(403);response.end();return;}
     }
@@ -64,7 +73,8 @@ app.whenReady().then(async()=>{
   ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;});
   const finishClose=async()=>{await database.close();approvedClose=true;window.close();};
   ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok)await finishClose();else dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');});
-  window=new BrowserWindow({width:1200,height:960,title:'InkBridge 原版模組隔離驗證',webPreferences:{preload:path.resolve(own,'../../src/main/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+  Menu.setApplicationMenu(null);
+  window=new BrowserWindow({width:1200,height:960,title:'InkBridge 墨橋',...(boardMode?{titleBarStyle:'hidden',titleBarOverlay:{color:'#eeeef0',symbolColor:'#3f3f46',height:36}}:{}),webPreferences:{preload:path.resolve(own,'../../src/main/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
   window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closeRequest)return;if(!rendererReady){finishClose().catch(error=>dialog.showErrorBox('InkBridge 尚未保存',error.message));return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
   globalThis.__inkbridgeOriginalProbe={dataRoot:data,origin,blocked,preload:'existing InkBridge limited preload; no original window.ipc',nodeIntegration:false,originalMainExecuted:false};

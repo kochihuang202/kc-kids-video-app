@@ -2,6 +2,8 @@
 // This module only maps the existing InkBridge database and routing boundary.
 export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
   const ListView=r(74582).ListView,SidebarTree=r(79509).SortableTree,ZoomControls=r(46979).OO,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
+  const SidebarNavigation=r(78507).InkBridgeSidebarNavigation,NativeFlowUi=r(48626);
+  if(!SidebarNavigation||!NativeFlowUi.InkBridgeCreationToolbar)throw Error('Apply native shell UI export patches first');
   // Open the supported original whiteboard view, through its own saved view key.
   // Collections have a separate native catalog, not the history-tab table.
   localStorage.setItem(r(39641).hS,'whiteboards');
@@ -16,7 +18,8 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   function hydrate(graph){const data=catalog(graph);redux.dispatch(folderActions.Tc(data.folders));redux.dispatch(actions.Dq({boardList:data.whiteboardList,instances:data.whiteboardInstances,allWhiteboardInstances:data.allWhiteboardInstances,allWhiteboards:data.allWhiteboards,unAttachedWhiteboards:data.unAttachedWhiteboards}));}
   const management=new Set(['createWhiteboard','updateBoard','deleteWhiteboard','addBoard','restoreWhiteboard']);
   const catalogServices=new Set(['addFolder','updateFolder','updateFoldersOrder','createWhiteboardInstance','updateWhiteboardInstance']);
-  globalThis.__inkbridgeServices={has:name=>['getTabs','getTabGroups','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  globalThis.__inkbridgeServices={has:name=>['getBoardListByIds','getTabs','getTabGroups','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+    if(name==='getBoardListByIds'){await flush();return {whiteboards:records(await window.inkbridge.load()).filter(board=>payload.includes(board.id))};}
     // No collection tabs/groups have been implemented or imported in this own
     // workspace. Report their actual empty catalog; never map history as favorites.
     if(name==='getTabs'||name==='getTabGroups')return {data:[]};
@@ -50,7 +53,13 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   };
   function TrashView(){const root=React.useRef(null);React.useLayoutEffect(()=>{const disable=()=>{const t=key=>r(1643).ag.t(key,{ns:'common'});for(const button of root.current.querySelectorAll('button'))if(button.getAttribute('aria-label')===t('deletePermanently')||button.textContent.trim()===t('emptyTrash')){button.disabled=true;button.title='本階段只提供復原，永久刪除尚未接入';}};disable();const observer=new MutationObserver(disable);observer.observe(root.current,{childList:true,subtree:true});return ()=>observer.disconnect();},[]);return React.createElement('div',{ref:root,className:'h-full'},React.createElement(r(69193).default));}
   const createInFolder=folderId=>window.dispatchEvent(new CustomEvent(r(39641).GO,{detail:{folderId}}));
+  const pendingUi=component=>React.createElement('fieldset',{disabled:true,title:'UI 已移植；此工具的資料與操作流程將逐項接入',onMouseDownCapture:event=>{event.preventDefault();event.stopPropagation();}},React.createElement(component,{inkbridgeUiOnly:true}));
   function ShellPortals({home,page}){return React.createElement(React.Fragment,null,
+    ReactDOM.createPortal(React.createElement(SidebarNavigation,{onNavigate:key=>{if(key==='board')showHome().catch(onError);}}),document.querySelector('#original-sidebar-navigation')),
+    ReactDOM.createPortal(React.createElement(SidebarNavigation,{horizontal:true,keys:['board','card-list','highlight','quick-notes'],enabledKeys:['card-list'],onNavigate:key=>{if(key==='card-list')document.querySelector('#toggle-outline').click();}}),document.querySelector('#original-top-views')),
+    !home?ReactDOM.createPortal(pendingUi(NativeFlowUi.InkBridgeCreationToolbar),document.querySelector('#original-native-tools')):null,
+    !home?ReactDOM.createPortal(pendingUi(NativeFlowUi.InkBridgeUndoControls),document.querySelector('#original-undo-controls')):null,
+    !home?ReactDOM.createPortal(React.createElement(NativeFlowUi.InkBridgeBoardCaption,{isReadOnly:true}),document.querySelector('#original-board-caption')):null,
     ReactDOM.createPortal(React.createElement('div',{onClickCapture:event=>{const button=event.target.closest('[aria-label]');if(button?.getAttribute('aria-label')===r(1643).ag.t('newTab',{ns:'common'})){event.preventDefault();event.stopPropagation();document.querySelector('#board-navigation-status').textContent='新增分頁的其他卡片服務尚未接入；可從清單開啟白板。';}}},React.createElement(HistoryTabs)),document.querySelector('#original-history-tabs')),
     React.createElement(r(64744).InkBridgeCreateWhiteboard),
     React.createElement(r(64744).InkBridgeCreateFolder),

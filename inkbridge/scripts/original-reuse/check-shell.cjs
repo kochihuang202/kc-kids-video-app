@@ -18,6 +18,7 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   const list=page.locator('#original-board-list');await expect(list.getByText('Alpha board',{exact:true})).toBeVisible();await expect(list.getByText('Beta board',{exact:true})).toBeVisible();
   await expect(page.locator('.breadcrumb strong')).toHaveText('Alpha board');
   assert.deepEqual(await page.evaluate(()=>window.__inkbridgeIntegrated.shellModules),{sidebar:79509,list:74582,zoom:46979,service:58850,tabs:23733,outline:41});
+  await page.locator('#toggle-outline').click();
   const outline=page.locator('#original-flow-outline');await expect(outline.getByRole('option').filter({hasText:'main note'})).toBeVisible();
   const search=outline.locator('input');await search.fill('no match fixture');await expect(outline.getByRole('option')).toHaveCount(0);await search.fill('main');await expect(outline.getByRole('option')).toHaveCount(1);await search.fill('');
   await outline.getByRole('option').filter({hasText:'main note'}).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().selectedNodeIds)).toContain('instance-main');

@@ -132,6 +132,8 @@ async function boot(){
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   $('#save-workspace').addEventListener('click',()=>coordinator.flush().catch(report));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
+  $('#toggle-sidebar').onclick=()=>{const sidebar=$('.original-sidebar');sidebar.hidden=!sidebar.hidden;};
+  $('#toggle-outline').onclick=()=>{const outline=$('#original-flow-outline');outline.hidden=!outline.hidden;$('#toggle-outline').setAttribute('aria-expanded',String(!outline.hidden));};
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();coordinator.flush().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
