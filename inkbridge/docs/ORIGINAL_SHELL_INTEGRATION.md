@@ -1,5 +1,19 @@
 # 原版清單與縮放整合 — 2026-10-31
 
+## 使用者截圖修正：完整白板側欄父元件
+
+本節取代下文較早的「清單原元件即足夠」驗收範圍。fc113c4保留早期InkBridge自製側欄與新增按鈕，只嵌入原74582子元件，缺少使用者截圖中的收藏／白板分頁及四個工具入口；資料流程通過不代表整段側欄porting完成。
+
+- 基線：新增真Electron check-sidebar-header，在fc113c4因sidebar tablist不存在而失敗，截圖確認同一差距。
+- 來源：完整79509.SortableTree，原factory SHA-256為6d92a3b4db85cea507cbf1ad01b915aef52f5639f85133bfd0e57cfe2226695e；其原48206.YE hook、39641事件／view key與延遲載入74582.ListView一併使用，未改原factory。
+- 移除舊標語、獨立「＋白板／＋分組」按鈕及舊sidebar CSS約束。完整原元件提供分頁列、搜尋、全部展開／收合、新增白板、新增分組與樹；入口直接發送原GO／hr事件。宿主只提供280px容器與自己的回收站／保存狀態入口。
+- 原父元件初始化讀取收藏getTabs／getTabGroups；InkBridge沒有實作或匯入收藏目錄，故回傳實際空目錄，不把historyTabs混作收藏。收藏分頁點擊會明確提示尚未接入，保留白板檢視；這不是收藏功能完成。白板view使用原保存鍵，啟動時選擇目前支援的whiteboards。
+- 新測試通過：原header緊湊單列、無重複自製新增入口、取消不寫入、頂層新建不建立folder引用且立即開啟、分組新增、原搜尋／Escape、全部展開收合與重開完整graph一致。已檢視sidebar-header-success.png，結果存在同目錄sidebar-header-result.json。既有check-folders-trash及check-board-management改點原header入口後通過，歷史內容／引用／view保留斷言不變。
+- 直接相關check-shell也通過：原切板、分頁、右側搜尋、縮放、編輯中導航與組字等待／重開一致，errors為空；來源清單斷言增加79509。沒有重新跑完整資料測試、效能或封裝。
+- PRD01第1.4節仍描述「白板灰色標題＋加號」，與使用者實際截圖及同hash原碼不符；本次依使用者截圖與原79509為準，沒有重寫Gemini未提交的PRD。
+
+仍不是整個應用外殼完成：頂部品牌／畫布標題等早期InkBridge布局保留，其他未接服務詳下文。不宣稱全應用外觀或所有功能等同原版。
+
 本次依使用者較晚確認，**選FlexNote的完整邏輯功能，不把Gemini自製DOM／localStorage類別直接搬回來**。沿用Gemini分支89e721f提供的清單／原模組線索，實際接入已恢復的原元件；不是整包merge該分支。
 
 ## 本次接入

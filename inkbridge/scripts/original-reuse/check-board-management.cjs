@@ -5,7 +5,7 @@ const {_electron,expect}=require('@playwright/test'),fs=require('node:fs/promise
  try{
  let page=await app.firstWindow();await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{},{timeout:30000});
  const label=key=>page.evaluate(key=>window.__originalRequire(1643).ag.t(key,{ns:'common'}),key);
- await page.locator('#create-whiteboard').click();let dialog=page.getByRole('dialog');await dialog.locator('input').fill('Created board');await dialog.getByRole('button',{name:await label('submit'),exact:true}).click();
+ await page.locator('#original-board-list').getByRole('tablist').locator('..').getByRole('button',{name:await label('newBoard'),exact:true}).click();let dialog=page.getByRole('dialog');await dialog.locator('input').fill('Created board');await dialog.getByRole('button',{name:await label('submit'),exact:true}).click();
  await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().boardId)).not.toBe('board-main');
  const id=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().boardId),list=page.locator('#original-board-list');await expect(list.getByText('Created board',{exact:true})).toBeVisible();
  await page.evaluate(()=>window.__inkbridgeIntegrated.addCard('Preserved card','PRESERVE_AFTER_TRASH',{x:20,y:20}));await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
@@ -33,7 +33,7 @@ const {_electron,expect}=require('@playwright/test'),fs=require('node:fs/promise
  // Original48677 does not hydrate missing Whiteboards; after trash the tab
  // falls back to its saved title. The authoritative renamed target is tested above.
  await expect(page.locator('[data-tour="history-tabs"]').getByText('Created board',{exact:true})).toBeVisible();
- await page.locator('#create-whiteboard').click();dialog=page.getByRole('dialog');await dialog.locator('input').fill('After trash board');await dialog.getByRole('button',{name:await label('submit'),exact:true}).click();
+ await page.locator('#original-board-list').getByRole('tablist').locator('..').getByRole('button',{name:await label('newBoard'),exact:true}).click();dialog=page.getByRole('dialog');await dialog.locator('input').fill('After trash board');await dialog.getByRole('button',{name:await label('submit'),exact:true}).click();
  await dialog.waitFor({state:'hidden'});
  await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.home)).toBe(false);await expect(page.locator('#add-card')).toBeEnabled();
  const final=await page.evaluate(()=>window.inkbridge.load());assert.equal(final.boards.filter(board=>!board.attributes?.isTrashed).length,1);assert.deepEqual(final.contents,after.contents);assert.deepEqual(final.instances,after.instances);

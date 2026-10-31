@@ -131,8 +131,6 @@ async function boot(){
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   $('#save-workspace').addEventListener('click',()=>coordinator.flush().catch(report));
-  $('#create-whiteboard').addEventListener('click',()=>window.dispatchEvent(new CustomEvent(r(39641).GO)));
-  $('#create-folder').addEventListener('click',()=>window.dispatchEvent(new CustomEvent(r(39641).hr)));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();coordinator.flush().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});

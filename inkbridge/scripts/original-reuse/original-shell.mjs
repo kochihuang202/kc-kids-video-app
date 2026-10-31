@@ -1,7 +1,10 @@
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
-  const ListView=r(74582).ListView,ZoomControls=r(46979).OO,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
+  const ListView=r(74582).ListView,SidebarTree=r(79509).SortableTree,ZoomControls=r(46979).OO,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
+  // Open the supported original whiteboard view, through its own saved view key.
+  // Collections have a separate native catalog, not the history-tab table.
+  localStorage.setItem(r(39641).hS,'whiteboards');
   if(!HistoryTabs)throw Error('Apply the original history-tab export patch first');
   const tabActions=r(90561),historyNames=new Set(['getHistoryTabs','createHistoryTab','touchHistoryTab','deleteHistoryTab','updateHistoryTab','updateHistoryTabsOrder']);
   const pendingHistory=new Set();
@@ -13,7 +16,10 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   function hydrate(graph){const data=catalog(graph);redux.dispatch(folderActions.Tc(data.folders));redux.dispatch(actions.Dq({boardList:data.whiteboardList,instances:data.whiteboardInstances,allWhiteboardInstances:data.allWhiteboardInstances,allWhiteboards:data.allWhiteboards,unAttachedWhiteboards:data.unAttachedWhiteboards}));}
   const management=new Set(['createWhiteboard','updateBoard','deleteWhiteboard','addBoard','restoreWhiteboard']);
   const catalogServices=new Set(['addFolder','updateFolder','updateFoldersOrder','createWhiteboardInstance','updateWhiteboardInstance']);
-  globalThis.__inkbridgeServices={has:name=>['getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  globalThis.__inkbridgeServices={has:name=>['getTabs','getTabGroups','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+    // No collection tabs/groups have been implemented or imported in this own
+    // workspace. Report their actual empty catalog; never map history as favorites.
+    if(name==='getTabs'||name==='getTabGroups')return {data:[]};
     if(name==='getFolders'){await flush();return catalog(await window.inkbridge.load());}
     if(name==='getWhiteboard'){await flush();const board=(await window.inkbridge.load()).boards.find(board=>board.id===payload);if(!board)throw Error('白板不存在');return {whiteboard:{color:'white',icon:null,...board.attributes,id:board.id,name:board.title}};}
     if(name==='getTrash'){await flush();const graph=await window.inkbridge.load();return {noteCards:[],mindMaps:[],pdfCards:[],highlights:[],videoHighlights:[],audioHighlights:[],noteHighlights:[],mediaCards:[],websiteCards:[],whiteboards:graph.boards.filter(board=>board.attributes?.isTrashed).map(board=>({...board.attributes,id:board.id,name:board.title}))};}
@@ -49,7 +55,7 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     React.createElement(r(64744).InkBridgeCreateWhiteboard),
     React.createElement(r(64744).InkBridgeCreateFolder),
     home?ReactDOM.createPortal(React.createElement('div',{style:{position:'absolute',inset:0,zIndex:300,overflow:'auto',background:'white'}},page==='trash'?React.createElement(TrashView):React.createElement(ListView,{hideOperation:true,onAddWhiteboard:createInFolder,sortBy:'default'})),document.querySelector('#original-board-home')):null,
-    ReactDOM.createPortal(React.createElement(ListView,{compact:true,hideOperation:true,onAddWhiteboard:createInFolder,sortBy:'default',classNames:{root:'inkbridge-original-board-tree'}}),document.querySelector('#original-board-list')),
+    ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col',onClickCapture:event=>{const tab=event.target.closest('[role="tab"]');if(tab?.getAttribute('aria-label')===r(1643).ag.t('collections',{ns:'common'})){event.preventDefault();event.stopPropagation();document.querySelector('#board-navigation-status').textContent='收藏資料服務尚未接入；目前保留白板檢視。';}}},React.createElement(SidebarTree)),document.querySelector('#original-board-list')),
     ReactDOM.createPortal(React.createElement(r(32367).w,{className:'h-full w-full rounded-none bg-transparent shadow-none'},React.createElement(FlowOutline)),document.querySelector('#original-flow-outline')),
     ReactDOM.createPortal(React.createElement(ZoomControls),document.querySelector('#original-zoom-controls')));
   }
@@ -59,5 +65,5 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     const result=await history('createHistoryTab',value);if(result.deletedTabId)redux.dispatch(tabActions.ff(result.deletedTabId));redux.dispatch(tabActions.AO(result.tab));
   }
   const ready=history('getHistoryTabs',{}).then(result=>redux.dispatch(tabActions.AY(result.data)));
-  return {ShellPortals,FlowOutline,hydrate,selected,homeSelected,ready,settle,modules:{list:74582,zoom:46979,service:58850,tabs:23733,outline:41}};
+  return {ShellPortals,FlowOutline,hydrate,selected,homeSelected,ready,settle,modules:{sidebar:79509,list:74582,zoom:46979,service:58850,tabs:23733,outline:41}};
 }

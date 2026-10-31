@@ -703,6 +703,13 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-092 — Port the original whiteboard sidebar parent, not only its list child
+
+- User evidence: the original whiteboard/favorites view tabs and search/collapse/create-board/create-group toolbar were absent. The host retained an early custom sidebar and topbar create button even though74582.ListView itself was original. Earlier persistence tests did not validate this parent UI.
+- Baseline: actual Electron check-sidebar-header fails because no sidebar tablist exists; no runtime error is needed to reproduce the missing feature.
+- Fix: mount the full recovered79509.SortableTree including its original48206 hook, view tabs, toolbar, search, expansion and nested74582.ListView. Remove the custom sidebar introduction and duplicate create controls; retain own SQLite boundaries. No extracted proprietary factory is committed.
+- Targeted tests: check-sidebar-header drives the original header, verifies compact layout/no old create controls, cancel/no write, root create/open, group create, search, expansion and exact graph after restart. Existing board-management and folders-trash flows now use the native header entry, retaining all data-preservation/restore/drag assertions. Collection writes remain unavailable; empty collection reads do not represent ported collection persistence.
+
 ## REG-091 — Folder board references must retain folder type through trash and restore
 
 - Reproduction: Original19281.newWhiteboardInstance ignores a supplied containerType and always returns whiteboard. Using it unadapted for a sidebar folder creates a visible reference but restoration cannot reattach it to the folder.
