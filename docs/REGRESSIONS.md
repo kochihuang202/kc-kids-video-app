@@ -703,6 +703,12 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-088 — Shell navigation must await the editor and real database commit
+
+- Evidence: Gemini shell89e721f calls nonexistent setActiveBoardId, uses a separate localStorage catalog, and sends board updates without required views. Its13 mock-DOM tests pass while real navigation/SQLite paths fail (see InkBridge GEMINI_SHELL_REVIEW.md).
+- Integration: Use the full original74582.ListView and46979.OO controls, with a real getFolders/route boundary into the existing SQLite coordinator. Serialize navigation, wait for composition and Commit ACK, preserve board title/view, and keep unsupported management actions explicitly unavailable. No Gemini ShellStore or private fixtures were merged.
+- Targeted verification: `inkbridge/scripts/original-reuse/check-shell.cjs` drives actual original list/zoom UI across two isolated boards, edits immediately before switching, gates composition, repeats navigation and verifies exact full SQLite graph after normal restart. Related `check-board.cjs` and actual BAT `check-launcher.cjs` pass. This is not a claim that every original shell feature or performance target has been completed.
+
 ## REG-087 — Original Canvas integration receives incompatible controlMode names
 
 - Reproduction: Mount the original Canvas in the InkBridge board with the old shell's `select` mode. Card editing works, but blank double-click never reaches the original pane callback. The original component expects `move` for normal manipulation and `hand` for panning.

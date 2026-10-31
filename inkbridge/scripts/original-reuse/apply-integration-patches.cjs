@@ -10,4 +10,5 @@ function patch(id,anchor,replacement,description){
 }
 patch('64744','default: function () { return oI; }','InkBridgeCanvasHostProvider: function () { return ov; }, default: function () { return oI; }','Expose the existing complete CanvasKit host provider');
 patch('34883','id: u, onBlur: J, editorBlocks: n','id: u, onEditorReady: e.onEditorReady, onBlur: J, editorBlocks: n','Pass an existing optional Editor callback through the original flow wrapper');
+patch('58850','let p = (e, t) => (0, o.d)()', 'let p = (e, t) => globalThis.__inkbridgeServices?.has(e) ? globalThis.__inkbridgeServices.call(e, t) : (0, o.d)()', 'Delegate explicitly supported original service calls to the real InkBridge data boundary');
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));
