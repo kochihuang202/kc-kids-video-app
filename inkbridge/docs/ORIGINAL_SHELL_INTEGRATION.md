@@ -1,5 +1,17 @@
 # 原版清單與縮放整合 — 2026-10-31
 
+## 最新截圖對齊修正（基線be86a0d）
+
+使用者再次指出左上導覽、分頁／面板銜接與右列表圖示差距。先以真Electron check-shell-parity重現：右面板280px、history起點x44、原導覽群組0個按鈕、列表圖示rgb(255,255,255)。
+
+- 原19281.newNoteCardInstance預設color="#fff"；原41.nk對#fff使用前景色，但對調色盤名稱white使用白色。InkBridge toNode誤用white，已改為原預設值；不改SQLite筆記或以CSS強制塗黑所有類型。修正後白卡圖示rgb(63,63,70)、寬16px。
+- 原22676的rightSidebarWidth預設460，移除自製280px限制。左上使用23733.e5中原側欄／搜尋／返回／前進四個完整按鈕及原圖示；只替換必要callback／停用狀態，不掛載尚未接入的全域搜尋。搜尋、返回、前進仍為UI，沒有聲稱新增導航功能。
+- history父容器起點對齊側欄x280；側欄收起時控制區改為144px。右面板展開時，頂部白板檢視使用原59678.chromeTabActive樣式，按原23733.e5的白板／卡片庫／高亮／日記次序排列；選中白板Tab與右面板左緣對齊，底緣在y36。清除沿用側欄Tabs的8px上邊距。前一批將卡片庫作為列表開關的暫時接線已校正為白板檢視入口。
+- check-shell-parity與check-compact-shell驗證實際geometry、圖示顏色、面板／側欄切換及無runtime error。既有check-shell選中列表項後會觸發原41.nk的setTimeout+400ms fitView；面板變寬使舊測試的zoom競速顯現。增加等待實際水平置中結果，保留原縮放增大斷言，不改原動畫或用固定延遲。
+- 重跑Patch時發現相鄰匯出插入會讓舊步驟重複加入自己的HistoryTabs屬性；已改成獨立匯出檢查，只正規化重複InkBridge入口。第二次執行15步均already applied，可重建原registry。新的私人hash紀錄在parity-patches.json／parity-patches-repeat.json，原廠factory仍不提交。
+
+目前只對照本次標記區域，不宣稱所有版面像素完全一致。AI、帳號、同步與前批排除範圍保持不接入。
+
 ## 最新：緊湊工作區與 UI 優先
 
 基線86b9ada；使用者要求先移植相關UI，功能分批接入，將Logo移入側欄，拿掉頂部浪費的空間。AI、線上備份／同步、資料庫匯入、帳號及快捷鍵設定本階段略過；既有研究與資料不刪除。

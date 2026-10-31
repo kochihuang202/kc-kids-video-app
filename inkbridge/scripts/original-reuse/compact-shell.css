@@ -1,12 +1,22 @@
 /* InkBridge branding/window container only. Native controls use original CSS. */
 :root{color:#27272a;background:white;font-family:"Segoe UI","Microsoft JhengHei",sans-serif}
 body{margin:0;overflow:hidden}
-.topbar{height:36px;display:flex;align-items:center;padding:0 146px 0 8px;gap:8px;background:#eeeef0;border:0;-webkit-app-region:drag}
+.topbar{height:36px;display:flex;align-items:flex-end;padding:0 146px 0 0;gap:0;background:#eeeef0;border:0;-webkit-app-region:drag}
+.topbar{--tab-active-background:#fff}
+#original-navigation-controls{display:flex;align-items:center;height:36px;width:280px;padding-left:8px;flex-shrink:0;-webkit-app-region:no-drag}
+.sidebar-closed #original-navigation-controls{width:144px}
 .topbar button,.topbar [data-tour],#original-history-tabs{-webkit-app-region:no-drag}
 #original-history-tabs{height:36px;min-width:0;overflow:hidden}
+#original-history-tabs>div{height:36px;display:flex;align-items:flex-end}
 #original-top-views{width:128px;flex-shrink:0;-webkit-app-region:no-drag}
 #original-top-views>div{margin-top:0!important}
+#original-top-views .mt-2{margin-top:0!important}
 #original-top-views [role="tablist"]{gap:2px}
+.outline-open #original-top-views{width:286px}
+#original-top-views>div{height:36px;align-items:flex-end}
+#original-top-views [role="tablist"]{height:36px;align-items:flex-end}
+#original-top-views [role="tab"]{height:34px!important;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}
+#original-top-views [aria-selected="true"]{border-top-left-radius:10px!important;border-top-right-radius:10px!important}
 .layout{height:calc(100vh - 36px);display:flex}
 .original-sidebar{width:280px!important;padding:8px!important;overflow:hidden;background:white}
 .original-sidebar[hidden]{display:none!important}
@@ -28,7 +38,7 @@ body{margin:0;overflow:hidden}
 #loading{position:absolute;inset:0;display:grid;place-items:center;background:#f4f3ee;white-space:pre-wrap;z-index:40}
 #loading[hidden]{display:none}
 #original-flow-outline[hidden]{display:none!important}
-#original-flow-outline{width:280px!important;min-width:280px!important}
+#original-flow-outline{width:460px!important;min-width:460px!important}
 #toggle-sidebar,#toggle-outline{height:28px;width:28px;border-radius:6px;flex-shrink:0;display:grid;place-items:center;color:#52525b;font-size:17px}
 #original-native-tools,#original-undo-controls,#original-board-caption{position:absolute;inset:0;pointer-events:none;z-index:30}
 #original-native-tools fieldset,#original-undo-controls fieldset{border:0;margin:0;padding:0;min-width:0;position:absolute;inset:0;pointer-events:none}

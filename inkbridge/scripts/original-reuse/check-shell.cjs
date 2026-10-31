@@ -22,6 +22,9 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   const outline=page.locator('#original-flow-outline');await expect(outline.getByRole('option').filter({hasText:'main note'})).toBeVisible();
   const search=outline.locator('input');await search.fill('no match fixture');await expect(outline.getByRole('option')).toHaveCount(0);await search.fill('main');await expect(outline.getByRole('option')).toHaveCount(1);await search.fill('');
   await outline.getByRole('option').filter({hasText:'main note'}).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().selectedNodeIds)).toContain('instance-main');
+  // The original list schedules a 400ms fit after selection. Await its actual
+  // centering result before testing zoom, rather than racing that animation.
+  await expect.poll(()=>page.evaluate(()=>{const s=window.__originalRequire(23).gt.getState(),n=s.nodes.find(n=>n.id==='instance-main'),rect=(s.containerElement||s.canvasElement).getBoundingClientRect();return (n.position.x+n.width/2)*s.view.scale+s.view.translateX-rect.width/2;})).toBeCloseTo(0,3);
   const zoomBefore=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view.scale);
   await page.getByRole('button',{name:'zoom-in',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view.scale)).toBeGreaterThan(zoomBefore);
   await page.getByRole('button',{name:'zoom',exact:true}).click();await page.getByRole('button',{name:'70%',exact:true}).click();

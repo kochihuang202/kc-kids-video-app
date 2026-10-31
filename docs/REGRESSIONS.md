@@ -703,6 +703,14 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-094 — Header/panel alignment and outline icon contrast must match the original contracts
+
+- User screenshot: missing four navigation controls, tabs beginning before the sidebar boundary, detached right-view tab, and white outline icons. Actual baseline: panel280px, history starts x44, outline icon rgb(255,255,255), no original navigation-control group.
+- Source:19281.newNoteCardInstance defaults color to #fff;41.nk treats #fff as foreground but palette name white as white.22676 defaults rightSidebarWidth to460.23733.e5 supplies the four original buttons and original Chrome tab CSS59678;78507's reusable navigation has a sidebar-only mt-2 margin.
+- Fix: adapt color to #fff at node boundary; use460px panel, four original navigation buttons,280px header control column (144px when sidebar hidden), original active-tab CSS and correct top-view order; remove the inherited header mt-2. Right-panel view is labeled Whiteboard, with unconnected search/back/forward still disabled. No DB migration or native engine rewrite.
+- Targeted test: check-shell-parity measures exact widths/positions and dark16px icons, native buttons, white active tab flush at y36, panel toggle and sidebar collapse. check-compact-shell remains applicable. Existing check-shell now waits for the native list selection's actual horizontal centering before its unchanged zoom-in assertion;41.nk schedules a400ms fit, so the old test raced zoom against selection animation. No fixed delay or weakened zoom expectation.
+- Patch repeatability: own export insertions check each export independently and normalize only duplicated InkBridge entries;15 patch steps report already applied on immediate rerun. Private originals remain untracked.
+
 ## REG-093 — Compact shell must preserve canvas area and native UI styling
 
 - User change: put InkBridge branding in the sidebar; replace the tall header/board title with a compact tab strip; port the visible core UI first. AI, account, shortcuts settings, cloud backup/sync and database import are out of current scope.

@@ -50,7 +50,7 @@ async function boot(){
       }
     },onStatus:value=>{state.persistence=value;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`已保存 · v${value.revision}`;}});
   state.flush=()=>coordinator.flush();state.load=()=>window.inkbridge.load();
-  function toNode(item){const content=contents.get(item.contentId);return {id:item.id,type:'NoteCard',position:{x:item.x,y:item.y},width:item.width,data:{id:content.id,objectId:content.id,title:content.title,content:noteDocument(content),scale:1,isAutoHeight:true,color:'white',lastEditedTime:String(content.revision||0)}};}
+  function toNode(item){const content=contents.get(item.contentId);return {id:item.id,type:'NoteCard',position:{x:item.x,y:item.y},width:item.width,data:{id:content.id,objectId:content.id,title:content.title,content:noteDocument(content),scale:1,isAutoHeight:true,color:'#fff',lastEditedTime:String(content.revision||0)}};}
   function addCard(title='新卡片',body='',point){
     const controls=state.controls,box=$('#board').getBoundingClientRect();point??=controls.screenToFlowPosition({x:box.x+box.width/2,y:box.y+box.height/2});
     const contentId=crypto.randomUUID(),instanceId=crypto.randomUUID(),content={id:contentId,title,body,document:noteDocument({title,body}),kind:'text',tone:'sage'};
@@ -132,8 +132,7 @@ async function boot(){
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   $('#save-workspace').addEventListener('click',()=>coordinator.flush().catch(report));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
-  $('#toggle-sidebar').onclick=()=>{const sidebar=$('.original-sidebar');sidebar.hidden=!sidebar.hidden;};
-  $('#toggle-outline').onclick=()=>{const outline=$('#original-flow-outline');outline.hidden=!outline.hidden;$('#toggle-outline').setAttribute('aria-expanded',String(!outline.hidden));};
+  $('#toggle-outline').onclick=()=>{const outline=$('#original-flow-outline');outline.hidden=!outline.hidden;document.body.classList.toggle('outline-open',!outline.hidden);$('#toggle-outline').setAttribute('aria-expanded',String(!outline.hidden));window.dispatchEvent(new Event('inkbridge:outline-visibility'));};
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();coordinator.flush().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
