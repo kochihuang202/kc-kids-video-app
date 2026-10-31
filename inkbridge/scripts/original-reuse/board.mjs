@@ -61,22 +61,23 @@ async function boot(){
   if(!instances.size){const contentId=crypto.randomUUID(),id=crypto.randomUUID(),document=noteDocument({title:'InkBridge 原版白板',body:'點卡片進入原版編輯器。\n雙擊空白處新增卡片。'});putContent({id:contentId,document,kind:'text',tone:'sage'});const item={id,contentId,boardId,x:20,y:20,width:520,height:200,z:0};instances.set(id,item);coordinator.stage({type:'putInstance',data:item});originalStore.getState().setNodes([toNode(item)]);}
   const pageProps=await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response=>response.json());window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/board',query:{},props:pageProps,isFallback:false};
   const RouterContext=r(29242).RouterContext,pageLoader=new(r(43867).default)(window.__NEXT_DATA__.buildId,'');
-  const router=r(51648).createRouter('/board',{},'/board',{initialProps:pageProps,pageLoader,App:r(64744).default,Component:Canvas,wrapApp:component=>component,subscription:()=>{throw Error('Navigation has not been connected to the InkBridge shell');},isFallback:false,locale:'zh-TW',locales:['zh-TW','zh','en'],defaultLocale:'zh-TW',isPreview:false});
+  const router=r(51648).createRouter('/flow',{whiteboardId:boardId},'/zh-TW/flow?whiteboardId='+encodeURIComponent(boardId),{initialProps:pageProps,pageLoader,App:r(64744).default,Component:Canvas,wrapApp:component=>component,subscription:()=>{throw Error('Navigation has not been connected to the InkBridge shell');},isFallback:false,locale:'zh-TW',locales:['zh-TW','zh','en'],defaultLocale:'zh-TW',isPreview:false});
   function navigate(operation){const task=navigationTail.catch(()=>{}).then(operation);navigationTail=task;return task;}
   function updateBoardTitle(){const title=boards.get(boardId)?.title||'';$('.breadcrumb strong').textContent=title;$('.board-heading h2').firstChild.textContent=title;}
   function switchBoard(id){return navigate(async()=>{
-    if(id===boardId)return;if(!boards.has(id))throw Error('白板不存在');
+    if(id===boardId&&!state.home)return;if(!boards.has(id))throw Error('白板不存在');
     $('#board-navigation-status').textContent='正在保存並切換…';
     try{
       await coordinator.flush();
       ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();
       navigationChanging=true;boardId=id;
-      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.get(item.contentId)?.kind==='text').sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);shell.selected();});
-      await state.controls.setViewport(boards.get(id).view,{duration:0});updateBoardTitle();
+      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.get(item.contentId)?.kind==='text').sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);});
+      await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),switchBoard,getActiveBoardId:()=>boardId,onError:report});
-  shell.hydrate(graph);shell.selected();updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
+  function showHome(){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();shell.homeSelected();ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);});});}
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),switchBoard,showHome,getActiveBoardId:()=>boardId,onError:report});
+  shell.hydrate(graph);await shell.ready;await shell.selected();updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
     React.useEffect(()=>()=>{const editor=editorRef.current;if(editor){try{const value=bodyFromEditor(editor);acceptDocument(props.nodeId,value.document,value.body);}catch(error){report(error);}if(editors.get(props.nodeId)===editor)editors.delete(props.nodeId);}},[props.nodeId]);
@@ -85,6 +86,7 @@ async function boot(){
   function App(){
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes);const [mode,setMode]=React.useState('move');state.setMode=setMode;state.controls=r(23).wf();
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
+    const [home,setHome]=React.useState(false);state.renderHome=setHome;
     return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
       React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
         onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
@@ -93,7 +95,7 @@ async function boot(){
         onNodesDelete:nodes=>{for(const node of nodes){const id=typeof node==='string'?node:node.id;instances.delete(id);coordinator.stage({type:'deleteInstance',id});}},
         onDoubleClick:(_event,point)=>addCard('新卡片','',point),
         onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
-      }),React.createElement(shell.ShellPortals))))));
+      }),React.createElement(shell.ShellPortals,{home}))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
@@ -105,7 +107,7 @@ async function boot(){
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
   // The old self-written performance lab is unrelated to this original engine.
   $('.performance-panel')?.setAttribute('hidden','');
-  window.inkbridge.onCloseRequested(async request=>{try{await navigationTail.catch(()=>{});await coordinator.flush();window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
+  window.inkbridge.onCloseRequested(async request=>{try{await navigationTail.catch(()=>{});await coordinator.flush();await shell.settle();window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
   window.inkbridge.onCloseCancelled(request=>report(Error(request.message)));
   await coordinator.flush();
 }

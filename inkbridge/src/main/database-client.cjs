@@ -80,6 +80,7 @@ class DatabaseClient {
 
   load() { return this.request('load'); }
   commit(request) { return this.request('commit', request); }
+  history(request) { return this.request('history', request); }
 
   close() {
     if (this.closePromise) return this.closePromise;

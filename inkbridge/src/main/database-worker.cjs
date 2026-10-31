@@ -17,6 +17,7 @@ if (database) parentPort.on('message', ({ id, method, payload }) => {
     let result;
     if (method === 'load') result = database.load();
     else if (method === 'commit') result = database.commit(payload);
+    else if (method === 'history') result = database.history(payload);
     else if (method === 'close') result = database.close();
     else throw Object.assign(new Error('Unknown database worker method'), { code: 'INVALID_REQUEST' });
     parentPort.postMessage({ id, result });

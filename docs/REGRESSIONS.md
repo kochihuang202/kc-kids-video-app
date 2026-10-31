@@ -703,6 +703,12 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-089 — Original shell components require their real parent providers and portal targets
+
+- Confirmed integration failures: Closing the last original history tab first failed with React200 because the home portal target had been inserted before its anchor existed; mounting original41.nk without its original32367.w Card parent failed with useCardContext undefined. Neither issue was fixed by replacing the original component.
+- Fix: Create the portal target in the correct host-template order and retain the original Card parent. History service writes use the real SQLite worker; normal close waits for pending navigation, editor flush and accepted history writes.
+- Targeted verification: Extended `inkbridge/scripts/original-reuse/check-shell.cjs` passes original tab switch/middle-close/last-tab home/reopen/persisted identity plus outline search/selection, existing composition/save gating and exact graph restart. `tests/history-tabs.test.cjs` plus related database file pass12/12. Related board/BAT flows pass; full Playwright/performance/package suites were not run.
+
 ## REG-088 — Shell navigation must await the editor and real database commit
 
 - Evidence: Gemini shell89e721f calls nonexistent setActiveBoardId, uses a separate localStorage catalog, and sends board updates without required views. Its13 mock-DOM tests pass while real navigation/SQLite paths fail (see InkBridge GEMINI_SHELL_REVIEW.md).

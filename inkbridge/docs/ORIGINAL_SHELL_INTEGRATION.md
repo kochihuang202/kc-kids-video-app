@@ -8,12 +8,18 @@
 |---|---|---|---|
 | 白板清單 | 74582.ListView | 8a136032797a1f1ffe566ea54295f06d8aeb5033d798b29a96696d6f36b0516c | 整個原元件、原Redux、翻譯、圖示與依賴。compact、hideOperation、按name排序使用原props。 |
 | 縮放、預設比例與檢視全圖 | 46979.OO | cba922d999fccbb9b3df078b7b7e368262a6785adc15da51b67c2e2d978682f8 | 整個原元件，直接使用原23.wf控制現有原Canvas。 |
+| 上方分頁條 | 23733內部eR | 1c5ca2a3e6b56728b7634895b87bd27f2e08eeeeedf722c7207ea6e680634743 | 僅增加InkBridgeHistoryTabs匯出；完整沿用原分頁、切換、關閉、排序邏輯與90561原Redux reducer。 |
+| 右側卡片列表／搜尋 | 41內部nk | 9d3c61e54ba643d39f879b80bd489702e659d917f0d946392b0a6f91470a408f | 僅增加InkBridgeFlowOutline匯出；使用原32367.w父Card及原23的節點、選取、定位API。 |
 
 這兩個factory的`locallyModified`均為false。沒有以新DOM類別、幾個SVG或參數模仿它們。
 
 `original-shell.mjs`只處理必要邊界：自己的SQLite boards映射到原元件欄位／Redux action；原清單的getFolders回傳真實本機DB清單（目前本機schema沒有folders／board-instances，該兩集合確實為空）；原flow路由轉成InkBridge工作區切換。不是原版資料庫或原Electron main的替代啟動。
 
-58850原服務gateway增加一個明確註冊的委派入口，目前**只接getFolders**；未接服務保持原有行為，不回假成功。原碼patch工具、hash與.before-inkbridge備份沿用既有機制。原版元件與所有依賴留在Git忽略的本機來源目錄；Git只管理接線、patch工具、測試與來源雜湊。
+58850原服務gateway增加一個明確註冊的委派入口，目前接getFolders、getWhiteboard及六個historyTabs服務；未接服務保持原有行為，不回假成功。原碼patch工具、hash與.before-inkbridge備份沿用既有機制。原版元件與所有依賴留在Git忽略的本機來源目錄；Git只管理接線、patch工具、測試與來源雜湊。
+
+分頁缺口另回查原ASAR的app/background.js（僅讀取，未執行）；SHA-256為9ed2877f59d645f75a27ecc517458b370ae1425227b61221c9c04489ff75f72f。原服務位置：createHistoryTab約239295、touchHistoryTab約240097、getHistoryTabs約240257、updateHistoryTabsOrder約240419、deleteHistoryTab約240856（UTF-16字元offset，原始壓縮JS）。表欄位與Gemini資料字典historyTabs條目交叉比對。
+
+`src/main/history-tabs.cjs`是自己的Node SQLite傳輸適配，**不是聲稱直接執行原Knex handler**：保留原服務名稱／回傳形狀、sourceId+tabGroupId去重、order、30個分頁上限及最久未touch者淘汰規則。只新增原historyTabs欄位的可選表，不替換既有筆記Schema；寫入由同一個SQLite worker串行執行並交易提交。上限只關閉分頁紀錄，不刪除白板或卡片。關閉視窗也等待已送出的分頁寫入。
 
 ## 保存與切換
 
@@ -27,12 +33,15 @@ board/content/instance資料沿用現有SQLite schema；切板不重新建一套
 - 修改後：同一白板回歸通過。
 - `check-shell.cjs`使用全新臨時SQLite，兩張白板各有不同文字卡片；真Electron操作原清單與原縮放元件。比例選單70%、zoom-in、fit-view、編輯中直接切板、組字期間切板等待、反覆切板、名稱保留、完整graph正常重開均通過，page errors為空。
 - `check-launcher.cjs`實際BAT啟動、原Flow輸入、Ctrl+S、真DB讀回及正常關閉返回0通過。
+- 後續擴充的同一check-shell流程：原分頁切換、中鍵關閉非目前頁、最後一頁關閉回原白板清單、重開分頁與正常重啟後ID保留；原右側列表的搜尋／無結果／選取均通過。
+- 分頁新增的3項資料測試及直接相關9項既有database測試共12/12通過，覆蓋去重、原30頁規則、config持久化、排序交易回復與核心DB資料保留。沒有跑全部Playwright、完整效能或重新封裝。
 - 截圖已檢視；本地結果為`private-original-editor/original-shell-result.json`及`original-shell-integrated.png`。沒有全套重測、沒有新效能數據或實體Windows IME結論。
 
 ## 明確未接入
 
 - 清單這輪只開啟／切換白板。原右鍵選單同時包含圖示、複製FlexNote連結、刪除等未接服務，因此整個管理入口由宿主明確停用並顯示說明；不留下半接的假操作。清單排序使用原name排序，也關閉需要folder schema的拖曳整理。
-- 新增白板、改名、刪除、資料夾、上方分頁、右側列表及其他側欄功能仍未宣稱完成。既有新增卡片與原Flow編輯不受此限制。
+- 新增白板、改名、刪除、資料夾與其他側欄功能仍未完成。原分頁內的新增入口會帶出尚未接入的多種卡片服務，因此目前明確停用該入口並說明；使用白板清單開啟的分頁已可切換／關閉／恢復。既有新增卡片與原Flow編輯不受此限制。
+- 右側元件的圖譜模式、所有特殊卡片、雙擊詳細頁與外開視窗尚未驗收；不將它們當成功能完成。外殼仍保留既有InkBridge布局，本次不是整個應用程式或Gemini分支的整體完成宣告。
 - 沒有合入Gemini的私人樣本、24張縮圖、假同步／更新提示、另一套store、舊Canvas或舊編輯器入口。Gemini工作樹未修改。
 
 ## 重複執行

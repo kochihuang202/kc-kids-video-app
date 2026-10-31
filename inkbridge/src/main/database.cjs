@@ -266,6 +266,11 @@ class WorkspaceDatabase {
     }
   }
 
+  history({method,payload}) {
+    if(this.closed)throw new PersistenceError('DATABASE_CLOSED','InkBridge database is closed');
+    return require('./history-tabs.cjs').historyTabs(this.db,method,payload);
+  }
+
   close() {
     if (this.closed) return;
     this.statements.clear();
