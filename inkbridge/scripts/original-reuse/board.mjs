@@ -132,6 +132,14 @@ async function boot(){
     React.useEffect(()=>()=>{const editor=editorRef.current;if(editor){try{const value=bodyFromEditor(editor);acceptDocument(props.nodeId,value.document,value.body);}catch(error){report(error);}if(editors.get(props.nodeId)===editor)editors.delete(props.nodeId);}},[props.nodeId]);
     return React.createElement(Flow,{...props,onEditorReady:editor=>{editorRef.current=editor;editors.set(props.nodeId,editor);state.lastEditorNode=props.nodeId;}});
   }
+  function CanvasPasteListener(){
+    try {
+      r(64744).InkBridgeUseCanvasPaste?.();
+    } catch(e) {
+      console.warn('Canvas paste listener notice:', e.message);
+    }
+    return null;
+  }
   function App(){
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes);const [mode,setMode]=React.useState('move');state.setMode=setMode;state.controls=r(23).wf();
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
@@ -193,7 +201,7 @@ async function boot(){
           onNodesDelete:nodes=>{for(const node of nodes){const id=typeof node==='string'?node:node.id;instances.delete(id);coordinator.stage({type:'deleteInstance',id});}},
           onDoubleClick:(_event,point)=>addCard('新卡片','',point),
           onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
-        }),React.createElement(shell.ShellPortals,{home,page})))))));
+        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener)))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});

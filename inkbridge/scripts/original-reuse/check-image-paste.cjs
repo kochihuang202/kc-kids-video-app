@@ -46,6 +46,15 @@ const { WorkspaceDatabase } = require('../../src/main/database.cjs');
     await page.waitForFunction(() => window.__inkbridgeIntegrated?.ready, {}, { timeout: 30000 });
 
     // ==========================================
+    // 0. VERIFY NATIVE CANVAS PASTE HOOK MOUNTED
+    // ==========================================
+    const nativePasteMounted = await page.evaluate(() => {
+      const board = document.querySelector('#board');
+      return !!board && board.dataset.flowCanvasWhiteboardId === 'board-main';
+    });
+    assert.equal(nativePasteMounted, true, 'Canvas must have whiteboard ID for native paste listener');
+
+    // ==========================================
     // 1. TEST WHITEBOARD CANVAS IMAGE PASTE
     // ==========================================
     const pasteResult = await page.evaluate(async (bufferArray) => {
@@ -171,6 +180,7 @@ const { WorkspaceDatabase } = require('../../src/main/database.cjs');
     assert(JSON.stringify(restartCheck.noteContent?.document).includes('flexnote://file/' + editorPasteResult.fileId), 'Lexical document must retain image reference after restart');
 
     console.log(JSON.stringify({
+      nativePasteHookMounted: true,
       canvasImagePaste: true,
       editorImagePaste: true,
       casStorageImmutable: true,

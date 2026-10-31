@@ -25,6 +25,7 @@
 | `85886` / `7865` | 卡片頂部工具列按鈕與更多觸發器 | 渲染包含 10 個按鈕的懸浮欄，點擊 `[aria-label="More options"]` 喚起 `95077` |
 | `95077` | 原版 `NoteCardActionListbox` 選單 | 包含 40 色調色盤、卡片佈局開關、五種打開視窗方式、歷史版本、白板收藏與刪除操作 |
 | `97101.y` / `36426` | 原版白板圖片拖放與粘貼 Hook | 白板貼圖時調用 `savePastedImageBuffers`，成功後轉換為 `MediaCard` 及 `MediaCardInstance` |
+| `64744` (rG hook) | 原版全域白板 Paste 監聽器 | 掛載於 `FLowContext.Provider`，監聽真實鍵盤 `Ctrl+V` (ClipboardEvent)，檢查 `[data-flow-canvas-whiteboard-id]` 並啟動貼圖流程 |
 | `73866` | 原版卡片 Lexical 富文本編輯器 | 編輯器內貼圖調用 `savePureBase64Image`，插入 Lexical `ImageNode`，路徑設為 `flexnote://file/${fileId}` |
 | `19281.YH` | 原版資料結構工廠 | 提供 `newMediaCard`, `newMediaCardInstance`, `mediaCardInstanceToMediaCardNode` 轉換 |
 | `58850` | 原版 IPC 服務調度器 | 連接 `addMediaCard`, `addMediaCardInstance`, `updateNoteCardInstance`, `deleteNoteCardInstance`, `savePastedImageBuffers`, `savePureBase64Image`, `uploadFile` |
@@ -98,9 +99,10 @@
      }
      ```
 6. **白板與卡片內圖片貼上測試 (`check-image-paste.cjs`)**：
-   - 5 / 5 項測試全部通過：
+   - 6 / 6 項測試全部通過：
      ```json
      {
+       "nativePasteHookMounted": true,
        "canvasImagePaste": true,
        "editorImagePaste": true,
        "casStorageImmutable": true,
