@@ -1,5 +1,5 @@
 // Isolated host for original modules; never starts the original Electron main.
-const {app,BrowserWindow,session,ipcMain,dialog,Menu}=require('electron');
+const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const crypto=require('node:crypto');
 const {createDatabaseClient}=require('../../src/main/database-client.cjs');
@@ -11,16 +11,29 @@ if(!resolvedData.startsWith(path.join(root,'profiles')+path.sep)&&!(path.dirname
 app.setName('InkBridge Original Module Probe');
 for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
+protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
 const types={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
 let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer;
 app.whenReady().then(async()=>{
   if(!acquired)return;
   const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});database=createDatabaseClient({filename});
+  const filesDir=path.join(data,'files');fs.mkdirSync(filesDir,{recursive:true});
+  protocol.handle('flexnote',async request=>{
+    try{
+      const url=new URL(request.url),fileId=path.basename(url.pathname);
+      const match=fs.existsSync(filesDir)?fs.readdirSync(filesDir).find(f=>f.startsWith(fileId)):null;
+      if(match){
+        const full=path.join(filesDir,match);
+        return new Response(fs.readFileSync(full),{status:200,headers:{'Content-Type':types[path.extname(match)]||'image/png'}});
+      }
+      return new Response('Not found',{status:404});
+    }catch{return new Response('Not found',{status:404});}
+  });
   server=http.createServer((request,response)=>{
     const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
     if(pathname==='/'){
       response.setHeader('Content-Type','text/html; charset=utf-8');
-      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'");
+      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'");
       const originalScripts='<script src="/runtime.js"></script><script src="/register-original.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_buildManifest.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_ssgManifest.js"></script>';
       if(boardMode){
         let html=fs.readFileSync(path.join(project,'src/renderer/index.html'),'utf8');
@@ -57,6 +70,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
     else if(pathname==='/inkbridge-core/original-note-writes.mjs')file=path.resolve(own,'../../src/core/original-note-writes.mjs');
     else if(pathname==='/inkbridge-core/original-folder-writes.mjs')file=path.resolve(own,'../../src/core/original-folder-writes.mjs');
+    else if(pathname.startsWith('/files/'))file=path.join(filesDir,path.basename(pathname));
     else if(pathname==='/runtime.js'||pathname==='/register-original.js')file=path.join(root,path.basename(pathname));
     else{
       const assetRoot=path.join(root,'vendor/app');file=path.resolve(assetRoot,'.'+pathname);
@@ -66,13 +80,68 @@ app.whenReady().then(async()=>{
     response.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
-  const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank';if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
+  const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://');if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   ipcMain.handle('inkbridge:info',event=>{if(!allowed(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
   ipcMain.handle('inkbridge:load',event=>{if(!allowed(event))throw Error('Unexpected sender');return database.load();});
   ipcMain.handle('inkbridge:history',(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');return database.history(request);});
   ipcMain.handle('inkbridge:commit',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');try{return {ok:true,ack:await database.commit(request)};}catch(error){return {ok:false,error:{message:error.message,code:error.code}};}});
+  ipcMain.handle('inkbridge:savePastedImageBuffers',async(event,{items})=>{
+    if(!allowed(event))throw Error('Unexpected sender');
+    try{
+      const results=[];
+      for(const item of items||[]){
+        const fileId=item.fileId||crypto.randomUUID(),ext=path.extname(item.fileName||'image.png').replace(/^\./,'').toLowerCase()||'png';
+        const buffer=Buffer.isBuffer(item.arrayBuffer)?item.arrayBuffer:Buffer.from(item.arrayBuffer);
+        const dest=path.join(filesDir,`${fileId}.${ext}`);
+        fs.writeFileSync(dest,buffer);
+        const stat=fs.statSync(dest);
+        const current=await database.load();
+        const fileRecord={id:fileId,name:item.fileName||`${fileId}.${ext}`,rawName:item.fileName||`${fileId}.${ext}`,type:ext,size:stat.size,category:'user',metadata:JSON.stringify({width:item.width||400,height:item.height||300}),createdBy:'inkbridge-user',createdTime:new Date().toISOString(),lastEditedTime:new Date().toISOString(),filePath:`files/${fileId}.${ext}`,rawPath:dest};
+        const ack=await database.commit({requestId:crypto.randomUUID(),baseRevision:current.revision,operations:[{type:'putCatalog',kind:'file',data:fileRecord}]});
+        window?.webContents?.send('inkbridge:revision',ack.revision);
+        results.push({filePath:dest,fileName:fileRecord.name,fileId,metadata:{width:item.width||400,height:item.height||300},remotePath:null,s3UploadResult:null,type:ext});
+      }
+      return results;
+    }catch(err){
+      console.error('[HOST ERROR in savePastedImageBuffers]', err);
+      throw err;
+    }
+  });
+  ipcMain.handle('inkbridge:savePureBase64Image',async(event,{items})=>{
+    if(!allowed(event))throw Error('Unexpected sender');
+    const results=[];
+    for(const item of items||[]){
+      const fileId=item.fileId||crypto.randomUUID();
+      const rawBase64=(item.base64Image||'').replace(/^data:image\/.*?;base64,/,'');
+      const buffer=Buffer.from(rawBase64,'base64');
+      const ext=(path.extname(item.fileName||'image.png').replace(/^\./,'')||'png').toLowerCase();
+      const dest=path.join(filesDir,`${fileId}.${ext}`);
+      fs.writeFileSync(dest,buffer);
+      const stat=fs.statSync(dest);
+      const current=await database.load();
+      const fileRecord={id:fileId,name:item.fileName||`${fileId}.${ext}`,rawName:item.fileName||`${fileId}.${ext}`,type:ext,size:stat.size,category:'user',metadata:JSON.stringify({width:400,height:300}),createdBy:'inkbridge-user',createdTime:new Date().toISOString(),lastEditedTime:new Date().toISOString(),filePath:`files/${fileId}.${ext}`,rawPath:dest};
+      const ack=await database.commit({requestId:crypto.randomUUID(),baseRevision:current.revision,operations:[{type:'putCatalog',kind:'file',data:fileRecord}]});
+      window?.webContents?.send('inkbridge:revision',ack.revision);
+      results.push({filePath:dest,fileName:item.fileName||fileRecord.name,fileId,metadata:{width:400,height:300},remotePath:null,s3UploadResult:null,type:ext});
+    }
+    return results;
+  });
+  ipcMain.handle('inkbridge:uploadFile',async(event,payload)=>{
+    if(!allowed(event))throw Error('Unexpected sender');
+    const srcPath=typeof payload==='string'?payload:payload.filePath;
+    if(!srcPath||!fs.existsSync(srcPath))throw Error('File not found: '+srcPath);
+    const fileId=crypto.randomUUID(),ext=path.extname(srcPath).replace(/^\./,'').toLowerCase()||'png';
+    const dest=path.join(filesDir,`${fileId}.${ext}`);
+    fs.copyFileSync(srcPath,dest);
+    const stat=fs.statSync(dest),baseName=path.basename(srcPath);
+    const current=await database.load();
+    const fileRecord={id:fileId,name:baseName,rawName:baseName,type:ext,size:stat.size,category:'user',metadata:JSON.stringify({width:400,height:300}),createdBy:'inkbridge-user',createdTime:new Date().toISOString(),lastEditedTime:new Date().toISOString(),filePath:`files/${fileId}.${ext}`,rawPath:dest};
+    const ack=await database.commit({requestId:crypto.randomUUID(),baseRevision:current.revision,operations:[{type:'putCatalog',kind:'file',data:fileRecord}]});
+    window?.webContents?.send('inkbridge:revision',ack.revision);
+    return {success:true,file:fileRecord};
+  });
   ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;});
   const finishClose=async()=>{await database.close();approvedClose=true;window.close();};
   ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok)await finishClose();else dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');});

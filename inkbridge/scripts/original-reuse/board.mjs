@@ -26,7 +26,9 @@ async function boot(){
   const graphContext=()=>({CanvasKit:K,fontMgr:fonts.getFontMgr(),view:originalStore.getState().view,theme:'light',locale:'zh-TW'});
   const bodyFromEditor=editor=>editor.read(()=>({document:JSON.parse(JSON.stringify(editor.getEditorState().toJSON())),body:r(41570).GvG().getTextContent()}));
   function putContent(content,body){
-    const document=JSON.parse(JSON.stringify(content.document)),title=helpers.LG(document),next={...content,document,title,body:body??helpers.Vj(document)};
+    const document=content.document?JSON.parse(JSON.stringify(content.document)):null;
+    const title=document?helpers.LG(document):(content.title||'新卡片');
+    const next={...content,document,title,body:body??(document?helpers.Vj(document):'')};
     const previous=contents.get(content.id);if(previous&&previous.title===next.title&&previous.body===next.body&&JSON.stringify(previous.document)===JSON.stringify(document))return;
     contents.set(next.id,next);coordinator.stage({type:'putContent',data:next});
   }
@@ -55,8 +57,16 @@ async function boot(){
         const value=bodyFromEditor(editor);acceptDocument(nodeId,value.document,value.body);
       }
     },onStatus:value=>{state.persistence=value;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`已保存 · v${value.revision}`;}});
+  window.inkbridge.onRevision?.(rev=>{if(typeof rev==='number'&&rev>coordinator.revision)coordinator.revision=rev;});
   state.flush=()=>coordinator.flush();state.load=()=>window.inkbridge.load();
-  function toNode(item){const content=contents.get(item.contentId);return {id:item.id,type:'NoteCard',position:{x:item.x,y:item.y},width:item.width,data:{id:content.id,objectId:content.id,title:content.title,content:noteDocument(content),scale:1,isAutoHeight:true,color:'#fff',...item.attributes,lastEditedTime:String(content.revision||0)}};}
+  function toNode(item){
+    const content=contents.get(item.contentId);
+    if(content?.kind==='image'||item.attributes?.type==='MediaCard'||item.attributes?.type==='image'){
+      const mediaCard={id:content?.id||item.contentId,title:content?.title||'Image',fileId:item.attributes?.fileId||content?.title,fileSuffix:item.attributes?.fileSuffix||'png',type:'image',...item.attributes};
+      return r(19281).YH.mediaCardInstanceToMediaCardNode(item,mediaCard);
+    }
+    return {id:item.id,type:'NoteCard',position:{x:item.x,y:item.y},width:item.width,data:{id:content?.id||item.contentId,objectId:content?.id||item.contentId,title:content?.title||'新卡片',content:noteDocument(content||{title:'新卡片',body:''}),scale:1,isAutoHeight:true,color:'#fff',...item.attributes,lastEditedTime:String(content?.revision||0)}};
+  }
   function addCard(title='新卡片',body='',point){
     const controls=state.controls,box=$('#board').getBoundingClientRect();point??=controls.screenToFlowPosition({x:box.x+box.width/2,y:box.y+box.height/2});
     const contentId=crypto.randomUUID(),instanceId=crypto.randomUUID(),content={id:contentId,title,body,document:noteDocument({title,body}),kind:'text',tone:'sage'};
@@ -64,13 +74,13 @@ async function boot(){
     originalStore.getState().addNodes([toNode(item)]);return instanceId;
   }
   if(!graph.boards.length){const board={id:boardId,title:'靈感白板',view:{x:80,y:60,zoom:.8}};boards.set(boardId,board);coordinator.stage({type:'putBoard',data:board});}
-  originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===boardId&&contents.get(item.contentId)?.kind==='text').sort((a,b)=>a.z-b.z).map(toNode));originalStore.getState().setConnections([]);
+  originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===boardId&&contents.has(item.contentId)).sort((a,b)=>a.z-b.z).map(toNode));originalStore.getState().setConnections([]);
   if(graph.revision===0&&!contents.size&&!instances.size){const contentId=crypto.randomUUID(),id=crypto.randomUUID(),document=noteDocument({title:'InkBridge 原版白板',body:'點卡片進入原版編輯器。\n雙擊空白處新增卡片。'});putContent({id:contentId,document,kind:'text',tone:'sage'});const item={id,contentId,boardId,x:20,y:20,width:520,height:200,z:0};instances.set(id,item);coordinator.stage({type:'putInstance',data:item});originalStore.getState().setNodes([toNode(item)]);}
   const pageProps=await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response=>response.json());window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/board',query:{},props:pageProps,isFallback:false};
   const RouterContext=r(29242).RouterContext,pageLoader=new(r(43867).default)(window.__NEXT_DATA__.buildId,'');
   const router=r(51648).createRouter('/flow',{whiteboardId:boardId},'/zh-TW/flow?whiteboardId='+encodeURIComponent(boardId),{initialProps:pageProps,pageLoader,App:r(64744).default,Component:Canvas,wrapApp:component=>component,subscription:()=>{throw Error('Navigation has not been connected to the InkBridge shell');},isFallback:false,locale:'zh-TW',locales:['zh-TW','zh','en'],defaultLocale:'zh-TW',isPreview:false});
   function navigate(operation){const task=navigationTail.catch(()=>{}).then(operation);navigationTail=task;return task;}
-  function updateBoardTitle(){const title=boards.get(boardId)?.title||'';$('.breadcrumb strong').textContent=title;$('.board-heading h2').firstChild.textContent=title;}
+  function updateBoardTitle(){const title=boards.get(boardId)?.title||'';$('.breadcrumb strong').textContent=title;$('.board-heading h2').firstChild.textContent=title;const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=boardId;}
   function switchBoard(id){return navigate(async()=>{
     if(!boards.has(id)||boards.get(id).attributes?.isTrashed)throw Error('白板不存在或已移至回收站');if(id===boardId&&!state.home)return;
     $('#board-navigation-status').textContent='正在保存並切換…';
@@ -78,7 +88,8 @@ async function boot(){
       await coordinator.flush();
       ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();
       navigationChanging=true;boardId=id;
-      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.get(item.contentId)?.kind==='text').sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
+      const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=id;
+      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.has(item.contentId)).sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
       await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
@@ -113,7 +124,8 @@ async function boot(){
   const flushAll=async()=>{await navigationTail;return coordinator.flush();};state.flush=flushAll;
   function registerModalEditor(contentId,editor){modalEditors.set(contentId,editor);const read=()=>{if(editor.isComposing())return;const value=bodyFromEditor(editor);acceptContentDocument(contentId,value.document,value.body);};const offUpdate=editor.registerUpdateListener(()=>queueMicrotask(read));let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();if(modalEditors.get(contentId)===editor)modalEditors.delete(contentId);});}});}
   const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  const syncRevision=async()=>{const g=await window.inkbridge.load();if(g.revision>coordinator.revision)coordinator.revision=g.revision;};
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,syncRevision,registerModalEditor,writeNote,switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
@@ -126,15 +138,62 @@ async function boot(){
     const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
     const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
     React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-flow-outline').inert=home;$('#original-zoom-controls').inert=home;},[home]);
+    const FlowContext=r(48626).FLowContext;
+    const flowContextValue=React.useMemo(()=>({
+      clickMention:()=>{},
+      syncEditorContentToAllCardInstances:(contentId,doc,body)=>acceptContentDocument(contentId,doc,body),
+      getCurrentNodeToFocusRef:()=>"",
+      clearCurrentNodeToFocusRef:()=>{},
+      updateNodeById:(id,updates)=>{
+        originalStore.getState().setNodes(nodes=>nodes.map(n=>n.id===id?{...n,...updates}:n));
+      },
+      updateNodeDataById:(id,dataUpdates)=>{
+        originalStore.getState().setNodes(nodes=>nodes.map(n=>n.id===id?{...n,data:{...n.data,...dataUpdates}}:n));
+        writeNote('updateNoteCardInstance',{id,...dataUpdates});
+      },
+      updateNodeDataByObjectId:(objectId,dataUpdates)=>{
+        originalStore.getState().setNodes(nodes=>nodes.map(n=>n.data?.objectId===objectId?{...n,data:{...n.data,...dataUpdates}}:n));
+        for(const [id,item] of instances){
+          if(item.contentId===objectId)writeNote('updateNoteCardInstance',{id,...dataUpdates});
+        }
+      },
+      getAllEdges:()=>originalStore.getState().connections||[],
+      getAllNodes:()=>originalStore.getState().nodes,
+      getSelectedNodes:()=>originalStore.getState().nodes.filter(n=>originalStore.getState().selectedNodeIds.has(n.id)),
+      updateEdgeById:()=>{},
+      setNodes:originalStore.getState().setNodes,
+      whiteboardId:activeBoardId,
+      setCurrentNodeToFocus:()=>{},
+      editMindmapGlobal:()=>{},
+      router,
+      setEdges:()=>{},
+      setConnections:originalStore.getState().setConnections,
+      onDeleteNode:node=>{
+        const id=typeof node==='string'?node:node.id;
+        instances.delete(id);
+        coordinator.stage({type:'deleteInstance',id});
+        originalStore.getState().setNodes(nodes=>nodes.filter(n=>n.id!==id));
+      },
+      onlyDisplayCardTitle:false,
+      textSizeAtSmallZoom:false,
+      onMindmapNodeChangeForUndo:()=>{},
+      pushUndoSnapshot:()=>{},
+      screenToFlowPosition:point=>state.controls?.screenToFlowPosition(point)||point,
+      getNodes:()=>originalStore.getState().nodes,
+      requestCanvasRender:()=>state.controls?.requestRender?.(),
+    }),[activeBoardId]);
     return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
-      React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
-        onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
-        onNodeDragEnd:(node,affected)=>{for(const item of affected?.length?affected:[node])persistGeometry(item);},
-        onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
-        onNodesDelete:nodes=>{for(const node of nodes){const id=typeof node==='string'?node:node.id;instances.delete(id);coordinator.stage({type:'deleteInstance',id});}},
-        onDoubleClick:(_event,point)=>addCard('新卡片','',point),
-        onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
-      }),React.createElement(shell.ShellPortals,{home,page}))))));
+      React.createElement(FlowContext.Provider,{value:flowContextValue},
+        React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
+          nodeToolbar:r(19395).z,
+          labelEditor:r(75435).Z,
+          onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
+          onNodeDragEnd:(node,affected)=>{for(const item of affected?.length?affected:[node])persistGeometry(item);},
+          onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
+          onNodesDelete:nodes=>{for(const node of nodes){const id=typeof node==='string'?node:node.id;instances.delete(id);coordinator.stage({type:'deleteInstance',id});}},
+          onDoubleClick:(_event,point)=>addCard('新卡片','',point),
+          onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
+        }),React.createElement(shell.ShellPortals,{home,page})))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});

@@ -35,7 +35,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             return { success: true };
         }
         if (method === 'addNoteCard') {
-            const note = payload.noteCard;
+            const note = payload.noteCard || payload;
             if (contents.has(note.id))
                 throw Error('卡片ID已存在');
             const document = typeof note.content === 'string' ? JSON.parse(note.content) : note.content;
@@ -44,16 +44,76 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             await coordinator.flush();
             return { success: true };
         }
+        if (method === 'addMediaCard') {
+            const cards = Array.isArray(payload) ? payload : [payload];
+            for (const card of cards) {
+                const content = { id: card.id, title: card.title || 'Image', body: '', kind: 'image', tone: 'sage', document: null };
+                putContent(content);
+                coordinator.stage(catalogOperation('card', { ...card, id: card.id, type: 'MediaCard', createdTime: card.createdTime, lastEditedTime: card.lastEditedTime, isTrashed: false }));
+            }
+            await coordinator.flush();
+            return { success: true, mediaCards: cards };
+        }
+        if (method === 'addMediaCardInstance') {
+            const items = Array.isArray(payload) ? payload : [payload];
+            for (const item of items) {
+                const instanceRow = {
+                    id: item.id,
+                    contentId: item.objectId,
+                    boardId: item.whiteboardId,
+                    x: item.x,
+                    y: item.y,
+                    width: item.width || 400,
+                    height: item.height || 300,
+                    z: instances.size
+                };
+                coordinator.stage({ type: 'putInstance', data: instanceRow });
+                coordinator.stage(catalogOperation('instance', { ...item, type: 'MediaCard' }));
+                instances.set(item.id, { ...instanceRow, attributes: { ...item, type: 'MediaCard' } });
+            }
+            await coordinator.flush();
+            store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
+            return { success: true };
+        }
+        if (method === 'updateNoteCardInstance' || method === 'batchUpdateCardInstances') {
+            const items = method === 'updateNoteCardInstance' ? [{ id: payload.id, updates: payload.updates }] : payload;
+            for (const item of items) {
+                const existing = instances.get(item.id);
+                if (!existing) continue;
+                const nextAttributes = { ...existing.attributes, ...item.updates, id: item.id };
+                instances.set(item.id, { ...existing, attributes: nextAttributes });
+                coordinator.stage(catalogOperation('instance', nextAttributes));
+            }
+            await coordinator.flush();
+            store.getState().setNodes(nodes => nodes.map(node => {
+                const matched = items.find(it => it.id === node.id);
+                if (!matched) return node;
+                return { ...node, data: { ...node.data, ...matched.updates } };
+            }));
+            return { success: true };
+        }
+        if (method === 'deleteNoteCardInstance') {
+            const id = typeof payload === 'string' ? payload : payload.id;
+            instances.delete(id);
+            coordinator.stage({ type: 'deleteInstance', id });
+            await coordinator.flush();
+            store.getState().setNodes(nodes => nodes.filter(node => node.id !== id));
+            return { success: true };
+        }
         const id = payload.id || payload.objectId;
         if (!contents.has(id))
             throw Error('卡片不存在');
         if (method === 'updateNoteCard') {
-            const updates = payload.updates || {}, document = typeof updates.content === 'string' ? JSON.parse(updates.content) : updates.content;
+            const updates = payload.updates || payload || {};
+            const rawDoc = updates.content || updates.document || payload.document || payload.content;
+            const document = typeof rawDoc === 'string' ? JSON.parse(rawDoc) : rawDoc;
             if (document)
-                acceptContentDocument(id, document);
+                acceptContentDocument(id, document, updates.body || payload.body);
             const metadata = { ...((await load()).cardMetadata || []).find(row => row.id === id), ...updates, id };
             delete metadata.content;
+            delete metadata.document;
             delete metadata.title;
+            delete metadata.body;
             coordinator.stage(catalogOperation('card', metadata));
         }
         else if (method === 'upsertCardRemark')
