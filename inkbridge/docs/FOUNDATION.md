@@ -1,5 +1,7 @@
 # InkBridge M1：研究轉為獨立實作
 
+> 歷史M1紀錄。後續使用者已改為優先完整重用原模組；本檔舊有「不載入原JS／WASM」描述不適用目前移植工作。最新方向依AGENTS.md及ORIGINAL_PORTING_PROGRESS.md，保留本檔只供歷史追溯。
+
 2026-10-30。產品是自寫 Windows 白板；FlexNote 只作研究對象。本目錄不載入它的 EXE、ASAR、JS、WASM、native addon、設定或筆記。已取消的複製版實驗工具保存在 `flexnote-assessment/private-retired-copy-experiment/`（Git 忽略），不是本專案依賴；私人候選包未啟動，也不視為 InkBridge 交付。
 
 | 既有成果 | 處理方式 |

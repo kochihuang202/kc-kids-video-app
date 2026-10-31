@@ -4,7 +4,7 @@ const fs=require('node:fs');const crypto=require('node:crypto');
 const version=require('../package.json').version;const output=path.resolve(__dirname,'../release',`${version}-${crypto.randomUUID().slice(0,8)}`);
 packager({dir:path.resolve(__dirname,'..'),out:output,name:'InkBridge',platform:'win32',arch:'x64',
   electronVersion:require('electron/package.json').version,overwrite:false,asar:false,prune:true,
-  ignore:[/^\/artifacts($|\/)/,/^\/test-results($|\/)/,/^\/tests($|\/)/,/^\/release($|\/)/,/^\/docs($|\/)/,/^\/playwright.config.cjs$/],
+  ignore:[/^\/private[^/]*($|\/)/,/^\/artifacts($|\/)/,/^\/test-results($|\/)/,/^\/tests($|\/)/,/^\/release($|\/)/,/^\/docs($|\/)/,/^\/playwright.config.cjs$/],
   win32metadata:{CompanyName:'InkBridge',FileDescription:'InkBridge 墨橋',ProductName:'InkBridge'}})
   .then(paths=>{
     const executable=path.join(paths[0],'InkBridge.exe');

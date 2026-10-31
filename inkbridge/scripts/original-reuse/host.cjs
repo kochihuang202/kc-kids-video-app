@@ -1,0 +1,53 @@
+// Isolated host for original modules; never starts the original Electron main.
+const {app,BrowserWindow,session,ipcMain,dialog}=require('electron');
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const crypto=require('node:crypto');
+const {createDatabaseClient}=require('../../src/main/database-client.cjs');
+const root=path.resolve(__dirname,'../../private-original-editor'),own=__dirname;
+const data=process.env.INKBRIDGE_ORIGINAL_PROBE_DATA||(app.isPackaged?path.join(root,'profiles','desktop'):null);if(!data)throw Error('A dedicated probe profile is required');
+const resolvedData=path.resolve(data),tempRoot=require('node:os').tmpdir();
+if(!resolvedData.startsWith(path.join(root,'profiles')+path.sep)&&!(path.dirname(resolvedData)===tempRoot&&path.basename(resolvedData).startsWith('inkbridge-original-modules-')))throw Error('Probe profile must be inside its private profiles or a dedicated temp directory');
+app.setName('InkBridge Original Module Probe');
+for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
+app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
+const types={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
+let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer;
+app.whenReady().then(async()=>{
+  if(!acquired)return;
+  const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});database=createDatabaseClient({filename});
+  server=http.createServer((request,response)=>{
+    const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
+    if(pathname==='/'){
+      response.setHeader('Content-Type','text/html; charset=utf-8');
+      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'");
+      response.end('<!doctype html><html lang="zh-TW"><meta charset="utf-8"><title>InkBridge — original module isolation probe</title><link rel="stylesheet" href="/_next/static/css/0a3dd850c67b254e.css"><style>body{margin:20px;background:#eee;font-family:sans-serif}#editor-host{width:520px;background:white;min-height:300px}canvas{background:white;margin-top:20px}#status{white-space:pre-wrap}</style><body><h1>InkBridge 原版模組隔離驗證</h1><pre id="status">正在載入原版模組…</pre><div id="editor-host"></div><canvas id="original-canvas" width="620" height="1400"></canvas><script src="/runtime.js"></script><script src="/register-original.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_buildManifest.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_ssgManifest.js"></script><script src="/probe.js"></script></body></html>');return;
+    }
+    let file;
+    if(pathname==='/probe.js')file=path.join(own,'probe.js');
+    else if(pathname==='/inkbridge-core/persistence-coordinator.mjs')file=path.resolve(own,'../../src/core/persistence-coordinator.mjs');
+    else if(pathname==='/runtime.js'||pathname==='/register-original.js')file=path.join(root,path.basename(pathname));
+    else{
+      const assetRoot=path.join(root,'vendor/app');file=path.resolve(assetRoot,'.'+pathname);
+      if(!file.startsWith(assetRoot+path.sep)){response.writeHead(403);response.end();return;}
+    }
+    if(!fs.existsSync(file)||!fs.statSync(file).isFile()){response.writeHead(404);response.end();return;}
+    response.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
+  const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank';if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
+  session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
+  const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
+  ipcMain.handle('inkbridge:info',event=>{if(!allowed(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
+  ipcMain.handle('inkbridge:load',event=>{if(!allowed(event))throw Error('Unexpected sender');return database.load();});
+  ipcMain.handle('inkbridge:commit',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');try{return {ok:true,ack:await database.commit(request)};}catch(error){return {ok:false,error:{message:error.message,code:error.code}};}});
+  ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;});
+  const finishClose=async()=>{await database.close();approvedClose=true;window.close();};
+  ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok)await finishClose();else dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');});
+  window=new BrowserWindow({width:1200,height:960,title:'InkBridge 原版模組隔離驗證',webPreferences:{preload:path.resolve(own,'../../src/main/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
+  window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closeRequest)return;if(!rendererReady){finishClose().catch(error=>dialog.showErrorBox('InkBridge 尚未保存',error.message));return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
+  globalThis.__inkbridgeOriginalProbe={dataRoot:data,origin,blocked,preload:'existing InkBridge limited preload; no original window.ipc',nodeIntegration:false,originalMainExecuted:false};
+  await window.loadURL(origin+'/');
+  app.on('second-instance',()=>{if(window.isMinimized())window.restore();window.show();window.focus();});
+});
+app.on('window-all-closed',()=>app.quit());app.on('before-quit',()=>server?.close());
