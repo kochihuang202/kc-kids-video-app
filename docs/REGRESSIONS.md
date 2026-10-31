@@ -703,6 +703,12 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: Paint the editing note last in the queried Canvas list, retaining persisted z-order for normal display. The matching real WebGL pixel regression is in `inkbridge/tests/desktop/editor.spec.cjs`.
 - Verification: After the user reported approval availability restored, the test failed with the old ordering (RGB141/172/156), then passed with the active paper (255/254/251). Final28-unit/18-desktop/15-packaged suites passed, including the pixel flow; actual screenshot inspected. Earlier spend-cap rejection did not execute the test and was not counted as a result.
 
+## REG-087 — Original Canvas integration receives incompatible controlMode names
+
+- Reproduction: Mount the original Canvas in the InkBridge board with the old shell's `select` mode. Card editing works, but blank double-click never reaches the original pane callback. The original component expects `move` for normal manipulation and `hand` for panning.
+- Fix: Map existing InkBridge toolbar controls to the original component's confirmed modes; keep the original pointer handlers and full Canvas/Flow components.
+- Targeted test: `inkbridge/scripts/original-reuse/check-board.cjs` failed before this mapping and passes afterward: actual blank double-click adds a node, right-drag changes viewport, card drag changes geometry, real lower-half text pixels remain visible after exiting a 24-paragraph editor at60%, composition waits for commit, and normal restart preserves complete SQLite graph. `check-launcher.cjs` verifies the actual BAT entry opens this integrated board and saves new typing. Legacy custom-engine test outcomes are not asserted as original-engine results.
+
 ## REG-086 — Rich HTML paste silently flattens list/code/link/table before AST validation
 
 - Scope: InkBridge editor import → projection/Canvas → SQLite → reopen.

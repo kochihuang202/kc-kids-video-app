@@ -1,0 +1,63 @@
+const {_electron}=require('@playwright/test'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+(async()=>{
+  const root=path.resolve(__dirname,'../..'),data=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-original-modules-'));
+  const env={...process.env,INKBRIDGE_ORIGINAL_PROBE_DATA:data,INKBRIDGE_ORIGINAL_VIEW:'board'};delete env.ELECTRON_RUN_AS_NODE;
+  const launch=()=>_electron.launch({args:[path.join(__dirname,'host.cjs')],executablePath:require('electron'),env,timeout:30000});let app=await launch();
+  try{
+    const page=await app.firstWindow();page.on('pageerror',error=>console.log('pageerror:',error.message));
+    await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready||window.__inkbridgeIntegrated?.errors.length,{},{timeout:30000});
+    const state=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect?.()||window.__inkbridgeIntegrated);console.log(JSON.stringify({nodes:state.nodes?.length,errors:state.errors}));
+    await page.screenshot({path:path.join(root,'private-original-editor/integrated-board.png')});assert.equal(state.errors.length,0);
+    assert((await page.locator('#board canvas').count())>0,'Original Canvas is not inside InkBridge board');
+    const node=state.nodes[0],box=await page.locator('#board').boundingBox(),view=state.view;
+    const point={x:box.x+view.translateX+(node.position.x+90)*view.scale,y:box.y+view.translateY+(node.position.y+90)*view.scale};
+    await page.mouse.click(point.x,point.y);assert((await page.evaluate(()=>window.__inkbridgeIntegrated.inspect())).selectedNodeIds.includes(node.id),'First original click must select the card');
+    await page.mouse.dblclick(point.x,point.y);
+    const editor=page.locator('#board [contenteditable="true"]');await editor.waitFor({state:'visible',timeout:10000});
+    await page.waitForFunction(()=>window.__inkbridgeIntegrated.inspect().editors.length>0);
+    await app.evaluate(async({clipboard})=>{const saved=[];for(const item of await clipboard.read()){const payload={};for(const type of item.types){const value=await item.getType(type);payload[type]=typeof value?.arrayBuffer==='function'?new Blob([await value.arrayBuffer()],{type:value.type}):value;}saved.push(payload);}globalThis.__boardClipboard=saved;});
+    try{
+      const html='<h2>主白板長文驗收</h2>'+Array.from({length:24},(_,i)=>`<p>第${i+1}段 原版完整長文龍</p>`).concat('<p>LAST_RENDER_LINE</p>').join('');
+      await app.evaluate(async({clipboard,ClipboardItem},html)=>clipboard.write([new ClipboardItem({'text/html':html,'text/plain':'主白板長文驗收'})]),html);
+      await editor.press('Control+a');await editor.press('Control+v');
+      await page.waitForFunction(()=>JSON.stringify(window.__inkbridgeIntegrated.inspect().nodes).includes('LAST_RENDER_LINE'));
+    }finally{await app.evaluate(async({clipboard,ClipboardItem})=>{const saved=globalThis.__boardClipboard;if(saved?.length)await clipboard.write(saved.map(payload=>new ClipboardItem(payload)));else clipboard.clear();delete globalThis.__boardClipboard;});}
+    await editor.press('Control+s');await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
+    await editor.press('Control+End');const cdp=await page.context().newCDPSession(page);
+    await cdp.send('Input.imeSetComposition',{text:'組字中',selectionStart:3,selectionEnd:3});
+    await page.evaluate(()=>{window.__compositionAck=false;window.__compositionSave=window.__inkbridgeIntegrated.flush().then(()=>{window.__compositionAck=true;});});
+    assert.equal(await page.evaluate(()=>window.__compositionAck),false);
+    await cdp.send('Input.insertText',{text:'整合選字完成龍'});await page.evaluate(()=>window.__compositionSave);
+    assert((await page.evaluate(()=>window.inkbridge.load())).contents.some(content=>content.body.includes('整合選字完成龍')));
+    await editor.press('Escape');await editor.waitFor({state:'hidden'});
+    await page.evaluate(()=>window.__inkbridgeIntegrated.controls.setViewport({x:50,y:40,zoom:.6}));
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    await page.screenshot({path:path.join(root,'private-original-editor/integrated-long-display.png')});
+    const saved=await page.evaluate(()=>window.inkbridge.load());assert(saved.contents.some(content=>content.body.includes('LAST_RENDER_LINE')));
+    const bounds=await page.evaluate(id=>window.__inkbridgeIntegrated.bounds(id),node.id);
+    const png=await page.screenshot();
+    const lowerTextPixels=await app.evaluate(({nativeImage},{png,rect})=>{const bitmap=nativeImage.createFromBuffer(Buffer.from(png,'base64')).crop(rect).toBitmap();let count=0;for(let i=0;i<bitmap.length;i+=4)if(bitmap[i]<150&&bitmap[i+1]<150&&bitmap[i+2]<150)count++;return count;},{png:png.toString('base64'),rect:{x:Math.round(box.x+50+(node.position.x+48)*.6),y:Math.round(box.y+40+(node.position.y+bounds.height*.5)*.6),width:150,height:Math.round(bounds.height*.2*.6)}});
+    assert(lowerTextPixels>40,'Actual lower-half canvas text pixels are missing');
+    const blank={x:box.x+box.width*.8,y:box.y+box.height*.35};
+    console.log(JSON.stringify({lowerTextPixels,step:'create'}));
+    await page.mouse.dblclick(blank.x,blank.y);await page.waitForFunction(()=>window.__inkbridgeIntegrated.inspect().nodes.length===2,{},{timeout:10000});
+    await page.keyboard.press('Escape');
+    const beforePan=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view);
+    await page.mouse.move(blank.x,box.y+box.height*.85);await page.mouse.down({button:'right'});await page.mouse.move(blank.x-90,box.y+box.height*.85-55,{steps:8});await page.mouse.up({button:'right'});
+    const afterPan=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view);console.log(JSON.stringify({step:'pan',beforePan,afterPan}));
+    assert(beforePan.translateX!==afterPan.translateX||beforePan.translateY!==afterPan.translateY,'Original right-drag did not pan');
+    const drag={x:box.x+afterPan.translateX+(node.position.x+100)*afterPan.scale,y:box.y+afterPan.translateY+(node.position.y+20)*afterPan.scale};
+    await page.mouse.move(drag.x,drag.y);await page.mouse.down();await page.mouse.move(drag.x+45,drag.y+30,{steps:8});await page.mouse.up();
+    const moved=await page.evaluate(id=>window.__inkbridgeIntegrated.inspect().nodes.find(node=>node.id===id),node.id);
+    assert(moved.position.x!==node.position.x||moved.position.y!==node.position.y,'Original card drag did not move');
+    await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
+    const expected=await page.evaluate(()=>window.inkbridge.load());
+    console.log(JSON.stringify({step:'restart'}));await app.close();app=await launch();
+    const reopened=await app.firstWindow();await reopened.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{},{timeout:30000});
+    const actual=await reopened.evaluate(()=>window.inkbridge.load());
+    assert.deepEqual(actual.contents,expected.contents);assert.deepEqual(actual.instances,expected.instances);assert.deepEqual(actual.boards,expected.boards);
+    assert.equal((await reopened.evaluate(()=>window.__inkbridgeIntegrated.inspect())).nodes.length,2);
+    const result={originalCanvasMounted:true,originalFlowEditing:true,saveAndEscape:true,chromiumIMEGate:true,lowerTextPixels,doubleClickCreatesCard:true,rightDragPans:true,cardDragMoves:true,restartDatabaseExact:true,bounds,errors:await reopened.evaluate(()=>window.__inkbridgeIntegrated.errors)};
+    await fs.writeFile(path.join(root,'private-original-editor/integrated-result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+  }catch(error){const page=await app.firstWindow();console.log(JSON.stringify({failureState:await page.evaluate(()=>{const state=window.__inkbridgeIntegrated.inspect();return {...state,nodes:state.nodes.map(({id,position})=>({id,position}))};})}));await app.evaluate(({app})=>app.exit(1));throw error;}finally{await app.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

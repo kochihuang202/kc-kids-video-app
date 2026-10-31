@@ -16,11 +16,25 @@
 
 直接載入完整原73866 Editor及其Settings/Flash/History/Table/Toolbar providers、63268 store、16125 Redux Provider、1643翻譯、51648/43867/29242 Router/PageLoader/Context。原_app模組須先初始化，否則會出現循環依賴R8讀取失敗；沒有改成假store或假Router來跳過。
 
-原74137 NoteCardDrawer、71560 TextDrawer、37757 CanvasKit初始化、65857原字型provider都已實際執行。原版drawer接收原AST並繪製，不經0.4自製projection/NoteLayout。原版有效scale低於0.1才走該路徑skeleton；不存在舊自製medium的3行上限。整體白板還有宿主LOD決策，未宣稱全部已移植。
+原10764 Canvas（含原互動、store、渲染引擎及overlay）、34883 Flow editor wrapper、74137 NoteCardDrawer、71560 TextDrawer、37757 CanvasKit初始化、65857原字型provider已接進既有InkBridge主白板。沒有在舊CanvasEngine上重寫原版手勢／渲染。原版drawer接收原AST；不經0.4自製projection/NoteLayout。原版有效scale低於0.1才走該路徑skeleton，不存在舊自製medium的3行上限。完整功能與效能仍需個別驗證。
 
 原版onChange/onSave callback沒有一路await到SQL的ACK。保存接合使用原public `editor.read(fn)`（預設force-commit），41570.GvG取得原root文字；組字結束才讀取，接回既有Coordinator與真SQLite COMMIT ACK。沒有固定延遲或假成功服務。
 
 ## 已執行的針對性驗證
+
+### 2026-10-31 主白板整合（本次）
+
+- `node scripts/original-reuse/check-board.cjs`：實際Electron中原Canvas掛在既有InkBridge `#board`，原Flow編輯器在同一張卡片編輯，Escape回Canvas顯示。
+- 真實HTML剪貼簿輸入24段長文；60%縮放後，截圖實際檢視末尾LAST_RENDER_LINE。截圖下半部文字區測得1011個深色像素，避免只驗AST存在而沒畫出文字。測後恢復剪貼簿。
+- 第一點選取、雙擊編輯、空白雙擊新增、右鍵拖曳平移、卡片拖曳均走原Canvas事件處理並通過。初測因舊殼模式`select`不符合原版契約而失敗；按原碼修正為一般操作`move`、平移`hand`後通過，未替換原事件邏輯。
+- 原Flow中的Chromium組字期間Flush保持pending，選字完成後SQLite包含最新字；仍不是實體Windows輸入法驗收。
+- 正常關閉／重開：contents、instances、boards（含完整AST、位置及viewport）深度相等，兩張卡片重新顯示；page errors為空。
+- `node scripts/original-reuse/check-launcher.cjs`：實際BAT啟動此整合白板、開啟原Flow編輯器、輸入、Ctrl+S、SQLite讀回、正常關閉返回0。沒有封裝EXE。
+- `private-original-editor/integrated-result.json`及`integrated-long-display.png`保留本地證據。只跑本次整合相關流程，沒有全套重測；舊自製渲染測試不能當成原Canvas的新驗收結果。
+
+原始factory只做兩項可回復接線修改：暴露既有CanvasHostProvider，以及Flow轉送既有onEditorReady。`apply-integration-patches.cjs`記錄SHA-256並保留.before-inkbridge備份；再用collect.cjs重組裝。原AST、互動與繪圖邏輯沒有自行替換。
+
+### 先前獨立模組宿主驗證（非本次整合全部重測）
 
 - 中文真實輸入與原onChange輸出。
 - OS剪貼簿Ctrl+V：heading、bold、list、code/highlight、link、table、callout與collapsible；原AST出現17類節點。測後恢復剪貼簿。
@@ -46,10 +60,11 @@
 
 ## 未完成，不能當成全功能產品
 
-- 目前是獨立原模組移植預覽宿主；尚未接回既有無限白板／完成原版整體CanvasEngine移植。
+- 主白板已接原Canvas；不是完整FlexNote應用。既有外殼仍為InkBridge原殼，Gemini側欄尚未合入。
 - 全部41註冊節點／26 custom的所有操作、所有快捷鍵、公式/圖表、附件、跨卡引用及原服務仍需接通與逐項驗收。
 - 未以假回覆掩蓋缺失服務；原版主程式資料服務不會因前端模組能掛載就自動可用。
-- DOM使用原importModal宿主、Canvas使用原NoteCardDrawer；尚未證明NoteCard overlay完整幾何、固定高度、焦點／拖放與整體效能同原版。
+- 預設BAT已使用原Flow overlay，不再用獨立importModal示範。固定高度、各種特殊節點、所有焦點／拖放及整體效能尚未全部驗收。
+- 目前只將本機text content/instance映射到原NoteCard；舊非文字資料不刪除，但本整合入口尚未顯示。附件、畫筆及未接資料服務不能當成已完成；initialDrawingStrokes使用原元件明確支援的空集合入口。
 - 長時間穩態記憶體、實體IME、完整原版效能比較尚未驗收。
 
 Gemini側邊欄在獨立.worktrees/shell-navigation、feat/shell-navigation；本輪不合併、不修改其工作樹。合併時再檢查共同容器、全域CSS及焦點／快捷鍵。
