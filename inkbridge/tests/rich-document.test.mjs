@@ -4,6 +4,7 @@ import {DEFAULT_TYPOGRAPHY,noteDocument,deriveTitle,projectDocument} from '../sr
 import {createEditor,$getRoot} from 'lexical';
 import {HeadingNode,QuoteNode} from '@lexical/rich-text';
 import {serializeEditorState} from '../src/core/editor-state.mjs';
+import {blockTypography,NoteLayout} from '../src/core/note-layout.mjs';
 
 const text=(value,format=0,style='')=>({type:'text',version:1,text:value,format,style,detail:0,mode:'normal'});
 const paragraph=(...children)=>({type:'paragraph',version:1,children,direction:null,format:'',indent:0});
@@ -57,15 +58,29 @@ test('normalization deeply preserves existing AST attributes, formats and metada
   assert.deepEqual(projection.blocks[0].runs[0],{text:'中文👩‍👧龍',format:3,style:'color: #123456;'});
 });
 
-test('nested inline text and unsupported block structures retain text with explicit unknown types',()=>{
+test('supported links and lists retain structure while genuinely unknown nodes stay explicit',()=>{
   const document=doc(paragraph(text('請看'),{type:'link',version:1,url:'https://example.invalid',children:[text('連結',1)]}),
     {type:'list',version:1,listType:'bullet',children:[{type:'listitem',version:1,children:[text('項目一')]},{type:'listitem',version:1,children:[text('項目二')]}]},
     {type:'future-widget',version:7,children:[text('未知節點文字')]});
   const projection=projectDocument({document});
   assert.equal(projection.text,'請看連結\n項目一\n項目二\n未知節點文字');
-  assert.deepEqual(projection.unknownTypes,['future-widget','link','list','listitem']);
+  assert.deepEqual(projection.unknownTypes,['future-widget']);
   assert.equal(projection.blocks[1].type,'list');
+  assert.equal(projection.blocks[0].runs[1].url,'https://example.invalid');
+  assert.equal(projection.blocks[1].children.length,2);
   assert.deepEqual(projection.document,document);
+});
+
+test('code tokens, nested list topology and merged table geometry survive projection without source mutation',()=>{
+  const document=doc({type:'code',version:1,language:'javascript',children:[{...text('const'),type:'code-highlight',highlightType:'keyword'},{type:'tab',version:1},text('answer = 42;')]},
+    {type:'list',version:1,listType:'number',start:3,children:[{type:'listitem',version:1,children:[text('parent'),{type:'list',version:1,listType:'bullet',children:[{type:'listitem',version:1,children:[text('child')]}]}]}]},
+    {type:'table',version:1,colWidths:[80,100],children:[{type:'tablerow',version:1,children:[{type:'tablecell',version:1,colSpan:2,rowSpan:1,headerState:1,children:[paragraph(text('merged'))]}]}]});
+  const before=structuredClone(document),projection=projectDocument({document});
+  assert.deepEqual(projection.document,before);assert.deepEqual(projection.unknownTypes,[]);
+  assert.equal(projection.blocks[0].runs[0].highlightType,'keyword');assert.equal(projection.blocks[0].language,'javascript');
+  const list=projection.blocks[1];assert.equal(list.start,3);assert.equal(list.children[0].inline.map(run=>run.text).join(''),'parent');assert.equal(list.children[0].children[0].type,'list');
+  assert.deepEqual(projection.blocks[2].colWidths,[80,100]);assert.equal(projection.blocks[2].children[0].children[0].colSpan,2);
+  assert.deepEqual(document,before);
 });
 
 test('title derives from first nonempty readable block and truncates Unicode code points safely',()=>{
@@ -84,4 +99,15 @@ test('malformed existing documents are rejected rather than replaced with plain 
 test('shared note-card defaults are immutable and contain no renderer-specific measurements',()=>{
   assert.deepEqual(DEFAULT_TYPOGRAPHY,{fontSize:14,lineHeight:1.6,padding:48,topPadding:2,minHeight:200});
   assert.ok(Object.isFrozen(DEFAULT_TYPOGRAPHY));
+});
+
+test('all six heading metrics are explicit and medium LOD uses one total line budget',()=>{
+  for(const [level,factor]of [2,1.5,1.2,1.1,1,.9].entries())assert.equal(blockTypography({tag:`h${level+1}`}).fontSize,14*factor);
+  let live=0;
+  const engine={fontManager:{},fontFamilies:['test'],color:value=>value,resources:{own:value=>{live++;return value;},release:value=>{if(value)live--;}}};
+  engine.K={ParagraphStyle:class{constructor(style){Object.assign(this,style);}},TextStyle:class{constructor(style){Object.assign(this,style);}},FontSlant:{Italic:1,Upright:0},parseColorString:value=>value,
+    ParagraphBuilder:{Make:style=>{let text='';return {pushStyle(){},pop(){},addText:value=>{text+=value;},build:()=>({layout(){},getHeight:()=>Math.min(style.maxLines,text.split('\n').length)*22.4,getLineMetrics:()=>Array.from({length:Math.min(style.maxLines,text.split('\n').length)},()=>({baseline:14,left:0,width:10,height:22.4}))})};}}};
+  const layout=new NoteLayout(engine).layout({document:doc(paragraph(text('a\nb')),paragraph(text('c\nd')),paragraph(text('must not render')))},160,{maxLines:3});
+  assert.equal(layout.blocks.length,2);assert.equal(layout.blocks.reduce((sum,block)=>sum+block.lines.length,0),3);assert.equal(live,0);
+  assert.throws(()=>new NoteLayout(engine).layout({body:'a\nb'},160,{draw(){throw Error('draw failed');}}),/draw failed/);assert.equal(live,0);
 });

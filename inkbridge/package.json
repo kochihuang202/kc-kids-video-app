@@ -1,7 +1,7 @@
 {
   "name": "inkbridge",
   "productName": "InkBridge",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "InkBridge 墨橋 — independent CanvasKit whiteboard",
   "private": true,
   "main": "src/main/main.cjs",
@@ -15,8 +15,16 @@
     "test:package": "node scripts/test-package.cjs"
   },
   "dependencies": {
+    "@lexical/code": "0.53.0",
+    "@lexical/code-core": "0.53.0",
+    "@lexical/code-prism": "0.53.0",
     "@lexical/history": "0.53.0",
+    "@lexical/link": "0.53.0",
+    "@lexical/list": "0.53.0",
+    "@lexical/markdown": "0.53.0",
     "@lexical/rich-text": "0.53.0",
+    "@lexical/selection": "0.53.0",
+    "@lexical/table": "0.53.0",
     "canvaskit-wasm": "0.42.0",
     "lexical": "0.53.0"
   },

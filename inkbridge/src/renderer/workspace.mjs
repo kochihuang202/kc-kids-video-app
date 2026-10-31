@@ -55,17 +55,21 @@ async function initialize(){
     await coordinator.flush();
   }
   const K=await window.CanvasKitInit({locateFile:file=>`inkbridge://app/vendor/${file}`});
-  const [font,boldFont,emojiFont]=await Promise.all([
+  const [font,boldFont,emojiFont,monoFont]=await Promise.all([
     fetch('inkbridge://app/fonts/ui').then(response=>{if(!response.ok)throw Error('無法載入系統字型');return response.arrayBuffer();}),
     fetch('inkbridge://app/fonts/bold').then(response=>response.ok?response.arrayBuffer():null).catch(()=>null),
-    fetch('inkbridge://app/fonts/emoji').then(response=>response.ok?response.arrayBuffer():null).catch(()=>null)
+    fetch('inkbridge://app/fonts/emoji').then(response=>response.ok?response.arrayBuffer():null).catch(()=>null),
+    fetch('inkbridge://app/fonts/mono').then(response=>response.ok?response.arrayBuffer():null).catch(()=>null)
   ]);
   const fontBuffers=[font];
   if(boldFont&&boldFont.byteLength>0)fontBuffers.push(boldFont);
   if(emojiFont&&emojiFont.byteLength>0)fontBuffers.push(emojiFont);
+  if(monoFont&&monoFont.byteLength>0)fontBuffers.push(monoFont);
   const manager=K.FontMgr.FromData(...fontBuffers);if(!manager||!manager.countFamilies())throw Error('CanvasKit 無法解析系統字型');
   engine=new CanvasEngine(K,$('#board'),manager,update);engine.setScene(documentModel);engine.view=graph.boards[0]?.view||{x:70,y:100,zoom:1};
+  engine.monoFamilies=engine.fontFamilies.filter(name=>/Consolas|Courier|Cascadia/i.test(name));engine.fontFamilies=engine.fontFamilies.filter(name=>!engine.monoFamilies.includes(name));
   document.documentElement.style.setProperty('--note-font',engine.fontFamilies.map(name=>JSON.stringify(name)).join(','));
+  document.documentElement.style.setProperty('--code-font',[...engine.monoFamilies,...engine.fontFamilies].map(name=>JSON.stringify(name)).join(','));
   noteEditor=new InlineNoteEditor({host:$('#card-editor'),element:$('#rich-editor'),engine,model:documentModel,createEditor:createRichEditor,save:flush,
     change:changedEditor,geometry:setGeometry,onError:showError,onViewChange:stageView});
   for(const item of documentModel.instances.values())resizeTextCard(item,documentModel.contents.get(item.contentId));
@@ -89,9 +93,11 @@ async function initialize(){
   for(const ev of ['mousedown','mouseup','mousemove','click','dblclick','pointerdown','pointermove','pointerup']){
     editorOverlay.addEventListener(ev,e=>e.stopPropagation());
   }
-  for(const [id,format]of [['format-bold','bold'],['format-italic','italic'],['format-underline','underline']]){
+  for(const [id,format]of [['format-bold','bold'],['format-italic','italic'],['format-underline','underline'],['format-strike','strikethrough'],['format-code','code']]){
     $(`#${id}`).addEventListener('mousedown',event=>event.preventDefault());$(`#${id}`).addEventListener('click',()=>noteEditor?.current?.controller.format(format));
   }
+  $('#editor-block').addEventListener('change',event=>{noteEditor?.current?.controller.block(event.target.value);event.target.value='';});
+  $('#editor-table').addEventListener('mousedown',event=>event.preventDefault());$('#editor-table').addEventListener('click',()=>noteEditor?.current?.controller.insertTable());
   for(const [id,action]of [['editor-undo','undo'],['editor-redo','redo']]){ $(`#${id}`).addEventListener('mousedown',event=>event.preventDefault());$(`#${id}`).addEventListener('click',()=>noteEditor?.current?.controller[action]()); }
   $('#editor-done')?.addEventListener('click',()=>closeEditor().catch(showError));$('#save-workspace').addEventListener('click',()=>flush().catch(showError));
   window.addEventListener('keydown',event=>{

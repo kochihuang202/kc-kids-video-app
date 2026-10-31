@@ -8,7 +8,7 @@
 <body>
   <header class="topbar">
     <div class="brand"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M5 28V16M31 28V16M5 23C10 6 26 6 31 23M12 15v13M24 15v13M4 28h28"/></svg><span>InkBridge<small>墨橋</small></span></div>
-    <div class="breadcrumb">我的工作空間<span>/</span><strong>靈感白板</strong><span class="version">0.3</span></div>
+    <div class="breadcrumb">我的工作空間<span>/</span><strong>靈感白板</strong><span class="version">0.4</span></div>
     <button id="save-workspace" title="Ctrl+S 保存到本機 SQLite">保存</button>
     <button id="add-card" class="primary"><span>＋</span> 新增卡片</button>
   </header>
@@ -26,14 +26,19 @@
         <div id="loading" role="status">正在準備白板…</div>
         <div id="card-editor" class="card-editor" hidden>
           <div class="editor-toolbar">
+            <select id="editor-block" aria-label="區塊格式"><option value="">區塊</option><option value="paragraph">內文</option><option value="h1">標題 1</option><option value="h2">標題 2</option><option value="h3">標題 3</option><option value="h4">標題 4</option><option value="h5">標題 5</option><option value="h6">標題 6</option><option value="bullet">無序清單</option><option value="number">有序清單</option><option value="check">待辦清單</option><option value="quote">引用</option><option value="code">程式碼</option></select>
             <button id="format-bold" aria-label="粗體" title="粗體 (Ctrl+B)"><b>B</b></button>
             <button id="format-italic" aria-label="斜體" title="斜體 (Ctrl+I)"><i>I</i></button>
             <button id="format-underline" aria-label="底線" title="底線 (Ctrl+U)"><u>U</u></button>
+            <button id="format-strike" aria-label="刪除線" title="刪除線"><s>S</s></button>
+            <button id="format-code" aria-label="行內程式碼" title="行內程式碼">&lt;&gt;</button>
+            <button id="editor-table" aria-label="插入表格" title="插入表格">▦</button>
             <div class="toolbar-divider"></div>
             <button id="editor-undo" aria-label="復原" title="復原 (Ctrl+Z)">↶</button>
             <button id="editor-redo" aria-label="重做" title="重做 (Ctrl+Y)">↷</button>
           </div>
           <div id="rich-editor" role="textbox" aria-label="卡片富文本內容" aria-multiline="true" contenteditable="true"></div>
+          <div id="editor-notice" role="status" hidden></div>
         </div>
         <div class="tools" aria-label="白板工具"><button id="select-tool" class="active" title="選取卡片" aria-label="選取工具">↖</button><button id="pan-tool" title="平移白板" aria-label="平移工具">✥</button><div></div><button id="fit" title="顯示所有卡片" aria-label="顯示全部">⛶</button></div>
         <div class="canvas-help">雙擊新增 <span>·</span> 空格＋拖曳平移 <span>·</span> 滾輪縮放</div>

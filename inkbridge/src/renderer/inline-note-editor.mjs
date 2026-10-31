@@ -16,7 +16,18 @@ export class InlineNoteEditor {
     for(let index=0;index<children.length;index++){
       const box=bounds.layout.blocks[index];if(!box)continue;const style=box.typography;
       Object.assign(children[index].style,{fontSize:`${style.fontSize}px`,fontWeight:String(style.weight),lineHeight:String(style.lineHeight),color:style.weight>400?'#253c32':'#6d786e',
-        marginTop:`${box.gap}px`,marginBottom:'0',minHeight:`${box.height}px`,padding:'0'});
+        marginTop:`${box.gap}px`,marginBottom:'0',minHeight:`${box.height}px`,boxSizing:'border-box',
+        padding:box.type==='code'?'8px 12px':box.type==='quote'?'0 0 0 20px':box.type==='list'?'0 0 0 24px':'0'});
+      if(box.type==='table'){
+        const table=children[index].matches('table')?children[index]:children[index].querySelector('table');
+        if(table){table.style.width=`${box.colWidths.reduce((a,b)=>a+b,0)}px`;
+          for(let row=0;row<table.rows.length;row++){
+            table.rows[row].style.height=`${box.rowHeights[row]}px`;
+            for(const cell of table.rows[row].cells){const geometry=box.cells.find(value=>value.row===row&&value.col===[...table.rows[row].cells].slice(0,cell.cellIndex).reduce((sum,c)=>sum+c.colSpan,0));
+              if(geometry)cell.style.width=`${geometry.width}px`;}
+          }
+        }
+      }
     }
     // This root has intrinsic height, not a percentage of the card. Reading its
     // intrinsic box cannot create the previous card-height feedback loop.
@@ -35,9 +46,11 @@ export class InlineNoteEditor {
     // Parse before replacing the overlay: unsupported/invalid AST must not be
     // silently cleared. Lexical errors leave the saved source document intact.
     this.host.hidden=false;
+    const notice=this.host.querySelector('#editor-notice');if(notice){notice.hidden=true;notice.textContent='';}
     let controller;
     try{
       controller=this.createEditor({element:this.element,document:noteDocument(content),onError:error=>{throw error;},
+        onNotice:message=>{if(notice){notice.textContent=message;notice.hidden=!message;}},
         onChange:value=>{if(this.current?.controller!==controller)return;this.change(content.id,value);this.reflow();},
         onSelection:rect=>this.ensureCaretVisible(rect)});
     }catch(error){this.host.hidden=true;throw error;}

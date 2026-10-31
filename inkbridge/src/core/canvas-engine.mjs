@@ -103,7 +103,16 @@ export class CanvasEngine {
     }finally{this.resources.release(paragraph);this.resources.release(builder);}
   }
   richParagraph(canvas,content,x,y,width,maxLines){
-    return this.noteLayout.layout(content,width,{maxLines,draw:(paragraph,box)=>canvas.drawParagraph(paragraph,x,y+box.top)});
+    return this.noteLayout.layout(content,width,{maxLines,draw:(paragraph,box)=>canvas.drawParagraph(paragraph,x+box.left,y+box.top),
+      decorate:(kind,box)=>{
+        if(kind==='code')this.rectangle(canvas,x+box.left,y+box.top,box.width,box.height,this.color('#f4f4f5'),4);
+        if(kind==='quote')this.rectangle(canvas,x+box.left,y+box.top,3,box.height,this.color('#d1d5db'));
+        if(kind==='cell'){
+          this.rectangle(canvas,x+box.left,y+box.top,box.width,box.height,box.background?this.K.parseColorString(box.background):this.color(box.header?'#edf0ec':'#fffefb'));
+          this.paint.setStyle(this.K.PaintStyle.Stroke);this.paint.setStrokeWidth(1);this.paint.setColor(this.color('#d1d5db'));
+          canvas.drawRect(this.K.XYWHRect(x+box.left,y+box.top,box.width,box.height),this.paint);this.paint.setStyle(this.K.PaintStyle.Fill);
+        }
+      }});
   }
   measureText(content,width){return this.noteLayout.layout(content,width).height;}
   measureNote(content,width){return this.noteLayout.bounds(content,width);}

@@ -38,6 +38,8 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
           file=['msjhbd.ttc','segoeuib.ttf'].map(name=>path.join(process.env.SystemRoot||'C:/Windows','Fonts',name)).find(p=>fs.existsSync(p));
         }else if(relative==='fonts/emoji'){
           file=path.join(process.env.SystemRoot||'C:/Windows','Fonts','seguiemj.ttf');
+        }else if(relative==='fonts/mono'){
+          file=['consola.ttf','cour.ttf'].map(name=>path.join(process.env.SystemRoot||'C:/Windows','Fonts',name)).find(p=>fs.existsSync(p));
         }else{
           const root=relative.startsWith('core/')?path.join(project,'src/core'):path.join(project,'src/renderer');
           const logical=relative.startsWith('core/')?relative.slice(5):relative||'index.html';
