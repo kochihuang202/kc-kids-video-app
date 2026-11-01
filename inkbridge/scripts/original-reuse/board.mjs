@@ -160,6 +160,18 @@ async function boot(){
     return null;
   }
   function NativeZoomLod(){const zoom=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().view.scale),lod=r(48626).InkBridgeUseZoomLod(zoom);React.useEffect(()=>lod.zoomchange({zoom}),[zoom]);return null;}
+  // Native48626 mounts90214 under FlowContext and passes14153 to Canvas.
+  // Keep that parent lifecycle: the hook owns outside-click, position and cleanup.
+  function NativeCanvas({flowContextValue,...props}){
+    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById});
+    return React.createElement(React.Fragment,null,
+      React.createElement(Canvas,{...props,onNodeContextMenu:menu.onNodeContextMenu,
+        multiSelectionToolbar:selection=>React.createElement(r(14153)._,{...selection,
+          whiteboardId:props.whiteboardId,nodes:props.nodes,
+          setNodes:originalStore.getState().setNodes,setConnections:originalStore.getState().setConnections,
+          fitView:state.controls.fitView,fitBounds:state.controls.fitBounds,
+          pushUndoSnapshot:flowContextValue.pushUndoSnapshot})}),menu.renderMenu());
+  }
   function App(){
     const onlyTitle=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.onlyDisplayCardTitle),smallTextSize=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.textSizeAtSmallZoom);
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes),sceneConnections=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().connections),mode=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.controlMode);state.setMode=value=>redux.dispatch(r(23407).Uw(value));state.controls=r(23).wf();
@@ -213,7 +225,7 @@ async function boot(){
     }),[activeBoardId,onlyTitle,smallTextSize]);
     return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
       React.createElement(FlowContext.Provider,{value:flowContextValue},
-        React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
+        React.createElement(React.Fragment,null,React.createElement(NativeCanvas,{flowContextValue,nodes,readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
           nodeToolbar:r(19395).z,
           connections:sceneConnections,
           onConnect:event=>connections.connect(event)?.catch(report),
