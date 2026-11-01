@@ -1,13 +1,13 @@
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord} from '/inkbridge-core/original-catalog.mjs';
-export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
+export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,bookmarks,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
   const ListView=r(74582).ListView,SidebarTree=r(79509).SortableTree,ZoomControls=r(46979).OO,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
   const SidebarNavigation=r(78507).InkBridgeSidebarNavigation,NativeFlowUi=r(48626);
   if(!SidebarNavigation||!NativeFlowUi.InkBridgeCreationToolbar)throw Error('Apply native shell UI export patches first');
   // Open the supported original whiteboard view, through its own saved view key.
   // Collections have a separate native catalog, not the history-tab table.
-  localStorage.setItem(r(39641).hS,'whiteboards');
+  if(!localStorage.getItem(r(39641).hS))localStorage.setItem(r(39641).hS,'whiteboards');
   if(!HistoryTabs)throw Error('Apply the original history-tab export patch first');
   const tabActions=r(90561),historyNames=new Set(['getHistoryTabs','createHistoryTab','touchHistoryTab','deleteHistoryTab','updateHistoryTab','updateHistoryTabsOrder']);
   const pendingHistory=new Set();
@@ -23,7 +23,8 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   const noteReads=new Set(['getTag','getNoteCardById','getTagsByCardId','getWhiteboardsByCardId','getCardLinks','getTagPropertyList','getCardRemark']);
   const cardInstanceWrites=new Set(['restoreNoteCardContentVersion','batchCreateNoteCards','batchCreateNoteCardInstances','addNoteCardInstance','batchDeleteNoteCardInstances','updateNoteCardInstance','batchUpdateCardInstances','batchUpdateMediaCardInstances','deleteNoteCardInstance','addMediaCard','addMediaCardInstance']);
   globalThis.__inkbridgeControlledNoteSaves=true;window.onGlobalModalClose=async()=>{await flushAll();redux.dispatch(r(22676).aV({show:false}));redux.dispatch(r(11473).f4());};
-  globalThis.__inkbridgeServices={has:name=>tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getTabs','getTabGroups','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  globalThis.__inkbridgeServices={has:name=>bookmarks.has(name)||tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+    if(bookmarks.has(name))return bookmarks.call(name,payload);
     if(tags.has(name))return tags.call(name,payload);
     if(name==='writeClipboardTextAndHtml')return window.inkbridge.writeClipboardTextAndHtml(payload);
     if(name==='batchInsertCardInstances'||name==='batchDeleteCardsByType'||name==='addNoteCard'||name==='updateNoteCard'||name==='upsertCardRemark'){const result=await writeNote(name,payload);if(name==='addNoteCard'||name==='batchDeleteCardsByType'||name==='batchInsertCardInstances')window.dispatchEvent(new Event(r(92344).kB));return result;}
@@ -41,9 +42,6 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     if(noteReads.has(name)){await flush();const graph=await window.inkbridge.load(),id=typeof payload==='string'?payload:payload.cardId||payload.objectId,content=graph.contents.find(c=>c.id===id),record=content?noteRecord(graph,content):null;if(name==='getNoteCardById')return record;if(name==='getTagsByCardId')return {success:true,data:(graph.tags||[]).filter(tag=>(graph.cardTags||[]).some(link=>link.tagId===tag.id&&link.cardId===id))};if(name==='getWhiteboardsByCardId')return {success:true,data:record?.apprearedInWhiteboards||[]};if(name==='getCardRemark')return (graph.cardRemarks||[]).find(row=>row.id===id)||{content:''};if(name==='getTagPropertyList')return {data:{propertyList:[],propertyValues:[]}};return {whiteboardLinks:record?.apprearedInWhiteboards||[],appearInMindmaps:[],linksInNoteCards:[],linksInDailyNotes:[],linksInMindmaps:[],linksInPdfHighlights:[],linksInVideoHighlights:[],linksInNoteHighlights:[],selfCard:record,fileRecord:null,linksInRelations:[]};}
     if(libraryReads.has(name)){await flush();const graph=await window.inkbridge.load();if(name==='batchGetInstanceListByWhiteboardId')return {list:graph.instances.filter(row=>row.boardId===payload.whiteboardId).map(row=>({...row.attributes,id:row.id,objectId:row.contentId,whiteboardId:row.boardId,x:row.x,y:row.y,width:row.width,height:row.height}))};if(name==='getAllWhiteboards')return {whiteboards:records(graph)};if(name==='getTagList')return {success:true,data:graph.tags||[]};if(name==='getBoardListPreviewByWhiteboardIds')return boardPreviews(graph,Array.isArray(payload)?payload:[payload]);return cardsByFilters(graph,payload);}
     if(name==='getBoardListByIds'){await flush();return {whiteboards:records(await window.inkbridge.load()).filter(board=>payload.includes(board.id))};}
-    // No collection tabs/groups have been implemented or imported in this own
-    // workspace. Report their actual empty catalog; never map history as favorites.
-    if(name==='getTabs'||name==='getTabGroups')return {data:[]};
     if(name==='getFolders'){await flush();return catalog(await window.inkbridge.load());}
     if(name==='getWhiteboard'){await flush();const board=(await window.inkbridge.load()).boards.find(board=>board.id===payload);if(!board)throw Error('白板不存在');return {whiteboard:{color:'white',icon:null,...board.attributes,id:board.id,name:board.title}};}
     if(name==='getTrash'){await flush();const graph=await window.inkbridge.load();return {noteCards:graph.contents.filter(c=>c.kind==='text').map(c=>noteRecord(graph,c)).filter(c=>c.isTrashed),mindMaps:[],pdfCards:[],highlights:[],videoHighlights:[],audioHighlights:[],noteHighlights:[],mediaCards:[],websiteCards:[],whiteboards:graph.boards.filter(board=>board.attributes?.isTrashed).map(board=>({...board.attributes,id:board.id,name:board.title}))};}
@@ -89,6 +87,7 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     React.createElement(r(64744).InkBridgeCardModal,{onBeforeClose:flushAll,onEditorReady:registerModalEditor,inkbridgeNoAi:true}),
     React.createElement(NativeCardOverlays),
     React.createElement(r(64744).InkBridgeTagManager),
+    React.createElement(r(64744).InkBridgeCollectionPicker),
     React.createElement(AddToWhiteboard),
     home?ReactDOM.createPortal(React.createElement(NativeNewCard),document.querySelector('#original-new-card-launcher')):null,
     ReactDOM.createPortal(React.createElement(r(23733).InkBridgeNavigationControls,{onToggleSidebar:()=>{const sidebar=document.querySelector('.original-sidebar');sidebar.hidden=!sidebar.hidden;document.body.classList.toggle('sidebar-closed',sidebar.hidden);}}),document.querySelector('#original-navigation-controls')),
@@ -101,7 +100,7 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     React.createElement(r(64744).InkBridgeCreateWhiteboard),
     React.createElement(r(64744).InkBridgeCreateFolder),
     home?ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col',style:{position:'absolute',inset:0,zIndex:300,overflow:'auto',background:'white'}},page==='trash'?React.createElement(TrashView):page==='note-detail'?React.createElement(r(58439).default,{onEditorReady:registerModalEditor}):React.createElement(page==='card-list'?r(57152).default:r(13177).default)),document.querySelector('#original-board-home')):null,
-    ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col',onClickCapture:event=>{const tab=event.target.closest('[role="tab"]');if(tab?.getAttribute('aria-label')===r(1643).ag.t('collections',{ns:'common'})){event.preventDefault();event.stopPropagation();document.querySelector('#board-navigation-status').textContent='收藏資料服務尚未接入；目前保留白板檢視。';}}},React.createElement(SidebarTree)),document.querySelector('#original-board-list')),
+    ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col'},React.createElement(SidebarTree)),document.querySelector('#original-board-list')),
     ReactDOM.createPortal(React.createElement(r(32367).w,{className:'h-full w-full rounded-none bg-transparent shadow-none'},React.createElement(FlowOutline)),document.querySelector('#original-flow-outline')),
     ReactDOM.createPortal(React.createElement(ZoomControls),document.querySelector('#original-zoom-controls')));
   }

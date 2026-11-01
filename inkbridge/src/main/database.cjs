@@ -175,7 +175,7 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:']]){
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -264,17 +264,19 @@ class WorkspaceDatabase {
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else if(operation.type==='deleteCatalog'){
-          check(['folder','card-tag'].includes(operation.kind),'Unsupported catalog deletion');
+          check(['folder','card-tag','saved-tab'].includes(operation.kind),'Unsupported catalog deletion');
           const result=this.statement('DELETE FROM meta WHERE key=?').run(operation.kind+':'+identifier(operation.id,'catalog ID'));
           changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
           if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
           else if(operation.kind==='whiteboard-instance'){const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
           else if(['card','remark'].includes(operation.kind))check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Catalog content is missing');
           else if(operation.kind==='instance')check(!!this.statement('SELECT id FROM instances WHERE id=?').get(id),'Catalog instance is missing');
           else if(operation.kind==='tag')text(data.name,'tag name',255);
           else if(operation.kind==='tag-group'){text(data.name,'tag group name',255);check(Array.isArray(data.tags),'Invalid tag group');data.tags.forEach(id=>identifier(id,'group tag ID'));}
+          else if(operation.kind==='tab-group'){check(Array.isArray(data.tabIds)&&Array.isArray(data.pinnedTabIds),'Invalid bookmark group');}
+          else if(operation.kind==='saved-tab'){text(data.title||'','bookmark title',4096);identifier(data.tabGroupId,'bookmark group ID');}
           else if(operation.kind==='card-tag'){identifier(data.cardId,'tagged card ID');identifier(data.tagId,'tag ID');}
           else if(operation.kind==='file'){text(data.name||'','file name',255);}
           else if(operation.kind==='content-version'){identifier(data.noteCardId,'version card ID');check(!!this.statement('SELECT id FROM contents WHERE id=?').get(data.noteCardId),'Version content is missing');validateDocument(JSON.parse(data.content));text(data.title,'version title',4096);text(data.createdTime,'version time',64);}

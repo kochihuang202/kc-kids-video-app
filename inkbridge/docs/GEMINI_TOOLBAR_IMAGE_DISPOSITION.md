@@ -53,3 +53,10 @@
 - 直接相關18項資料測試通過；失敗批次／正常關閉／重啟亦在實際Electron流程驗證。完整標籤頁、系統Collection屬性與表格查詢仍未驗收，不能把管理標籤的通過擴大成整套標籤／Collection功能完成。
 
 完整任務仍在進行；此批是可回復、已驗證的整合基礎。啟動仍使用Start-InkBridge.bat；私人factory／registry／圖片與profile不提交Git。
+
+### 後續更新：原收藏選單與收藏樹
+
+- 保留64744.rf完整加入收藏視窗、79509/48206完整收藏樹；接入getTabs/getTabGroups、create/update/deleteTab、updateTabGroup及兩個原版來源查詢。原背景initTabSource與getTabReferencesObjectCards逐欄核對，沒有用null冒充成功。
+- 自有SQLite meta分開保存saved-tab、tab-group；建立連結與父層排序同交易。刪除收藏資料夾只遞迴刪連結，不刪筆記內容。原生重複加入防護保留。
+- 實際Electron測試通過：加入、重複防護、收藏樹開啟原note-detail頁面、中文編輯/ACK、正常關閉後讀取SQLite、重啟完整比對及讀出更新標題。相關check-shell18項通過。
+- 新localhost origin使UI-only localStorage頁籤偏好無法跨啟動延續，收藏本身與排序存在SQLite不受影響。多收藏群組管理、所有收藏右鍵動作尚未完整驗收；不可擴大成全收藏系統完成。

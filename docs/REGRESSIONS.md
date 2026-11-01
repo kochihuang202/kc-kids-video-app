@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-102 — Native favorites require target-source reads, durable ordering and independent deletion
+
+- Full64744.rf picker and79509/48206 tree call initTabSource and getTabReferencesObjectCards in addition to saved-tab CRUD. A silent null service caused allWhiteboards/noteCards exceptions despite successful link writes. Preserve original reply shapes and query actual own records.
+- saved-tab and tab-group meta records are distinct from history tabs and tag Collections. Link creation stores its parent ordering in the same transaction; recursive removal removes links only. Normal close can emit an editor history snapshot: compare restart against the actual closed SQLite graph, while asserting content and favorites match the last acknowledged edits.
+- check-native-bookmarks drives native add, duplicate prevention, tree navigation, Chinese editing, normal close, exact SQLite reopen and tree read. original-bookmarks unit tests nested ordering, reference DTOs, invalid parent without writes and deletion preserving contents/boards. Host uses a new localhost origin per launch; UI-only localStorage view preferences are not claimed persistent.
+
 ## REG-101 — Native tag management must persist its dependencies and reject whole invalid batches
 
 - Port full64744.am; its addTag creates both collection and view DTOs. Reuse them and original tag service contracts at the own SQLite boundary, including System bootstrap names/order verified in original initTagState; own workspace IDs stay independent.

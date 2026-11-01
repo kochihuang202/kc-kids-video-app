@@ -49,6 +49,7 @@ expose('23733','InkBridgeNavigationControls','inkbridgeNavigationControls','Tabb
 patch('23733','    "use strict";','    "use strict";\n    function inkbridgeNavigationControls({onToggleSidebar}) { const {t:E}=(0,s.$G)("common"); return (0,i.jsxs)("div",{className:"flex items-center gap-0",children:['+navigationButtons.join(',')+']}); }','Retain original four navigation buttons/icons; unconnected actions disabled');
 expose('64744','InkBridgeCardModal','nC','default: function () { return oI; }','Expose complete original card modal independently of original app lifecycle');
 expose('64744','InkBridgeTagManager','am','default: function () { return oI; }','Expose the complete original card tag manager without the app lifecycle');
+expose('64744','InkBridgeCollectionPicker','rf','default: function () { return oI; }','Expose the full original add-to-favorites picker');
 patch('58439','let eu = () => {','let eu = (inkbridgeProps={}) => {','Retain complete original note-detail page with an editor registration boundary');
 patch('58439','onEditorReady: eN, classNames:','onEditorReady: editor => { eN(editor); inkbridgeProps.onEditorReady?.(A.id, editor); }, classNames:','Register the actual note-detail Lexical editor for save/close ACK');
 patch('64744','let { isPinned: i = !1, pinnedCard: r, floatingIndex: a = 0 } = e','let { isPinned: i = !1, pinnedCard: r, floatingIndex: a = 0, onBeforeClose: inkbridgeBeforeClose, inkbridgeNoAi = true } = e','Give native card modal an awaited persistence boundary and excluded-AI flag');
