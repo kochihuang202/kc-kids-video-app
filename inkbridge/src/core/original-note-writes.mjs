@@ -145,7 +145,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             const document = typeof rawDoc === 'string' ? JSON.parse(rawDoc) : rawDoc;
             if (document)
                 acceptContentDocument(id, document, updates.body || payload.body);
-            const metadata = { ...((await load()).cardMetadata || []).find(row => row.id === id), ...updates, id };
+            const metadata = { ...((await load()).cardMetadata || []).find(row => row.id === id), ...updates, id, lastEditedTime:new Date().toISOString() };
             delete metadata.content;
             delete metadata.document;
             delete metadata.title;

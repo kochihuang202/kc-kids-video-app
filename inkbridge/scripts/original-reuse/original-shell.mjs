@@ -1,7 +1,7 @@
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord} from '/inkbridge-core/original-catalog.mjs';
-export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
+export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
   const ListView=r(74582).ListView,SidebarTree=r(79509).SortableTree,ZoomControls=r(46979).OO,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
   const SidebarNavigation=r(78507).InkBridgeSidebarNavigation,NativeFlowUi=r(48626);
   if(!SidebarNavigation||!NativeFlowUi.InkBridgeCreationToolbar)throw Error('Apply native shell UI export patches first');
@@ -23,7 +23,8 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   const noteReads=new Set(['getTag','getNoteCardById','getTagsByCardId','getWhiteboardsByCardId','getCardLinks','getTagPropertyList','getCardRemark']);
   const cardInstanceWrites=new Set(['restoreNoteCardContentVersion','batchCreateNoteCards','batchCreateNoteCardInstances','addNoteCardInstance','batchDeleteNoteCardInstances','updateNoteCardInstance','batchUpdateCardInstances','batchUpdateMediaCardInstances','deleteNoteCardInstance','addMediaCard','addMediaCardInstance']);
   globalThis.__inkbridgeControlledNoteSaves=true;window.onGlobalModalClose=async()=>{await flushAll();redux.dispatch(r(22676).aV({show:false}));redux.dispatch(r(11473).f4());};
-  globalThis.__inkbridgeServices={has:name=>name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getTabs','getTabGroups','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  globalThis.__inkbridgeServices={has:name=>tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getTabs','getTabGroups','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+    if(tags.has(name))return tags.call(name,payload);
     if(name==='writeClipboardTextAndHtml')return window.inkbridge.writeClipboardTextAndHtml(payload);
     if(name==='batchInsertCardInstances'||name==='batchDeleteCardsByType'||name==='addNoteCard'||name==='updateNoteCard'||name==='upsertCardRemark'){const result=await writeNote(name,payload);if(name==='addNoteCard'||name==='batchDeleteCardsByType'||name==='batchInsertCardInstances')window.dispatchEvent(new Event(r(92344).kB));return result;}
     if(cardInstanceWrites.has(name))return writeNote(name,payload);
@@ -87,6 +88,7 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     React.createElement(r(55153).VW,{toastOffset:50,maxVisibleToasts:1,placement:'top-right',regionProps:{className:'flexnote-global-toast-region'}}),
     React.createElement(r(64744).InkBridgeCardModal,{onBeforeClose:flushAll,onEditorReady:registerModalEditor,inkbridgeNoAi:true}),
     React.createElement(NativeCardOverlays),
+    React.createElement(r(64744).InkBridgeTagManager),
     React.createElement(AddToWhiteboard),
     home?ReactDOM.createPortal(React.createElement(NativeNewCard),document.querySelector('#original-new-card-launcher')):null,
     ReactDOM.createPortal(React.createElement(r(23733).InkBridgeNavigationControls,{onToggleSidebar:()=>{const sidebar=document.querySelector('.original-sidebar');sidebar.hidden=!sidebar.hidden;document.body.classList.toggle('sidebar-closed',sidebar.hidden);}}),document.querySelector('#original-navigation-controls')),

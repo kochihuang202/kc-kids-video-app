@@ -45,4 +45,11 @@
 
 原選單UI存在，但以下不可列為已實作：在側邊欄開啟的完整41.n父流程、真正獨立編輯視窗、管理標籤的完整資料／collection依賴、收藏資料、Markdown／Word／PDF匯出、轉Mindmap的資料模型及排版。圖片的SVG／HEIC等未驗格式、MediaCard在卡片庫的全面支援也未列完成。原模組來源可繼續追，不應自行換簡化假UI。
 
+### 後續更新：原管理標籤視窗已接入
+
+- 已重用64744.am完整視窗，補getTagStates、getCommonTagsByCardIds、addTag、batchAddTagToCards、batchDeleteTagFromCards。原版initTagState的System與六種系統標籤名稱／順序已核對，本工作區使用獨立ID。
+- 原UI生成的tag、collection、collectionView完整DTO保存到既有meta表。原生新增標籤、附加／移除、Collection/View依賴與精確重啟已通過check-native-tags。
+- 批次先驗證全部card/tag再stage，無效批次不殘留部分更新。已回報的navigation驗證失敗不再毒化後續Flush/close；真正未提交資料仍須通過Coordinator保存。
+- 直接相關18項資料測試通過；失敗批次／正常關閉／重啟亦在實際Electron流程驗證。完整標籤頁、系統Collection屬性與表格查詢仍未驗收，不能把管理標籤的通過擴大成整套標籤／Collection功能完成。
+
 完整任務仍在進行；此批是可回復、已驗證的整合基礎。啟動仍使用Start-InkBridge.bat；私人factory／registry／圖片與profile不提交Git。

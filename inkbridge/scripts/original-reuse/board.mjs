@@ -5,6 +5,7 @@ import {noteDocument} from '/inkbridge-core/rich-document.mjs';
 import {connectOriginalShell} from './original-shell.mjs';
 import {createOriginalNoteWriter} from '/inkbridge-core/original-note-writes.mjs';
 import {folderDeletionOperations} from '/inkbridge-core/original-folder-writes.mjs';
+import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -122,11 +123,12 @@ async function boot(){
     for(const operation of ops)coordinator.stage(operation);await coordinator.flush();boards.set(id,board);
     if(id===boardId)updateBoardTitle();return {board,boardInstance};
   });}
-  const flushAll=async()=>{do{if(pendingExternal.size)await Promise.all([...pendingExternal]);await navigationTail;}while(pendingExternal.size);return coordinator.flush();};state.flush=flushAll;
+  const flushAll=async()=>{do{if(pendingExternal.size)await Promise.all([...pendingExternal]);await navigationTail.catch(()=>{});}while(pendingExternal.size);return coordinator.flush();};state.flush=flushAll;
   function registerModalEditor(contentId,editor){modalEditors.set(contentId,editor);const read=()=>{if(editor.isComposing())return;const value=bodyFromEditor(editor);acceptContentDocument(contentId,value.document,value.body);};const offUpdate=editor.registerUpdateListener(()=>queueMicrotask(read));let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();if(modalEditors.get(contentId)===editor)modalEditors.delete(contentId);});}});}
   function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([id])=>id===contentId).map(([,editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
   const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);

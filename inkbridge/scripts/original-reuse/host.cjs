@@ -61,6 +61,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
     else if(pathname==='/inkbridge-core/original-note-writes.mjs')file=path.resolve(own,'../../src/core/original-note-writes.mjs');
     else if(pathname==='/inkbridge-core/original-folder-writes.mjs')file=path.resolve(own,'../../src/core/original-folder-writes.mjs');
+    else if(pathname==='/inkbridge-core/original-tags.mjs')file=path.resolve(own,'../../src/core/original-tags.mjs');
     else if(pathname.startsWith('/files/'))file=path.join(filesDir,path.basename(pathname));
     else if(pathname==='/runtime.js'||pathname==='/register-original.js')file=path.join(root,path.basename(pathname));
     else{

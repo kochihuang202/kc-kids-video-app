@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-101 — Native tag management must persist its dependencies and reject whole invalid batches
+
+- Port full64744.am; its addTag creates both collection and view DTOs. Reuse them and original tag service contracts at the own SQLite boundary, including System bootstrap names/order verified in original initTagState; own workspace IDs stay independent.
+- Validate all assignment targets before staging. Otherwise a valid first target followed by a missing card could leave a partial pending update that autosaves after the service rejects. Flush drains an already-reported failed navigation promise without suppressing pending SQLite save failures, so validation errors do not permanently block window close.
+- Actual check-native-tags creates a Chinese tag through the native menu, attaches/detaches/re-attaches, checks collection/view consistency, rejects a mixed valid/missing-card batch, flushes with graph unchanged, closes normally and reopens with exact graph. Related18 database/catalog/persistence/query cases pass. Full Collection properties/table and inline-tag extraction are not claimed.
+
 ## REG-098 — Original card menu closes when its Canvas ancestor scrolls on focus
 
 - Reproduction: original10969 trace onOpenChange(false) enters the React-Aria ancestor-scroll handler while document remains focused; Canvas react-flow pane scrollLeft becomes280. It intermittently prevents even Copy Link clicks. Earlier presence-only Gemini tests missed it.
