@@ -7,6 +7,8 @@ import {createOriginalNoteWriter} from '/inkbridge-core/original-note-writes.mjs
 import {folderDeletionOperations} from '/inkbridge-core/original-folder-writes.mjs';
 import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
 import {createOriginalBookmarks} from '/inkbridge-core/original-bookmarks.mjs';
+import {createOriginalPdf} from '/inkbridge-core/original-pdf.mjs';
+import {createOriginalConnections} from '/inkbridge-core/original-connections.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -20,7 +22,7 @@ async function boot(){
   r(64744);const React=r(27378),ReactDOM=r(31542),redux=r(63268).Z,Provider=r(16125).zt,Theme=r(2726).f,Canvas=r(10764).p,Flow=r(34883).R,CanvasProvider=r(64744).InkBridgeCanvasHostProvider;
   if(!CanvasProvider)throw Error('Apply the recorded original integration patches first');
   const kit=r(37757),K=await kit.zj();kit.nY(K);const fonts=r(65857).fO;await new Promise((resolve,reject)=>fonts.init(K,resolve).catch(reject));
-  const graph=await window.inkbridge.load(),info=await window.inkbridge.info(),contents=new Map(graph.contents.map(content=>[content.id,content])),instances=new Map(graph.instances.map(instance=>[instance.id,instance]));
+  const graph=await window.inkbridge.load(),info=await window.inkbridge.info(),contents=new Map(graph.contents.map(content=>[content.id,content])),instances=new Map(graph.instances.map(instance=>[instance.id,instance])),files=new Map((graph.files||[]).map(file=>[file.id,file]));
   r(19281).YH.init('inkbridge-local',graph.workspaceId);
   let boardId=graph.boards.find(board=>!board.attributes?.isTrashed)?.id||graph.boards[0]?.id||'board-main',navigationChanging=false,navigationTail=Promise.resolve(),shell;
   const boards=new Map(graph.boards.map(board=>[board.id,board])),originalStore=r(23).gt,editors=new Map(),modalEditors=new Map(),editorSnapshots=new WeakMap(),helpers=r(45828),engine=r(66597).L;
@@ -71,6 +73,7 @@ async function boot(){
   state.flush=()=>coordinator.flush();state.load=()=>window.inkbridge.load();
   function toNode(item){
     const content=contents.get(item.contentId);
+    if(content?.kind==='pdf'){const card={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content};return r(19281).YH.pdfCardInstanceToPdfCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},card,files.get(card.fileId));}
     if(content?.kind==='image'||item.attributes?.type==='MediaCard'||item.attributes?.type==='image'){
       const mediaCard={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content,type:'image'};
       return r(19281).YH.mediaCardInstanceToMediaCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},mediaCard);
@@ -100,11 +103,13 @@ async function boot(){
       navigationChanging=true;boardId=id;
       const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=id;
       ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.has(item.contentId)).sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
+      connections.hydrate(await window.inkbridge.load());
       await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
   function showHome(page='home'){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected(page);ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page=page;state.renderPage(page);});});}
   function showNote(id){return navigate(async()=>{if(contents.get(id)?.kind!=='text')throw Error('筆記卡片不存在');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/note-detail',route:'/note-detail',query:{id},asPath:'/zh-TW/note-detail?id='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='note-detail';state.renderPage('note-detail');});await shell.selectedNote(id,contents.get(id).title);});}
+  function showPdf(id){return navigate(async()=>{const content=contents.get(id);if(content?.kind!=='pdf')throw Error('PDF card missing');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/pdf',route:'/pdf',query:{pdfId:id,fileId:content.fileId||graph.cardMetadata?.find(row=>row.id===id)?.fileId},asPath:'/zh-TW/pdf?pdfId='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='pdf';state.renderPage('pdf');});await shell.selectedNote(id,content.title,r(81638).R.PDFCard);});}
   const catalogOperation=(kind,data)=>({type:'putCatalog',kind,data:JSON.parse(JSON.stringify(data))});
   function writeCatalog(method,payload){return navigate(async()=>{
     await coordinator.flush();const current=await window.inkbridge.load(),folders=current.folders||[],refs=current.whiteboardInstances||[],now=new Date().toISOString();let ops=[];
@@ -136,10 +141,13 @@ async function boot(){
   function registerModalEditor(contentId,editor){if(modalEditors.has(editor))return;modalEditors.set(editor,contentId);editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));const read=()=>readLiveEditor(editor,contentId);const offUpdate=editor.registerUpdateListener(({tags})=>{if(tags.has('editor-force-update')){editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));return;}queueMicrotask(read);});let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();modalEditors.delete(editor);});}});}
   function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([,id])=>id===contentId).map(([editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
   globalThis.__inkbridgeRegisterSidebarEditor=registerModalEditor;
-  const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
+  const writeNoteBase=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
+  const writeNote=async(method,payload)=>{const result=await writeNoteBase(method,payload);if(method==='registerFiles')for(const file of payload.files)files.set(file.id,file);if(['deleteNoteCardInstance','batchDeleteNoteCardInstances','batchDeleteCardsByType'].includes(method))connections.hydrate(await window.inkbridge.load());return result;};
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
+  const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
@@ -151,12 +159,14 @@ async function boot(){
     r(64744).InkBridgeUseCanvasPaste();
     return null;
   }
+  function NativeZoomLod(){const zoom=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().view.scale),lod=r(48626).InkBridgeUseZoomLod(zoom);React.useEffect(()=>lod.zoomchange({zoom}),[zoom]);return null;}
   function App(){
-    const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes);const [mode,setMode]=React.useState('move');state.setMode=setMode;state.controls=r(23).wf();
+    const onlyTitle=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.onlyDisplayCardTitle),smallTextSize=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.textSizeAtSmallZoom);
+    const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes),sceneConnections=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().connections),mode=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.controlMode);state.setMode=value=>redux.dispatch(r(23407).Uw(value));state.controls=r(23).wf();
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
     const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
     const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
-    React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-flow-outline').inert=home;$('#original-zoom-controls').inert=home;},[home]);
+    React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-zoom-controls').inert=home;},[home]);
     const FlowContext=r(48626).FLowContext;
     const flowContextValue=React.useMemo(()=>({
       clickMention:()=>{},
@@ -176,16 +186,16 @@ async function boot(){
           if(item.contentId===objectId)writeNote('updateNoteCardInstance',{id,updates:dataUpdates}).catch(report);
         }
       },
-      getAllEdges:()=>originalStore.getState().connections||[],
+      getAllEdges:connections.edges,
       getAllNodes:()=>originalStore.getState().nodes,
       getSelectedNodes:()=>originalStore.getState().nodes.filter(n=>originalStore.getState().selectedNodeIds.has(n.id)),
-      updateEdgeById:()=>{},
+      updateEdgeById:(id,updates)=>connections.updateEdge(id,updates).catch(report),
       setNodes:originalStore.getState().setNodes,
       whiteboardId:activeBoardId,
       setCurrentNodeToFocus:()=>{},
       editMindmapGlobal:()=>{},
       router,
-      setEdges:()=>{},
+      setEdges:update=>{const edges=typeof update==='function'?update(connections.edges()):update;originalStore.getState().setConnections(edges.map(edge=>r(19281).YH.connectionToFlowConnection(r(19281).YH.edgeToConnection(edge,boardId))));},
       setConnections:originalStore.getState().setConnections,
       onDeleteNode:(objectOrNode,instanceId)=>{
         // Original85886 calls (objectId, instanceId); Canvas callers may pass a node.
@@ -193,26 +203,32 @@ async function boot(){
         if(!id||!instances.has(id))return;
         return writeNote('deleteNoteCardInstance',id).catch(report);
       },
-      onlyDisplayCardTitle:false,
-      textSizeAtSmallZoom:false,
+      onlyDisplayCardTitle:onlyTitle,
+      textSizeAtSmallZoom:smallTextSize,
       onMindmapNodeChangeForUndo:()=>{},
       pushUndoSnapshot:()=>{},
       screenToFlowPosition:point=>state.controls?.screenToFlowPosition(point)||point,
       getNodes:()=>originalStore.getState().nodes,
       requestCanvasRender:()=>state.controls?.requestRender?.(),
-    }),[activeBoardId]);
+    }),[activeBoardId,onlyTitle,smallTextSize]);
     return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
       React.createElement(FlowContext.Provider,{value:flowContextValue},
-        React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,connections:[],readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
+        React.createElement(React.Fragment,null,React.createElement(Canvas,{nodes,readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:graph.boards[0]?.view||{x:80,y:60,zoom:.8},
           nodeToolbar:r(19395).z,
+          connections:sceneConnections,
+          onConnect:event=>connections.connect(event)?.catch(report),
+          onConnectionsChange:connections.changed,
+          onEdgesDelete:edges=>{for(const edge of edges)connections.call('deleteConnection',typeof edge==='string'?edge:edge.id).catch(report);},
+          connectionToolbar:props=>React.createElement(r(32627).L,{...props,updateEdgeById:(id,updates)=>connections.updateEdge(id,updates).catch(report),setEdges:flowContextValue.setEdges,handleDeleteEdge:edges=>{for(const edge of edges)connections.call('deleteConnection',edge.id).catch(report);},clearSelectedEdge:()=>originalStore.getState().setSelectedConnectionId(null)}),
           labelEditor:r(75435).Z,
+          pdfViewerComponent:r(96895).ZP,
           onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
           onNodeDragEnd:(node,affected)=>{for(const item of affected?.length?affected:[node])persistGeometry(item);},
           onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
-          onNodesDelete:nodes=>{for(const node of nodes){const id=typeof node==='string'?node:node.id;instances.delete(id);coordinator.stage({type:'deleteInstance',id});}},
+          onNodesDelete:nodes=>{for(const node of nodes)writeNote('deleteNoteCardInstance',typeof node==='string'?node:node.id).catch(report);},
           onDoubleClick:(_event,point)=>addCard('新卡片','',point),
           onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
-        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener)))))));
+        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod)))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
@@ -220,7 +236,7 @@ async function boot(){
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   $('#save-workspace').addEventListener('click',()=>flushAll().catch(report));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
-  $('#toggle-outline').onclick=()=>{const outline=$('#original-flow-outline');outline.hidden=!outline.hidden;document.body.classList.toggle('outline-open',!outline.hidden);$('#toggle-outline').setAttribute('aria-expanded',String(!outline.hidden));window.dispatchEvent(new Event('inkbridge:outline-visibility'));};
+  $('#toggle-outline').onclick=()=>redux.dispatch(r(22676).yn({view:r(22676).XM.whiteboard}));
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();flushAll().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};

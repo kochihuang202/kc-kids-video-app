@@ -175,7 +175,7 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:']]){
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -218,7 +218,7 @@ class WorkspaceDatabase {
           const body = text(data.body ?? '', 'body', 500000);
           const document = validateDocument(data.document);
           const kind = data.kind ?? 'text', tone = data.tone ?? 'sage';
-          check(['text', 'image'].includes(kind), 'Invalid card kind');
+          check(['text', 'image', 'pdf'].includes(kind), 'Invalid card kind');
           check(['sage', 'sand', 'rose', 'blue'].includes(tone), 'Invalid card tone');
           const old = this.statement('SELECT * FROM contents WHERE id=?').get(id);
           const different = !old || old.title !== title || old.body !== body || old.document_json !== document || old.kind !== kind || old.tone !== tone;
@@ -244,6 +244,7 @@ class WorkspaceDatabase {
             changed = true;
           }
         } else if (operation.type === 'deleteInstance') {
+          changed = this.deleteConnectionReferences(operation.id) || changed;
           const result = this.statement('DELETE FROM instances WHERE id=?').run(identifier(operation.id, 'instance ID'));
           changed ||= Number(result.changes) > 0;
           const metadata = this.statement('DELETE FROM meta WHERE key=?').run('instance:'+operation.id);
@@ -264,11 +265,13 @@ class WorkspaceDatabase {
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else if(operation.type==='deleteCatalog'){
-          check(['folder','card-tag','saved-tab'].includes(operation.kind),'Unsupported catalog deletion');
+          check(['folder','card-tag','saved-tab','connection'].includes(operation.kind),'Unsupported catalog deletion');
+          if(operation.kind==='connection')changed=this.deleteConnectionReferences(operation.id)||changed;
           const result=this.statement('DELETE FROM meta WHERE key=?').run(operation.kind+':'+identifier(operation.id,'catalog ID'));
           changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          if(operation.kind==='connection'){for(const endpoint of [data.beginId,data.endId]){identifier(endpoint,'connection endpoint');check(!!this.statement('SELECT id FROM instances WHERE id=? AND board_id=?').get(endpoint,data.whiteboardId)||(()=>{const edge=this.statement('SELECT value FROM meta WHERE key=?').get('connection:'+endpoint);return edge&&JSON.parse(edge.value).whiteboardId===data.whiteboardId;})(),'Connection endpoint is missing');}}
           if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
           else if(operation.kind==='whiteboard-instance'){const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
           else if(['card','remark'].includes(operation.kind))check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Catalog content is missing');
@@ -296,6 +299,13 @@ class WorkspaceDatabase {
       this.db.exec('ROLLBACK');
       throw error;
     }
+  }
+
+  deleteConnectionReferences(seed) {
+    const ids=new Set([seed]),records=this.statement("SELECT key,value FROM meta WHERE key LIKE 'connection:%'").all().map(row=>({...row,data:JSON.parse(row.value)}));let again=true,changed=false;
+    while(again){again=false;for(const row of records)if(!ids.has(row.data.id)&&(ids.has(row.data.beginId)||ids.has(row.data.endId))){ids.add(row.data.id);again=true;}}
+    for(const row of records)if(ids.has(row.data.id))changed=Number(this.statement('DELETE FROM meta WHERE key=?').run(row.key).changes)>0||changed;
+    return changed;
   }
 
   history({method,payload}) {

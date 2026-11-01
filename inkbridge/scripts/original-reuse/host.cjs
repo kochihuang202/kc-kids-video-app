@@ -12,7 +12,7 @@ app.setName('InkBridge Original Module Probe');
 for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
 protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
-const types={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
+const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.pdf':'application/pdf','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
 let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer;
 app.whenReady().then(async()=>{
   if(!acquired)return;
@@ -24,7 +24,7 @@ app.whenReady().then(async()=>{
     const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
     if(pathname==='/'){
       response.setHeader('Content-Type','text/html; charset=utf-8');
-      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'");
+      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");
       const originalScripts='<script src="/runtime.js"></script><script src="/register-original.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_buildManifest.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_ssgManifest.js"></script>';
       if(boardMode){
         let html=fs.readFileSync(path.join(project,'src/renderer/index.html'),'utf8');
@@ -42,7 +42,6 @@ app.whenReady().then(async()=>{
         html=html.replace('</main>','</main><aside id="original-flow-outline" aria-label="卡片列表" style="width:280px;min-width:280px;background:white;border-left:1px solid #e1e4dc;display:flex;min-height:0"></aside>');
         html=html.replace('<div class="zoom-controls">','<div id="original-board-home" style="display:contents"></div><div id="original-board-caption"></div><div id="original-native-tools"></div><div id="original-undo-controls"></div><div id="original-zoom-controls"></div><div class="zoom-controls" hidden>');
         html=html.replace('id="original-flow-outline"','id="original-flow-outline" hidden');
-        html=html.replace('</main>','</main><aside id="original-card-sidebar" style="display:flex;min-height:0"></aside>');
         html=html.replace('</head>','<link rel="stylesheet" href="/integration/compact-shell.css"></head>');
         html=html.replace('</head>','<style>.canvas-wrap{isolation:isolate}#board-navigation-status{display:block;color:#a54235;font-size:11px}#original-zoom-controls{display:contents}.zoom-controls[hidden]{display:none}.board-heading h2{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head>');
         html=html.replace('<script src="vendor/canvaskit.js"></script><script type="module" src="workspace.mjs"></script>',originalScripts+'<script type="module" src="/integration/board.mjs"></script>');
@@ -64,6 +63,9 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-folder-writes.mjs')file=path.resolve(own,'../../src/core/original-folder-writes.mjs');
     else if(pathname==='/inkbridge-core/original-tags.mjs')file=path.resolve(own,'../../src/core/original-tags.mjs');
     else if(pathname==='/inkbridge-core/original-bookmarks.mjs')file=path.resolve(own,'../../src/core/original-bookmarks.mjs');
+    else if(pathname==='/inkbridge-core/original-pdf.mjs')file=path.resolve(own,'../../src/core/original-pdf.mjs');
+    else if(pathname==='/inkbridge-core/original-connections.mjs')file=path.resolve(own,'../../src/core/original-connections.mjs');
+    else if(pathname==='/inkbridge-core/original-search.mjs')file=path.resolve(own,'../../src/core/original-search.mjs');
     else if(pathname.startsWith('/files/'))file=path.join(filesDir,path.basename(pathname));
     else if(pathname==='/runtime.js'||pathname==='/register-original.js')file=path.join(root,path.basename(pathname));
     else{
@@ -73,7 +75,13 @@ app.whenReady().then(async()=>{
     if(!fs.existsSync(file)||!fs.statSync(file).isFile()){response.writeHead(404);response.end();return;}
     response.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
   });
-  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
+  // A stable origin per isolated profile preserves the native localStorage
+  // preferences. Never fall back to a different origin if its port is busy.
+  const endpointFile=path.join(data,'local-endpoint.json');
+  const storedPort=fs.existsSync(endpointFile)?JSON.parse(fs.readFileSync(endpointFile,'utf8')).port:0;
+  if(!Number.isInteger(storedPort)||storedPort!==0&&(storedPort<1024||storedPort>65535))throw Error('Invalid workspace endpoint');
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(storedPort,'127.0.0.1',resolve);});const origin=`http://127.0.0.1:${server.address().port}`;
+  if(!storedPort)fs.writeFileSync(endpointFile,JSON.stringify({port:server.address().port}),'utf8');
   const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://');if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
@@ -91,7 +99,8 @@ app.whenReady().then(async()=>{
     if(!Array.isArray(items)||items.length>100)throw Error('Invalid image batch');
     return items.map(item=>{const match=/^data:image\/[a-zA-Z0-9.+-]+;base64,([a-zA-Z0-9+/=\s]+)$/.exec(item.base64Image||'');if(!match)throw Error('Invalid image data URL');return attachments.prepare(Buffer.from(match[1],'base64'),item.fileName);});
   });
-  ipcMain.handle('inkbridge:uploadFile',async()=>{throw Error('Use the confirmed clipboard image path; arbitrary local file import is not connected');});
+  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const stat=fs.statSync(source);if(!stat.isFile()||stat.size>64*1024*1024)throw Error('Invalid selected file size');const item=attachments.prepare(fs.readFileSync(source),path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
+  ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!allowed(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');return files.map(file=>{if(typeof file.path!=='string'||!path.isAbsolute(file.path)||fs.statSync(file.path).size>64*1024*1024)throw Error('Invalid selected file');return {path:file.path,sha256:crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex')};});});
   ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!allowed(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
   ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;});
   const finishClose=async()=>{await database.close();approvedClose=true;window.close();};

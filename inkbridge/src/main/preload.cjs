@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   savePastedImageBuffers:request=>ipcRenderer.invoke('inkbridge:savePastedImageBuffers',request),
   savePureBase64Image:request=>ipcRenderer.invoke('inkbridge:savePureBase64Image',request),
   uploadFile:request=>ipcRenderer.invoke('inkbridge:uploadFile',request),
+  inspectFiles:request=>ipcRenderer.invoke('inkbridge:inspectFiles',request),
   ready:()=>ipcRenderer.send('inkbridge:renderer-ready'),
   onCloseRequested:callback=>{const listener=(_event,request)=>callback(request);ipcRenderer.on('inkbridge:prepare-close',listener);return ()=>ipcRenderer.removeListener('inkbridge:prepare-close',listener);},
   onCloseCancelled:callback=>{const listener=(_event,request)=>callback(request);ipcRenderer.on('inkbridge:close-cancelled',listener);return ()=>ipcRenderer.removeListener('inkbridge:close-cancelled',listener);},

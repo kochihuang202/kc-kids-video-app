@@ -819,3 +819,21 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Targeted tests: `inkbridge/tests/desktop/rich-paste.spec.cjs` covers actual OS clipboard Ctrl+V; complete AST across real SQLite close/restart/re-edit; 100 mixed blocks and blanks; HTML MIME priority; code Tab/Enter/Undo/Redo; checklist selection/toggle; table Tab/ShiftTab and actual display; rejected details/summary without note loss. Initial standard-rich test failed on missing list structure; long paragraphs and HTML priority already passed before the fix.
 - Related existing regressions: REG-074, REG-075, REG-077, REG-080–085. No historical test was removed or weakened. The unit expectation that link/list are unsupported was changed because this requested feature now implements them; the future-widget unknown-node assertion remains.
 - Limits: This does not implement all 26 original custom nodes, Markdown conversion, column-resize UI or complete original typography parity. All original source excerpts remain private; public Lexical is MIT and pinned in the lockfile.
+
+## REG-104 — Native attachment library omits media and PDF sidebar uses placement identity
+
+- Reproduction: Library filtering includes only text despite a saved image; the original PDF menu spreads instance data after the content ID, so the sidebar queries a placement ID. A new PDF node also reads an obsolete initial file catalog and displays zero size until restart.
+- Fix: Typed attachment projections and native gallery parent, real soft-trash/restore adapters, PDF menu content/instance identity separation, live committed file catalog, exact-version offline PDF.js assets, complete native PDF page/reader route. Optional PDF screenshots must not publish `data:,` from an unmounted/zero-size reader.
+- Tests: check-native-library-attachments runs real native search/add-to-board/trash/restore/restart and retains CAS bytes. check-native-pdf imports a real three-page file, asserts actual parsed count, page3, file size, sidebar canvas, PDF page, SHA and restart. Existing real OS clipboard image-paste/gallery flow passed earlier in this batch. PDF annotation/export and guaranteed thumbnail generation are not claimed.
+
+## REG-105 — Connection deletion leaves orphan edges or crosses board boundaries
+
+- Reproduction: The independent store has no persisted edge adapter; Gemini's getCardLinks groups reverse direction and deletion does not protect referenced edges. Adding an edge against another board's edge must also be rejected.
+- Fix: Preserve native Canvas gestures,19281 converters and32627 toolbar, mapping only their SQLite boundary. Enforce same-board endpoints; delete dependent edges recursively in the same transaction and hydrate the scene after accepted deletion. Mentions use the complete native typeahead and64744 preview parent; backlink AST nodes reference content IDs.
+- Tests: check-native-connections drives actual endpoint drag, follow-path, start arrow/color, restart, toolbar deletion and card-removal cascade. check-native-mentions types/selects a real mention, checks the saved AST/backlinks and native hover preview, closes normally and restarts. native-attachments-connections.test.cjs checks foreign-board rejection and atomic rollback of a cascade followed by an invalid operation.
+
+## REG-106 — Random localhost origin loses native sidebar preferences between launches
+
+- Reproduction: Native localStorage sidebar width is written correctly, but a different random host port on each restart changes its origin. A test using a fixed port can conceal this production failure. Shrinking the Canvas while native controls already subtract sidebar width also displaces controls twice.
+- Fix: Persist the OS-selected port per isolated profile; fail on a busy stored port rather than silently moving its storage origin. Retain full1201/41 sidebar parents and native resize lifecycle; align overlay/control widths. Reuse full48626 LOD hook including search suppression.
+- Tests: check-native-resize-lod drives real handles, width persistence, search/zoom LOD and same-origin restart. Related check-shell passes the maintained edit/IME-wait/navigation/tabs/zoom/restart flow. No complete suite or new performance claim.

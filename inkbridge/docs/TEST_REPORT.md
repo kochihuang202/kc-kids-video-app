@@ -49,3 +49,7 @@
 ## 完成界線
 
 本輪完成 M1：可操作白板、CanvasKit WebGL、索引／裁切／LOD／有上限 picture cache、實際 Windows executable、自動化與效能基準。內容目前只在記憶體；沒有 SQLite、Lexical、永久保存、快照、OneDrive、真實附件匯入或多視窗同步。M2 才加入自己的資料庫與編輯器保存協定。
+
+## 2026-11-01 原模組整合更新
+
+以上為早期M1歷史量測，並非目前功能狀態。現階段SQLite、原生編輯器、CAS圖片、PDF閱讀與原生側欄／連線等實際驗證，見 [原模組整合驗收](NATIVE_INTEGRATION_ACCEPTANCE.md) 及 [Gemini交付覆核](GEMINI_TOOLBAR_IMAGE_DISPOSITION.md)。本批20項相關資料測試與專項Electron流程通過；未重跑完整套件、效能或EXE封裝，亦未將M1量測套用成現階段效能宣稱。啟動使用 `Start-InkBridge.bat`。

@@ -71,3 +71,7 @@
 - 相關check-native-note-page與check-real-image-paste再次通過，未重跑完整效能/封裝測試。仍未完成：真正獨立Windows編輯視窗、完整Markdown/Word/PDF匯出、轉Mindmap根節點、完整標籤頁與所有MediaCard卡片庫流程。前文「仍未完成」為當時審查狀態；本節與後續更新才是目前完成邊界。
 
 本批私人factory修改後SHA-256：73866=`c535d510da5673c20fa6fbd6720f58e71fd9a5452155026734ee65d230167810`；95077=`88f8e752ef1e5c8de90448e991384af00206425da2d538411b0f2accb8ff2c8e`；75000=`8f82e2caa9ec1c9f980cf3204a7aebdddc820773597198bca5959afddbf9d7b0`。原始factory SHA保留於各檔頭；可重複套用的定位、描述與變更由apply-integration-patches管理，不提交私人factory。
+
+### 後續更新：六項整合收尾
+
+本批補完原生側欄調寬／origin持久化、完整LOD hook、圖片畫廊與卡片庫搜尋／加入白板／刪除復原、真實提及與反向引用、連線手勢／工具列／刪除連動，以及PDF匯入／白板／側欄／分頁閱讀／頁碼重啟。完整來源、測試與剩餘限制見 [NATIVE_INTEGRATION_ACCEPTANCE.md](NATIVE_INTEGRATION_ACCEPTANCE.md)。前文零連線及origin無法跨啟動延續為歷史狀態，本批已修正；不把前文未完成清單當作當前狀態，也不把本批閱讀驗證擴大為所有PDF標註與匯出完成。

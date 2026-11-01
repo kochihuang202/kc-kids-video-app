@@ -29,7 +29,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         }
         if (method === 'batchInsertCardInstances'||method==='batchCreateNoteCardInstances'||method==='addNoteCardInstance') {
             const nativeRows=method==='batchInsertCardInstances'?payload.instances:(Array.isArray(payload)?payload:[payload]).map(row=>({...row,__type:'NoteCard'}));
-            if (!Array.isArray(nativeRows) || nativeRows.some(row => row.__type !== 'NoteCard' || !contents.has(row.objectId)))
+            if (!Array.isArray(nativeRows) || nativeRows.some(row => !contents.has(row.objectId)||!({NoteCard:'text',PDFCard:'pdf',MediaCard:'image',image:'image'}[row.__type]===contents.get(row.objectId)?.kind)))
                 throw Error('含有尚未接入的卡片類型，未變更資料');
             const rows = nativeRows.map((row, index) => ({ id: row.id, contentId: row.objectId, boardId: row.whiteboardId, x: row.x, y: row.y, width: row.width || 520, height: row.height || 480, z: instances.size + index }));
             for (let i = 0; i < rows.length; i++) {
@@ -42,13 +42,13 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
             return { success: true };
         }
-        if (method === 'batchDeleteCardsByType' || method === 'restoreNoteCard') {
-            const targets = method === 'restoreNoteCard' ? [{ objectId: payload.id, objectType: 'NoteCard' }] : payload;
-            if (!Array.isArray(targets) || targets.some(row => row.objectType !== 'NoteCard' || !contents.has(row.objectId)))
+        if (method === 'batchDeleteCardsByType' || method === 'restoreNoteCard' || method === 'restoreAttachmentCard') {
+            const targets = method !== 'batchDeleteCardsByType' ? [{ objectId: payload.id, objectType: method==='restoreNoteCard'?'NoteCard':payload.type }] : payload;
+            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','MediaCard','image','PDFCard'].includes(row.objectType)||({NoteCard:'text',MediaCard:'image',image:'image',PDFCard:'pdf'}[row.objectType]!==contents.get(row.objectId)?.kind)))
                 throw Error('這批卡片含有尚未接入的類型，未變更資料');
             const graph = await load(), ids = new Set(targets.map(row => row.objectId));
             for (const id of ids)
-                coordinator.stage(catalogOperation('card', { ...(graph.cardMetadata || []).find(row => row.id === id), id, isTrashed: method !== 'restoreNoteCard', lastEditedTime: new Date().toISOString() }));
+                coordinator.stage(catalogOperation('card', { ...(graph.cardMetadata || []).find(row => row.id === id), id, isTrashed: method === 'batchDeleteCardsByType', lastEditedTime: new Date().toISOString() }));
             const removed = method === 'batchDeleteCardsByType' ? [...instances.values()].filter(row => ids.has(row.contentId)) : [];
             for (const row of removed)
                 coordinator.stage({ type: 'deleteInstance', id: row.id });

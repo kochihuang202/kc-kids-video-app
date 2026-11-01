@@ -2,6 +2,7 @@
 // Sources: background getCardsByFilters917676, advanced907363..910947,
 // whiteboard membership966792; the UI itself remains the original factories.
 export function noteRecord(graph, content) { const meta = graph.cardMetadata?.find(row => row.id === content.id) || {}; return { createdTime: null, lastEditedTime: null, isTrashed: false, propertiesConfig: [], insights: [], ...meta, id: content.id, title: content.title, content: content.document, type: 'NoteCard', apprearedInWhiteboards: graph.boards.filter(board => !board.attributes?.isTrashed && graph.instances.some(instance => instance.contentId === content.id && instance.boardId === board.id)).map(board => ({ id: board.id, name: board.title })) }; }
+export function attachmentRecord(graph,content){const meta=graph.cardMetadata?.find(row=>row.id===content.id)||{},file=graph.files?.find(row=>row.id===meta.fileId),record={...noteRecord(graph,content),...meta,id:content.id,title:content.title,type:content.kind==='pdf'?'PDFCard':'image',fileSize:file?.size};if(record.caption&&typeof record.caption==='string')record.caption=JSON.parse(record.caption);return record;}
 export function emptyNote(value) { if (typeof value === 'string') {
     try {
         value = JSON.parse(value);
@@ -57,13 +58,13 @@ else
     const equal = values.length === 1 && actual.includes(values[0]);
     return op === 'equals' ? equal : !equal;
 } const overlap = values.some(value => actual.includes(value)); return op === 'notContains' ? !overlap : overlap; }
-export function cardsByFilters(graph, request = {}) { const { cardTypes = ['NoteCard'], tags = [], whiteboardIds = [], page = 1, pageSize = 20, keyword = '', sortBy = 'updatedAt', sortOrder = 'desc', advancedFilter, filterEmptyNoteCards = false } = request; const conditions = (advancedFilter?.conditions || []).filter(c => c?.operator && (['isEmpty', 'isNotEmpty'].includes(c.operator) || (Array.isArray(c.value) ? c.value.length : String(c.value ?? '').trim().length))); let rows = cardTypes.includes('NoteCard') ? graph.contents.filter(c => c.kind === 'text').map(c => noteRecord(graph, c)).filter(c => !c.isTrashed) : []; rows = rows.filter(row => { const memberships = (graph.cardTags || []).filter(tag => tag.cardId === row.id).map(tag => tag.tagId); if (conditions.length) {
+export function cardsByFilters(graph, request = {}) { const { cardTypes = ['NoteCard'], tags = [], whiteboardIds = [], page = 1, pageSize = 20, keyword = '', sortBy = 'updatedAt', sortOrder = 'desc', advancedFilter, filterEmptyNoteCards = false } = request; const conditions = (advancedFilter?.conditions || []).filter(c => c?.operator && (['isEmpty', 'isNotEmpty'].includes(c.operator) || (Array.isArray(c.value) ? c.value.length : String(c.value ?? '').trim().length))); let rows = graph.contents.filter(c => c.kind==='text'&&cardTypes.includes('NoteCard')||c.kind==='image'&&cardTypes.includes('image')||c.kind==='pdf'&&cardTypes.includes('PDFCard')).map(c=>c.kind==='text'?noteRecord(graph,c):attachmentRecord(graph,c)).filter(c=>!c.isTrashed); rows = rows.filter(row => { const memberships = (graph.cardTags || []).filter(tag => tag.cardId === row.id).map(tag => tag.tagId); if (conditions.length) {
     const matches = conditions.map(c => conditionMatches(row, c, memberships));
     if (advancedFilter.logic === 'all' ? !matches.every(Boolean) : !matches.some(Boolean))
         return false;
 }
 else if ((tags.length && !tags.some(id => memberships.includes(id))) || (whiteboardIds.length && !row.apprearedInWhiteboards.some(b => whiteboardIds.includes(b.id))))
-    return false; const text = (row.title + ' ' + JSON.stringify(row.content)).toLowerCase(); return (!keyword || text.includes(keyword.toLowerCase())) && (!filterEmptyNoteCards || emptyNote(row.content)); }); rows.sort((a, b) => Date.parse(b.lastEditedTime) - Date.parse(a.lastEditedTime)); const totalCount = rows.length; rows = rows.slice((page - 1) * pageSize, page * pageSize); if (sortBy === 'updatedAt' || sortBy === 'createdAt') {
+    return false; const text = (row.title + ' ' + JSON.stringify(row.content)).toLowerCase(); return (!keyword || text.includes(keyword.toLowerCase())) && (!filterEmptyNoteCards || row.type==='NoteCard'&&emptyNote(row.content)); }); rows.sort((a, b) => Date.parse(b.lastEditedTime) - Date.parse(a.lastEditedTime)); const totalCount = rows.length; rows = rows.slice((page - 1) * pageSize, page * pageSize); if (sortBy === 'updatedAt' || sortBy === 'createdAt') {
     const field = sortBy === 'updatedAt' ? 'lastEditedTime' : 'createdTime';
     rows.sort((a, b) => (sortOrder === 'asc' ? 1 : -1) * (Date.parse(a[field]) - Date.parse(b[field])));
 } return { success: true, data: rows, totalCount, page, pageSize }; }
