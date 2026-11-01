@@ -175,7 +175,7 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:']]){
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:'],['sections','section:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -265,17 +265,19 @@ class WorkspaceDatabase {
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else if(operation.type==='deleteCatalog'){
-          check(['folder','card-tag','saved-tab','connection'].includes(operation.kind),'Unsupported catalog deletion');
+          check(['folder','card-tag','saved-tab','connection','section'].includes(operation.kind),'Unsupported catalog deletion');
           if(operation.kind==='connection')changed=this.deleteConnectionReferences(operation.id)||changed;
+          if(operation.kind==='section'){const members=this.statement("SELECT value FROM meta WHERE key LIKE 'section:%' OR key LIKE 'instance:%'").all();check(!members.some(row=>JSON.parse(row.value).parentId===operation.id),'Group still has members');}
           const result=this.statement('DELETE FROM meta WHERE key=?').run(operation.kind+':'+identifier(operation.id,'catalog ID'));
           changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection','section'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
           if(operation.kind==='connection'){for(const endpoint of [data.beginId,data.endId]){identifier(endpoint,'connection endpoint');check(!!this.statement('SELECT id FROM instances WHERE id=? AND board_id=?').get(endpoint,data.whiteboardId)||(()=>{const edge=this.statement('SELECT value FROM meta WHERE key=?').get('connection:'+endpoint);return edge&&JSON.parse(edge.value).whiteboardId===data.whiteboardId;})(),'Connection endpoint is missing');}}
-          if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
+          if(operation.kind==='section'){const boardId=identifier(data.whiteboardId,'group board ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Group board is missing');for(const key of ['x','y'])number(data[key],'group '+key,-1e9,1e9);for(const key of ['width','height'])number(data[key],'group '+key,1,1e9);if(data.parentId){identifier(data.parentId,'group parent ID');const seen=new Set([id]);let parent=data.parentId;while(parent){check(!seen.has(parent),'Cyclic group hierarchy');seen.add(parent);const record=this.statement('SELECT value FROM meta WHERE key=?').get('section:'+parent);check(!!record,'Group parent is missing');const group=JSON.parse(record.value);check(group.whiteboardId===boardId,'Group parent belongs to another board');parent=group.parentId;}}}
+          else if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
           else if(operation.kind==='whiteboard-instance'){const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
           else if(['card','remark'].includes(operation.kind))check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Catalog content is missing');
-          else if(operation.kind==='instance')check(!!this.statement('SELECT id FROM instances WHERE id=?').get(id),'Catalog instance is missing');
+          else if(operation.kind==='instance'){const instance=this.statement('SELECT board_id FROM instances WHERE id=?').get(id);check(!!instance,'Catalog instance is missing');if(data.parentId){const parent=this.statement('SELECT value FROM meta WHERE key=?').get('section:'+identifier(data.parentId,'group parent ID'));check(!!parent&&JSON.parse(parent.value).whiteboardId===instance.board_id,'Instance group parent is missing or belongs to another board');}}
           else if(operation.kind==='tag')text(data.name,'tag name',255);
           else if(operation.kind==='tag-group'){text(data.name,'tag group name',255);check(Array.isArray(data.tags),'Invalid tag group');data.tags.forEach(id=>identifier(id,'group tag ID'));}
           else if(operation.kind==='tab-group'){check(Array.isArray(data.tabIds)&&Array.isArray(data.pinnedTabIds),'Invalid bookmark group');}

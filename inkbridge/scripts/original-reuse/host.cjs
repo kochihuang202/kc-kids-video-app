@@ -60,6 +60,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/persistence-coordinator.mjs')file=path.resolve(own,'../../src/core/persistence-coordinator.mjs');
     else if(pathname==='/inkbridge-core/rich-document.mjs')file=path.resolve(own,'../../src/core/rich-document.mjs');
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
+    else if(pathname==='/inkbridge-core/original-sections.mjs')file=path.resolve(own,'../../src/core/original-sections.mjs');
     else if(pathname==='/inkbridge-core/original-note-writes.mjs')file=path.resolve(own,'../../src/core/original-note-writes.mjs');
     else if(pathname==='/inkbridge-core/original-folder-writes.mjs')file=path.resolve(own,'../../src/core/original-folder-writes.mjs');
     else if(pathname==='/inkbridge-core/original-tags.mjs')file=path.resolve(own,'../../src/core/original-tags.mjs');

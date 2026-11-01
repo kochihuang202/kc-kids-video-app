@@ -1,6 +1,6 @@
 // SQLite/write-boundary adaptation. All creation/selection/layout UI and the
 // add-to-whiteboard placement algorithm remain original modules 31167/94700.
-export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument }) {
+export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene }) {
     return (method, payload) => navigate(async () => {
         await coordinator.flush();
         const stageVersion=(noteCardId,snapshot)=>coordinator.stage(catalogOperation('content-version',{id:crypto.randomUUID(),noteCardId,title:snapshot.title||'',content:snapshot.content,createdTime:new Date().toISOString()}));
@@ -39,7 +39,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             await coordinator.flush();
             for (const row of rows)
                 instances.set(row.id, { ...row, attributes: nativeRows.find(native => native.id === row.id) });
-            store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
+            hydrateScene ? hydrateScene() : store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
             return { success: true };
         }
         if (method === 'batchDeleteCardsByType' || method === 'restoreNoteCard' || method === 'restoreAttachmentCard') {
@@ -99,7 +99,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             }
             await coordinator.flush();
             for(const [id,row]of pendingInstances)instances.set(id,row);
-            store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
+            hydrateScene ? hydrateScene() : store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
             return { success: true };
         }
         if (method === 'updateNoteCardInstance' || method === 'batchUpdateCardInstances' || method === 'batchUpdateMediaCardInstances') {
@@ -119,9 +119,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             for(const [id,next] of changed)instances.set(id,next);
             store.getState().setNodes(nodes => nodes.map(node => {
                 const next=changed.get(node.id);if(!next)return node;
-                const updated={...node,position:{x:next.x,y:next.y},width:next.width,draggable:!next.attributes.isPinned,data:{...node.data,...next.attributes}};
-                if(next.attributes.isAutoHeight===true||next.attributes.isFolded)updated.height=undefined;
-                else if(next.attributes.isAutoHeight===false)updated.height=next.height;
+                const updated={...node,...toNode(next)};
                 return updated;
             }));
             return { success: true };

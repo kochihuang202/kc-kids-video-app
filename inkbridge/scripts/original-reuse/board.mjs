@@ -1,3 +1,4 @@
+import {createOriginalSections,projectGroupedNode} from '/inkbridge-core/original-sections.mjs';
 // InkBridge SQLite/UI boundary only. Canvas, gestures, cache, flow overlay and
 // editing behavior come from the complete original components and their store.
 import {PersistenceCoordinator} from '/inkbridge-core/persistence-coordinator.mjs';
@@ -37,11 +38,6 @@ async function boot(){
     const previous=contents.get(content.id);if(previous&&previous.title===next.title&&previous.body===next.body&&JSON.stringify(previous.document)===JSON.stringify(document))return;
     contents.set(next.id,next);coordinator.stage({type:'putContent',data:JSON.parse(JSON.stringify(next))});
   }
-  function persistGeometry(node){
-    const item=instances.get(node.id);if(!item)return;
-    const bounds=engine.getNodeBounds(node,graphContext()),next={...item,x:node.position.x,y:node.position.y,width:node.width||bounds.width,height:bounds.height};
-    if(JSON.stringify(next)===JSON.stringify(item))return;instances.set(next.id,next);coordinator.stage({type:'putInstance',data:next});
-  }
   function acceptDocument(nodeId,document,body){
     const item=instances.get(nodeId);if(!item)return;const editor=editors.get(nodeId);if(editor){readLiveEditor(editor,item.contentId);return;}acceptContentDocument(item.contentId,document,body);
   }
@@ -71,7 +67,9 @@ async function boot(){
       }
     },onStatus:value=>{state.persistence=value;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`已保存 · v${value.revision}`;}});
   state.flush=()=>coordinator.flush();state.load=()=>window.inkbridge.load();
-  function toNode(item){
+  const sections=createOriginalSections({graph,navigate,coordinator,instances,store:originalStore,toNode,getBoardId:()=>boardId,convertSection:row=>r(19281).YH.sectionToGroupNode(row),catalogOperation});
+  function toNode(item){return projectGroupedNode(toLocalNode(item),sections.sections);}
+  function toLocalNode(item){
     const content=contents.get(item.contentId);
     if(content?.kind==='pdf'){const card={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content};return r(19281).YH.pdfCardInstanceToPdfCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},card,files.get(card.fileId));}
     if(content?.kind==='image'||item.attributes?.type==='MediaCard'||item.attributes?.type==='image'){
@@ -87,7 +85,7 @@ async function boot(){
     originalStore.getState().addNodes([toNode(item)]);return instanceId;
   }
   if(!graph.boards.length){const board={id:boardId,title:'靈感白板',view:{x:80,y:60,zoom:.8}};boards.set(boardId,board);coordinator.stage({type:'putBoard',data:board});}
-  originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===boardId&&contents.has(item.contentId)).sort((a,b)=>a.z-b.z).map(toNode));originalStore.getState().setConnections([]);
+  sections.hydrate();originalStore.getState().setConnections([]);
   if(graph.revision===0&&!contents.size&&!instances.size){const contentId=crypto.randomUUID(),id=crypto.randomUUID(),document=noteDocument({title:'InkBridge 原版白板',body:'點卡片進入原版編輯器。\n雙擊空白處新增卡片。'});putContent({id:contentId,document,kind:'text',tone:'sage'});const item={id,contentId,boardId,x:20,y:20,width:520,height:200,z:0};instances.set(id,item);coordinator.stage({type:'putInstance',data:item});originalStore.getState().setNodes([toNode(item)]);}
   const pageProps=await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response=>response.json());window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/board',query:{},props:pageProps,isFallback:false};
   const RouterContext=r(29242).RouterContext,pageLoader=new(r(43867).default)(window.__NEXT_DATA__.buildId,'');
@@ -102,7 +100,7 @@ async function boot(){
       ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();
       navigationChanging=true;boardId=id;
       const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=id;
-      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());originalStore.getState().setNodes([...instances.values()].filter(item=>item.boardId===id&&contents.has(item.contentId)).sort((a,b)=>a.z-b.z).map(toNode));state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
+      ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());sections.hydrate();state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
       connections.hydrate(await window.inkbridge.load());
       await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
@@ -110,7 +108,7 @@ async function boot(){
   function showHome(page='home'){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected(page);ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page=page;state.renderPage(page);});});}
   function showNote(id){return navigate(async()=>{if(contents.get(id)?.kind!=='text')throw Error('筆記卡片不存在');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/note-detail',route:'/note-detail',query:{id},asPath:'/zh-TW/note-detail?id='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='note-detail';state.renderPage('note-detail');});await shell.selectedNote(id,contents.get(id).title);});}
   function showPdf(id){return navigate(async()=>{const content=contents.get(id);if(content?.kind!=='pdf')throw Error('PDF card missing');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/pdf',route:'/pdf',query:{pdfId:id,fileId:content.fileId||graph.cardMetadata?.find(row=>row.id===id)?.fileId},asPath:'/zh-TW/pdf?pdfId='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='pdf';state.renderPage('pdf');});await shell.selectedNote(id,content.title,r(81638).R.PDFCard);});}
-  const catalogOperation=(kind,data)=>({type:'putCatalog',kind,data:JSON.parse(JSON.stringify(data))});
+  function catalogOperation(kind,data){return {type:'putCatalog',kind,data:JSON.parse(JSON.stringify(data))};}
   function writeCatalog(method,payload){return navigate(async()=>{
     await coordinator.flush();const current=await window.inkbridge.load(),folders=current.folders||[],refs=current.whiteboardInstances||[],now=new Date().toISOString();let ops=[];
     if(method==='deleteWhiteboardFolder')ops=folderDeletionOperations(current,payload,now);
@@ -141,13 +139,13 @@ async function boot(){
   function registerModalEditor(contentId,editor){if(modalEditors.has(editor))return;modalEditors.set(editor,contentId);editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));const read=()=>readLiveEditor(editor,contentId);const offUpdate=editor.registerUpdateListener(({tags})=>{if(tags.has('editor-force-update')){editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));return;}queueMicrotask(read);});let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();modalEditors.delete(editor);});}});}
   function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([,id])=>id===contentId).map(([editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
   globalThis.__inkbridgeRegisterSidebarEditor=registerModalEditor;
-  const writeNoteBase=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
+  const writeNoteBase=createOriginalNoteWriter({hydrateScene:sections.hydrate,navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
   const writeNote=async(method,payload)=>{const result=await writeNoteBase(method,payload);if(method==='registerFiles')for(const file of payload.files)files.set(file.id,file);if(['deleteNoteCardInstance','batchDeleteNoteCardInstances','batchDeleteCardsByType'].includes(method))connections.hydrate(await window.inkbridge.load());return result;};
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
   const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
   const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
@@ -163,9 +161,10 @@ async function boot(){
   // Native48626 mounts90214 under FlowContext and passes14153 to Canvas.
   // Keep that parent lifecycle: the hook owns outside-click, position and cleanup.
   function NativeCanvas({flowContextValue,...props}){
+    const nativeWrites=r(99665).U(props.nodes);
     const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById});
     return React.createElement(React.Fragment,null,
-      React.createElement(Canvas,{...props,onNodeContextMenu:menu.onNodeContextMenu,
+      React.createElement(Canvas,{...props,onNodeDragEnd:nativeWrites.syncNodesPosition,onNodesDelete:nativeWrites.deleteNodes,onNodeTitleChange:(id,title)=>sections.sections.has(id)?sections.call('updateSection',{id,updates:{title}}).catch(report):undefined,onNodeContextMenu:menu.onNodeContextMenu,
         multiSelectionToolbar:selection=>React.createElement(r(14153)._,{...selection,
           whiteboardId:props.whiteboardId,nodes:props.nodes,
           setNodes:originalStore.getState().setNodes,setConnections:originalStore.getState().setConnections,
@@ -235,9 +234,7 @@ async function boot(){
           labelEditor:r(75435).Z,
           pdfViewerComponent:r(96895).ZP,
           onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
-          onNodeDragEnd:(node,affected)=>{for(const item of affected?.length?affected:[node])persistGeometry(item);},
           onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
-          onNodesDelete:nodes=>{for(const node of nodes)writeNote('deleteNoteCardInstance',typeof node==='string'?node:node.id).catch(report);},
           onDoubleClick:(_event,point)=>addCard('新卡片','',point),
           onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
         }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod)))))));
