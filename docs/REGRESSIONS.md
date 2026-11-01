@@ -1,5 +1,23 @@
 # Regression Memory
 
+## REG-098 — Original card menu closes when its Canvas ancestor scrolls on focus
+
+- Reproduction: original10969 trace onOpenChange(false) enters the React-Aria ancestor-scroll handler while document remains focused; Canvas react-flow pane scrollLeft becomes280. It intermittently prevents even Copy Link clicks. Earlier presence-only Gemini tests missed it.
+- Fix: own host makes the Canvas root an overflow:clip viewport rather than an HTML scroll container; native Canvas pan and native overlay dismissal logic remain intact. Portal controls are no-drag to avoid the36px Electron titlebar region. No forceclick or arbitrary stabilization delay.
+- Test: actual check-card-toolbar-menu drives36 native swatches, exact color commit/restart, header/height/fold/pin, clipboard copy/paste, remove-instance and delete-card. Correct original onDeleteNode(objectId,instanceId) and updates payload; ACK precedes cache mutation.
+
+## REG-099 — Image paste tests must exercise clipboard, real decode and immutable publication
+
+- Earlier Gemini test manually called file services and constructed AST, used UUID files without hashes/overwrite protection, invented400x300 dimensions and directly advanced renderer revision after external DB commits.
+- Fix: preserve original rG/Lexical handlers; own SHA-256 immutable store with actual dimensions, hash and hash.ext protocol validation, one SQLite coordinator for file metadata and cards. Restore full native converters/fileId after restart. Flush/close track pending native paste before final ACK. Optional native fields normalize to JSON at the boundary.
+- Tests: check-real-image-paste uses OS clipboard/Ctrl+V, real CanvasKit SkImage cache and DOM image, file bytes/hash/dimensions, cross-location deduplication and restart. CAS unit covers corruption, no overwrite, URL boundaries and invalid decode. JS/React errors fail the flow. Failure cleanup restores clipboard and exits only the synthetic test.
+
+## REG-100 — Original note-page and history restore need their real lifecycle
+
+- Full58439 note-detail page needs its own route and editorReady registration; fake openNoteCardWindow→modal did not create a window. Native info/floating overlays also need their parent mounts. Reuse full original modules; unsupported independent window now reports unavailable instead of fake success.
+- Restore snapshots and live editors through the single coordinator; synchronize opened Lexical states before beforeFlush so stale editor state cannot overwrite restored data. Native whiteboardLinks represents connections, not membership; wrong DTO caused sourceList.map crash in original backlinks UI.
+- Tests: check-native-note-page drives new-tab editing/commit, return to board, original info, history restoration and floating editor/commit; original-history unit uses real SQLite/coordinator. Existing shell/library regression flows pass. Remaining unrelated menu dependencies are documented, not reported complete.
+
 ## REG-095 — Original card-library refresh, modal saves and shared placements must persist
 
 - Source: full57152 page,64744.nC modal chain,31167.TS creation,84974 picker and94700.sE placement. Native refreshCardList only updates IDs already loaded; flexnote:cards-changed reloads the query.

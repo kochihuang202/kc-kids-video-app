@@ -1,163 +1,49 @@
-// Verification test for authentic Card Selection Toolbar (85886/59745) and Context Menu (95077).
-const { _electron, expect } = require('@playwright/test');
-const fs = require('node:fs/promises');
-const path = require('node:path');
-const os = require('node:os');
-const crypto = require('node:crypto');
-const assert = require('node:assert/strict');
-const { WorkspaceDatabase } = require('../../src/main/database.cjs');
-
-(async () => {
-  const root = path.resolve(__dirname, '../..');
-  const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-toolbar-'));
-  const { noteDocument } = await import('../../src/core/rich-document.mjs');
-  
-  // Seed database with a note card on the whiteboard
-  const db = new WorkspaceDatabase(path.join(data, 'Workspace/inkbridge.sqlite3'));
-  db.commit({
-    requestId: crypto.randomUUID(),
-    baseRevision: 0,
-    operations: [
-      { type: 'putBoard', data: { id: 'board-main', title: 'Toolbar Test Board', view: { x: 0, y: 0, zoom: 1 } } },
-      { type: 'putContent', data: { id: 'content-1', title: 'Test Card Title', body: 'Test Card Content', kind: 'text', tone: 'sage', document: noteDocument({ title: 'Test Card Title', body: 'Test Card Content' }) } },
-      { type: 'putInstance', data: { id: 'instance-1', contentId: 'content-1', boardId: 'board-main', x: 100, y: 100, width: 400, height: 250, z: 0, attributes: { color: '#ffffff' } } }
-    ]
-  });
-  db.close();
-
-  const env = { ...process.env, INKBRIDGE_ORIGINAL_PROBE_DATA: data, INKBRIDGE_ORIGINAL_VIEW: 'board' };
-  delete env.ELECTRON_RUN_AS_NODE;
-
-  const launch = () => _electron.launch({
-    args: [path.join(__dirname, 'host.cjs')],
-    executablePath: require('electron'),
-    env,
-    timeout: 30000
-  });
-
-  let app = await launch();
-  try {
-    let page = await app.firstWindow();
-    await page.waitForFunction(() => window.__inkbridgeIntegrated?.ready, {}, { timeout: 30000 });
-
-    // 1. Click card on canvas to select it
-    const box = await page.locator('#board').boundingBox();
-    const state = await page.evaluate(() => window.__inkbridgeIntegrated.inspect());
-    const cardX = box.x + state.view.translateX + (100 + 100) * state.view.scale;
-    const cardY = box.y + state.view.translateY + (100 + 40) * state.view.scale;
-
-    await page.mouse.click(cardX, cardY);
-    await page.waitForTimeout(600);
-
-    // 2. Verify Card Floating Selection Toolbar appears (module 85886 / 59745)
-    const toolbar = page.locator('.selection-toolbar-container');
-    await expect(toolbar).toBeVisible();
-
-    // Verify key toolbar buttons are present
-    const toolbarButtons = await page.evaluate(() => {
-      const container = document.querySelector('.selection-toolbar-container');
-      const buttons = Array.from(container.querySelectorAll('button, [data-slot="trigger"]'));
-      return {
-        hasScan: !!container.querySelector('.lucide-scan'),
-        hasMaximize: !!container.querySelector('.lucide-maximize2, .lucide-maximize-2'),
-        hasPalette: !!container.querySelector('.lucide-palette'),
-        hasMapPlus: !!container.querySelector('.lucide-map-plus'),
-        hasEllipsis: !!container.querySelector('.lucide-ellipsis'),
-        hasTrash: !!container.querySelector('.lucide-trash2, .lucide-trash-2')
-      };
-    });
-
-    assert.equal(toolbarButtons.hasScan, true, 'Focus/Scan button present');
-    assert.equal(toolbarButtons.hasMaximize, true, 'Maximize button present');
-    assert.equal(toolbarButtons.hasPalette, true, 'Palette button present');
-    assert.equal(toolbarButtons.hasMapPlus, true, 'Add to Whiteboard button present');
-    assert.equal(toolbarButtons.hasEllipsis, true, 'More options (...) button present');
-    assert.equal(toolbarButtons.hasTrash, true, 'Delete button present');
-
-    // 3. Click More options trigger (...) to open full popover menu (module 95077)
-    const moreBtn = page.locator('[aria-label="More options"]');
-    await moreBtn.click();
-    await page.waitForTimeout(600);
-
-    const contextMenu = page.locator('.context-menu-root');
-    await expect(contextMenu).toBeVisible();
-
-    // Verify all menu items from Screenshot 4
-    const menuItems = await page.evaluate(() => {
-      const menu = document.querySelector('.context-menu-root');
-      const texts = Array.from(menu.querySelectorAll('li, button, div')).map(el => el.textContent.trim()).filter(Boolean);
-      return Array.from(new Set(texts));
-    });
-
-    const expectedKeywords = [
-      '高亮頭部',
-      '自動高度',
-      '複製卡片',
-      '轉為思維導圖根節點',
-      '複製鏈接',
-      '在側邊欄中打開',
-      '在彈層中打開',
-      '在浮窗中打開',
-      '查看信息',
-      '歷史版本',
-      '導出',
-      '管理標籤',
-      '添加到白板',
-      '添加到收藏',
-      '從此白板移除',
-      '刪除'
-    ];
-
-    for (const kw of expectedKeywords) {
-      assert(menuItems.some(item => item.includes(kw)), `Menu item "${kw}" must be present in full context menu`);
-    }
-
-    // 4. Test color palette update & persistence
-    // Open palette or click a color swatch in context menu
-    const colorUpdated = await page.evaluate(async () => {
-      // Find a color button in the context menu palette (40-color grid)
-      const swatches = Array.from(document.querySelectorAll('.context-menu-root [role="button"][style*="background"], .context-menu-root [data-color]'));
-      if (swatches.length > 0) {
-        swatches[3].click(); // click a non-white color swatch
-        await window.__inkbridgeIntegrated.flush();
-        return true;
-      }
-      return false;
-    });
-
-    // Check that store has updated node attributes
-    const updatedColor = await page.evaluate(() => {
-      const node = window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'instance-1');
-      return node?.data?.color || node?.data?.instanceColor;
-    });
-
-    // Flush and verify SQLite commit
-    await page.evaluate(() => window.__inkbridgeIntegrated.flush());
-
-    // Close app and reopen to verify restart persistence
-    await app.close();
-    app = await launch();
-    page = await app.firstWindow();
-    await page.waitForFunction(() => window.__inkbridgeIntegrated?.ready, {}, { timeout: 30000 });
-
-    const persistedNode = await page.evaluate(() => {
-      const node = window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'instance-1');
-      return { id: node?.id, color: node?.data?.color, attributes: node?.data };
-    });
-
-    assert.equal(persistedNode.id, 'instance-1');
-
-    console.log(JSON.stringify({
-      selectionToolbar: true,
-      contextMenuOptionsVerified: true,
-      allExpectedOptionsFound: true,
-      colorPaletteInteractive: true,
-      persistedOnRestart: true
-    }));
-  } finally {
-    await app.close();
-  }
-})().catch(e => {
-  console.error(e);
-  process.exit(1);
-});
+// Real original toolbar actions, SQLite and normal restart. No simulated stores.
+const {_electron,expect}=require('@playwright/test');
+const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {WorkspaceDatabase}=require('../../src/main/database.cjs');
+(async()=>{
+ const root=path.resolve(__dirname,'../..'),data=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-original-modules-toolbar-'));
+ const {noteDocument}=await import('../../src/core/rich-document.mjs');const db=new WorkspaceDatabase(path.join(data,'Workspace/inkbridge.sqlite3'));
+ db.commit({requestId:crypto.randomUUID(),baseRevision:0,operations:[
+  {type:'putBoard',data:{id:'board-main',title:'Toolbar Test Board',view:{x:0,y:0,zoom:1}}},
+  {type:'putContent',data:{id:'content-1',title:'Test Card Title',body:'Test Card Content',kind:'text',tone:'sage',document:noteDocument({title:'Test Card Title',body:'Test Card Content'})}},
+  {type:'putInstance',data:{id:'instance-1',contentId:'content-1',boardId:'board-main',x:100,y:100,width:400,height:250,z:0}},
+ ]});db.close();
+ const env={...process.env,INKBRIDGE_ORIGINAL_PROBE_DATA:data,INKBRIDGE_ORIGINAL_VIEW:'board'};delete env.ELECTRON_RUN_AS_NODE;
+ const launch=()=>_electron.launch({args:[path.join(__dirname,'host.cjs')],executablePath:require('electron'),env,timeout:30000});let app=await launch(),page;
+ let savedClipboard;
+ const restoreClipboard=()=>savedClipboard?app.evaluate(async({clipboard,ClipboardItem},saved)=>{if(!saved.length){await clipboard.clear();return;}await clipboard.write(saved.map(item=>new ClipboardItem(Object.fromEntries(item.map(({type,data})=>[type,typeof data==='string'?data:new Blob([new Uint8Array(data)],{type})])))));},savedClipboard):Promise.resolve();
+ const clipboardText=type=>app.evaluate(async({clipboard},type)=>{for(const item of await clipboard.read())if(item.types.includes(type)){const value=await item.getType(type);return typeof value==='string'?value:await value.text();}return '';},type);
+ try{
+  savedClipboard=await app.evaluate(async({clipboard})=>{const saved=[];for(const item of await clipboard.read()){const payload=[];for(const type of item.types){const value=await item.getType(type);payload.push({type,data:typeof value?.arrayBuffer==='function'?Array.from(new Uint8Array(await value.arrayBuffer())):value});}saved.push(payload);}return saved;});
+  page=await app.firstWindow();await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{},{timeout:30000});
+  await app.evaluate(({app})=>app.focus({steal:true}));await page.bringToFront();await page.evaluate(()=>{window.__toolbarDebug=[];for(const name of ['blur','focus','pointerdown','pointerup','click','keydown'])window.addEventListener(name,event=>{if(window.__toolbarDebug.length<100)window.__toolbarDebug.push({name,time:performance.now(),target:event.target?.outerHTML?.slice(0,180),key:event.key,focused:document.hasFocus()});},true);new MutationObserver(()=>{const visible=!!document.querySelector('.context-menu-root');if(visible!==window.__toolbarLastMenu){window.__toolbarLastMenu=visible;window.__toolbarDebug.push({menu:visible,time:performance.now(),focused:document.hasFocus(),active:document.activeElement?.outerHTML?.slice(0,160)});}}).observe(document.body,{childList:true,subtree:true});});
+  await page.evaluate(()=>window.addEventListener('scroll',event=>window.__toolbarDebug.push({kind:'scroll',target:event.target?.id||event.target?.nodeName,top:event.target?.scrollTop,left:event.target?.scrollLeft,html:event.target?.outerHTML?.slice(0,200)}),true));
+  const t=key=>page.evaluate(key=>window.__originalRequire(1643).ag.t(key,{ns:'common'}),key),load=()=>page.evaluate(()=>window.inkbridge.load()),flush=()=>page.evaluate(()=>window.__inkbridgeIntegrated.flush());
+  const select=async(id='instance-1')=>{const state=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect());if(state.selectedNodeIds.includes(id)&&!state.editingNodeId&&await page.locator('.selection-toolbar-container').isVisible())return;const box=await page.locator('#board').boundingBox(),value=await page.evaluate(id=>{const state=window.__inkbridgeIntegrated.inspect(),node=state.nodes.find(n=>n.id===id);return {node,view:state.view};},id);assert(value.node);await page.mouse.click(box.x+value.view.translateX+(value.node.position.x+50)*value.view.scale,box.y+value.view.translateY+(value.node.position.y+35)*value.view.scale);await expect(page.locator('.selection-toolbar-container')).toBeVisible();};
+  const more=async()=>{if(!await page.locator('.selection-toolbar-container').isVisible())await select();await app.evaluate(({app})=>app.focus({steal:true}));await page.bringToFront();await page.evaluate(()=>{window.__inkbridgeTraceMenus=true;window.__toolbarMenuTrace??=[];});await page.locator('[aria-label="More options"]').click();await expect(page.locator('.context-menu-root')).toBeVisible();};
+  await select();await more();
+  for(const key of ['Highlight Header','Auto Height','Copy Card','convertNoteCardToMindmapRoot','copyLink','Open in Sidebar','openInPopup','openInFloatingWindow','Open in new tab','openInNewWindow','viewInfo','noteCardVersionHistory','manageTags','moveToWhiteboard','addToCollection','removeFromWhiteboard','Delete'])await expect(page.locator('.context-menu-root').getByText(await t(key),{exact:true})).toBeVisible();
+  // Native88396 swatches are divs without role=button. Check the complete source palette.
+  const colors=await page.evaluate(()=>window.__originalRequire(88396).Jk),palette=page.locator('.context-menu-root [class~="grid-cols-12"]').first(),swatches=palette.locator(':scope > div[style*="background-color"]');
+  assert(colors.length>3,'native palette must have usable swatches');await expect(swatches).toHaveCount(colors.length);const chosenColor=colors[3];assert.notEqual(chosenColor,'white');console.log('palette',JSON.stringify({colors:colors.length,swatches:await swatches.count(),chosenColor,rect:await swatches.nth(3).boundingBox()}));await page.screenshot({path:path.join(root,'private-original-editor/card-toolbar-palette-before.png')});await swatches.nth(3).click();await flush();
+  await expect.poll(async()=>(await load()).instances.find(i=>i.id==='instance-1')?.attributes?.color).toBe(chosenColor);
+  await page.keyboard.press('Escape');await select();await more();await page.locator('.context-menu-root').getByText(await t('Highlight Header'),{exact:true}).click();await flush();assert.equal((await load()).instances[0].attributes.highlightHeader,true);
+  await more();await page.locator('.context-menu-root').getByText(await t('Auto Height'),{exact:true}).click();await flush();assert.equal((await load()).instances[0].attributes.isAutoHeight,false);
+  await page.locator('.selection-toolbar-container .lucide-panel-top-close').locator('..').click();await flush();assert.equal((await load()).instances[0].attributes.isFolded,true);
+  await page.locator('.selection-toolbar-container .lucide-panel-top-close').locator('..').click();await flush();assert.equal((await load()).instances[0].attributes.isFolded,false);
+  await page.locator('.selection-toolbar-container .lucide-pin-off').locator('..').click();await page.getByRole('button',{name:await t('Pin'),exact:true}).click();await flush();assert.equal((await load()).instances[0].attributes.isPinned,true);await page.keyboard.press('Escape');
+  const before=await load();await app.close();app=await launch();page=await app.firstWindow();await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{},{timeout:30000});assert.deepEqual(await load(),before);
+  const restored=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().nodes.find(n=>n.id==='instance-1').data);assert.equal(restored.color,chosenColor);assert.equal(restored.highlightHeader,true);assert.equal(restored.isPinned,true);assert.equal(restored.isAutoHeight,false);
+  if(process.env.INKBRIDGE_TEST_STOP_BEFORE_CLIPBOARD==='1'){console.log(JSON.stringify({subset:'before OS clipboard',nativePaletteSwatches:colors.length,colorCommitAndRestart:true,header:true,autoHeight:true,fold:true,pin:true}));return;}
+  await page.evaluate(()=>{window.__toolbarDebug=[];window.addEventListener('scroll',event=>window.__toolbarDebug.push({kind:'scroll',target:event.target?.id||event.target?.nodeName,top:event.target?.scrollTop,left:event.target?.scrollLeft,html:event.target?.outerHTML?.slice(0,200)}),true);});
+  await select();await more();await page.locator('.context-menu-root').getByText(await t('copyLink'),{exact:true}).click();await expect.poll(()=>clipboardText('text/plain')).toMatch(/inkbridge:\/\/.*content-1/);
+  await more();await page.locator('.context-menu-root').getByText(await t('Copy Card'),{exact:true}).click();await expect.poll(()=>clipboardText('text/html')).toContain('flexnote-canvas-copy:');await page.mouse.click(1000,750);await page.keyboard.press('Control+v');await expect.poll(async()=>(await load()).contents.length).toBe(2);await flush();let graph=await load();assert.equal(graph.instances.length,2);const copied=graph.contents.find(c=>c.id!=='content-1');assert.deepEqual(copied.document,graph.contents.find(c=>c.id==='content-1').document);
+  // Toolbar removal passes (contentID,instanceID), unlike the single-node Canvas callback.
+  await select();const remove=page.locator('.selection-toolbar-container .lucide-circle-x').locator('..');await remove.click();await flush();graph=await load();assert(!graph.instances.some(i=>i.id==='instance-1'));assert(graph.contents.some(c=>c.id==='content-1'));
+  await select(graph.instances[0].id);await more();await page.locator('.context-menu-root').getByText(await t('Delete'),{exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:await t('Confirm'),exact:true}).click();await expect.poll(async()=>(await load()).instances.length).toBe(0);assert((await load()).cardMetadata.find(c=>c.id===copied.id).isTrashed);
+  assert.deepEqual(await page.evaluate(()=>window.__inkbridgeIntegrated.errors),[]);await page.screenshot({path:path.join(root,'private-original-editor/card-toolbar-actions-success.png')});
+  console.log(JSON.stringify({nativeToolbar:true,menuItemsVisible:true,nativePaletteSwatches:colors.length,colorCommitAndRestart:true,header:true,autoHeight:true,fold:true,pin:true,copyLink:true,copyCardViaClipboard:true,removeInstancePreservesContent:true,deleteTrashesContent:true}));
+ }catch(error){if(page){await page.screenshot({path:path.join(root,'private-original-editor/card-toolbar-actions-failure.png')});console.log(JSON.stringify({errors:await page.evaluate(()=>window.__inkbridgeIntegrated?.errors),debug:await page.evaluate(()=>window.__toolbarDebug),menuTrace:await page.evaluate(()=>window.__toolbarMenuTrace),state:await page.evaluate(()=>window.__inkbridgeIntegrated?.inspect()),menu:await page.locator('.context-menu-root').allTextContents()}));}await restoreClipboard().catch(()=>{});await app.evaluate(({app})=>app.exit(1)).catch(()=>{});throw error;}finally{await restoreClipboard().catch(()=>{});await app.close().catch(()=>{});}
+})().catch(error=>{console.error(error);process.exitCode=1;});

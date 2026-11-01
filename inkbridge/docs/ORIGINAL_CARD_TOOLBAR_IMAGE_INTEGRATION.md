@@ -1,5 +1,7 @@
 # FlexNote 原版卡片懸浮工具列、完整選單與白板／卡片圖片貼上整合報告
 
+> 這是Gemini原交付紀錄，以下「完整完成／40色／貼圖測試」等宣稱經覆核不全成立。現況、修正及尚未完成項目以 [GEMINI_TOOLBAR_IMAGE_DISPOSITION.md](GEMINI_TOOLBAR_IMAGE_DISPOSITION.md) 為準；保留原文作交付證據，不當作目前驗收結果。
+
 ## 1. 執行概述與工作範圍
 本階段完全基於 FlexNote 原始碼、解包模組與 REA 調研契約進行移植，**完全不自創假 UI、不引入 Mock Store、不存 SQLite BLOB**，嚴格在獨立工作樹 (`feat/original-shell-integration`) 進行，未變更任何主分支或正式目錄。
 

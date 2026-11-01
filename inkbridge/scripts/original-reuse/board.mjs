@@ -22,6 +22,7 @@ async function boot(){
   r(19281).YH.init('inkbridge-local',graph.workspaceId);
   let boardId=graph.boards.find(board=>!board.attributes?.isTrashed)?.id||graph.boards[0]?.id||'board-main',navigationChanging=false,navigationTail=Promise.resolve(),shell;
   const boards=new Map(graph.boards.map(board=>[board.id,board])),originalStore=r(23).gt,editors=new Map(),modalEditors=new Map(),helpers=r(45828),engine=r(66597).L;
+  const pendingExternal=new Set();globalThis.__inkbridgeTrackOperation=operation=>{let task;try{task=Promise.resolve(operation());}catch(error){task=Promise.reject(error);}pendingExternal.add(task);task.then(()=>pendingExternal.delete(task),error=>{pendingExternal.delete(task);report(error);});return task;};
   function stageBoardView(view,id=boardId){if(state.home||navigationChanging||!boards.has(id))return;const board={...boards.get(id),view};boards.set(id,board);coordinator.stage({type:'putBoard',data:board});}
   const graphContext=()=>({CanvasKit:K,fontMgr:fonts.getFontMgr(),view:originalStore.getState().view,theme:'light',locale:'zh-TW'});
   const bodyFromEditor=editor=>editor.read(()=>({document:JSON.parse(JSON.stringify(editor.getEditorState().toJSON())),body:r(41570).GvG().getTextContent()}));
@@ -30,7 +31,7 @@ async function boot(){
     const title=document?helpers.LG(document):(content.title||'新卡片');
     const next={...content,document,title,body:body??(document?helpers.Vj(document):'')};
     const previous=contents.get(content.id);if(previous&&previous.title===next.title&&previous.body===next.body&&JSON.stringify(previous.document)===JSON.stringify(document))return;
-    contents.set(next.id,next);coordinator.stage({type:'putContent',data:next});
+    contents.set(next.id,next);coordinator.stage({type:'putContent',data:JSON.parse(JSON.stringify(next))});
   }
   function persistGeometry(node){
     const item=instances.get(node.id);if(!item)return;
@@ -57,15 +58,14 @@ async function boot(){
         const value=bodyFromEditor(editor);acceptDocument(nodeId,value.document,value.body);
       }
     },onStatus:value=>{state.persistence=value;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`已保存 · v${value.revision}`;}});
-  window.inkbridge.onRevision?.(rev=>{if(typeof rev==='number'&&rev>coordinator.revision)coordinator.revision=rev;});
   state.flush=()=>coordinator.flush();state.load=()=>window.inkbridge.load();
   function toNode(item){
     const content=contents.get(item.contentId);
     if(content?.kind==='image'||item.attributes?.type==='MediaCard'||item.attributes?.type==='image'){
-      const mediaCard={id:content?.id||item.contentId,title:content?.title||'Image',fileId:item.attributes?.fileId||content?.title,fileSuffix:item.attributes?.fileSuffix||'png',type:'image',...item.attributes};
-      return r(19281).YH.mediaCardInstanceToMediaCardNode(item,mediaCard);
+      const mediaCard={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content,type:'image'};
+      return r(19281).YH.mediaCardInstanceToMediaCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},mediaCard);
     }
-    return {id:item.id,type:'NoteCard',position:{x:item.x,y:item.y},width:item.width,data:{id:content?.id||item.contentId,objectId:content?.id||item.contentId,title:content?.title||'新卡片',content:noteDocument(content||{title:'新卡片',body:''}),scale:1,isAutoHeight:true,color:'#fff',...item.attributes,lastEditedTime:String(content?.revision||0)}};
+    return r(19281).YH.convertNoteCardToNode({...content,content:noteDocument(content)},{isAutoHeight:true,scale:1,color:'#fff',...item.attributes,id:item.id,objectId:item.contentId,whiteboardId:item.boardId,x:item.x,y:item.y,width:item.width,height:item.height});
   }
   function addCard(title='新卡片',body='',point){
     const controls=state.controls,box=$('#board').getBoundingClientRect();point??=controls.screenToFlowPosition({x:box.x+box.width/2,y:box.y+box.height/2});
@@ -94,6 +94,7 @@ async function boot(){
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
   function showHome(page='home'){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected(page);ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page=page;state.renderPage(page);});});}
+  function showNote(id){return navigate(async()=>{if(contents.get(id)?.kind!=='text')throw Error('筆記卡片不存在');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/note-detail',route:'/note-detail',query:{id},asPath:'/zh-TW/note-detail?id='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='note-detail';state.renderPage('note-detail');});await shell.selectedNote(id,contents.get(id).title);});}
   const catalogOperation=(kind,data)=>({type:'putCatalog',kind,data:JSON.parse(JSON.stringify(data))});
   function writeCatalog(method,payload){return navigate(async()=>{
     await coordinator.flush();const current=await window.inkbridge.load(),folders=current.folders||[],refs=current.whiteboardInstances||[],now=new Date().toISOString();let ops=[];
@@ -121,11 +122,11 @@ async function boot(){
     for(const operation of ops)coordinator.stage(operation);await coordinator.flush();boards.set(id,board);
     if(id===boardId)updateBoardTitle();return {board,boardInstance};
   });}
-  const flushAll=async()=>{await navigationTail;return coordinator.flush();};state.flush=flushAll;
+  const flushAll=async()=>{do{if(pendingExternal.size)await Promise.all([...pendingExternal]);await navigationTail;}while(pendingExternal.size);return coordinator.flush();};state.flush=flushAll;
   function registerModalEditor(contentId,editor){modalEditors.set(contentId,editor);const read=()=>{if(editor.isComposing())return;const value=bodyFromEditor(editor);acceptContentDocument(contentId,value.document,value.body);};const offUpdate=editor.registerUpdateListener(()=>queueMicrotask(read));let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();if(modalEditors.get(contentId)===editor)modalEditors.delete(contentId);});}});}
-  const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
-  const syncRevision=async()=>{const g=await window.inkbridge.load();if(g.revision>coordinator.revision)coordinator.revision=g.revision;};
-  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,syncRevision,registerModalEditor,writeNote,switchBoard,showHome,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([id])=>id===contentId).map(([,editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
+  const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
+  shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
@@ -133,11 +134,8 @@ async function boot(){
     return React.createElement(Flow,{...props,onEditorReady:editor=>{editorRef.current=editor;editors.set(props.nodeId,editor);state.lastEditorNode=props.nodeId;}});
   }
   function CanvasPasteListener(){
-    try {
-      r(64744).InkBridgeUseCanvasPaste?.();
-    } catch(e) {
-      console.warn('Canvas paste listener notice:', e.message);
-    }
+    if(typeof r(64744).InkBridgeUseCanvasPaste!=='function')throw Error('Native canvas paste hook is not exported');
+    r(64744).InkBridgeUseCanvasPaste();
     return null;
   }
   function App(){
@@ -157,12 +155,12 @@ async function boot(){
       },
       updateNodeDataById:(id,dataUpdates)=>{
         originalStore.getState().setNodes(nodes=>nodes.map(n=>n.id===id?{...n,data:{...n.data,...dataUpdates}}:n));
-        writeNote('updateNoteCardInstance',{id,...dataUpdates});
+        writeNote('updateNoteCardInstance',{id,updates:dataUpdates}).catch(report);
       },
       updateNodeDataByObjectId:(objectId,dataUpdates)=>{
         originalStore.getState().setNodes(nodes=>nodes.map(n=>n.data?.objectId===objectId?{...n,data:{...n.data,...dataUpdates}}:n));
         for(const [id,item] of instances){
-          if(item.contentId===objectId)writeNote('updateNoteCardInstance',{id,...dataUpdates});
+          if(item.contentId===objectId)writeNote('updateNoteCardInstance',{id,updates:dataUpdates}).catch(report);
         }
       },
       getAllEdges:()=>originalStore.getState().connections||[],
@@ -176,11 +174,11 @@ async function boot(){
       router,
       setEdges:()=>{},
       setConnections:originalStore.getState().setConnections,
-      onDeleteNode:node=>{
-        const id=typeof node==='string'?node:node.id;
-        instances.delete(id);
-        coordinator.stage({type:'deleteInstance',id});
-        originalStore.getState().setNodes(nodes=>nodes.filter(n=>n.id!==id));
+      onDeleteNode:(objectOrNode,instanceId)=>{
+        // Original85886 calls (objectId, instanceId); Canvas callers may pass a node.
+        const id=instanceId||(typeof objectOrNode==='string'?objectOrNode:objectOrNode?.id);
+        if(!id||!instances.has(id))return;
+        return writeNote('deleteNoteCardInstance',id).catch(report);
       },
       onlyDisplayCardTitle:false,
       textSizeAtSmallZoom:false,
@@ -215,7 +213,7 @@ async function boot(){
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
   // The old self-written performance lab is unrelated to this original engine.
   $('.performance-panel')?.setAttribute('hidden','');
-  window.inkbridge.onCloseRequested(async request=>{try{await navigationTail.catch(()=>{});await coordinator.flush();await shell.settle();window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
+  window.inkbridge.onCloseRequested(async request=>{try{await flushAll();await shell.settle();await flushAll();window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
   window.inkbridge.onCloseCancelled(request=>report(Error(request.message)));
   await coordinator.flush();coordinator.status();
 }

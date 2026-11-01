@@ -175,7 +175,7 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:']]){
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -268,7 +268,7 @@ class WorkspaceDatabase {
           const result=this.statement('DELETE FROM meta WHERE key=?').run('folder:'+identifier(operation.id,'folder ID'));
           changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
           if(operation.kind==='folder'){text(data.name,'folder name',255);check(Array.isArray(data.whiteboardInstanceIds),'Invalid folder references');for(const ref of data.whiteboardInstanceIds)identifier(ref,'board instance ID');}
           else if(operation.kind==='whiteboard-instance'){const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
           else if(['card','remark'].includes(operation.kind))check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Catalog content is missing');
@@ -276,6 +276,7 @@ class WorkspaceDatabase {
           else if(operation.kind==='tag')text(data.name,'tag name',255);
           else if(operation.kind==='card-tag'){identifier(data.cardId,'tagged card ID');identifier(data.tagId,'tag ID');}
           else if(operation.kind==='file'){text(data.name||'','file name',255);}
+          else if(operation.kind==='content-version'){identifier(data.noteCardId,'version card ID');check(!!this.statement('SELECT id FROM contents WHERE id=?').get(data.noteCardId),'Version content is missing');validateDocument(JSON.parse(data.content));text(data.title,'version title',4096);text(data.createdTime,'version time',64);}
           const value=canonicalJSON(data),key=operation.kind+':'+id,old=this.statement('SELECT value FROM meta WHERE key=?').get(key);
           if(old?.value!==value){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,value);changed=true;}
         } else throw new PersistenceError('INVALID_REQUEST', 'Unknown commit operation');

@@ -6,6 +6,7 @@ body{margin:0;overflow:hidden}
 #original-navigation-controls{display:flex;align-items:center;height:36px;width:280px;padding-left:8px;flex-shrink:0;-webkit-app-region:no-drag}
 .sidebar-closed #original-navigation-controls{width:144px}
 .topbar button,.topbar [data-tour],#original-history-tabs{-webkit-app-region:no-drag}
+.context-menu-root,.context-menu-root *,.selection-toolbar-container,.selection-toolbar-container *,[data-slot="popover-content"],[data-slot="popover-content"] *{-webkit-app-region:no-drag}
 #original-history-tabs{height:36px;min-width:0;overflow:hidden}
 #original-history-tabs>div{height:36px;display:flex;align-items:flex-end}
 #original-top-views{width:128px;flex-shrink:0;-webkit-app-region:no-drag}
@@ -35,6 +36,9 @@ body{margin:0;overflow:hidden}
 .board-area{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;padding:0;background:#e8e8eb}
 .board-heading,.statusbar,.canvas-help,.tools{display:none!important}
 .canvas-wrap{position:relative;overflow:hidden;margin:0;border:0;border-radius:0;flex:1;min-height:0;isolation:isolate}
+/* This is a Canvas viewport, not an HTML scroll container. Native popover
+   autofocus otherwise scrolls it horizontally and closes the original menu. */
+.canvas-wrap .react-flow.react-flow__pane{overflow:clip!important}
 #loading{position:absolute;inset:0;display:grid;place-items:center;background:#f4f3ee;white-space:pre-wrap;z-index:40}
 #loading[hidden]{display:none}
 #original-flow-outline[hidden]{display:none!important}
