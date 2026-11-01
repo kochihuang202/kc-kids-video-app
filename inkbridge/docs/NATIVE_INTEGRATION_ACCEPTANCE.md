@@ -2,6 +2,8 @@
 
 基線：`ddd8d55`，分支 `codex/inkbridge-editor-rebuild`。本批核對 Gemini `26a2c17` 所列需求；保留可用完整原模組，修正自有 SQLite／路由邊界，不直接接受其「全部通過」宣稱。正式 FlexNote、帳號、正式資料及 OneDrive 未變更。
 
+後續狀態：共用浮層閃動已於61fff45修正；Gemini b5fd5bc的進階功能已另行覆核，單卡Markdown／Word匯出及真實圖片尺寸投影已選擇性接入，見 [進階交付處置](GEMINI_ADVANCED_DISPOSITION.md)。本文件其餘內容保留該批驗收邊界，不表示後續項目永遠未完成。
+
 ## 本批結果
 
 | 項目 | 原版來源與整合結果 | 實測證據 |
