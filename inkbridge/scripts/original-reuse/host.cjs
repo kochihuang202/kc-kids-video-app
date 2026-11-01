@@ -7,7 +7,7 @@ const root=path.resolve(__dirname,'../../private-original-editor'),own=__dirname
 const project=path.resolve(__dirname,'../..'),boardMode=process.env.INKBRIDGE_ORIGINAL_VIEW==='board';
 const data=process.env.INKBRIDGE_ORIGINAL_PROBE_DATA||(app.isPackaged?path.join(root,'profiles','desktop'):null);if(!data)throw Error('A dedicated probe profile is required');
 const resolvedData=path.resolve(data),tempRoot=require('node:os').tmpdir();
-if(!resolvedData.startsWith(path.join(root,'profiles')+path.sep)&&!(path.dirname(resolvedData)===tempRoot&&path.basename(resolvedData).startsWith('inkbridge-original-modules-')))throw Error('Probe profile must be inside its private profiles or a dedicated temp directory');
+if(!resolvedData.startsWith(path.join(root,'profiles')+path.sep)&&!(path.dirname(resolvedData)===tempRoot&&path.basename(resolvedData).startsWith('inkbridge-original-modules-'))){console.error('Probe profile must be inside its private profiles or a dedicated temp directory');process.exit(1);}
 app.setName('InkBridge Original Module Probe');
 for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
