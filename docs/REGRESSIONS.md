@@ -1,5 +1,12 @@
 # Regression Memory
 
+## REG-103 — Original sidebar needs its parent, content identity and shared editor updates
+
+- Mount full41.n instead of substituting a modal. Original95077 sidebar action spreads instance data after the content ID and overwrites it; match19395's working call contract by placing content ID last and passing cardInstanceId separately. Reference ordering uses updateTabConfig, which checks saved tabs then history tabs and merges config, matching the original background.
+- Register actual75000 sidebar/view-reference editors for save/IME/close ACK. Track editors by editor object, not content ID, so multiple views do not replace each other's registration. Own content acceptance also updates the native flow reducer and other live editor states with the native editor-force-update tag, preserving the originating selection and ongoing IME. Native recent-typing prop suppression alone otherwise leaves the peer visibly stale.
+- Further reproduction: an unchanged older editor was unconditionally re-read during Flush; the native73866 deferred onChange snapshot could also survive an external update and run during unmount. Track each live editor's observed document, accept only new edits, and cancel superseded native deferred snapshots on editor-force-update. Peer updates commit through Lexical's discrete boundary, not a sleep. The initial pass was insufficient; the regression includes composition followed by actual normal close and a closed-database content assertion.
+- check-native-sidebar drives the native menu, real reference editor, SQLite ACK, whiteboard-to-sidebar updates, composition-blocked Flush, reference ordering, normal close and exact SQLite restart. Chromium composition simulation is not physical Chinese IME certification. Related native note-page/history/floating and real image-paste flows pass. Independent Windows note windows remain separate unfinished work.
+
 ## REG-102 — Native favorites require target-source reads, durable ordering and independent deletion
 
 - Full64744.rf picker and79509/48206 tree call initTabSource and getTabReferencesObjectCards in addition to saved-tab CRUD. A silent null service caused allWhiteboards/noteCards exceptions despite successful link writes. Preserve original reply shapes and query actual own records.

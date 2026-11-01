@@ -23,7 +23,7 @@ async function boot(){
   const graph=await window.inkbridge.load(),info=await window.inkbridge.info(),contents=new Map(graph.contents.map(content=>[content.id,content])),instances=new Map(graph.instances.map(instance=>[instance.id,instance]));
   r(19281).YH.init('inkbridge-local',graph.workspaceId);
   let boardId=graph.boards.find(board=>!board.attributes?.isTrashed)?.id||graph.boards[0]?.id||'board-main',navigationChanging=false,navigationTail=Promise.resolve(),shell;
-  const boards=new Map(graph.boards.map(board=>[board.id,board])),originalStore=r(23).gt,editors=new Map(),modalEditors=new Map(),helpers=r(45828),engine=r(66597).L;
+  const boards=new Map(graph.boards.map(board=>[board.id,board])),originalStore=r(23).gt,editors=new Map(),modalEditors=new Map(),editorSnapshots=new WeakMap(),helpers=r(45828),engine=r(66597).L;
   const pendingExternal=new Set();globalThis.__inkbridgeTrackOperation=operation=>{let task;try{task=Promise.resolve(operation());}catch(error){task=Promise.reject(error);}pendingExternal.add(task);task.then(()=>pendingExternal.delete(task),error=>{pendingExternal.delete(task);report(error);});return task;};
   function stageBoardView(view,id=boardId){if(state.home||navigationChanging||!boards.has(id))return;const board={...boards.get(id),view};boards.set(id,board);coordinator.stage({type:'putBoard',data:board});}
   const graphContext=()=>({CanvasKit:K,fontMgr:fonts.getFontMgr(),view:originalStore.getState().view,theme:'light',locale:'zh-TW'});
@@ -41,11 +41,19 @@ async function boot(){
     if(JSON.stringify(next)===JSON.stringify(item))return;instances.set(next.id,next);coordinator.stage({type:'putInstance',data:next});
   }
   function acceptDocument(nodeId,document,body){
-    const item=instances.get(nodeId);if(item)acceptContentDocument(item.contentId,document,body);
+    const item=instances.get(nodeId);if(!item)return;const editor=editors.get(nodeId);if(editor){readLiveEditor(editor,item.contentId);return;}acceptContentDocument(item.contentId,document,body);
   }
-  function acceptContentDocument(contentId,document,body){
+  function readLiveEditor(editor,contentId){if(editor.isComposing())return;const value=bodyFromEditor(editor),serialized=JSON.stringify(value.document);if(editorSnapshots.get(editor)===serialized)return;editorSnapshots.set(editor,serialized);acceptContentDocument(contentId,value.document,value.body,editor);}
+  function acceptContentDocument(contentId,document,body,sourceEditor){
     const content=contents.get(contentId);if(!content)return;
     putContent({...content,document},body);
+    const native=redux.getState().flow.noteCards.find(row=>row.id===contentId);
+    if(!native||JSON.stringify(native.content)!==JSON.stringify(document))redux.dispatch(r(23407).yc.updateNoteCard({id:contentId,title:helpers.LG(document),content:document,lastEditedTime:new Date().toISOString()}));
+    // The native editor deliberately suppresses recent prop echoes. Like its
+    // external-update path, explicitly update other live editors; never reset
+    // the originating editor's selection or interrupt an IME composition.
+    const peers=[...modalEditors].filter(([,id])=>id===contentId).map(([editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));
+    for(const editor of new Set(peers))if(editor!==sourceEditor&&!editor.isComposing()&&JSON.stringify(bodyFromEditor(editor).document)!==JSON.stringify(document)){editor.setEditorState(editor.parseEditorState(document),{tag:'editor-force-update'});editor.update(()=>{},{discrete:true,tag:'editor-force-update'});editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));}
     const current=originalStore.getState();
     if(current.nodes.some(node=>node.data.objectId===content.id&&JSON.stringify(node.data.content)!==JSON.stringify(document))){
       current.setNodes(nodes=>nodes.map(node=>node.data.objectId===content.id?{...node,data:{...node.data,content:document,title:helpers.LG(document),lastEditedTime:new Date().toISOString()}}:node));
@@ -54,10 +62,10 @@ async function boot(){
   }
   const coordinator=new PersistenceCoordinator({revision:graph.revision,commit:async request=>{const result=await window.inkbridge.commit(request);if(!result.ok)throw Error(result.error.message);state.lastAck=result.ack;return result.ack;},
     beforeFlush:async()=>{
-      for(const [contentId,editor]of [...modalEditors]){if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));const value=bodyFromEditor(editor);acceptContentDocument(contentId,value.document,value.body);}
+      for(const [editor,contentId]of [...modalEditors]){if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));readLiveEditor(editor,contentId);}
       for(const [nodeId,editor]of [...editors]){
         if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));
-        const value=bodyFromEditor(editor);acceptDocument(nodeId,value.document,value.body);
+        readLiveEditor(editor,instances.get(nodeId)?.contentId);
       }
     },onStatus:value=>{state.persistence=value;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`已保存 · v${value.revision}`;}});
   state.flush=()=>coordinator.flush();state.load=()=>window.inkbridge.load();
@@ -125,9 +133,10 @@ async function boot(){
     if(id===boardId)updateBoardTitle();return {board,boardInstance};
   });}
   const flushAll=async()=>{do{if(pendingExternal.size)await Promise.all([...pendingExternal]);await navigationTail.catch(()=>{});}while(pendingExternal.size);return coordinator.flush();};state.flush=flushAll;
-  function registerModalEditor(contentId,editor){modalEditors.set(contentId,editor);const read=()=>{if(editor.isComposing())return;const value=bodyFromEditor(editor);acceptContentDocument(contentId,value.document,value.body);};const offUpdate=editor.registerUpdateListener(()=>queueMicrotask(read));let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();if(modalEditors.get(contentId)===editor)modalEditors.delete(contentId);});}});}
-  function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([id])=>id===contentId).map(([,editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
-  const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
+  function registerModalEditor(contentId,editor){if(modalEditors.has(editor))return;modalEditors.set(editor,contentId);editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));const read=()=>readLiveEditor(editor,contentId);const offUpdate=editor.registerUpdateListener(({tags})=>{if(tags.has('editor-force-update')){editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));return;}queueMicrotask(read);});let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();modalEditors.delete(editor);});}});}
+  function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([,id])=>id===contentId).map(([editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
+  globalThis.__inkbridgeRegisterSidebarEditor=registerModalEditor;
+  const writeNote=createOriginalNoteWriter({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
   shell=connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,switchBoard,showHome,showNote,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
@@ -135,7 +144,7 @@ async function boot(){
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
     React.useEffect(()=>()=>{const editor=editorRef.current;if(editor){try{const value=bodyFromEditor(editor);acceptDocument(props.nodeId,value.document,value.body);}catch(error){report(error);}if(editors.get(props.nodeId)===editor)editors.delete(props.nodeId);}},[props.nodeId]);
-    return React.createElement(Flow,{...props,onEditorReady:editor=>{editorRef.current=editor;editors.set(props.nodeId,editor);state.lastEditorNode=props.nodeId;}});
+    return React.createElement(Flow,{...props,onEditorReady:editor=>{editorRef.current=editor;editors.set(props.nodeId,editor);registerModalEditor(instances.get(props.nodeId)?.contentId,editor);state.lastEditorNode=props.nodeId;}});
   }
   function CanvasPasteListener(){
     if(typeof r(64744).InkBridgeUseCanvasPaste!=='function')throw Error('Native canvas paste hook is not exported');

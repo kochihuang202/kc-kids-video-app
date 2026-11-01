@@ -60,3 +60,14 @@
 - 自有SQLite meta分開保存saved-tab、tab-group；建立連結與父層排序同交易。刪除收藏資料夾只遞迴刪連結，不刪筆記內容。原生重複加入防護保留。
 - 實際Electron測試通過：加入、重複防護、收藏樹開啟原note-detail頁面、中文編輯/ACK、正常關閉後讀取SQLite、重啟完整比對及讀出更新標題。相關check-shell18項通過。
 - 新localhost origin使UI-only localStorage頁籤偏好無法跨啟動延續，收藏本身與排序存在SQLite不受影響。多收藏群組管理、所有收藏右鍵動作尚未完整驗收；不可擴大成全收藏系統完成。
+
+### 後續更新：原右側欄完整父元件
+
+- 接入41.n與原add-flow-reference流程。95077選單原調用將實例data.id蓋過內容ID；比對19395已正確的工具列調用後修正參數次序，獨立傳cardInstanceId。沒有改成替代面板。
+- 原updateTabConfig先查收藏，再查歷史分頁、合併config；自有邊界依此保存參考卡片順序。75000的sidebar/view-reference實際editor加入同一保存/組字/關閉等待流程。
+- 同一卡片的多個編輯器改以editor物件註冊，避免用content ID覆蓋註冊；使用原flow reducer及editor-force-update同步其他編輯器。實測先抓到「側欄顯示舊內容」，再修正，未以固定延遲掩蓋。
+- 重複驗證再抓到關閉後退回舊內容：73866原待保存快照在force-update後仍可能於卸載送出。現在取消被取代的原延後回呼、以各實際editor的新內容變更推進保存、在Lexical discrete邊界更新其他視圖；SQLite適配層等待Flush後以最新活躍內容取代遲到回呼。這是自有儲存邊界的必要適配，不能宣稱零自寫邏輯。original-history新增「遲到舊回呼不能覆蓋新live commit」測試，保留既有歷史還原斷言。
+- check-native-sidebar驗證原選單→側欄→編輯→ACK→白板再編輯→側欄一致、組字期間Flush不提前回覆、composition commit、正常關閉及精確重啟。中文IME使用Chromium協定模擬，尚非實體輸入法驗收。
+- 相關check-native-note-page與check-real-image-paste再次通過，未重跑完整效能/封裝測試。仍未完成：真正獨立Windows編輯視窗、完整Markdown/Word/PDF匯出、轉Mindmap根節點、完整標籤頁與所有MediaCard卡片庫流程。前文「仍未完成」為當時審查狀態；本節與後續更新才是目前完成邊界。
+
+本批私人factory修改後SHA-256：73866=`c535d510da5673c20fa6fbd6720f58e71fd9a5452155026734ee65d230167810`；95077=`88f8e752ef1e5c8de90448e991384af00206425da2d538411b0f2accb8ff2c8e`；75000=`8f82e2caa9ec1c9f980cf3204a7aebdddc820773597198bca5959afddbf9d7b0`。原始factory SHA保留於各檔頭；可重複套用的定位、描述與變更由apply-integration-patches管理，不提交私人factory。

@@ -23,7 +23,13 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
   const noteReads=new Set(['getTag','getNoteCardById','getTagsByCardId','getWhiteboardsByCardId','getCardLinks','getTagPropertyList','getCardRemark']);
   const cardInstanceWrites=new Set(['restoreNoteCardContentVersion','batchCreateNoteCards','batchCreateNoteCardInstances','addNoteCardInstance','batchDeleteNoteCardInstances','updateNoteCardInstance','batchUpdateCardInstances','batchUpdateMediaCardInstances','deleteNoteCardInstance','addMediaCard','addMediaCardInstance']);
   globalThis.__inkbridgeControlledNoteSaves=true;window.onGlobalModalClose=async()=>{await flushAll();redux.dispatch(r(22676).aV({show:false}));redux.dispatch(r(11473).f4());};
-  globalThis.__inkbridgeServices={has:name=>bookmarks.has(name)||tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  globalThis.__inkbridgeServices={has:name=>name==='updateTabConfig'||bookmarks.has(name)||tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+    if(name==='updateTabConfig'){
+      await flush();const saved=(await window.inkbridge.load()).savedTabs?.find(tab=>tab.id===payload.id);
+      if(saved)return bookmarks.call('updateTab',{id:saved.id,config:{...saved.config,...payload.config}});
+      const current=(await history('getHistoryTabs',{})).data.find(tab=>tab.id===payload.id);
+      return current?history('updateHistoryTab',{id:current.id,config:{...current.config,...payload.config}}):{success:false,tab:null};
+    }
     if(bookmarks.has(name))return bookmarks.call(name,payload);
     if(tags.has(name))return tags.call(name,payload);
     if(name==='writeClipboardTextAndHtml')return window.inkbridge.writeClipboardTextAndHtml(payload);
@@ -88,6 +94,7 @@ export function connectOriginalShell({requireOriginal:r,React,ReactDOM,redux,rou
     React.createElement(NativeCardOverlays),
     React.createElement(r(64744).InkBridgeTagManager),
     React.createElement(r(64744).InkBridgeCollectionPicker),
+    ReactDOM.createPortal(React.createElement(r(41).n),document.querySelector('#original-card-sidebar')),
     React.createElement(AddToWhiteboard),
     home?ReactDOM.createPortal(React.createElement(NativeNewCard),document.querySelector('#original-new-card-launcher')):null,
     ReactDOM.createPortal(React.createElement(r(23733).InkBridgeNavigationControls,{onToggleSidebar:()=>{const sidebar=document.querySelector('.original-sidebar');sidebar.hidden=!sidebar.hidden;document.body.classList.toggle('sidebar-closed',sidebar.hidden);}}),document.querySelector('#original-navigation-controls')),

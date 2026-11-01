@@ -1,6 +1,6 @@
 // SQLite/write-boundary adaptation. All creation/selection/layout UI and the
 // add-to-whiteboard placement algorithm remain original modules 31167/94700.
-export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId }) {
+export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument }) {
     return (method, payload) => navigate(async () => {
         await coordinator.flush();
         const stageVersion=(noteCardId,snapshot)=>coordinator.stage(catalogOperation('content-version',{id:crypto.randomUUID(),noteCardId,title:snapshot.title||'',content:snapshot.content,createdTime:new Date().toISOString()}));
@@ -141,7 +141,10 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         if (method === 'updateNoteCard') {
             if(typeof payload.contentVersionSnapshot?.content==='string')stageVersion(id,payload.contentVersionSnapshot);
             const updates = payload.updates || payload || {};
-            const rawDoc = updates.content || updates.document || payload.document || payload.content;
+            // The native onChange can be a deferred snapshot from a view that
+            // has since received newer content. Flush reads live editors first;
+            // an open editor's accepted state supersedes that old callback.
+            const rawDoc = getLiveDocument?.(id) || updates.content || updates.document || payload.document || payload.content;
             const document = typeof rawDoc === 'string' ? JSON.parse(rawDoc) : rawDoc;
             if (document)
                 acceptContentDocument(id, document, updates.body || payload.body);

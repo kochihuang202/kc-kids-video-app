@@ -42,6 +42,7 @@ app.whenReady().then(async()=>{
         html=html.replace('</main>','</main><aside id="original-flow-outline" aria-label="卡片列表" style="width:280px;min-width:280px;background:white;border-left:1px solid #e1e4dc;display:flex;min-height:0"></aside>');
         html=html.replace('<div class="zoom-controls">','<div id="original-board-home" style="display:contents"></div><div id="original-board-caption"></div><div id="original-native-tools"></div><div id="original-undo-controls"></div><div id="original-zoom-controls"></div><div class="zoom-controls" hidden>');
         html=html.replace('id="original-flow-outline"','id="original-flow-outline" hidden');
+        html=html.replace('</main>','</main><aside id="original-card-sidebar" style="display:flex;min-height:0"></aside>');
         html=html.replace('</head>','<link rel="stylesheet" href="/integration/compact-shell.css"></head>');
         html=html.replace('</head>','<style>.canvas-wrap{isolation:isolate}#board-navigation-status{display:block;color:#a54235;font-size:11px}#original-zoom-controls{display:contents}.zoom-controls[hidden]{display:none}.board-heading h2{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head>');
         html=html.replace('<script src="vendor/canvaskit.js"></script><script type="module" src="workspace.mjs"></script>',originalScripts+'<script type="module" src="/integration/board.mjs"></script>');
