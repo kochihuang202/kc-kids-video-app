@@ -16,6 +16,8 @@ const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javas
 let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer,closing=false;
 app.whenReady().then(async()=>{
   if(!acquired)return;
+  const restore=require('../../src/main/workspace-restore.cjs');
+  await restore.recoverRestore(data);
   const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});database=createDatabaseClient({filename});
   const filesDir=path.join(data,'files');fs.mkdirSync(filesDir,{recursive:true});
   const attachments=require('../../src/main/attachment-store.cjs').createAttachmentStore(filesDir,bytes=>nativeImage.createFromBuffer(bytes).getSize());
@@ -96,11 +98,42 @@ app.whenReady().then(async()=>{
   const readable=event=>allowed(event)||!!standalone.child(event);
   const storageSettings=require('../../src/main/storage-settings.cjs').createStorageSettings({filename:path.join(data,'Profile','storage-settings.json'),localDirectory:data,applicationDirectory:project});
   const selectedExchangeDirectories=new Set();
+  const snapshots=require('../../src/main/workspace-snapshots.cjs').createWorkspaceSnapshots({localDirectory:data,database,getExchange:()=>storageSettings.read().exchangeDirectory,resolveAttachment:attachments.resolvePath});
+  let snapshotTask;
+  const createSnapshot=(reason,alreadyFlushed=false)=>{
+    if(snapshotTask)return snapshotTask;
+    snapshotTask=(async()=>{if(!storageSettings.read().exchangeDirectory)return {configured:false,created:false};if(!alreadyFlushed)await standalone.flushForSettings();return snapshots.create(reason);})().finally(()=>{snapshotTask=null;});
+    return snapshotTask;
+  };
+  ipcMain.handle('inkbridge:create-snapshot',event=>{if(!readable(event)||closing||applyingSettings)throw Error('目前無法建立快照');return createSnapshot('manual');});
   let applyingSettings=false;
   ipcMain.handle('inkbridge:storage-settings',async(event,request)=>{
     if(!readable(event))throw Error('Unexpected sender');
     const method=request?.method;
     if(method==='read')return storageSettings.read();
+    if(method==='scan')return snapshots.scan();
+    if(method==='restore'){
+      if(applyingSettings||closing||snapshotTask)throw Error('正在保存或關閉，請稍後再試');
+      const exchange=storageSettings.read().exchangeDirectory;
+      if(!exchange)throw Error('尚未設定交換資料夾');
+      const rows=await snapshots.scan(),selected=rows.find(row=>row.workspaceId===request.workspaceId&&row.snapshotId===request.snapshotId&&row.integrity==='complete');
+      if(!selected)throw Error('選定快照尚未完整到達或驗證失敗，請重新掃描');
+      const answer=await dialog.showMessageBox(BrowserWindow.fromWebContents(event.sender),{type:'question',buttons:['取消','保存目前資料並載入'],defaultId:0,cancelId:0,title:'載入工作區快照',message:'將保存目前資料並重新啟動 InkBridge',detail:`工作區：${selected.workspaceId}\n快照：${selected.snapshotId}\n建立時間：${selected.manifest.createdAt}\n原本工作資料將保留在本機 Restore 備份目錄，其他快照不會刪除。`});
+      if(answer.response!==1)return {cancelled:true};
+      applyingSettings=true;let databaseClosed=false;
+      try{
+        if(snapshotTask)await snapshotTask;
+        await standalone.prepareAll();await createSnapshot('before-load',true);
+        const staged=await restore.stageRestore({local:data,exchange,workspaceId:selected.workspaceId,snapshotId:selected.snapshotId,snapshots});
+        closing=true;await database.close();databaseClosed=true;
+        await restore.switchRestore({local:data,staged,snapshots});
+        approvedClose=true;app.relaunch();app.exit(0);
+      }catch(error){
+        if(databaseClosed){dialog.showErrorBox('快照載入未完成',error.message+'\n已保留或恢復原工作資料，請重新啟動 InkBridge。');approvedClose=true;app.relaunch();app.exit(1);}
+        closing=false;window.webContents.send('inkbridge:close-cancelled',{message:'載入已取消：'+error.message});await standalone.cancelAll();throw error;
+      }finally{applyingSettings=false;}
+      return {restarting:true};
+    }
     if(method==='choose'){
       const result=await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender),{title:'選擇 OneDrive 交換資料夾',properties:['openDirectory','createDirectory']});
       if(result.canceled||!result.filePaths[0])return {cancelled:true};
@@ -115,7 +148,7 @@ app.whenReady().then(async()=>{
     const directory=request.directory;
     if(!selectedExchangeDirectories.has(directory)&&directory!==storageSettings.read().exchangeDirectory)throw Error('請先按瀏覽選擇資料夾');
     if(method==='check')return storageSettings.check(directory);
-    if(applyingSettings||closing)throw Error('正在保存或關閉，請稍後再試');
+    if(applyingSettings||closing||snapshotTask)throw Error('正在保存或關閉，請稍後再試');
     applyingSettings=true;
     try{await standalone.flushForSettings();if(closing)throw Error('程式正在關閉');return storageSettings.save(directory);}finally{applyingSettings=false;}
   });
@@ -139,7 +172,7 @@ app.whenReady().then(async()=>{
   ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');return files.map(file=>{if(typeof file.path!=='string'||!path.isAbsolute(file.path)||fs.statSync(file.path).size>64*1024*1024)throw Error('Invalid selected file');return {path:file.path,sha256:crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex')};});});
   ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
   ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;standalone.markReady(event);});
-  const finishClose=async()=>{if(rendererReady)await standalone.prepareAll();await database.close();standalone.destroyAll();approvedClose=true;window.close();};
+  const finishClose=async()=>{if(snapshotTask)await snapshotTask;if(rendererReady){await standalone.prepareAll();await createSnapshot('close',true);}await database.close();standalone.destroyAll();approvedClose=true;window.close();};
   ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok){try{await finishClose();}catch(error){closing=false;window.webContents.send('inkbridge:close-cancelled',{message:error.message});await standalone.cancelAll();dialog.showErrorBox('InkBridge 尚未保存',error.message+'；所有視窗保留。');}}else {closing=false;dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');}});
   Menu.setApplicationMenu(null);
   window=new BrowserWindow({width:1200,height:960,title:'InkBridge 墨橋',...(boardMode?{titleBarStyle:'hidden',titleBarOverlay:{color:'#eeeef0',symbolColor:'#3f3f46',height:36}}:{}),webPreferences:{preload:path.resolve(own,'../../src/main/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
@@ -147,6 +180,8 @@ app.whenReady().then(async()=>{
   window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closing)return;closing=true;if(!rendererReady){finishClose().catch(error=>{closing=false;dialog.showErrorBox('InkBridge 尚未保存',error.message);});return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;closing=false;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
   globalThis.__inkbridgeOriginalProbe={dataRoot:data,origin,blocked,preload:'existing InkBridge limited preload; no original window.ipc',nodeIntegration:false,originalMainExecuted:false};
   await window.loadURL(origin+'/');
+  const stopSnapshotTimer=require('../../src/main/snapshot-scheduler.cjs').startSnapshotScheduler({ready:()=>rendererReady&&!closing&&!applyingSettings,save:()=>createSnapshot('timer'),onError:error=>{if(!window.isDestroyed())window.webContents.send('inkbridge:snapshot-error',{message:error.message});}});
+  window.once('closed',stopSnapshotTimer);
   app.on('second-instance',()=>{if(window.isMinimized())window.restore();window.show();window.focus();});
 });
 app.on('window-all-closed',()=>app.quit());app.on('before-quit',()=>{if(approvedClose)server?.close();});

@@ -18,6 +18,12 @@ if (database) parentPort.on('message', ({ id, method, payload }) => {
     if (method === 'load') result = database.load();
     else if (method === 'commit') result = database.commit(payload);
     else if (method === 'history') result = database.history(payload);
+    else if (method === 'snapshot') {
+      // The single writer processes no commits between VACUUM INTO and ACK.
+      // The caller supplies an unused LOCAL staging filename, never OneDrive.
+      database.db.prepare('VACUUM INTO ?').run(payload);
+      result = {workspaceId: database.workspaceId, revision: database.revision()};
+    }
     else if (method === 'close') result = database.close();
     else throw Object.assign(new Error('Unknown database worker method'), { code: 'INVALID_REQUEST' });
     parentPort.postMessage({ id, result });

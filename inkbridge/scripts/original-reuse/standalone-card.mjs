@@ -150,10 +150,11 @@ async function boot() {
     } });
     window.inkbridge.onCloseCancelled(request => { closeEpoch++; document.body.inert = false; $('#standalone-status').textContent = request.message; });
     window.inkbridge.ready();
-    $('#standalone-save').onclick = () => flush().catch(report);
+    const saveSnapshot=async()=>{await flush();await window.inkbridge.createSnapshot();};
+    $('#standalone-save').onclick = () => saveSnapshot().catch(report);
     document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
         event.preventDefault();
-        flush().catch(report);
+        saveSnapshot().catch(report);
     } }, true);
     $('#standalone-recover').onclick = async () => { try {
         await settleComposition();

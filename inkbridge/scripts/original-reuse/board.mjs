@@ -342,10 +342,12 @@ async function boot(){
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   installStorageSettings();
-  $('#save-workspace').addEventListener('click',()=>flushAll().catch(report));
+  window.inkbridge.onSnapshotError(value=>report(Error('自動快照失敗：'+value.message)));
+  const saveSnapshot=async()=>{await flushAll();const result=await window.inkbridge.createSnapshot();if(result.configured)$('#persistence-status').textContent=result.created?'已保存並建立快照':'已保存；快照無變更';};
+  $('#save-workspace').addEventListener('click',()=>saveSnapshot().catch(report));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
   $('#toggle-outline').onclick=()=>redux.dispatch(r(22676).yn({view:r(22676).XM.whiteboard}));
-  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();flushAll().catch(report);}},true);
+  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();saveSnapshot().catch(report);}},true);
   $('#select-tool').onclick=()=>state.setMode('move');$('#pan-tool').onclick=()=>state.setMode('hand');$('#zoom-in').onclick=()=>state.controls.zoomIn();$('#zoom-out').onclick=()=>state.controls.zoomOut();$('#zoom-reset').onclick=()=>state.controls.setViewport({zoom:1});$('#fit').onclick=()=>state.controls.fitView({getBounds:node=>engine.getNodeBounds(node,graphContext())});
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
   // The old self-written performance lab is unrelated to this original engine.
