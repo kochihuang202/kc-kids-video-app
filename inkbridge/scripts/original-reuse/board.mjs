@@ -101,9 +101,9 @@ async function boot(){
     }
     return r(19281).YH.convertNoteCardToNode({...content,content:noteDocument(content)},{isAutoHeight:true,scale:1,color:'#fff',...item.attributes,id:item.id,objectId:item.contentId,whiteboardId:item.boardId,x:item.x,y:item.y,width:item.width,height:item.height});
   }
-  function addCard(title='新卡片',body='',point){
+  function addCard(title='',body='',point){
     const controls=state.controls,box=$('#board').getBoundingClientRect();point??=controls.screenToFlowPosition({x:box.x+box.width/2,y:box.y+box.height/2});
-    const contentId=crypto.randomUUID(),instanceId=crypto.randomUUID(),content={id:contentId,title,body,document:noteDocument({title,body}),kind:'text',tone:'sage'};
+    const contentId=crypto.randomUUID(),instanceId=crypto.randomUUID(),content={id:contentId,title,body,document:title||body?noteDocument({title,body}):r(19281).YH.newEmptyEditorContent(),kind:'text',tone:'sage'};
     putContent(content,body);const item={id:instanceId,contentId,boardId,x:point.x,y:point.y,width:520,height:200,z:instances.size};instances.set(item.id,item);coordinator.stage({type:'putInstance',data:item});
     originalStore.getState().addNodes([toNode(item)]);return instanceId;
   }
@@ -332,7 +332,7 @@ async function boot(){
           pdfViewerComponent:r(96895).ZP,
           onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
           onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
-          onDoubleClick:(_event,point)=>addCard('新卡片','',point),
+          onDoubleClick:(_event,point)=>{const id=addCard('','',point);originalStore.getState().setSelectedNodeIds(new Set([id]));requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent('canvaskit-open-node-editor',{detail:{nodeId:id}})));},
           onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
         }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod),React.createElement(NativeReferenceFocus,{home,nodes})))))));
   }
