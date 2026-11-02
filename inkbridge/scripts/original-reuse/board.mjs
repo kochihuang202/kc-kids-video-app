@@ -6,6 +6,7 @@ import {createOriginalSections,projectGroupedNode,sectionWorldPosition} from '/i
 import {PersistenceCoordinator} from '/inkbridge-core/persistence-coordinator.mjs';
 import {noteDocument} from '/inkbridge-core/rich-document.mjs';
 import {connectOriginalShell} from './original-shell.mjs';
+import {installStorageSettings} from './storage-settings.mjs';
 import {createOriginalNoteWriter} from '/inkbridge-core/original-note-writes.mjs';
 import {folderDeletionOperations} from '/inkbridge-core/original-folder-writes.mjs';
 import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
@@ -182,7 +183,7 @@ async function boot(){
   globalThis.__inkbridgeRemoteRequest=request=>{
     const task=remoteTail.catch(()=>{}).then(async()=>{
       const {method,cardId,payload}=request;
-      if(method==='flush'){const epoch=closeEpoch;await flushAll();await shell.settle();await flushAll();if(epoch!==closeEpoch)throw Error('關閉已取消');document.body.inert=true;return {saved:true};}
+      if(method==='flush'){const epoch=closeEpoch;await flushAll();await shell.settle();await flushAll();if(epoch!==closeEpoch)throw Error('關閉已取消');if(request.freeze!==false)document.body.inert=true;return {saved:true};}
       if(method==='workspaceCommit'){
         await flushAll();const current=await window.inkbridge.load(),operations=payload.request.operations;
         for(const [editor,id]of modalEditors){if(editor.isComposing())throw Object.assign(Error('主視窗仍在組字；白板視窗草稿保留'),{code:'WORKSPACE_CONFLICT'});readLiveEditor(editor,id);}
@@ -340,6 +341,7 @@ async function boot(){
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
+  installStorageSettings();
   $('#save-workspace').addEventListener('click',()=>flushAll().catch(report));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
   $('#toggle-outline').onclick=()=>redux.dispatch(r(22676).yn({view:r(22676).XM.whiteboard}));

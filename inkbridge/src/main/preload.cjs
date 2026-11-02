@@ -1,5 +1,6 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('inkbridge',{
+  storageSettings:request=>ipcRenderer.invoke('inkbridge:storage-settings',request),
   info:()=>ipcRenderer.invoke('inkbridge:info'),load:()=>ipcRenderer.invoke('inkbridge:load'),commit:request=>ipcRenderer.invoke('inkbridge:commit',request),
   openStandaloneWindow:payload=>ipcRenderer.invoke('inkbridge:open-standalone-window',payload),
   openNoteWindow:payload=>ipcRenderer.invoke('inkbridge:open-note-window',payload),

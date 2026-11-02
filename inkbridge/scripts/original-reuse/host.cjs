@@ -94,6 +94,31 @@ app.whenReady().then(async()=>{
   const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load()});
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   const readable=event=>allowed(event)||!!standalone.child(event);
+  const storageSettings=require('../../src/main/storage-settings.cjs').createStorageSettings({filename:path.join(data,'Profile','storage-settings.json'),localDirectory:data,applicationDirectory:project});
+  const selectedExchangeDirectories=new Set();
+  let applyingSettings=false;
+  ipcMain.handle('inkbridge:storage-settings',async(event,request)=>{
+    if(!readable(event))throw Error('Unexpected sender');
+    const method=request?.method;
+    if(method==='read')return storageSettings.read();
+    if(method==='choose'){
+      const result=await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender),{title:'選擇 OneDrive 交換資料夾',properties:['openDirectory','createDirectory']});
+      if(result.canceled||!result.filePaths[0])return {cancelled:true};
+      const directory=fs.realpathSync(result.filePaths[0]);selectedExchangeDirectories.add(directory);return {directory};
+    }
+    if(method==='openLocal'||method==='openExchange'){
+      const directory=method==='openLocal'?data:storageSettings.read().exchangeDirectory;
+      if(!directory)throw Error('尚未設定交換資料夾');
+      const error=await shell.openPath(directory);if(error)throw Error(error);return {success:true};
+    }
+    if(method!=='check'&&method!=='apply')throw Error('Unknown settings operation');
+    const directory=request.directory;
+    if(!selectedExchangeDirectories.has(directory)&&directory!==storageSettings.read().exchangeDirectory)throw Error('請先按瀏覽選擇資料夾');
+    if(method==='check')return storageSettings.check(directory);
+    if(applyingSettings||closing)throw Error('正在保存或關閉，請稍後再試');
+    applyingSettings=true;
+    try{await standalone.flushForSettings();if(closing)throw Error('程式正在關閉');return storageSettings.save(directory);}finally{applyingSettings=false;}
+  });
   ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!readable(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
   ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});

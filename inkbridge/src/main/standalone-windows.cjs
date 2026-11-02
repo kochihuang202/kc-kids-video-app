@@ -122,6 +122,14 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
         if (!row.window.isDestroyed())
             row.window.close();
     } }
-    return { child, main, markReady, prepareAll, cancelAll, destroyAll };
+    async function flushForSettings() {
+        for (const row of windows.values()) {
+            if (row.window.isDestroyed()) continue;
+            if (!row.ready) throw Error('編輯視窗仍在載入，請稍後再套用設定');
+            await request(row.window, {method: 'flush', freeze: false});
+        }
+        await request(getMain(), {method: 'flush', freeze: false});
+    }
+    return { child, main, markReady, prepareAll, cancelAll, destroyAll, flushForSettings };
 }
 module.exports = { installStandaloneWindows };

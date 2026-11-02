@@ -137,7 +137,7 @@ async function boot() {
         if (epoch !== closeEpoch)
             throw Error('關閉已取消');
         read();
-        document.body.inert = true;
+        if (request.freeze !== false) document.body.inert = true;
         const result = await flush();
         if (epoch !== closeEpoch)
             document.body.inert = false;
