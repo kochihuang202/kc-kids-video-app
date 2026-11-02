@@ -57,3 +57,5 @@
 ## 2026-11-02 新窗口打開
 
 獨立Windows文字編輯視窗、保存ACK、立即關閉、貼圖與重啟、主子內容同步及保存失敗／衝突草稿保護已實測。9項相關單元測試及native-backlinks/native-groups歷史流程通過；沒有重跑完整套件。測試類型、來源hash與Ctrl+B／實體IME等未驗收項目完整列於 [獨立視窗驗收](STANDALONE_WINDOW_ACCEPTANCE.md)。
+
+使用者補充的白板分頁入口呼叫另一個API，前述驗收漏掉此入口。已真實重現並補接；白板新窗口的操作／保存／衝突、卡片窗口回歸、18項原shell流程與17項相關單元測試見 [白板分頁開窗驗收](BOARD_WINDOW_ACCEPTANCE.md)。

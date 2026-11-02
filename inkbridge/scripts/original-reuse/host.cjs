@@ -26,7 +26,7 @@ app.whenReady().then(async()=>{
     if(pathname==='/standalone'){
       response.setHeader('Content-Type','text/html; charset=utf-8');response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");response.end(fs.readFileSync(path.join(own,'standalone-card.html'),'utf8'));return;
     }
-    if(pathname==='/'){
+    if(pathname==='/'||pathname==='/board-window'){
       response.setHeader('Content-Type','text/html; charset=utf-8');
       response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");
       const originalScripts='<script src="/runtime.js"></script><script src="/register-original.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_buildManifest.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_ssgManifest.js"></script>';
@@ -63,6 +63,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/persistence-coordinator.mjs')file=path.resolve(own,'../../src/core/persistence-coordinator.mjs');
     else if(pathname==='/inkbridge-core/rich-document.mjs')file=path.resolve(own,'../../src/core/rich-document.mjs');
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
+    else if(pathname==='/inkbridge-core/workspace-window-sync.mjs')file=path.resolve(own,'../../src/core/workspace-window-sync.mjs');
     else if(pathname==='/inkbridge-core/note-version.mjs')file=path.resolve(own,'../../src/core/note-version.mjs');
     else if(pathname==='/inkbridge-core/original-sections.mjs')file=path.resolve(own,'../../src/core/original-sections.mjs');
     else if(pathname==='/inkbridge-core/original-note-writes.mjs')file=path.resolve(own,'../../src/core/original-note-writes.mjs');
@@ -94,10 +95,10 @@ app.whenReady().then(async()=>{
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   const readable=event=>allowed(event)||!!standalone.child(event);
   ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
-  ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!allowed(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
+  ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!readable(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
   ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
   ipcMain.handle('inkbridge:load',event=>{if(!readable(event))throw Error('Unexpected sender');return database.load();});
-  ipcMain.handle('inkbridge:history',(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');return database.history(request);});
+  ipcMain.handle('inkbridge:history',(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return database.history(request);});
   ipcMain.handle('inkbridge:commit',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');try{return {ok:true,ack:await database.commit(request)};}catch(error){return {ok:false,error:{message:error.message,code:error.code}};}});
   ipcMain.handle('inkbridge:savePastedImageBuffers',async(event,{items})=>{
     if(!readable(event))throw Error('Unexpected sender');

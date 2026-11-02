@@ -13,13 +13,13 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
     ipcMain.on('inkbridge:bridge-result', (event, value) => { const item = pending.get(value?.id); if (!item || item.sender !== event.sender.id)
         return; clearTimeout(item.timer); pending.delete(value.id); value.ok ? item.resolve(value.result) : item.reject(Object.assign(Error(value.error?.message || 'Editor operation failed'), { code: value.error?.code })); });
     async function open(payload) {
-        const id = payload?.cardId;
+        const boardId=payload?.whiteboardId,workspace=!!boardId,id=boardId||payload?.cardId;
         if (typeof id !== 'string' || !id)
             throw Error('A note card ID is required');
-        const graph = await load(), content = graph.contents.find(row => row.id === id && row.kind === 'text');
+        const graph = await load(), content = workspace?graph.boards.find(row=>row.id===id&&!row.attributes?.isTrashed):graph.contents.find(row => row.id === id && row.kind === 'text');
         if (!content || graph.cardMetadata?.some(row => row.id === id && row.isTrashed))
             throw Error('Note is missing or in trash');
-        const old = windows.get(id);
+        const key=(workspace?'Whiteboard:':'note-card:')+id,old = windows.get(key);
         if (old && !old.window.isDestroyed()) {
             if (old.window.isMinimized())
                 old.window.restore();
@@ -27,10 +27,10 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
             old.window.focus();
             return { success: true, windowId: old.window.id };
         }
-        const win = new BrowserWindow({ width: 960, height: 760, minWidth: 560, minHeight: 420, show: false, autoHideMenuBar: true, title: (content.title || '筆記') + ' — InkBridge', backgroundColor: '#ffffff', webPreferences: { preload, sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false } });
+        const win = new BrowserWindow({ width: 960, height: 760, minWidth: 560, minHeight: 420, show: false, autoHideMenuBar: true, title: (content.title || '筆記') + ' — InkBridge', backgroundColor: '#ffffff', ...(workspace?{titleBarStyle:'hidden',titleBarOverlay:{color:'#eeeef0',symbolColor:'#3f3f46',height:36}}:{}),webPreferences: { preload, sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false } });
         const webContentsId = win.webContents.id;
-        const row = { window: win, url: origin + '/standalone?cardId=' + encodeURIComponent(id), cardId: id, ready: false, approved: false, closing: null };
-        windows.set(id, row);
+        const row = { window: win, url: origin + (workspace?'/board-window?whiteboardId=':'/standalone?cardId=') + encodeURIComponent(id), cardId: workspace?null:id, kind:workspace?'workspace':'note', ready: false, approved: false, closing: null };
+        windows.set(key, row);
         win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
         win.webContents.on('will-navigate', (event, url) => { if (url !== row.url)
             event.preventDefault(); });
@@ -50,8 +50,8 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
         finally {
             row.closing = null;
         } })(); });
-        win.on('closed', () => { if (windows.get(id) === row)
-            windows.delete(id); for (const [key, item] of pending)
+        win.on('closed', () => { if (windows.get(key) === row)
+            windows.delete(key); for (const [key, item] of pending)
             if (item.sender === webContentsId) {
                 clearTimeout(item.timer);
                 pending.delete(key);
@@ -62,6 +62,7 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
     }
     ipcMain.handle('inkbridge:open-note-window', (event, payload) => { if (!main(event) && !child(event))
         throw Error('Unexpected sender'); return open(payload); });
+    ipcMain.handle('inkbridge:open-standalone-window',(event,payload)=>{if(!main(event)&&!child(event))throw Error('Unexpected sender');const route=new URL(payload?.route,origin+'/');if(route.origin!==origin)throw Error('External standalone route is not allowed');if(/\/flow$/.test(route.pathname))return open({whiteboardId:route.searchParams.get('whiteboardId')});if(/\/note-detail$/.test(route.pathname))return open({cardId:route.searchParams.get('id')});throw Error('此分頁類型尚未接入獨立視窗：'+route.pathname);});
     ipcMain.handle('inkbridge:note-call', async (event, { method, payload } = {}) => {
         const row = child(event);
         if (!row)
@@ -83,8 +84,9 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
                 }
                 return { ok: true, result: { file } };
             }
-            if (!['loadNote', 'commitNote', 'service', 'navigate'].includes(method))
+            if (!['loadNote', 'commitNote', 'service', 'navigate', 'workspaceCommit'].includes(method))
                 throw Error('Unsupported note bridge operation');
+            if(method==='workspaceCommit'&&row.kind!=='workspace')throw Error('Workspace writes require a registered board window');
             const result = await request(getMain(), { method, cardId: row.cardId, payload });
             if (method === 'navigate' || method === 'service' && payload?.name === 'openCardInMainModal') {
                 getMain().show();

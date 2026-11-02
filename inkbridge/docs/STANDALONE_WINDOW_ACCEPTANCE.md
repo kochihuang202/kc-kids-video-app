@@ -1,5 +1,7 @@
 # 新窗口打開：實作與驗收
 
+後續修正：本文件原驗收只涵蓋卡片入口，不能代表白板分頁入口。使用者回報後已重現並補接原23733的 `openStandaloneWindow`；指定白板的真實窗口、編輯及保存證據見 [白板分頁開窗驗收](BOARD_WINDOW_ACCEPTANCE.md)。
+
 2026-11-02；基線 `fe67b00`，分支 `codex/inkbridge-editor-rebuild`。本批只整合獨立 Windows 文字卡片編輯視窗；不整包合併 Gemini，不修改正式 FlexNote、正式資料庫或 Gemini 工作樹。
 
 ## 來源與採用範圍

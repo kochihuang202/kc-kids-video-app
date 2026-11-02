@@ -1,6 +1,7 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('inkbridge',{
   info:()=>ipcRenderer.invoke('inkbridge:info'),load:()=>ipcRenderer.invoke('inkbridge:load'),commit:request=>ipcRenderer.invoke('inkbridge:commit',request),
+  openStandaloneWindow:payload=>ipcRenderer.invoke('inkbridge:open-standalone-window',payload),
   openNoteWindow:payload=>ipcRenderer.invoke('inkbridge:open-note-window',payload),
   noteCall:request=>ipcRenderer.invoke('inkbridge:note-call',request),
   workspaceCommitted:()=>ipcRenderer.send('inkbridge:workspace-committed'),
