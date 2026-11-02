@@ -1,6 +1,7 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('inkbridge',{
   info:()=>ipcRenderer.invoke('inkbridge:info'),load:()=>ipcRenderer.invoke('inkbridge:load'),commit:request=>ipcRenderer.invoke('inkbridge:commit',request),
+  openAttachment:id=>ipcRenderer.invoke('inkbridge:open-attachment',id),
   exportArtifact:request=>ipcRenderer.invoke('inkbridge:export-artifact',request),
   history:request=>ipcRenderer.invoke('inkbridge:history',request),
   writeClipboardTextAndHtml:request=>ipcRenderer.invoke('inkbridge:writeClipboardTextAndHtml',request),

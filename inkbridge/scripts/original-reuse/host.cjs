@@ -1,5 +1,5 @@
 // Isolated host for original modules; never starts the original Electron main.
-const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol,nativeImage,clipboard,ClipboardItem}=require('electron');
+const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol,nativeImage,clipboard,ClipboardItem,shell}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const crypto=require('node:crypto');
 const {createDatabaseClient}=require('../../src/main/database-client.cjs');
@@ -87,6 +87,7 @@ app.whenReady().then(async()=>{
   const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://');if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
+  ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!allowed(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!allowed(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
   ipcMain.handle('inkbridge:info',event=>{if(!allowed(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
   ipcMain.handle('inkbridge:load',event=>{if(!allowed(event))throw Error('Unexpected sender');return database.load();});

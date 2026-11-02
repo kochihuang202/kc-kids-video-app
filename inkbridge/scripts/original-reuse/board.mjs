@@ -1,4 +1,4 @@
-import {createOriginalSections,projectGroupedNode} from '/inkbridge-core/original-sections.mjs';
+import {createOriginalSections,projectGroupedNode,sectionWorldPosition} from '/inkbridge-core/original-sections.mjs';
 // InkBridge SQLite/UI boundary only. Canvas, gestures, cache, flow overlay and
 // editing behavior come from the complete original components and their store.
 import {PersistenceCoordinator} from '/inkbridge-core/persistence-coordinator.mjs';
@@ -38,6 +38,11 @@ async function boot(){
     const previous=contents.get(content.id);if(previous&&previous.title===next.title&&previous.body===next.body&&JSON.stringify(previous.document)===JSON.stringify(document))return;
     contents.set(next.id,next);coordinator.stage({type:'putContent',data:JSON.parse(JSON.stringify(next))});
   }
+  function persistGeometry(node){
+    const item=instances.get(node.id);if(!item)return;
+    const parent=sectionWorldPosition(node.parentId,sections.sections),bounds=engine.getNodeBounds(node,graphContext()),next={...item,x:node.position.x-parent.x,y:node.position.y-parent.y,width:node.width||bounds.width,height:bounds.height};
+    if(JSON.stringify(next)===JSON.stringify(item))return;instances.set(next.id,next);coordinator.stage({type:'putInstance',data:next});
+  }
   function acceptDocument(nodeId,document,body){
     const item=instances.get(nodeId);if(!item)return;const editor=editors.get(nodeId);if(editor){readLiveEditor(editor,item.contentId);return;}acceptContentDocument(item.contentId,document,body);
   }
@@ -58,7 +63,7 @@ async function boot(){
     }
     for(const node of originalStore.getState().nodes)if(node.data.objectId===content.id)persistGeometry(node);
   }
-  const coordinator=new PersistenceCoordinator({revision:graph.revision,commit:async request=>{const result=await window.inkbridge.commit(request);if(!result.ok)throw Error(result.error.message);state.lastAck=result.ack;return result.ack;},
+  const coordinator=new PersistenceCoordinator({revision:graph.revision,commit:async request=>{const result=await window.inkbridge.commit(request);if(!result.ok)throw Error(result.error.message);state.lastAck=result.ack;if(result.ack.changed)window.dispatchEvent(new Event('inkbridge:references-committed'));return result.ack;},
     beforeFlush:async()=>{
       for(const [editor,contentId]of [...modalEditors]){if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));readLiveEditor(editor,contentId);}
       for(const [nodeId,editor]of [...editors]){
@@ -90,6 +95,7 @@ async function boot(){
   const pageProps=await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response=>response.json());window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/board',query:{},props:pageProps,isFallback:false};
   const RouterContext=r(29242).RouterContext,pageLoader=new(r(43867).default)(window.__NEXT_DATA__.buildId,'');
   const router=r(51648).createRouter('/flow',{whiteboardId:boardId},'/zh-TW/flow?whiteboardId='+encodeURIComponent(boardId),{initialProps:pageProps,pageLoader,App:r(64744).default,Component:Canvas,wrapApp:component=>component,subscription:()=>{throw Error('Navigation has not been connected to the InkBridge shell');},isFallback:false,locale:'zh-TW',locales:['zh-TW','zh','en'],defaultLocale:'zh-TW',isPreview:false});
+  window.router=router;Object.defineProperty(globalThis,'__inkbridgeRoutePath',{configurable:true,get:()=>router.pathname});
   function navigate(operation){const task=navigationTail.catch(()=>{}).then(operation);navigationTail=task;return task;}
   function updateBoardTitle(){const title=boards.get(boardId)?.title||'';$('.breadcrumb strong').textContent=title;$('.board-heading h2').firstChild.textContent=title;const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=boardId;}
   function switchBoard(id){return navigate(async()=>{
@@ -171,6 +177,20 @@ async function boot(){
           fitView:state.controls.fitView,fitBounds:state.controls.fitBounds,
           pushUndoSnapshot:flowContextValue.pushUndoSnapshot})}),menu.renderMenu());
   }
+  // Native48626 consumes23407.fitviewObjectParam after routing to a board.
+  // Keep the original focus/selection contract against the owned Canvas store.
+  function NativeReferenceFocus({home,nodes}){
+    const request=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.fitviewObjectParam);
+    React.useEffect(()=>{
+      if(home||!request?.id)return;
+      const requestedBoard=request.globalModalParams?.objectId;if(boards.has(requestedBoard)&&requestedBoard!==boardId)return;
+      const target=nodes.find(node=>node.id===request.id||node.data?.objectId===request.id);
+      if(!target)return;
+      originalStore.getState().setSelectedNodeIds(new Set([target.id]));
+      state.controls.fitView({nodes:[{id:target.id}],duration:400,maxZoom:1});
+      redux.dispatch(r(23407)._z({id:''}));
+    },[home,nodes,request]);return null;
+  }
   function App(){
     const onlyTitle=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.onlyDisplayCardTitle),smallTextSize=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.textSizeAtSmallZoom);
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes),sceneConnections=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().connections),mode=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.controlMode);state.setMode=value=>redux.dispatch(r(23407).Uw(value));state.controls=r(23).wf();
@@ -237,7 +257,7 @@ async function boot(){
           onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
           onDoubleClick:(_event,point)=>addCard('新卡片','',point),
           onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;window.inkbridge.ready();}}
-        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod)))))));
+        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod),React.createElement(NativeReferenceFocus,{home,nodes})))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});

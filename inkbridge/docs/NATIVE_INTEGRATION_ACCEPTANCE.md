@@ -4,6 +4,8 @@
 
 後續狀態：共用浮層閃動已於61fff45修正；Gemini b5fd5bc的進階功能已另行覆核，單卡Markdown／Word匯出及真實圖片尺寸投影已選擇性接入，見 [進階交付處置](GEMINI_ADVANCED_DISPOSITION.md)。本文件其餘內容保留該批驗收邊界，不表示後續項目永遠未完成。
 
+雙鏈後續完整操作驗收（2026-11-02）見 [BACKLINKS_INTEGRATION_ACCEPTANCE.md](BACKLINKS_INTEGRATION_ACCEPTANCE.md)：補同板／跨板定位、來源往返、區塊與附件引用；前述舊測試只涵蓋建立／查詢／預覽，不能當完整跳轉驗收。
+
 ## 本批結果
 
 | 項目 | 原版來源與整合結果 | 實測證據 |

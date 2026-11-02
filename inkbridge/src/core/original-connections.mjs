@@ -21,10 +21,12 @@ export function cardLinks(graph, cardId) {
             groups.get(board.id)[side].push({ whiteboardId: board.id, whiteboardName: board.title, targetObjectId: endpoint, targetObjectType: type, targetObject: object });
         }
     }
+    // Original getCardLinks also exposes membership in a containing section.
+    for(const item of placements){const section=graph.sections?.find(row=>row.id===item.attributes?.parentId),board=section&&graph.boards.find(row=>row.id===item.boardId&&!row.attributes?.isTrashed);if(!section||!board)continue;if(!groups.has(board.id))groups.set(board.id,{whiteboardId:board.id,whiteboardName:board.title,sourceList:[],targetList:[],groupList:[]});const list=groups.get(board.id).groupList;if(!list.some(row=>row.id===section.id))list.push({id:section.id,groupName:section.title||'',whiteboardId:board.id});}
     const scan = (node, out) => { if (!node || typeof node !== 'object')
         return; if ((node.type === 'mention' || node.type === 'embed-card') && node.objectId === cardId)
         out.push(node); for (const child of node.children || [])
-        scan(child, out); };
+        scan(child, out); const caption=node.caption;if(caption&&typeof caption==='object')scan(caption.editorState?.root||caption.root,out); };
     const linksInNoteCards = [];
     for (const row of graph.contents.filter(row => row.kind === 'text')) {
         const note = noteRecord(graph, row);
@@ -35,8 +37,9 @@ export function cardLinks(graph, cardId) {
         if (links.length)
             linksInNoteCards.push({ noteCard: note, links });
     }
-    const selfCard = content ? record(content) : null;
-    return { success: true, whiteboardLinks: [...groups.values()], linksInNoteCards, linksInDailyNotes: [], linksInMindmaps: [], linksInPdfHighlights: [], linksInVideoHighlights: [], linksInWebsiteCards: [], linksInNoteHighlights: [], linksInRelations: [], mindmapIdList: [], appearInMindmaps: [], selfCard, fileRecord: graph.files?.find(file => file.id === selfCard?.fileId) || null };
+    const section=graph.sections?.find(row=>row.id===cardId),board=graph.boards.find(row=>row.id===cardId),file=graph.files?.find(row=>row.id===cardId);
+    const selfCard = content ? record(content) : section ? {...section,type:'NodeGroup'} : board ? {...board.attributes,id:board.id,name:board.title,type:'Whiteboard'} : file ? {...file,type:'File'} : null;
+    return { success: true, whiteboardLinks: [...groups.values()], linksInNoteCards, linksInDailyNotes: [], linksInMindmaps: [], linksInPdfHighlights: [], linksInVideoHighlights: [], linksInWebsiteCards: [], linksInNoteHighlights: [], linksInRelations: [], mindmapIdList: [], appearInMindmaps: [], selfCard, fileRecord: file || graph.files?.find(file => file.id === selfCard?.fileId) || null };
 }
 export function createOriginalConnections({ r, navigate, coordinator, load, store, catalogOperation, getBoardId }) {
     const rows = new Map(), names = new Set(['addConnection', 'updateConnection', 'deleteConnection', 'getConnectionsByWhiteboardId', 'getCardLinks']);

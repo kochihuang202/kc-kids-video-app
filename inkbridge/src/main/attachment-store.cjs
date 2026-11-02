@@ -23,6 +23,7 @@ function createAttachmentStore(directory,decodeImage){
   return {fileId,fileName:fileRecord.name,filePath:target,type:ext,metadata,remotePath:null,fileRecord};
  }
  function readUrl(value){const url=new URL(value);if(url.protocol!=='flexnote:'||url.hostname!=='file'||url.search||url.hash)throw Error('Invalid attachment URL');const match=/^([a-f0-9]{64})(?:\.(png|jpg|gif|webp|bmp|pdf))?$/.exec(decodeURIComponent(url.pathname.slice(1)));if(!match)throw Error('Invalid attachment ID');const id=match[1],candidates=fs.readdirSync(directory).filter(name=>new RegExp(`^${id}\\.(png|jpg|gif|webp|bmp|pdf)$`).test(name));if(candidates.length!==1||match[2]&&candidates[0]!==`${id}.${match[2]}`)throw Error('Missing attachment');const file=path.join(directory,candidates[0]),bytes=fs.readFileSync(file);if(digest(bytes)!==id)throw Error('Attachment integrity failure');return {bytes,ext:path.extname(file)};}
- return {prepare,readUrl};
+ function resolvePath(id){if(typeof id!=='string'||!/^[a-f0-9]{64}$/.test(id))throw Error('Invalid attachment ID');const {ext}=readUrl('flexnote://file/'+id),file=path.join(directory,id+ext),real=fs.realpathSync(file);if(path.dirname(real)!==fs.realpathSync(directory))throw Error('Attachment path escapes workspace');return real;}
+ return {prepare,readUrl,resolvePath};
 }
 module.exports={createAttachmentStore};
