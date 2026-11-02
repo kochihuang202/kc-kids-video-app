@@ -130,7 +130,7 @@ app.whenReady().then(async()=>{
   ipcMain.handle('inkbridge:operations',event=>{if(!readable(event))throw Error('Unexpected sender');return [...operations.values()];});
   const updater=require('../../src/main/program-updates.cjs').createProgramUpdates({installRoot:path.dirname(project),localDirectory:data,getExchange:()=>storageSettings.read().exchangeDirectory,portable,notify,queue,
     prepareClose:async()=>{try{if(rendererReady)await standalone.prepareAll();await createSnapshot('before-program-update',true);}catch(error){if(rendererReady)await standalone.resumeAll();throw error;}},
-    exit:async()=>{closing=true;await database.close();approvedClose=true;standalone.destroyAll();app.exit(0);}});
+    resume:()=>standalone.resumeAll(),exit:async()=>{closing=true;await database.close();approvedClose=true;standalone.destroyAll();app.exit(0);}});
   ipcMain.handle('inkbridge:program-update',(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return updater.call(request);});
   ipcMain.handle('inkbridge:storage-settings',async(event,request)=>{
     if(!readable(event))throw Error('Unexpected sender');

@@ -44,7 +44,13 @@ Ctrl+S、保存、每 10 分鐘、正常關閉與切到背景會走同一保存�
 
 收藏測試明確新增 fixture 卡片，不再依賴啟動自動插入示範卡片。舊 check-startup-snapshots/check-storage-settings 的每次手選/關閉程序規格由本次使用者指令取代，無感流程由新增測試維護；不把舊行為失敗偽稱回歸通過。
 
-尚需完成發布驗收：實際可攜版由畫面按更新、重啟與 health ACK；最後 ZIP/簽章檔/說明複製至 OneDrive 後的雜湊核對。
+實際可攜版更新驗收已通過：隔離可攜 Electron 由畫面按「更新並重新啟動」，108,221 bytes／3 個變更檔案的簽章增量完成替換、新程序 health ACK，最新未按保存的中文保留，設定仍在，能正常關閉新視窗。證據：`release/program-update-acceptance.json`，本機 fixture `TEMP/inkbridge-update-acceptance-tnOb7H`。完整交付包另外執行 BAT／解壓／改程式目錄的最終驗收，結果保存在 `release/portable-test-result.json`；OneDrive 複製雜湊在發布紀錄中另列，不由本段推定。
+
+補充安全測試：check-seamless-sync 通過合成 Lexical 組字狀態等待、實際 main IPC handler 拒絕過期 epoch；不是實體中文鍵盤輸入法認證。program-updates 通過未到齊 ZIP、錯誤程式基底、重複點擊共用同一操作，以及 Windows 獨占檔案鎖定和失敗啟動的回復。
+
+實際交接中發現直接子程序會隨測試啟動器的 Windows job tree 被終止，因此改由 Windows WMI 程序代理啟動隱藏外部工具，等 helper-started ACK 才退出原程式；政策禁止代理時保留原程式並回報，不假稱成功。手動診斷曾有一次未傳測試 LOCALAPPDATA，啟動到預設 InkBridge AppData；已精確停止該測試程序，確認未設定交換區、未載入共用筆記，未刪除該目錄。現在 plan 明確傳遞 AppData，實際端到端測試亦驗證隔離位置。此事件不列為成功驗收。
+
+FlexNote 原版對照見 [FLEXNOTE_UPDATER_EVIDENCE.md](FLEXNOTE_UPDATER_EVIDENCE.md)：目前安裝 1.1.66 使用 electron-updater 6.6.2／NSIS／CDN，與使用者指定的 OneDrive 逐檔可攜 ZIP 有格式差異。沿用已確認生命週期，不接原版 CDN，也不把安裝器當成可攜覆蓋器。
 
 尚未宣稱：兩台實體電腦的實際網路傳輸、斷電硬體故障、大型工作區效能與所有原版功能全回歸。本次不刪除正式資料，也未自動替正式工作區做配對。
 

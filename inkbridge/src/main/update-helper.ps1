@@ -1,5 +1,16 @@
-param([Parameter(Mandatory=$true)][string]$PlanFile,[ValidateSet('Stage','Apply','Recover')][string]$Mode='Stage')
+param([Parameter(Mandatory=$true)][string]$PlanFile,[ValidateSet('Stage','Dispatch','Apply','Recover')][string]$Mode='Stage')
 $ErrorActionPreference='Stop'
+if($Mode -eq 'Dispatch'){
+ # The Windows process broker places the helper outside a launcher's job tree.
+ # Direct child creation can be terminated together with Electron by a launcher.
+ if($PSCommandPath.Contains('"') -or $PlanFile.Contains('"')){throw 'Invalid helper path'}
+ $command='"'+$PSHOME+'\powershell.exe" -NoProfile -NonInteractive -File "'+$PSCommandPath+'" -PlanFile "'+$PlanFile+'" -Mode Apply'
+ $startup=([wmiclass]'Win32_ProcessStartup').CreateInstance();$startup.ShowWindow=0
+ $created=([wmiclass]'Win32_Process').Create($command,$null,$startup)
+ if($created.ReturnValue -ne 0){throw ('Windows update broker refused launch: '+$created.ReturnValue)}
+ exit 0
+}
+trap {try{[IO.File]::WriteAllText((Join-Path (Split-Path -Parent $PlanFile) 'helper-error.log'),($_|Out-String))}catch{};exit 1}
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $plan=Get-Content -LiteralPath $PlanFile -Raw -Encoding UTF8 | ConvertFrom-Json
 $job=[IO.Path]::GetFullPath($plan.jobDirectory);$root=[IO.Path]::GetFullPath($plan.installRoot).TrimEnd('\')
@@ -34,6 +45,7 @@ function Rollback {
  };WriteJson $journal @{phase='rolled-back';applied=@()}
 }
 function Launch {
+ if($plan.localAppData){$env:LOCALAPPDATA=$plan.localAppData}
  $env:INKBRIDGE_UPDATE_IN_PROGRESS=$job
  $env:INKBRIDGE_UPDATE_HEALTH_FILE=$plan.healthFile
  $env:INKBRIDGE_EXPECTED_BUILD=$plan.targetBuildId
@@ -55,6 +67,7 @@ if($Mode -eq 'Stage'){
  WriteJson (Join-Path $job 'stage-ready.json') @{ready=$true};exit 0
 }
 if(-not(Test-Path -LiteralPath (Join-Path $job 'stage-ready.json'))){throw 'Package has not been staged'}
+WriteJson (Join-Path $job 'helper-started.json') @{pid=$PID;waitingFor=$plan.parentPid}
 if($plan.parentPid -gt 0){$parentProcess=Get-Process -Id $plan.parentPid -ErrorAction SilentlyContinue;if($parentProcess){if(-not $parentProcess.WaitForExit(60000)){throw 'InkBridge did not exit'}}}
 $applied=New-Object Collections.ArrayList
 try{
@@ -67,5 +80,5 @@ try{
  $started=Launch;$healthy=$false;$timeout=90;if($plan.healthTimeoutSeconds -and $plan.healthTimeoutSeconds -ge 1 -and $plan.healthTimeoutSeconds -le 90){$timeout=$plan.healthTimeoutSeconds};$deadline=[DateTime]::UtcNow.AddSeconds($timeout)
  while([DateTime]::UtcNow -lt $deadline){if(Test-Path -LiteralPath $plan.healthFile){try{$health=Get-Content -LiteralPath $plan.healthFile -Raw -Encoding UTF8|ConvertFrom-Json;if($health.ready -and $health.buildId -eq $plan.targetBuildId){$healthy=$true;break}}catch{}};Start-Sleep -Milliseconds 250}
  if(-not $healthy){if(-not $started.HasExited){& "$env:SystemRoot\System32\taskkill.exe" /PID $started.Id /T /F | Out-Null};throw 'Updated InkBridge did not become healthy'}
- WriteJson $journal @{phase='healthy';applied=@($applied)};WriteJson (Join-Path $job 'result.json') @{success=$true;targetBuildId=$plan.targetBuildId}
-}catch{$failure=$_.Exception.Message;Rollback;WriteJson (Join-Path $job 'result.json') @{success=$false;message=$failure};$env:INKBRIDGE_UPDATE_HEALTH_FILE='';Launch | Out-Null;exit 1}
+ WriteJson $journal @{phase='healthy';applied=@($applied)};WriteJson (Join-Path $job 'result.json') @{success=$true;targetBuildId=$plan.targetBuildId;completedAt=[DateTime]::UtcNow.ToString('o')}
+}catch{$failure=$_.Exception.Message;Rollback;WriteJson (Join-Path $job 'result.json') @{success=$false;message=$failure;completedAt=[DateTime]::UtcNow.ToString('o')};$env:INKBRIDGE_UPDATE_HEALTH_FILE='';Launch | Out-Null;exit 1}
