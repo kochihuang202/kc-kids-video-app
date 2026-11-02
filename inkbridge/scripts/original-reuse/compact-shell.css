@@ -3,9 +3,10 @@
 body{margin:0;overflow:hidden}
 .topbar{height:36px;display:flex;align-items:flex-end;padding:0 146px 0 0;gap:0;background:#eeeef0;border:0;-webkit-app-region:drag}
 .topbar{--tab-active-background:#fff}
-#original-navigation-controls{display:flex;align-items:center;height:36px;width:var(--inkbridge-left-width,260px);padding-left:8px;flex-shrink:0;-webkit-app-region:no-drag}
+#original-navigation-controls{display:flex;align-items:center;height:36px;width:var(--inkbridge-left-width,260px);padding-left:8px;flex-shrink:0}
+#original-navigation-controls>div{-webkit-app-region:no-drag}
 .sidebar-closed #original-navigation-controls{width:144px}
-.topbar button,.topbar [data-tour],#original-history-tabs{-webkit-app-region:no-drag}
+.topbar button,.topbar [data-tour]{-webkit-app-region:no-drag}
 .context-menu-root,.context-menu-root *,.selection-toolbar-container,.selection-toolbar-container *,[data-slot="popover-content"],[data-slot="popover-content"] *{-webkit-app-region:no-drag}
 #original-history-tabs{height:36px;min-width:0;overflow:hidden}
 #original-history-tabs>div{height:36px;display:flex;align-items:flex-end}
