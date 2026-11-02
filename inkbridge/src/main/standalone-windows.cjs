@@ -1,17 +1,17 @@
 // Owned window/RPC boundary. Native32573 opens one window per note; the note UI
 // and Lexical remain native75000/73866. No original Electron main is executed.
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
-function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preload, getMain, load }) {
+function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preload, getMain, load,assertEpoch=()=>{},getEpoch=()=>0 }) {
     const windows = new Map(), pending = new Map();
     const child = event => { const row = [...windows.values()].find(row => row.window.webContents === event.sender); return row && event.senderFrame?.url === row.url ? row : null; };
     const main = event => event.sender === getMain()?.webContents && event.senderFrame?.url.startsWith(origin + '/');
     function request(window, payload) {
         if (!window || window.isDestroyed())
             return Promise.reject(Error('Editor window is closed'));
-        return new Promise((resolve, reject) => { const id = crypto.randomUUID(), timer = setTimeout(() => { pending.delete(id); reject(Error('Editor did not acknowledge the operation; window retained')); }, 30000); pending.set(id, { sender: window.webContents.id, resolve, reject, timer }); window.webContents.send('inkbridge:bridge-request', { id, payload }); });
+        return new Promise((resolve, reject) => { const id = crypto.randomUUID(), timer = setTimeout(() => { pending.delete(id); reject(Error('Editor did not acknowledge the operation; window retained')); }, 30000); pending.set(id, { sender: window.webContents.id, resolve, reject, timer }); window.webContents.send('inkbridge:bridge-request', { id, payload,epoch:getEpoch() }); });
     }
     ipcMain.on('inkbridge:bridge-result', (event, value) => { const item = pending.get(value?.id); if (!item || item.sender !== event.sender.id)
-        return; clearTimeout(item.timer); pending.delete(value.id); value.ok ? item.resolve(value.result) : item.reject(Object.assign(Error(value.error?.message || 'Editor operation failed'), { code: value.error?.code })); });
+        return;try{assertEpoch(value.epoch);}catch{return;} clearTimeout(item.timer); pending.delete(value.id); value.ok ? item.resolve(value.result) : item.reject(Object.assign(Error(value.error?.message || 'Editor operation failed'), { code: value.error?.code })); });
     async function open(payload) {
         const boardId=payload?.whiteboardId,workspace=!!boardId,id=boardId||payload?.cardId;
         if (typeof id !== 'string' || !id)
@@ -31,6 +31,7 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
         const webContentsId = win.webContents.id;
         const row = { window: win, url: origin + (workspace?'/board-window?whiteboardId=':'/standalone?cardId=') + encodeURIComponent(id), cardId: workspace?null:id, kind:workspace?'workspace':'note', ready: false, approved: false, closing: null };
         windows.set(key, row);
+        win.webContents.on('did-start-navigation',(_e,_url,_inPlace,isMain)=>{if(isMain)row.ready=false;});
         win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
         win.webContents.on('will-navigate', (event, url) => { if (url !== row.url)
             event.preventDefault(); });
@@ -86,6 +87,7 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
             }
             if (!['loadNote', 'commitNote', 'service', 'navigate', 'workspaceCommit'].includes(method))
                 throw Error('Unsupported note bridge operation');
+            if(method==='loadNote'){const graph=await load(),content=graph.contents.find(c=>c.id===row.cardId&&!graph.cardMetadata?.some(m=>m.id===c.id&&m.isTrashed));if(!content)throw Object.assign(Error('卡片已移除'),{code:'NOTE_UNAVAILABLE'});return {ok:true,result:{content,workspaceId:graph.workspaceId}};}
             if(method==='workspaceCommit'&&row.kind!=='workspace')throw Error('Workspace writes require a registered board window');
             const result = await request(getMain(), { method, cardId: row.cardId, payload });
             if (method === 'navigate' || method === 'service' && payload?.name === 'openCardInMainModal') {
@@ -130,6 +132,8 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
         }
         await request(getMain(), {method: 'flush', freeze: false});
     }
-    return { child, main, markReady, prepareAll, cancelAll, destroyAll, flushForSettings };
+    const list=()=>[getMain(),...[...windows.values()].map(row=>row.window)].filter(win=>win&&!win.isDestroyed());
+    const resumeAll=async()=>{for(const win of list())await request(win,{method:'resume'});};
+    return { child, main, markReady, prepareAll, cancelAll, destroyAll, flushForSettings,list,resumeAll,allReady:()=>[...windows.values()].every(row=>row.window.isDestroyed()||row.ready) };
 }
 module.exports = { installStandaloneWindows };

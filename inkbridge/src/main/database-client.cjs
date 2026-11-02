@@ -79,6 +79,7 @@ class DatabaseClient {
   }
 
   load() { return this.request('load'); }
+  summary() { return this.request('summary'); }
   commit(request) { return this.request('commit', request); }
   history(request) { return this.request('history', request); }
   snapshot(filename) { return this.request('snapshot', filename); }

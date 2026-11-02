@@ -16,7 +16,7 @@ function inspectDatabase(file){const db=new DatabaseSync(file,{readOnly:true});t
   for(const row of [...db.prepare('SELECT document_json AS value FROM contents WHERE document_json IS NOT NULL').all(),...db.prepare('SELECT value FROM meta').all()]){
     for(const match of row.value.matchAll(/flexnote:\/\/file\/([a-f0-9]{64})/g))if(!registered.has(match[1]))throw Error('內容引用的附件缺少 catalog 記錄，拒絕不完整快照');
   }
-  return {workspaceId:meta('workspaceId'),revision:Number(meta('revision')),files,sqliteVersion:db.prepare('SELECT sqlite_version() AS v').get().v};
+  return {workspaceId:meta('workspaceId'),revision:Number(meta('revision')),files,summary:{boards:db.prepare('SELECT COUNT(*) AS n FROM boards').get().n,cards:db.prepare('SELECT COUNT(*) AS n FROM contents').get().n,name:db.prepare('SELECT title FROM boards ORDER BY id LIMIT 1').get()?.title||'筆記工作區'},sqliteVersion:db.prepare('SELECT sqlite_version() AS v').get().v};
 }finally{db.close();}}
 function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAttachment,appVersion='0.4.0',fault=()=>{}}){
   let pending;

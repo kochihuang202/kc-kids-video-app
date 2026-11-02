@@ -3,6 +3,8 @@
 // coordinator and custom Markdown converter are intentionally not used.
 import { PersistenceCoordinator } from '/inkbridge-core/persistence-coordinator.mjs';
 import { documentIdentity, standaloneServices } from '/inkbridge-core/note-version.mjs';
+import {installOperationUI} from './operation-ui.mjs';
+import {noteDocument} from '/inkbridge-core/rich-document.mjs';
 const r = window.__originalRequire, $ = s => document.querySelector(s);
 const state = window.__inkbridgeStandalone = { ready: false, errors: [], conflict: false };
 const rpc = async (method, payload) => { const response = await window.inkbridge.noteCall({ method, payload }); if (!response.ok)
@@ -11,11 +13,13 @@ function report(error) { state.errors.push({ message: error.message, code: error
 window.addEventListener('error', event => report(event.error || Error(event.message)));
 window.addEventListener('unhandledrejection', event => report(event.reason instanceof Error ? event.reason : Error(String(event.reason))));
 async function boot() {
+    installOperationUI();
     r.p = '/_next/';
     r(64744);
     globalThis.__inkbridgeControlledNoteSaves = true;
     const React = r(27378), ReactDOM = r(31542), redux = r(63268).Z, Provider = r(16125).zt, Theme = r(2726).f, helpers = r(45828), id = new URL(location.href).searchParams.get('cardId');
-    const initial = await rpc('loadNote');
+    let initial;try{initial=await rpc('loadNote');}catch(error){if(error.code!=='NOTE_UNAVAILABLE')throw error;document.body.inert=false;$('#standalone-status').textContent='這張卡片已被移除，不會重新建立。';state.ready=true;window.inkbridge.onBridgeRequest(async()=>({saved:true}));window.inkbridge.ready();return;}
+    initial.content={...initial.content,document:initial.content.document||noteDocument({title:initial.content.title,body:initial.content.body})};
     let content = initial.content, editor, stagedIdentity = documentIdentity(content.document), applying = false, setDocument, refreshing = Promise.resolve(), recoveryPath = '', closeEpoch = 0;
     r(19281).YH.init('inkbridge-local', initial.workspaceId);
     const pageProps = await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response => response.json());
@@ -76,7 +80,7 @@ async function boot() {
             return;
         applying = true;
         try {
-            content = latest.content;
+            content = {...latest.content,document:latest.content.document||noteDocument({title:latest.content.title,body:latest.content.body})};
             editor.setEditorState(editor.parseEditorState(content.document), { tag: 'editor-force-update' });
             editor.update(() => { }, { discrete: true, tag: 'editor-force-update' });
             stagedIdentity = documentIdentity(editor.getEditorState().toJSON());
@@ -131,7 +135,7 @@ async function boot() {
     coordinator.status();
     document.body.inert = false;
     state.ready = true;
-    window.inkbridge.onBridgeRequest(async (request) => { if (request.method !== 'flush')
+    window.inkbridge.onBridgeRequest(async (request) => { if(request.method==='resume'){closeEpoch++;document.body.inert=false;return {resumed:true};}if (request.method !== 'flush')
         throw Error('Unsupported editor lifecycle request'); const epoch = closeEpoch; try {
         await settleComposition();
         if (epoch !== closeEpoch)

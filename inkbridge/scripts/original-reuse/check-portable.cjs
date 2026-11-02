@@ -31,7 +31,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
     const info=await page.evaluate(()=>window.inkbridge.info());assert.equal(info.dataRoot,path.join(local,'InkBridge'));
     await assert.rejects(fs.stat(path.join(directory,'app/private-original-editor/profiles')));
     const editor=page.locator('#board [contenteditable=true]').first();
-    const graph=await page.evaluate(()=>window.inkbridge.load());assert.ok(graph.contents.length,'brand-new app should initialize its own sample workspace');
+    const graph=await page.evaluate(()=>window.inkbridge.load());assert.equal(graph.contents.length,0,'new app must not create demo content before joining a workspace');
     const board=await page.locator('#board').boundingBox();await page.mouse.dblclick(board.x+200,board.y+180);
     await expect(editor).toBeVisible();await editor.click();await page.keyboard.press('Control+a');await page.keyboard.insertText('可攜版沒有 Node 也能保存中文');await page.keyboard.press('Control+s');
     await page.evaluate(()=>window.__inkbridgeIntegrated.flush());

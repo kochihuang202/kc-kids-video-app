@@ -1,5 +1,5 @@
 // Isolated host for original modules; never starts the original Electron main.
-const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol,nativeImage,clipboard,ClipboardItem,shell}=require('electron');
+const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol,nativeImage,clipboard,ClipboardItem,shell,powerMonitor}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const crypto=require('node:crypto');
 const {createDatabaseClient}=require('../../src/main/database-client.cjs');
@@ -15,12 +15,18 @@ for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
 protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
 const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.pdf':'application/pdf','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
-let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer,closing=false;
+let server,window,database,databaseClient,liveSync,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer,closing=false;
+const queue=require('../../src/main/operation-queue.cjs').createOperationQueue();
+const operations=new Map();
+function notify(value){if(value.key!=='startup-retry')operations.set(value.key,value);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:operation',value);}
+const handle=ipcMain.handle.bind(ipcMain);
+ipcMain.handle=(channel,listener)=>handle(channel,(event,payload,epoch)=>{if(liveSync&&channel.startsWith('inkbridge:'))liveSync.assertEpoch(epoch);return listener(event,payload,epoch);});
 app.whenReady().then(async()=>{
   if(!acquired)return;
   const restore=require('../../src/main/workspace-restore.cjs');
   await restore.recoverRestore(data);
-  const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});database=createDatabaseClient({filename});
+  const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});databaseClient=createDatabaseClient({filename});
+  database=Object.fromEntries(['load','summary','commit','history','snapshot','close'].map(name=>[name,(...args)=>databaseClient[name](...args)]));
   const filesDir=path.join(data,'files');fs.mkdirSync(filesDir,{recursive:true});
   const attachments=require('../../src/main/attachment-store.cjs').createAttachmentStore(filesDir,bytes=>nativeImage.createFromBuffer(bytes).getSize());
   const exportsService=require('../../src/main/original-exports.cjs').createOriginalExports({directory:path.join(data,'exports'),load:()=>database.load(),attachments});
@@ -95,20 +101,37 @@ app.whenReady().then(async()=>{
   if(!storedPort)fs.writeFileSync(endpointFile,JSON.stringify({port:server.address().port}),'utf8');
   const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://');if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
-  const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load()});
+  const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load(),assertEpoch:value=>liveSync?.assertEpoch(value),getEpoch:()=>liveSync?.epoch||0});
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   const readable=event=>allowed(event)||!!standalone.child(event);
   const storageSettings=require('../../src/main/storage-settings.cjs').createStorageSettings({filename:path.join(data,'Profile','storage-settings.json'),localDirectory:data,applicationDirectory:project});
   const selectedExchangeDirectories=new Set();
-  const snapshots=require('../../src/main/workspace-snapshots.cjs').createWorkspaceSnapshots({localDirectory:data,database,getExchange:()=>storageSettings.read().exchangeDirectory,resolveAttachment:attachments.resolvePath});
+  const snapshots=require('../../src/main/sync-snapshots.cjs').createSyncSnapshots({localDirectory:data,database,getExchange:()=>storageSettings.read().exchangeDirectory,resolveAttachment:attachments.resolvePath});
   let snapshotTask;
   const createSnapshot=(reason,alreadyFlushed=false)=>{
     if(snapshotTask)return snapshotTask;
-    snapshotTask=(async()=>{if(!storageSettings.read().exchangeDirectory)return {configured:false,created:false};if(!alreadyFlushed)await standalone.flushForSettings();const result=await snapshots.create(reason);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:snapshot-saved',result);return result;})().finally(()=>{snapshotTask=null;});
+    snapshotTask=(async()=>{if(!alreadyFlushed)await standalone.flushForSettings();if(!storageSettings.read().exchangeDirectory){notify({key:'save',state:'success',title:'已保存本機',time:new Date().toISOString()});return {configured:false,created:false};}const result=await snapshots.create(reason);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:snapshot-saved',result);notify({key:'save',state:result.pending?'waiting':'success',title:result.pending?'已保存本機，等待交換資料夾恢復':result.created?'已保存到 OneDrive 本機交換資料夾':'沒有新變更',time:result.createdAt});return result;})().finally(()=>{snapshotTask=null;});
     return snapshotTask;
   };
-  ipcMain.handle('inkbridge:create-snapshot',event=>{if(!readable(event)||closing||applyingSettings)throw Error('目前無法建立快照');return createSnapshot('manual');});
+  ipcMain.handle('inkbridge:create-snapshot',(event,_request,epoch)=>{if(!readable(event)||closing||applyingSettings)throw Error('目前無法建立快照');liveSync.assertEpoch(epoch);return queue.run('save',()=>{liveSync.assertEpoch(epoch);return createSnapshot('manual');}).catch(error=>{notify({key:'save',state:'error',title:'保存未完成',message:error.message});throw error;});});
   let applyingSettings=false;
+  liveSync=require('../../src/main/live-sync.cjs').installLiveSync({app,powerMonitor,localDirectory:data,database,snapshots,getExchange:()=>storageSettings.read().exchangeDirectory,queue,notify,save:createSnapshot,canRun:()=>rendererReady&&!closing&&!applyingSettings&&standalone.allReady(),
+    windows:{list:()=>standalone.list(),pause:()=>standalone.prepareAll(),resume:()=>standalone.resumeAll()},
+    startupStatus:async(rows,current)=>{const h=await snapshots.status();return require('../../src/main/startup-snapshot-status.cjs').startupSnapshotStatus({rows,workspaceId:current.workspaceId,localRevision:current.revision,head:h.baseSnapshotId?{snapshotId:h.baseSnapshotId,revision:h.baseRevision}:null});},
+    swap:async(m,initial,session)=>{
+      const staged=await restore.stageRestore({local:data,exchange:storageSettings.read().exchangeDirectory,workspaceId:m.workspaceId,snapshotId:m.snapshotId,snapshots,sharedAssets:true});
+      await database.close();
+      try{await restore.switchRestore({local:data,staged,snapshots});databaseClient=createDatabaseClient({filename});await database.load();
+        if(!initial){session.advance();session.resetReady();rendererReady=false;await session.wait();}
+      }catch(error){await database.close().catch(()=>{});await restore.rollbackRestore(data,staged);databaseClient=createDatabaseClient({filename});await database.load();if(!initial){session.advance();session.resetReady();await session.wait();}throw error;}
+    }});
+  ipcMain.on('inkbridge:epoch',event=>event.returnValue=liveSync.epoch);
+  ipcMain.handle('inkbridge:sync',(event,request,epoch)=>{if(!readable(event))throw Error('Unexpected sender');liveSync.assertEpoch(epoch);return liveSync.call(request);});
+  ipcMain.handle('inkbridge:operations',event=>{if(!readable(event))throw Error('Unexpected sender');return [...operations.values()];});
+  const updater=require('../../src/main/program-updates.cjs').createProgramUpdates({installRoot:path.dirname(project),localDirectory:data,getExchange:()=>storageSettings.read().exchangeDirectory,portable,notify,queue,
+    prepareClose:async()=>{try{if(rendererReady)await standalone.prepareAll();await createSnapshot('before-program-update',true);}catch(error){if(rendererReady)await standalone.resumeAll();throw error;}},
+    exit:async()=>{closing=true;await database.close();approvedClose=true;standalone.destroyAll();app.exit(0);}});
+  ipcMain.handle('inkbridge:program-update',(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return updater.call(request);});
   ipcMain.handle('inkbridge:storage-settings',async(event,request)=>{
     if(!readable(event))throw Error('Unexpected sender');
     const method=request?.method;
@@ -124,19 +147,7 @@ app.whenReady().then(async()=>{
       if(!selected)throw Error('選定快照尚未完整到達或驗證失敗，請重新掃描');
       const answer=await dialog.showMessageBox(BrowserWindow.fromWebContents(event.sender),{type:'question',buttons:['取消','保存目前資料並載入'],defaultId:0,cancelId:0,title:'載入工作區快照',message:'將保存目前資料並重新啟動 InkBridge',detail:`工作區：${selected.workspaceId}\n版本：v${selected.manifest.revision}\n快照：${selected.snapshotId}\n建立時間：${selected.manifest.createdAt}\n原本工作資料將保留在本機 Restore 備份目錄，其他快照不會刪除。`});
       if(answer.response!==1)return {cancelled:true};
-      applyingSettings=true;let databaseClosed=false;
-      try{
-        if(snapshotTask)await snapshotTask;
-        await standalone.prepareAll();await createSnapshot('before-load',true);
-        const staged=await restore.stageRestore({local:data,exchange,workspaceId:selected.workspaceId,snapshotId:selected.snapshotId,snapshots});
-        closing=true;await database.close();databaseClosed=true;
-        await restore.switchRestore({local:data,staged,snapshots});
-        approvedClose=true;app.relaunch();app.exit(0);
-      }catch(error){
-        if(databaseClosed){dialog.showErrorBox('快照載入未完成',error.message+'\n已保留或恢復原工作資料，請重新啟動 InkBridge。');approvedClose=true;app.relaunch();app.exit(1);}
-        closing=false;window.webContents.send('inkbridge:close-cancelled',{message:'載入已取消：'+error.message});await standalone.cancelAll();throw error;
-      }finally{applyingSettings=false;}
-      return {restarting:true};
+      return liveSync.call({method:'select',workspaceId:selected.workspaceId,snapshotId:selected.snapshotId});
     }
     if(method==='choose'){
       const result=await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender),{title:'選擇 OneDrive 交換資料夾',properties:['openDirectory','createDirectory']});
@@ -154,7 +165,7 @@ app.whenReady().then(async()=>{
     if(method==='check')return storageSettings.check(directory);
     if(applyingSettings||closing||snapshotTask)throw Error('正在保存或關閉，請稍後再試');
     applyingSettings=true;
-    try{await standalone.flushForSettings();if(closing)throw Error('程式正在關閉');return storageSettings.save(directory);}finally{applyingSettings=false;}
+    try{return await queue.run('settings',async()=>{await standalone.flushForSettings();if(closing)throw Error('程式正在關閉');const result=storageSettings.save(directory);liveSync.watch();return result;});}finally{applyingSettings=false;}
   });
   ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!readable(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
@@ -175,17 +186,19 @@ app.whenReady().then(async()=>{
   ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const stat=fs.statSync(source);if(!stat.isFile()||stat.size>64*1024*1024)throw Error('Invalid selected file size');const item=attachments.prepare(fs.readFileSync(source),path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
   ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');return files.map(file=>{if(typeof file.path!=='string'||!path.isAbsolute(file.path)||fs.statSync(file.path).size>64*1024*1024)throw Error('Invalid selected file');return {path:file.path,sha256:crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex')};});});
   ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
-  ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;standalone.markReady(event);});
+  ipcMain.on('inkbridge:renderer-ready',(event,epoch)=>{if(epoch!==liveSync.epoch)return;if(allowed(event)){rendererReady=true;updater.health().catch(()=>{});updater.check().catch(()=>{});}standalone.markReady(event);liveSync.markedReady(event.sender.id);});
   const finishClose=async()=>{if(snapshotTask)await snapshotTask;if(rendererReady){await standalone.prepareAll();await createSnapshot('close',true);}await database.close();standalone.destroyAll();approvedClose=true;window.close();};
   ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok){try{await finishClose();}catch(error){closing=false;window.webContents.send('inkbridge:close-cancelled',{message:error.message});await standalone.cancelAll();dialog.showErrorBox('InkBridge 尚未保存',error.message+'；所有視窗保留。');}}else {closing=false;dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');}});
   Menu.setApplicationMenu(null);
   window=new BrowserWindow({width:1200,height:960,title:'InkBridge 墨橋',...(boardMode?{titleBarStyle:'hidden',titleBarOverlay:{color:'#eeeef0',symbolColor:'#3f3f46',height:36}}:{}),webPreferences:{preload:path.resolve(own,'../../src/main/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
-  window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closing)return;closing=true;if(!rendererReady){finishClose().catch(error=>{closing=false;dialog.showErrorBox('InkBridge 尚未保存',error.message);});return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;closing=false;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
+  window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closing)return;if(queue.active){queue.settle().then(()=>{if(!window.isDestroyed())window.close();});return;}closing=true;if(!rendererReady){finishClose().catch(error=>{closing=false;dialog.showErrorBox('InkBridge 尚未保存',error.message);});return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;closing=false;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
   globalThis.__inkbridgeOriginalProbe={dataRoot:data,origin,blocked,preload:'existing InkBridge limited preload; no original window.ipc',nodeIntegration:false,originalMainExecuted:false};
   await window.loadURL(origin+'/');
-  const stopSnapshotTimer=require('../../src/main/snapshot-scheduler.cjs').startSnapshotScheduler({ready:()=>rendererReady&&!closing&&!applyingSettings,save:()=>createSnapshot('timer'),onError:error=>{if(!window.isDestroyed())window.webContents.send('inkbridge:snapshot-error',{message:error.message});}});
-  window.once('closed',stopSnapshotTimer);
+  const stopSnapshotTimer=require('../../src/main/snapshot-scheduler.cjs').startSnapshotScheduler({ready:()=>rendererReady&&!closing&&!applyingSettings&&!queue.active,save:()=>queue.run('timer-save',()=>createSnapshot('timer')),onError:error=>notify({key:'save',state:'error',title:'自動保存未完成',message:error.message})});
+  let blurTimer;app.on('browser-window-blur',()=>{clearTimeout(blurTimer);blurTimer=setTimeout(()=>{if(!BrowserWindow.getFocusedWindow()&&rendererReady&&!closing&&!queue.active)queue.run('background-save',()=>createSnapshot('background')).catch(error=>notify({key:'save',state:'error',title:'背景保存未完成',message:error.message}));},500);});
+  window.once('closed',()=>{stopSnapshotTimer();clearTimeout(blurTimer);liveSync.dispose();});
   app.on('second-instance',()=>{if(window.isMinimized())window.restore();window.show();window.focus();});
+  app.on('browser-window-focus',()=>{if(rendererReady)updater.check().catch(()=>{});});
 });
 app.on('window-all-closed',()=>app.quit());app.on('before-quit',()=>{if(approvedClose)server?.close();});

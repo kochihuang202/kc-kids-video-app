@@ -16,6 +16,7 @@ if (database) parentPort.on('message', ({ id, method, payload }) => {
   try {
     let result;
     if (method === 'load') result = database.load();
+    else if(method==='summary')result={workspaceId:database.workspaceId,revision:database.revision()};
     else if (method === 'commit') result = database.commit(payload);
     else if (method === 'history') result = database.history(payload);
     else if (method === 'snapshot') {

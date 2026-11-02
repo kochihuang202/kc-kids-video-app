@@ -24,7 +24,7 @@ async function recoverRestore(local){
   }
   await fs.rename(journal,path.join(staging,'restore-journal-'+crypto.randomUUID()+'.json'));
 }
-async function stageRestore({local,exchange,workspaceId,snapshotId,snapshots}){
+async function stageRestore({local,exchange,workspaceId,snapshotId,snapshots,sharedAssets=false}){
   if(!UUID.test(workspaceId)||!UUID.test(snapshotId))throw Error('無效的快照 ID');
   const source=path.join(exchange,'snapshots',workspaceId,snapshotId),manifest=await snapshots.validate(exchange,source);
   if(manifest.workspaceId!==workspaceId)throw Error('工作區 ID 不一致');
@@ -32,15 +32,15 @@ async function stageRestore({local,exchange,workspaceId,snapshotId,snapshots}){
   for(const name of ['Workspace','files','previous'])await fs.mkdir(path.join(staging,name),{recursive:true});
   const databaseFile=path.join(staging,'Workspace','inkbridge.sqlite3');await copyDurable(path.join(source,'database.sqlite3'),databaseFile);
   if(await hashFile(databaseFile)!==manifest.database.sha256)throw Error('還原資料庫複製驗證失敗');inspectDatabase(databaseFile);
-  for(const asset of manifest.assets){const target=path.join(staging,asset.logicalPath);await copyDurable(path.join(exchange,asset.objectPath),target);if(await hashFile(target)!==asset.sha256)throw Error('還原附件複製驗證失敗');}
+  for(const asset of manifest.assets){const target=path.join(sharedAssets?local:staging,asset.logicalPath);if(!await exists(target))await require('./sync-files.cjs').atomic(target,await fs.readFile(path.join(exchange,asset.objectPath)));if(await hashFile(target)!==asset.sha256)throw Error('還原附件複製驗證失敗');}
   const state=path.join(local,'Profile','snapshot-state.json');if(await exists(state))await copyDurable(state,path.join(staging,'previous','snapshot-state.json'));
-  return {id,manifest};
+  return {id,manifest,sharedAssets};
 }
 async function switchRestore({local,staged,snapshots,fault=()=>{}}){
   const staging=path.join(local,'Restore-'+staged.id),journal=path.join(local,'Profile','restore-journal.json');
   await writeAtomic(journal,JSON.stringify({id:staged.id,phase:'switching'}));
   try{
-    for(const name of ['Workspace','files']){
+    for(const name of staged.sharedAssets?['Workspace']:['Workspace','files']){
       const current=path.join(local,name);if(await exists(current))await fs.rename(current,path.join(staging,'previous',name));
       await fault('after-old-'+name);await fs.rename(path.join(staging,name),current);await fault('after-new-'+name);
     }
@@ -49,4 +49,5 @@ async function switchRestore({local,staged,snapshots,fault=()=>{}}){
   }catch(error){await recoverRestore(local);throw error;}
   await recoverRestore(local); // archives committed journal, keeps rollback data
 }
-module.exports={recoverRestore,stageRestore,switchRestore};
+async function rollbackRestore(local,staged){await writeAtomic(path.join(local,'Profile','restore-journal.json'),JSON.stringify({id:staged.id,phase:'switching'}));await recoverRestore(local);}
+module.exports={recoverRestore,stageRestore,switchRestore,rollbackRestore};

@@ -5,9 +5,11 @@ export function createOriginalBookmarks({r,redux,navigate,coordinator,load,catal
  const methods=new Set(['getTabs','getTabGroups','initTabSource','getTabReferencesObjectCards','createTab','updateTab','deleteTab','updateTabGroup']);
  const arrays=data=>{const next={...data};for(const key of ['tabIds','pinnedTabIds','subTabIds'])if(next[key]!==undefined)next[key]=typeof next[key]==='string'?JSON.parse(next[key]):next[key];return next;};
  const put=(kind,data)=>coordinator.stage(catalogOperation(kind,arrays(data)));
- const ready=()=>navigate(async()=>{await coordinator.flush();let graph=await load();if(!(graph.tabGroups||[]).length){put('tab-group',{...r(19281).YH.newTabGroup({name:'Default'}),id:'default',title:'Default',createdBy:'system'});await coordinator.flush();graph=await load();}redux.dispatch(r(49478).ex({currentTabGroupId:graph.tabGroups[0].id}));return graph;});
+ const defaultGroup={...r(19281).YH.newTabGroup({name:'Default'}),id:'default',title:'Default',createdBy:'system'};
+ const ready=()=>navigate(async()=>{await coordinator.flush();let graph=await load();if(!(graph.tabGroups||[]).length)graph={...graph,tabGroups:[defaultGroup]};redux.dispatch(r(49478).ex({currentTabGroupId:graph.tabGroups[0].id}));return graph;});
  const call=(name,payload)=>navigate(async()=>{
-  await coordinator.flush();const graph=await load(),tabs=graph.savedTabs||[],groups=graph.tabGroups||[];
+  await coordinator.flush();const graph=await load(),tabs=graph.savedTabs||[],groups=graph.tabGroups?.length?graph.tabGroups:[defaultGroup];
+  if(!graph.tabGroups?.length&&['createTab','updateTabGroup'].includes(name))put('tab-group',defaultGroup);
   if(name==='getTabs')return {success:true,data:tabs};if(name==='getTabGroups')return {success:true,data:groups};
   // background initTabSource selects saved-link targets, not history tabs.
   // Unsupported card models have no records in this workspace yet.

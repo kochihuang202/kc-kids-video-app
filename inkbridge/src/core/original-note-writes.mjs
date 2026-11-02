@@ -1,9 +1,11 @@
 // SQLite/write-boundary adaptation. All creation/selection/layout UI and the
 // add-to-whiteboard placement algorithm remain original modules 31167/94700.
+import {documentIdentity} from './note-version.mjs';
 export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene }) {
     return (method, payload) => navigate(async () => {
         await coordinator.flush();
-        const stageVersion=(noteCardId,snapshot)=>coordinator.stage(catalogOperation('content-version',{id:crypto.randomUUID(),noteCardId,title:snapshot.title||'',content:snapshot.content,createdTime:new Date().toISOString()}));
+        const versions=(await load()).contentVersions||[],stagedVersions=new Set();
+        const stageVersion=(noteCardId,snapshot)=>{const identity=documentIdentity(JSON.parse(snapshot.content)),key=noteCardId+':'+identity;if(stagedVersions.has(key)||versions.some(v=>v.noteCardId===noteCardId&&documentIdentity(JSON.parse(v.content))===identity))return;stagedVersions.add(key);coordinator.stage(catalogOperation('content-version',{id:crypto.randomUUID(),noteCardId,title:snapshot.title||'',content:snapshot.content,createdTime:new Date().toISOString()}));};
         if(method==='restoreNoteCardContentVersion'){
             const graph=await load(),version=(graph.contentVersions||[]).find(row=>row.id===payload.versionId&&row.noteCardId===payload.noteCardId),current=contents.get(payload.noteCardId);
             if(!version)return {success:false,error:'version_not_found'};
@@ -137,8 +139,10 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         if (!contents.has(id))
             throw Error('卡片不存在');
         if (method === 'updateNoteCard') {
-            if(typeof payload.contentVersionSnapshot?.content==='string')stageVersion(id,payload.contentVersionSnapshot);
             const updates = payload.updates || payload || {};
+            const previous=contents.get(id),snapshot=payload.contentVersionSnapshot;
+            const hasHistory=typeof snapshot?.content==='string'&&previous.document&&JSON.stringify(JSON.parse(snapshot.content))!==JSON.stringify(previous.document);
+            if(hasHistory)stageVersion(id,snapshot);
             // The native onChange can be a deferred snapshot from a view that
             // has since received newer content. Flush reads live editors first;
             // an open editor's accepted state supersedes that old callback.
@@ -146,7 +150,11 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             const document = typeof rawDoc === 'string' ? JSON.parse(rawDoc) : rawDoc;
             if (document)
                 acceptContentDocument(id, document, updates.body || payload.body);
-            const metadata = { ...((await load()).cardMetadata || []).find(row => row.id === id), ...updates, id, lastEditedTime:new Date().toISOString() };
+            const priorMeta=((await load()).cardMetadata || []).find(row => row.id === id)||{};
+            const meaningful=Object.keys(updates).filter(key=>!['id','objectId','createdTime','lastEditedTime','content','document','title','body'].includes(key));
+            const changedMetadata=meaningful.some(key=>JSON.stringify(updates[key])!==JSON.stringify(priorMeta[key]));
+            if(!changedMetadata&&!hasHistory){await coordinator.flush();return {success:true};}
+            const metadata = { ...priorMeta, ...updates, id, lastEditedTime:new Date().toISOString() };
             delete metadata.content;
             delete metadata.document;
             delete metadata.title;

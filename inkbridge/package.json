@@ -1,7 +1,7 @@
 {
   "name": "inkbridge",
   "productName": "InkBridge",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "InkBridge 墨橋 — independent CanvasKit whiteboard",
   "private": true,
   "main": "src/main/main.cjs",
