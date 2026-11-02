@@ -81,7 +81,7 @@ async function boot(){
         if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));
         readLiveEditor(editor,instances.get(nodeId)?.contentId);
       }
-    },onStatus:value=>{state.persistence=value;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`已保存 · v${value.revision}`;}});
+    },onStatus:value=>{state.persistence=value;const snapshot=state.snapshotInfo;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`本機 v${value.revision}${snapshot?.configured?`｜快照 ${snapshot.baseRevision===null?'尚無':`v${snapshot.baseRevision}`}`:''}`;$('#persistence-status').title=snapshot?.baseSnapshotId?`最近成功快照：${snapshot.baseSnapshotId}\n本機版本號不是快照數量，也不表示 OneDrive 已上傳。`:'本機已提交版本，不代表其他電腦已收到。';}});
   if(boardWindow){const recover=document.createElement('button');recover.id='board-window-recover';recover.textContent='保留草稿並重新載入';recover.hidden=true;recover.className='px-2 py-1 text-xs text-danger';$('#persistence-status').after(recover);
     const status=coordinator.onStatus;coordinator.onStatus=value=>{status(value);recover.hidden=!value.error;};
     recover.onclick=async()=>{try{document.body.inert=true;coordinator.dispose();await coordinator.flushTail.catch(()=>{});while(pendingExternal.size)await Promise.all([...pendingExternal]);await coordinator.beforeFlush();coordinator.dispose();
@@ -341,9 +341,11 @@ async function boot(){
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
-  installStorageSettings();
+  const storageUI=installStorageSettings();
+  window.inkbridge.onSnapshotSaved(result=>{if(result.workspaceId===graph.workspaceId){state.snapshotInfo={configured:true,baseRevision:result.revision,baseSnapshotId:result.snapshotId};coordinator.status();}});
+  window.inkbridge.storageSettings({method:'snapshotStatus'}).then(info=>{state.snapshotInfo=info;coordinator.status();}).catch(()=>{});
   window.inkbridge.onSnapshotError(value=>report(Error('自動快照失敗：'+value.message)));
-  const saveSnapshot=async()=>{await flushAll();const result=await window.inkbridge.createSnapshot();if(result.configured)$('#persistence-status').textContent=result.created?'已保存並建立快照':'已保存；快照無變更';};
+  const saveSnapshot=async()=>{await flushAll();await window.inkbridge.createSnapshot();};
   $('#save-workspace').addEventListener('click',()=>saveSnapshot().catch(report));
   $('#open-trash').addEventListener('click',()=>showHome('trash').catch(report));
   $('#toggle-outline').onclick=()=>redux.dispatch(r(22676).yn({view:r(22676).XM.whiteboard}));
@@ -355,5 +357,6 @@ async function boot(){
   window.inkbridge.onCloseRequested(async request=>{const epoch=++closeEpoch;try{await flushAll();await shell.settle();if(epoch!==closeEpoch)return;document.body.inert=true;await flushAll();if(epoch!==closeEpoch){document.body.inert=false;return;}window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){document.body.inert=false;if(epoch===closeEpoch)window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
   window.inkbridge.onCloseCancelled(request=>{closeEpoch++;document.body.inert=false;report(Error(request.message));});
   await coordinator.flush();coordinator.status();
+  if(!boardWindow)storageUI.checkOnStartup();
 }
 boot().catch(error=>{state.errors.push({message:error.message,stack:error.stack});$('#loading').textContent='原版白板接入失敗：'+error.message;});

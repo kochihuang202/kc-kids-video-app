@@ -50,7 +50,7 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
       const handle=await fs.open(candidate,'r+');try{await handle.sync();}finally{await handle.close();}
       const captured=inspectDatabase(candidate),key=root+'|'+captured.workspaceId,head=state.heads[key];
       // Only committed application revisions determine changes, never mtimes.
-      if(head?.revision===captured.revision){await validate(root,path.join(root,'snapshots',captured.workspaceId,head.snapshotId));return {configured:true,created:false,snapshotId:head.snapshotId};}
+      if(head?.revision===captured.revision){await validate(root,path.join(root,'snapshots',captured.workspaceId,head.snapshotId));return {configured:true,created:false,snapshotId:head.snapshotId,workspaceId:captured.workspaceId,revision:captured.revision};}
       const assets=[];
       for(const file of captured.files){
         const source=resolveAttachment(file.id),bytes=await fs.readFile(source),hash=digest(bytes);
@@ -73,7 +73,7 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
       await durable(path.join(destination,'manifest.json'),JSON.stringify(manifest,null,2));
       await validate(root,destination);await fault('before-state');
       state.heads[key]={snapshotId:id,revision:captured.revision};await writeState(state);
-      return {configured:true,created:true,snapshotId:id,revision:captured.revision};
+      return {configured:true,created:true,snapshotId:id,workspaceId:captured.workspaceId,revision:captured.revision};
     }finally{await fs.rm(staging,{recursive:true,force:true});}
   }
   async function scan(){
@@ -97,6 +97,12 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
     return rows;
   }
   async function adopt(manifest){const root=await fs.realpath(getExchange()),state=await identity();state.heads[root+'|'+manifest.workspaceId]={snapshotId:manifest.snapshotId,revision:manifest.revision};await writeState(state);}
-  return {validate,scan,adopt,create(reason='manual'){if(pending)return pending;pending=publish(reason).finally(()=>{pending=null;});return pending;}};
+  async function startup(){
+    if(!getExchange())return {configured:false,kind:'unconfigured'};
+    const rows=await scan(),root=await fs.realpath(getExchange()),state=await identity(),graph=await database.load();
+    return {configured:true,...require('./startup-snapshot-status.cjs').startupSnapshotStatus({rows,workspaceId:graph.workspaceId,localRevision:graph.revision,head:state.heads[root+'|'+graph.workspaceId]})};
+  }
+  async function status(){const graph=await database.load();if(!getExchange())return {configured:false,workspaceId:graph.workspaceId,localRevision:graph.revision,baseRevision:null,baseSnapshotId:null};const root=await fs.realpath(getExchange()),state=await readJSON(stateFile,{heads:{}}),head=state.heads[root+'|'+graph.workspaceId];return {configured:true,workspaceId:graph.workspaceId,localRevision:graph.revision,baseRevision:head?.revision??null,baseSnapshotId:head?.snapshotId||null};}
+  return {validate,scan,adopt,startup,status,create(reason='manual'){if(pending)return pending;pending=publish(reason).finally(()=>{pending=null;});return pending;}};
 }
 module.exports={createWorkspaceSnapshots,inspectDatabase,hashFile};

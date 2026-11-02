@@ -2,6 +2,7 @@ const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('inkbridge',{
   storageSettings:request=>ipcRenderer.invoke('inkbridge:storage-settings',request),
   createSnapshot:()=>ipcRenderer.invoke('inkbridge:create-snapshot'),
+  onSnapshotSaved:callback=>{const listener=(_event,value)=>callback(value);ipcRenderer.on('inkbridge:snapshot-saved',listener);return ()=>ipcRenderer.removeListener('inkbridge:snapshot-saved',listener);},
   onSnapshotError:callback=>{const listener=(_event,value)=>callback(value);ipcRenderer.on('inkbridge:snapshot-error',listener);return ()=>ipcRenderer.removeListener('inkbridge:snapshot-error',listener);},
   info:()=>ipcRenderer.invoke('inkbridge:info'),load:()=>ipcRenderer.invoke('inkbridge:load'),commit:request=>ipcRenderer.invoke('inkbridge:commit',request),
   openStandaloneWindow:payload=>ipcRenderer.invoke('inkbridge:open-standalone-window',payload),

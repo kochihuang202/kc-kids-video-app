@@ -104,7 +104,7 @@ app.whenReady().then(async()=>{
   let snapshotTask;
   const createSnapshot=(reason,alreadyFlushed=false)=>{
     if(snapshotTask)return snapshotTask;
-    snapshotTask=(async()=>{if(!storageSettings.read().exchangeDirectory)return {configured:false,created:false};if(!alreadyFlushed)await standalone.flushForSettings();return snapshots.create(reason);})().finally(()=>{snapshotTask=null;});
+    snapshotTask=(async()=>{if(!storageSettings.read().exchangeDirectory)return {configured:false,created:false};if(!alreadyFlushed)await standalone.flushForSettings();const result=await snapshots.create(reason);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:snapshot-saved',result);return result;})().finally(()=>{snapshotTask=null;});
     return snapshotTask;
   };
   ipcMain.handle('inkbridge:create-snapshot',event=>{if(!readable(event)||closing||applyingSettings)throw Error('目前無法建立快照');return createSnapshot('manual');});
@@ -113,6 +113,8 @@ app.whenReady().then(async()=>{
     if(!readable(event))throw Error('Unexpected sender');
     const method=request?.method;
     if(method==='read')return storageSettings.read();
+    if(method==='startup')return snapshots.startup();
+    if(method==='snapshotStatus')return snapshots.status();
     if(method==='scan')return snapshots.scan();
     if(method==='restore'){
       if(applyingSettings||closing||snapshotTask)throw Error('正在保存或關閉，請稍後再試');
@@ -120,7 +122,7 @@ app.whenReady().then(async()=>{
       if(!exchange)throw Error('尚未設定交換資料夾');
       const rows=await snapshots.scan(),selected=rows.find(row=>row.workspaceId===request.workspaceId&&row.snapshotId===request.snapshotId&&row.integrity==='complete');
       if(!selected)throw Error('選定快照尚未完整到達或驗證失敗，請重新掃描');
-      const answer=await dialog.showMessageBox(BrowserWindow.fromWebContents(event.sender),{type:'question',buttons:['取消','保存目前資料並載入'],defaultId:0,cancelId:0,title:'載入工作區快照',message:'將保存目前資料並重新啟動 InkBridge',detail:`工作區：${selected.workspaceId}\n快照：${selected.snapshotId}\n建立時間：${selected.manifest.createdAt}\n原本工作資料將保留在本機 Restore 備份目錄，其他快照不會刪除。`});
+      const answer=await dialog.showMessageBox(BrowserWindow.fromWebContents(event.sender),{type:'question',buttons:['取消','保存目前資料並載入'],defaultId:0,cancelId:0,title:'載入工作區快照',message:'將保存目前資料並重新啟動 InkBridge',detail:`工作區：${selected.workspaceId}\n版本：v${selected.manifest.revision}\n快照：${selected.snapshotId}\n建立時間：${selected.manifest.createdAt}\n原本工作資料將保留在本機 Restore 備份目錄，其他快照不會刪除。`});
       if(answer.response!==1)return {cancelled:true};
       applyingSettings=true;let databaseClosed=false;
       try{

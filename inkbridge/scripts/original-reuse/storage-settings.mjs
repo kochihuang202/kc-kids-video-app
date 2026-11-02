@@ -1,4 +1,5 @@
 // InkBridge-owned exchange settings. Does not invoke FlexNote cloud/account services.
+import {installStartupSnapshotNotice} from './startup-snapshot-notice.mjs';
 export function installStorageSettings() {
   const button = document.createElement('button');
   button.id = 'open-storage-settings'; button.textContent = '⚙'; button.title = '設定'; button.setAttribute('aria-label', '設定');
@@ -14,7 +15,7 @@ export function installStorageSettings() {
   <p>各電腦保留自己的本機資料庫。OneDrive 交換資料夾將用於不可變快照與共用附件。</p>
   <label for="exchange-directory">OneDrive 交換資料夾</label><input id="exchange-directory" readonly placeholder="尚未設定，請按瀏覽選擇">
   <button id="browse-exchange">瀏覽…</button><button id="check-exchange">檢查資料夾</button><button id="open-exchange">開啟已設定資料夾</button><button id="create-workspace-snapshot">建立快照</button>
-  <p id="storage-settings-status" role="status"></p>
+  <p id="storage-settings-status" role="status"></p><p id="storage-version-summary"></p>
   <h3>本機工作資料</h3><p class="local-path" id="local-directory"></p><button id="open-local-data">開啟本機資料夾</button>
   <h3>工作區快照</h3><button id="scan-workspace-snapshots">重新掃描快照</button><div id="workspace-snapshot-list" style="max-height:220px;overflow:auto;font-size:12px"></div>
   <p>設定後，Ctrl+S、每 10 分鐘及正常關閉會檢查並保存有變更的快照。載入會先保存目前版本，驗證後重新啟動。OneDrive 上傳由您確認；程式更新檢查尚未啟用。</p>
@@ -28,12 +29,13 @@ export function installStorageSettings() {
     try { await action(); } catch (error) { $('#storage-settings-status').textContent = error.message; }
     finally { busy = false; dialog.querySelectorAll('button').forEach(el => el.disabled = false); }
   };
-  button.onclick = () => { dialog.showModal(); run(async () => {
+  button.onclick = () => { dialog.showModal(); return run(async () => {
     const settings = await call({method:'read'});
     $('#exchange-directory').value = settings.exchangeDirectory;
     $('#local-directory').textContent = settings.localDirectory;
     $('#workspace-snapshot-list').replaceChildren();
     $('#storage-settings-status').textContent = settings.exchangeDirectory ? '已記住此電腦的交換路徑。可以建立或掃描快照。' : '尚未設定交換資料夾；仍可在本機編輯。';
+    const version=await call({method:'snapshotStatus'});$('#storage-version-summary').textContent=`本機 v${version.localRevision}｜最近快照 ${version.baseRevision===null?'尚無':`v${version.baseRevision}`}（本機提交紀錄，不代表 OneDrive 已上傳）`;
   }); };
   $('#browse-exchange').onclick = () => run(async () => {
     const result = await call({method:'choose'}); if (result.cancelled) return;
@@ -54,7 +56,8 @@ export function installStorageSettings() {
   $('#create-workspace-snapshot').onclick=()=>run(async()=>{
     $('#storage-settings-status').textContent='正在等待保存並驗證快照…';
     const result=await window.inkbridge.createSnapshot();
-    $('#storage-settings-status').textContent=!result.configured?'請先套用交換資料夾設定。':result.created?`快照已建立並驗證：${result.snapshotId}`:`沒有變更，保留快照：${result.snapshotId}`;
+    $('#storage-settings-status').textContent=!result.configured?'請先套用交換資料夾設定。':result.created?`快照已建立並驗證：v${result.revision} · ${result.snapshotId}`:`沒有變更，保留快照：v${result.revision} · ${result.snapshotId}`;
+    if(result.configured)$('#storage-version-summary').textContent=`快照 v${result.revision}｜ID ${result.snapshotId}`;
   });
   $('#scan-workspace-snapshots').onclick=()=>run(async()=>{
     $('#storage-settings-status').textContent='正在讀取並驗證本機已到達的快照與附件…';
@@ -62,7 +65,7 @@ export function installStorageSettings() {
     const labels={current:'目前版本',newer:'同一版本鏈的較新版本',ancestor:'同一版本鏈的舊版',branch:'另一個獨立分支',unbased:'尚未載入的版本',unknown:'版本鏈尚未到齊，關係未確認','other-workspace':'其他工作區（可載入）'};
     for(const row of rows){
       const item=document.createElement('div');item.style.cssText='border-bottom:1px solid #ddd;padding:10px 0;overflow-wrap:anywhere';
-      const text=document.createElement('div');text.textContent=`${row.integrity==='complete'?labels[row.relation]:'尚未完整下載／驗證失敗'}\n工作區 ${row.workspaceId}\n快照 ${row.snapshotId}\n${row.manifest?.createdAt||''}${row.error?'\n'+row.error:''}`;text.style.whiteSpace='pre-wrap';item.append(text);
+      const text=document.createElement('div');text.textContent=`${row.integrity==='complete'?labels[row.relation]:'尚未完整下載／驗證失敗'}\n工作區 ${row.workspaceId}\n快照 ${row.snapshotId}${row.manifest?` · v${row.manifest.revision}\n來源電腦 ${row.manifest.sourceComputerId}`:''}\n${row.manifest?.createdAt||''}${row.error?'\n'+row.error:''}`;text.style.whiteSpace='pre-wrap';item.append(text);
       if(row.integrity==='complete'){
         const load=document.createElement('button');load.textContent='載入此快照';load.dataset.snapshotId=row.snapshotId;
         load.onclick=()=>run(async()=>{const result=await call({method:'restore',workspaceId:row.workspaceId,snapshotId:row.snapshotId});$('#storage-settings-status').textContent=result.cancelled?'已取消載入。':'正在重新啟動…';});item.append(load);
@@ -76,4 +79,6 @@ export function installStorageSettings() {
   $('#cancel-storage-settings').onclick = () => dialog.close();
   dialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
   call({method:'read'}).then(value => { if (!value.exchangeDirectory) button.title = '設定：尚未選擇交換資料夾'; }).catch(() => { button.title = '設定讀取失敗，請開啟查看'; });
+  const startup=installStartupSnapshotNotice({call,review:async()=>{await button.onclick();$('#scan-workspace-snapshots').click();}});
+  return {checkOnStartup:()=>startup.check()};
 }
