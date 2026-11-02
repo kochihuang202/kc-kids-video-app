@@ -8,7 +8,7 @@
 
 「檢查資料夾」會建立一個唯一暫存檔、fsync、讀回及刪除，列出是否存在 snapshots/、assets/，不判斷 OneDrive 上傳狀態或快照完整性。不存在的交換目錄需先建立或使用 Windows 瀏覽對話框建立。
 
-已接通快照建立、掃描與手動載入，操作與驗證見 [WORKSPACE_SNAPSHOTS.md](WORKSPACE_SNAPSHOTS.md)。尚未交付：程式版本檢查與跨電腦可攜 ZIP。沒有自動設定使用者正式 OneDrive，也沒有複製正式資料。本次隔離測試僅使用 TEMP 目錄。
+已接通快照建立、掃描與手動載入，操作與驗證見 [WORKSPACE_SNAPSHOTS.md](WORKSPACE_SNAPSHOTS.md)。可攜 ZIP 與跨電腦執行方式見 [PORTABLE_DELIVERY.md](PORTABLE_DELIVERY.md)；程式版本檢查尚未交付。沒有自動設定使用者正式 OneDrive，也沒有複製正式資料。本次隔離測試僅使用 TEMP 目錄。
 
 ## 驗證（2026-11-02）
 
