@@ -59,3 +59,7 @@
 獨立Windows文字編輯視窗、保存ACK、立即關閉、貼圖與重啟、主子內容同步及保存失敗／衝突草稿保護已實測。9項相關單元測試及native-backlinks/native-groups歷史流程通過；沒有重跑完整套件。測試類型、來源hash與Ctrl+B／實體IME等未驗收項目完整列於 [獨立視窗驗收](STANDALONE_WINDOW_ACCEPTANCE.md)。
 
 使用者補充的白板分頁入口呼叫另一個API，前述驗收漏掉此入口。已真實重現並補接；白板新窗口的操作／保存／衝突、卡片窗口回歸、18項原shell流程與17項相關單元測試見 [白板分頁開窗驗收](BOARD_WINDOW_ACCEPTANCE.md)。
+
+## 2026-11-02 多分頁拖曳與PDF拖入
+
+舊拖曳測試只涵蓋少量分頁；新增18分頁捲動／最大化與Windows實際滑鼠拖動，捕獲並修正越出裁切範圍的no-drag原生區域。PDF拖入漏接原97101 hook，接回後主／額外白板的受信任真實路徑拖入、CAS bytes、原PDF三頁解析及重啟通過；原titlebar與PDF歷史流程亦通過。只跑相關測試，詳見 [來源、修正與驗收界線](WINDOW_DRAG_PDF_DROP_FIX.md)。

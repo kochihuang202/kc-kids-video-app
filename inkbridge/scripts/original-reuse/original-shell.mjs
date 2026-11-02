@@ -3,6 +3,19 @@ import {searchGraph,searchBlocks} from '/inkbridge-core/original-search.mjs';
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord,attachmentRecord} from '/inkbridge-core/original-catalog.mjs';
 export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
+  function NativeNavigationControls(){
+    React.useLayoutEffect(()=>{
+      const host=document.querySelector('#original-navigation-controls'),controls=host.firstElementChild,caption=document.createElement('div');
+      caption.id='native-navigation-caption';caption.setAttribute('aria-hidden','true');Object.assign(caption.style,{position:'fixed',zIndex:'2147483647',pointerEvents:'none',WebkitAppRegion:'drag'});
+      // Electron includes native no-drag rectangles of offscreen history tabs.
+      // Define only the actual empty navigation space after that scroll subtree;
+      // keep Windows' own caption drag behavior and original button handlers.
+      const measure=()=>{const outer=host.getBoundingClientRect(),inner=controls.getBoundingClientRect(),left=Math.min(outer.right,Math.max(outer.left,inner.right));Object.assign(caption.style,{left:left+'px',top:outer.top+'px',width:Math.max(0,outer.right-left)+'px',height:outer.height+'px'});};
+      document.body.appendChild(caption);const observer=new ResizeObserver(measure);observer.observe(host);observer.observe(controls);window.addEventListener('resize',measure);measure();
+      return()=>{observer.disconnect();window.removeEventListener('resize',measure);caption.remove();};
+    },[]);
+    return React.createElement(r(23733).InkBridgeNavigationControls,{onToggleSidebar:()=>redux.dispatch(r(22676).y9(!redux.getState().ui.leftSidebarShow))});
+  }
   const sidebarContent=document.querySelector('.original-sidebar'),leftHost=document.createElement('div'),sidebarParking=document.createElement('div');leftHost.id='original-left-frame';sidebarContent.before(leftHost);sidebarParking.hidden=true;document.body.appendChild(sidebarParking);sidebarParking.appendChild(sidebarContent);
   function SidebarContent(){const ref=React.useRef(null);React.useLayoutEffect(()=>{ref.current.appendChild(sidebarContent);return ()=>sidebarParking.appendChild(sidebarContent);},[]);return React.createElement('div',{ref,style:{height:'100%',minHeight:0}});}
   function NativeLeftSidebar(){const shown=r(16125).v9(state=>state.ui.leftSidebarShow);React.useEffect(()=>{document.body.classList.toggle('sidebar-closed',!shown);},[shown]);React.useEffect(()=>{const width=()=>document.documentElement.style.setProperty('--inkbridge-left-width',(localStorage.getItem('sidebar_left_width')||260)+'px');width();window.addEventListener('sidebar-left-width',width);return ()=>window.removeEventListener('sidebar-left-width',width);},[]);return React.createElement(r(1201).yE,{inkbridgeUiOnly:true,inkbridgeRenderContent:()=>React.createElement(SidebarContent)});}
@@ -25,7 +38,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   function hydrate(graph){const data=catalog(graph);redux.dispatch(folderActions.Tc(data.folders));redux.dispatch(actions.Dq({boardList:data.whiteboardList,instances:data.whiteboardInstances,allWhiteboardInstances:data.allWhiteboardInstances,allWhiteboards:data.allWhiteboards,unAttachedWhiteboards:data.unAttachedWhiteboards}));}
   const management=new Set(['createWhiteboard','updateBoard','deleteWhiteboard','addBoard','restoreWhiteboard']);
   const catalogServices=new Set(['addFolder','updateFolder','deleteWhiteboardFolder','updateFoldersOrder','createWhiteboardInstance','updateWhiteboardInstance']);
-  const libraryReads=new Set(['batchGetInstanceListByWhiteboardId','getAllWhiteboards','getTagList','getCardsByFilters','getBoardListPreviewByWhiteboardIds']);
+  const libraryReads=new Set(['getAllFiles','batchGetInstanceListByWhiteboardId','getAllWhiteboards','getTagList','getCardsByFilters','getBoardListPreviewByWhiteboardIds']);
   const noteReads=new Set(['getTag','getNoteCardById','getTagsByCardId','getWhiteboardsByCardId','getCardLinks','getTagPropertyList','getCardRemark']);
   const cardInstanceWrites=new Set(['restoreNoteCardContentVersion','batchCreateNoteCards','batchCreateNoteCardInstances','addNoteCardInstance','batchDeleteNoteCardInstances','updateNoteCardInstance','batchUpdateCardInstances','batchUpdateMediaCardInstances','deleteNoteCardInstance','addMediaCard','addMediaCardInstance']);
   globalThis.__inkbridgeControlledNoteSaves=true;window.onGlobalModalClose=async()=>{await flushAll();redux.dispatch(r(22676).aV({show:false}));redux.dispatch(r(11473).f4());};
@@ -52,6 +65,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     if(name==='getNoteCardContentVersions'){await flush();return ((await window.inkbridge.load()).contentVersions||[]).filter(row=>row.noteCardId===payload.noteCardId).sort((a,b)=>b.createdTime.localeCompare(a.createdTime));}
     if(name==='openStandaloneWindow'){await flushAll();try{return await window.inkbridge.openStandaloneWindow(payload);}catch(error){onError(error);throw error;}}
     if(name==='openNoteCardWindow'){await flushAll();return window.inkbridge.openNoteWindow(payload);}
+    if(name==='getAllFiles'){await flush();return ((await window.inkbridge.load()).files||[]).map(file=>({...file,metadata:typeof file.metadata==='string'?JSON.parse(file.metadata):file.metadata}));}
     if(name==='savePastedImageBuffers'||name==='savePureBase64Image')return globalThis.__inkbridgeTrackOperation(async()=>{const res=await window.inkbridge[name](payload);await writeNote('registerFiles',{files:res.map(item=>item.fileRecord)});return res;});
     if(name==='uploadFile'){const result=await window.inkbridge.uploadFile(payload);await writeNote('registerFiles',{files:[result.fileRecord]});return result;}
     if(name==='getFileById'){await flush();const file=((await window.inkbridge.load()).files||[]).find(f=>f.id===(typeof payload==='string'?payload:payload.id));return {success:!!file,file:file?{...file,metadata:typeof file.metadata==='string'?JSON.parse(file.metadata):file.metadata}:undefined};}
@@ -117,7 +131,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     ReactDOM.createPortal(React.createElement(NativeRightSidebar),document.querySelector('#original-flow-outline')),
     React.createElement(AddToWhiteboard),
     home?ReactDOM.createPortal(React.createElement(NativeNewCard),document.querySelector('#original-new-card-launcher')):null,
-    ReactDOM.createPortal(React.createElement(r(23733).InkBridgeNavigationControls,{onToggleSidebar:()=>redux.dispatch(r(22676).y9(!redux.getState().ui.leftSidebarShow))}),document.querySelector('#original-navigation-controls')),
+    ReactDOM.createPortal(React.createElement(NativeNavigationControls),document.querySelector('#original-navigation-controls')),
     ReactDOM.createPortal(React.createElement(SidebarNavigation,{selectedKey:page==='card-list'?'card-list':'board',enabledKeys:['board','card-list'],onNavigate:key=>{if(key==='board'||key==='card-list')showHome(key).catch(onError);}}),document.querySelector('#original-sidebar-navigation')),
     ReactDOM.createPortal(React.createElement(SidebarNavigation,{horizontal:true,keys:['board','card-list','highlight','quick-notes'],selectedKey:outlineOpen?'board':'',enabledKeys:['board'],onNavigate:key=>{if(key==='board')document.querySelector('#toggle-outline').click();}}),document.querySelector('#original-top-views')),
     !home?ReactDOM.createPortal(React.createElement(NativeTools),document.querySelector('#original-native-tools')):null,

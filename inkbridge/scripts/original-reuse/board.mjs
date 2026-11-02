@@ -244,9 +244,10 @@ async function boot(){
   // Keep that parent lifecycle: the hook owns outside-click, position and cleanup.
   function NativeCanvas({flowContextValue,...props}){
     const nativeWrites=r(99665).U(props.nodes);
+    const nativeDrop=r(97101).y({whiteboardId:props.whiteboardId});
     const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById});
     return React.createElement(React.Fragment,null,
-      React.createElement(Canvas,{...props,onNodeDragEnd:nativeWrites.syncNodesPosition,onNodesDelete:nativeWrites.deleteNodes,onNodeTitleChange:(id,title)=>sections.sections.has(id)?sections.call('updateSection',{id,updates:{title}}).catch(report):undefined,onNodeContextMenu:menu.onNodeContextMenu,
+      React.createElement(Canvas,{...props,onDrop:event=>globalThis.__inkbridgeTrackOperation(()=>nativeDrop.handleDrop(event)).catch(report),onDragOver:nativeDrop.handleDragOver,onNodeDragEnd:nativeWrites.syncNodesPosition,onNodesDelete:nativeWrites.deleteNodes,onNodeTitleChange:(id,title)=>sections.sections.has(id)?sections.call('updateSection',{id,updates:{title}}).catch(report):undefined,onNodeContextMenu:menu.onNodeContextMenu,
         multiSelectionToolbar:selection=>React.createElement(r(14153)._,{...selection,
           whiteboardId:props.whiteboardId,nodes:props.nodes,
           setNodes:originalStore.getState().setNodes,setConnections:originalStore.getState().setConnections,
