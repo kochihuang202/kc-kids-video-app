@@ -53,3 +53,7 @@
 ## 2026-11-01 原模組整合更新
 
 以上為早期M1歷史量測，並非目前功能狀態。現階段SQLite、原生編輯器、CAS圖片、PDF閱讀與原生側欄／連線等實際驗證，見 [原模組整合驗收](NATIVE_INTEGRATION_ACCEPTANCE.md) 及 [Gemini交付覆核](GEMINI_TOOLBAR_IMAGE_DISPOSITION.md)。本批20項相關資料測試與專項Electron流程通過；未重跑完整套件、效能或EXE封裝，亦未將M1量測套用成現階段效能宣稱。啟動使用 `Start-InkBridge.bat`。
+
+## 2026-11-02 新窗口打開
+
+獨立Windows文字編輯視窗、保存ACK、立即關閉、貼圖與重啟、主子內容同步及保存失敗／衝突草稿保護已實測。9項相關單元測試及native-backlinks/native-groups歷史流程通過；沒有重跑完整套件。測試類型、來源hash與Ctrl+B／實體IME等未驗收項目完整列於 [獨立視窗驗收](STANDALONE_WINDOW_ACCEPTANCE.md)。

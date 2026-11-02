@@ -50,7 +50,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     if(name==='batchInsertCardInstances'||name==='batchDeleteCardsByType'||name==='addNoteCard'||name==='updateNoteCard'||name==='upsertCardRemark'){const result=await writeNote(name,payload);if(name==='addNoteCard'||name==='batchDeleteCardsByType'||name==='batchInsertCardInstances')window.dispatchEvent(new Event(r(92344).kB));return result;}
     if(cardInstanceWrites.has(name))return writeNote(name,payload);
     if(name==='getNoteCardContentVersions'){await flush();return ((await window.inkbridge.load()).contentVersions||[]).filter(row=>row.noteCardId===payload.noteCardId).sort((a,b)=>b.createdTime.localeCompare(a.createdTime));}
-    if(name==='openNoteCardWindow')throw Error('獨立編輯視窗尚未接入；請使用彈層或浮窗');
+    if(name==='openNoteCardWindow'){await flushAll();return window.inkbridge.openNoteWindow(payload);}
     if(name==='savePastedImageBuffers'||name==='savePureBase64Image')return globalThis.__inkbridgeTrackOperation(async()=>{const res=await window.inkbridge[name](payload);await writeNote('registerFiles',{files:res.map(item=>item.fileRecord)});return res;});
     if(name==='uploadFile'){const result=await window.inkbridge.uploadFile(payload);await writeNote('registerFiles',{files:[result.fileRecord]});return result;}
     if(name==='getFileById'){await flush();const file=((await window.inkbridge.load()).files||[]).find(f=>f.id===(typeof payload==='string'?payload:payload.id));return {success:!!file,file:file?{...file,metadata:typeof file.metadata==='string'?JSON.parse(file.metadata):file.metadata}:undefined};}

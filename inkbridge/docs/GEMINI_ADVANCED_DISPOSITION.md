@@ -1,5 +1,7 @@
 # Gemini b5fd5bc 進階功能覆核與選擇性整合
 
+**2026-11-02更新：獨立Windows文字編輯視窗已選擇性整合。** 保留原32573視窗重用行為、75000/73866完整編輯器，採用自有單一writer／內容版本／關閉ACK協定；沒有併入下述有P0缺陷的Gemini保存流程。實際輸入、立即關閉、貼圖、衝突與父子關閉驗證見 [新窗口驗收](STANDALONE_WINDOW_ACCEPTANCE.md)。下文保留2026-11-01審查時的歷史判定；PDF匯出及心智圖仍未接入。
+
 日期：2026-11-01。主線基線61fff45；審查工作樹`.worktrees/shell-navigation/inkbridge`，分支`feat/original-shell-integration`，提交`b5fd5bc8d33a4e2ec5d286b39fe2f77e240793d0`。未整包merge，也未修改Gemini工作樹。
 
 工作樹內未找到同名獨立`CODEX_HANDOVER_SPECIFICATION.md`；已核對實際`docs/ORIGINAL_CARD_TOOLBAR_IMAGE_INTEGRATION.md`、fb28950至b5fd5bc新增程式與check-advanced-features。貼文及「100%」不是驗收證據。

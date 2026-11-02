@@ -13,7 +13,7 @@ for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
 protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
 const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.pdf':'application/pdf','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
-let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer;
+let server,window,database,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer,closing=false;
 app.whenReady().then(async()=>{
   if(!acquired)return;
   const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});database=createDatabaseClient({filename});
@@ -23,6 +23,9 @@ app.whenReady().then(async()=>{
   protocol.handle('flexnote',async request=>{try{const {bytes,ext}=attachments.readUrl(request.url);return new Response(bytes,{headers:{'Content-Type':types[ext]||'image/png','Access-Control-Allow-Origin':'*'}});}catch{return new Response('Not found',{status:404});}});
   server=http.createServer((request,response)=>{
     const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
+    if(pathname==='/standalone'){
+      response.setHeader('Content-Type','text/html; charset=utf-8');response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");response.end(fs.readFileSync(path.join(own,'standalone-card.html'),'utf8'));return;
+    }
     if(pathname==='/'){
       response.setHeader('Content-Type','text/html; charset=utf-8');
       response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");
@@ -60,6 +63,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/persistence-coordinator.mjs')file=path.resolve(own,'../../src/core/persistence-coordinator.mjs');
     else if(pathname==='/inkbridge-core/rich-document.mjs')file=path.resolve(own,'../../src/core/rich-document.mjs');
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
+    else if(pathname==='/inkbridge-core/note-version.mjs')file=path.resolve(own,'../../src/core/note-version.mjs');
     else if(pathname==='/inkbridge-core/original-sections.mjs')file=path.resolve(own,'../../src/core/original-sections.mjs');
     else if(pathname==='/inkbridge-core/original-note-writes.mjs')file=path.resolve(own,'../../src/core/original-note-writes.mjs');
     else if(pathname==='/inkbridge-core/original-folder-writes.mjs')file=path.resolve(own,'../../src/core/original-folder-writes.mjs');
@@ -86,35 +90,37 @@ app.whenReady().then(async()=>{
   if(!storedPort)fs.writeFileSync(endpointFile,JSON.stringify({port:server.address().port}),'utf8');
   const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://');if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
+  const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load()});
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
-  ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!allowed(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
+  const readable=event=>allowed(event)||!!standalone.child(event);
+  ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!allowed(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
-  ipcMain.handle('inkbridge:info',event=>{if(!allowed(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
-  ipcMain.handle('inkbridge:load',event=>{if(!allowed(event))throw Error('Unexpected sender');return database.load();});
+  ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
+  ipcMain.handle('inkbridge:load',event=>{if(!readable(event))throw Error('Unexpected sender');return database.load();});
   ipcMain.handle('inkbridge:history',(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');return database.history(request);});
   ipcMain.handle('inkbridge:commit',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');try{return {ok:true,ack:await database.commit(request)};}catch(error){return {ok:false,error:{message:error.message,code:error.code}};}});
   ipcMain.handle('inkbridge:savePastedImageBuffers',async(event,{items})=>{
-    if(!allowed(event))throw Error('Unexpected sender');
+    if(!readable(event))throw Error('Unexpected sender');
     if(!Array.isArray(items)||items.length>100)throw Error('Invalid image batch');
     return items.map(item=>attachments.prepare(item.arrayBuffer,item.fileName));
   });
   ipcMain.handle('inkbridge:savePureBase64Image',async(event,{items})=>{
-    if(!allowed(event))throw Error('Unexpected sender');
+    if(!readable(event))throw Error('Unexpected sender');
     if(!Array.isArray(items)||items.length>100)throw Error('Invalid image batch');
     return items.map(item=>{const match=/^data:image\/[a-zA-Z0-9.+-]+;base64,([a-zA-Z0-9+/=\s]+)$/.exec(item.base64Image||'');if(!match)throw Error('Invalid image data URL');return attachments.prepare(Buffer.from(match[1],'base64'),item.fileName);});
   });
-  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const stat=fs.statSync(source);if(!stat.isFile()||stat.size>64*1024*1024)throw Error('Invalid selected file size');const item=attachments.prepare(fs.readFileSync(source),path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
-  ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!allowed(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');return files.map(file=>{if(typeof file.path!=='string'||!path.isAbsolute(file.path)||fs.statSync(file.path).size>64*1024*1024)throw Error('Invalid selected file');return {path:file.path,sha256:crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex')};});});
-  ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!allowed(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
-  ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;});
-  const finishClose=async()=>{await database.close();approvedClose=true;window.close();};
-  ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok)await finishClose();else dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');});
+  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const stat=fs.statSync(source);if(!stat.isFile()||stat.size>64*1024*1024)throw Error('Invalid selected file size');const item=attachments.prepare(fs.readFileSync(source),path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
+  ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');return files.map(file=>{if(typeof file.path!=='string'||!path.isAbsolute(file.path)||fs.statSync(file.path).size>64*1024*1024)throw Error('Invalid selected file');return {path:file.path,sha256:crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex')};});});
+  ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
+  ipcMain.on('inkbridge:renderer-ready',event=>{if(allowed(event))rendererReady=true;standalone.markReady(event);});
+  const finishClose=async()=>{if(rendererReady)await standalone.prepareAll();await database.close();standalone.destroyAll();approvedClose=true;window.close();};
+  ipcMain.on('inkbridge:close-result',async(event,result)=>{if(!allowed(event)||result.requestId!==closeRequest)return;clearTimeout(closeTimer);closeRequest=null;if(result.ok){try{await finishClose();}catch(error){closing=false;window.webContents.send('inkbridge:close-cancelled',{message:error.message});await standalone.cancelAll();dialog.showErrorBox('InkBridge 尚未保存',error.message+'；所有視窗保留。');}}else {closing=false;dialog.showErrorBox('InkBridge 尚未保存',result.error||'原版編輯器／SQLite保存未完成');}});
   Menu.setApplicationMenu(null);
   window=new BrowserWindow({width:1200,height:960,title:'InkBridge 墨橋',...(boardMode?{titleBarStyle:'hidden',titleBarOverlay:{color:'#eeeef0',symbolColor:'#3f3f46',height:36}}:{}),webPreferences:{preload:path.resolve(own,'../../src/main/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
-  window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closeRequest)return;if(!rendererReady){finishClose().catch(error=>dialog.showErrorBox('InkBridge 尚未保存',error.message));return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
+  window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closing)return;closing=true;if(!rendererReady){finishClose().catch(error=>{closing=false;dialog.showErrorBox('InkBridge 尚未保存',error.message);});return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;closing=false;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
   globalThis.__inkbridgeOriginalProbe={dataRoot:data,origin,blocked,preload:'existing InkBridge limited preload; no original window.ipc',nodeIntegration:false,originalMainExecuted:false};
   await window.loadURL(origin+'/');
   app.on('second-instance',()=>{if(window.isMinimized())window.restore();window.show();window.focus();});
 });
-app.on('window-all-closed',()=>app.quit());app.on('before-quit',()=>server?.close());
+app.on('window-all-closed',()=>app.quit());app.on('before-quit',()=>{if(approvedClose)server?.close();});

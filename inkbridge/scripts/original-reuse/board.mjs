@@ -1,3 +1,4 @@
+import {checkNoteVersion,documentIdentity,standaloneServices} from '/inkbridge-core/note-version.mjs';
 import {createOriginalSections,projectGroupedNode,sectionWorldPosition} from '/inkbridge-core/original-sections.mjs';
 // InkBridge SQLite/UI boundary only. Canvas, gestures, cache, flow overlay and
 // editing behavior come from the complete original components and their store.
@@ -63,7 +64,7 @@ async function boot(){
     }
     for(const node of originalStore.getState().nodes)if(node.data.objectId===content.id)persistGeometry(node);
   }
-  const coordinator=new PersistenceCoordinator({revision:graph.revision,commit:async request=>{const result=await window.inkbridge.commit(request);if(!result.ok)throw Error(result.error.message);state.lastAck=result.ack;if(result.ack.changed)window.dispatchEvent(new Event('inkbridge:references-committed'));return result.ack;},
+  const coordinator=new PersistenceCoordinator({revision:graph.revision,commit:async request=>{const result=await window.inkbridge.commit(request);if(!result.ok)throw Error(result.error.message);state.lastAck=result.ack;if(result.ack.changed){window.dispatchEvent(new Event('inkbridge:references-committed'));window.inkbridge.workspaceCommitted();}return result.ack;},
     beforeFlush:async()=>{
       for(const [editor,contentId]of [...modalEditors]){if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));readLiveEditor(editor,contentId);}
       for(const [nodeId,editor]of [...editors]){
@@ -152,6 +153,39 @@ async function boot(){
   const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
   const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
   shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  let remoteTail=Promise.resolve(),closeEpoch=0;
+  globalThis.__inkbridgeRemoteRequest=request=>{
+    const task=remoteTail.catch(()=>{}).then(async()=>{
+      const {method,cardId,payload}=request;
+      if(method==='flush'){const epoch=closeEpoch;await flushAll();await shell.settle();await flushAll();if(epoch!==closeEpoch)throw Error('關閉已取消');document.body.inert=true;return {saved:true};}
+      if(method==='navigate'){await flushAll();return router.push(payload.href);}
+      if(method==='service'){
+        if(payload.name==='openCardInMainModal'){await flushAll();redux.dispatch(r(22676).aV({show:true,params:payload.payload}));return {success:true};}
+        if(payload.name==='registerFiles')return writeNote('registerFiles',payload.payload);
+        if(!standaloneServices.includes(payload.name)||!globalThis.__inkbridgeServices.has(payload.name))throw Error('Unsupported child editor service: '+payload.name);
+        return globalThis.__inkbridgeServices.call(payload.name,payload.payload);
+      }
+      await flushAll();const currentGraph=await window.inkbridge.load(),current=currentGraph.contents.find(row=>row.id===cardId&&row.kind==='text'&&!currentGraph.cardMetadata?.some(meta=>meta.id===cardId&&meta.isTrashed));
+      if(!current)throw Object.assign(Error('卡片已不存在或已移至回收站'),{code:'NOTE_UNAVAILABLE'});
+      if(method==='loadNote')return {content:current,workspaceId:currentGraph.workspaceId};
+      if(method!=='commitNote')throw Error('Unsupported remote note operation');
+      const noteDoc=noteDocument({document:payload.document});
+      // A native input may arrive while the SQLite read above is awaiting IPC.
+      // Do not replace that newly typed main-window draft with a child snapshot.
+      for(const [editor,id]of modalEditors)if(id===cardId){if(editor.isComposing())throw Object.assign(Error('主視窗仍在組字；子視窗草稿保留'),{code:'CONTENT_CONFLICT'});readLiveEditor(editor,id);}
+      if(documentIdentity(contents.get(cardId)?.document)!==documentIdentity(current.document))throw Object.assign(Error('主視窗有較新的待保存內容；子視窗草稿保留'),{code:'CONTENT_CONFLICT'});
+      if(checkNoteVersion(current,payload.expectedRevision,noteDoc)){
+        replaceContentDocument(cardId,noteDoc);
+        // Complete peer editor application before beforeFlush reads their state.
+        for(const [editor,id]of modalEditors)if(id===cardId){editor.update(()=>{},{discrete:true,tag:'editor-force-update'});editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));}
+        await writeNote('updateNoteCard',{id:cardId,updates:{content:noteDoc}});
+      }
+      const saved=(await window.inkbridge.load()).contents.find(row=>row.id===cardId);
+      if(!saved||documentIdentity(saved.document)!==documentIdentity(noteDoc))throw Object.assign(Error('另一視窗在保存期間更新了卡片；子視窗草稿保留'),{code:'CONTENT_CONFLICT'});
+      return {requestId:payload.requestId,revision:saved.revision,changed:saved.revision!==current.revision};
+    });remoteTail=task;return task;
+  };
+  window.inkbridge.onBridgeRequest(request=>globalThis.__inkbridgeRemoteRequest(request));
   shell.hydrate(graph);await shell.ready;if(!boards.get(boardId)?.attributes?.isTrashed)await shell.selected();else {state.home=true;shell.homeSelected();}updateBoardTitle();state.shellModules=shell.modules;state.switchBoard=switchBoard;
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
@@ -271,8 +305,8 @@ async function boot(){
   const dialog=$('#new-card-dialog');$('#add-card').onclick=()=>{dialog.showModal();$('#card-title').focus();};$('#cancel-card').onclick=()=>dialog.close();$('#new-card-form').onsubmit=event=>{event.preventDefault();addCard($('#card-title').value,$('#card-body').value);dialog.close();event.target.reset();};
   // The old self-written performance lab is unrelated to this original engine.
   $('.performance-panel')?.setAttribute('hidden','');
-  window.inkbridge.onCloseRequested(async request=>{try{await flushAll();await shell.settle();await flushAll();window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
-  window.inkbridge.onCloseCancelled(request=>report(Error(request.message)));
+  window.inkbridge.onCloseRequested(async request=>{const epoch=++closeEpoch;try{await flushAll();await shell.settle();if(epoch!==closeEpoch)return;document.body.inert=true;await flushAll();if(epoch!==closeEpoch){document.body.inert=false;return;}window.inkbridge.closeResult({requestId:request.requestId,ok:true});}catch(error){document.body.inert=false;if(epoch===closeEpoch)window.inkbridge.closeResult({requestId:request.requestId,ok:false,error:error.message});}});
+  window.inkbridge.onCloseCancelled(request=>{closeEpoch++;document.body.inert=false;report(Error(request.message));});
   await coordinator.flush();coordinator.status();
 }
 boot().catch(error=>{state.errors.push({message:error.message,stack:error.stack});$('#loading').textContent='原版白板接入失敗：'+error.message;});
