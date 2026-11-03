@@ -55,6 +55,7 @@ app.whenReady().then(async()=>{
         html=html.replace('<div id="original-board-list"','<div class="sidebar-brand-row">'+brand+'<button id="add-card" aria-label="新增卡片" title="新增卡片">＋</button><span id="original-new-card-launcher"></span></div><div id="original-sidebar-navigation"></div><div id="original-board-list"');
         const save=html.match(/<button id="save-workspace"[^>]*>[\s\S]*?<\/button>/)?.[0];html=html.replace(save,'');html=html.replace('<div id="persistence-status"',save+'<div id="persistence-status"');
         html=html.replace('<button id="open-trash"','<div class="sidebar-footer"><button id="open-trash"').replace('正在載入…</div><b id="sidebar-count"','正在載入…</div></div><b id="sidebar-count"');
+        html=html.replace('<div class="sidebar-footer">','<div class="sidebar-footer"><div id="sidebar-footer-ui"></div>');
         html=html.replace('<div class="breadcrumb">','<div id="original-history-tabs" style="flex:1;min-width:0"></div><div class="breadcrumb" style="display:none" hidden>');
         html=html.replace('<button id="toggle-outline"','<div id="original-top-views"></div><button id="toggle-outline"');
         html=html.replace('</main>','</main><aside id="original-flow-outline" aria-label="卡片列表" style="width:280px;min-width:280px;background:white;border-left:1px solid #e1e4dc;display:flex;min-height:0"></aside>');
@@ -175,7 +176,7 @@ app.whenReady().then(async()=>{
   });
   ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!readable(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
-  ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge Original Module Probe',version:'private-porting',isTest:true,dataRoot:data,databasePath:filename};});
+  ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge',version:require('../../package.json').version,isTest:!portable,dataRoot:data,databasePath:filename};});
   ipcMain.handle('inkbridge:load',event=>{if(!readable(event))throw Error('Unexpected sender');return database.load();});
   ipcMain.handle('inkbridge:history',(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return database.history(request);});
   ipcMain.handle('inkbridge:commit',async(event,request)=>{if(!allowed(event))throw Error('Unexpected sender');try{return {ok:true,ack:await database.commit(request)};}catch(error){return {ok:false,error:{message:error.message,code:error.code}};}});

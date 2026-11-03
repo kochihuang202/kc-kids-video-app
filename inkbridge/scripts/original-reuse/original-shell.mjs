@@ -1,8 +1,10 @@
 import {searchGraph,searchBlocks} from '/inkbridge-core/original-search.mjs';
+import {createSidebarFooter} from './sidebar-footer.mjs';
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord,attachmentRecord} from '/inkbridge-core/original-catalog.mjs';
 export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
+  const SidebarFooter=createSidebarFooter(React,r);
   function NativeNavigationControls(){
     React.useLayoutEffect(()=>{
       const host=document.querySelector('#original-navigation-controls'),controls=host.firstElementChild,caption=document.createElement('div');
@@ -127,6 +129,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     React.createElement(r(64744).InkBridgeCollectionPicker),
     React.createElement(r(64744).InkBridgeImageGallery),
     React.createElement(r(64744).InkBridgeCardPopover),
+    ReactDOM.createPortal(React.createElement(SidebarFooter),document.querySelector('#sidebar-footer-ui')),
     ReactDOM.createPortal(React.createElement(NativeLeftSidebar),leftHost),
     ReactDOM.createPortal(React.createElement(NativeRightSidebar),document.querySelector('#original-flow-outline')),
     React.createElement(AddToWhiteboard),
