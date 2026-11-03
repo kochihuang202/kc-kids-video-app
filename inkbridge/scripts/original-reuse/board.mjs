@@ -332,6 +332,9 @@ async function boot(){
         React.createElement(React.Fragment,null,React.createElement(NativeCanvas,{flowContextValue,nodes,readOnly:home,initialDrawingStrokes:[],whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:boards.get(activeBoardId)?.view||{x:80,y:60,zoom:.8},
           nodeToolbar:r(19395).z,
           connections:sceneConnections,
+          // Native48626 passes this contract to Canvas10764. Keep new links curved
+          // even when the toolbar changes the shape of an individual saved link.
+          connectionDefaults:{pathType:'bezier',strokeWidth:r(19281).YH.userTempBehavior.lineThickness,color:r(19281).YH.userTempBehavior.lineColor,endArrow:true,endArrowType:'arrow',labelFollowPath:r(19281).YH.userTempBehavior.labelFollowPath},
           onConnect:event=>connections.connect(event)?.catch(report),
           onConnectionsChange:connections.changed,
           onEdgesDelete:edges=>{for(const edge of edges)connections.call('deleteConnection',typeof edge==='string'?edge:edge.id).catch(report);},

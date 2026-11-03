@@ -40,6 +40,8 @@ Ctrl+S、保存、每 10 分鐘、正常關閉與切到背景會走同一保存�
 
 ## 驗證狀態
 
+最後交付包、實測數字、複製雜湊與首次使用方式以 [RELEASE_0.5.0_ACCEPTANCE.md](RELEASE_0.5.0_ACCEPTANCE.md) 為準；下列 tnOb7H 是較早通過的更新器驗證紀錄。
+
 已執行：check-seamless-sync（啟動/運行中自動更新、同一 HWND、多視窗、觀看位置、真衝突）；check-sync-entry（缺檔到齊自動進入、一次配對、舊工作區保存）；sync-outbox、program-updates、persistence、note-version、workspace-snapshots、original-bookmarks 定向測試；既有 check-standalone-windows、check-board-windows、check-native-bookmarks 回歸。
 
 收藏測試明確新增 fixture 卡片，不再依賴啟動自動插入示範卡片。舊 check-startup-snapshots/check-storage-settings 的每次手選/關閉程序規格由本次使用者指令取代，無感流程由新增測試維護；不把舊行為失敗偽稱回歸通過。
