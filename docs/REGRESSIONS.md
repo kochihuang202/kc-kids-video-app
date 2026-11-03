@@ -625,6 +625,13 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Root cause: The download catalogue, category API caches and per-video snapshots duplicated complete metadata. Page loading wrote more optional snapshots before saving the critical catalogue; a catalogue quota exception aborted the page before `setSeries`/`setDevice`. The estimate for OPFS downloads did not cover this separate text-storage failure. The browser repro confirms this code path; it does not by itself establish the original physical phone's storage distribution or an iOS-version-specific defect.
 - Regression tests: `e2e/regressions/download-catalogue-quota.spec.ts` runs actual download → leave → real localStorage pressure → tap tab → preserved completion/preferences/view outbox → offline category/lesson → advancing local playback without another media fetch; the second flow injects a persistent catalogue-write quota error, verifies a usable list, stage-specific diagnostic evidence and explicit deletion. Both page assertions failed before the fix. `test/diagnostics.spec.ts` REG-071 verifies real Worker ingestion, replay, exact storage-detail export, error outcome and no new watch history. Historical download/thumbnail/offline/playback assertions remain unchanged. Physical iPhone retest remains required.
 
+## REG-MEDIA-001 — MP3 extension hides an MP4 wrapper that iPad rejects
+
+- Problem/reproduction: Play third-season `ml3-057` on iPad; `MEDIA_ERROR_4` occurs at zero while the computer can play it. The source is MP4 carrying MP3 audio with leading ID3 and an invalid metadata packet, yet named `.mp3` and served as `audio/mpeg`. HEAD/Range responses match the file, excluding an observed transport truncation.
+- Correct behavior: Standard MP3 bytes under the MP3 name; preserve the valid audio packets and validate full decoding before accepting a replacement. The user confirmed the repaired episode plays on iPad on 2026-11-03.
+- Root cause: Extension-only import checks accepted a mismatched wrapper and stray metadata packet; desktop tolerance concealed the incompatible asset. No player rollback is needed for this incident.
+- Regression test: `scripts/tests/test_standardize_mp3.py` exercises real FFmpeg conversion of normal MP3 and MP4-plus-ID3 under a false MP3 extension, unchanged source hashes, full output decoding, failures without final output, and safe resume. The reusable script creates a separate copy tree; subsequent files are not claimed as physically iPad-verified. See `docs/audio-standardization.md`.
+
 ## REG-072 — InkBridge marks its blank CanvasKit board ready before its first frame succeeds
 
 - Scope: `inkbridge/src/core/canvas-engine.mjs`, `inkbridge/src/renderer/app.mjs`.
