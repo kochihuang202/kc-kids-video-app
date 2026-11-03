@@ -632,6 +632,13 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Root cause: Extension-only import checks accepted a mismatched wrapper and stray metadata packet; desktop tolerance concealed the incompatible asset. No player rollback is needed for this incident.
 - Regression test: `scripts/tests/test_standardize_mp3.py` exercises real FFmpeg conversion of normal MP3 and MP4-plus-ID3 under a false MP3 extension, unchanged source hashes, full output decoding, failures without final output, and safe resume. The reusable script creates a separate copy tree; subsequent files are not claimed as physically iPad-verified. See `docs/audio-standardization.md`.
 
+## REG-MEDIA-002 — Large invalid metadata packets survive double MP3 remuxing
+
+- Problem/reproduction: The third-season batch completed 235/240. Five Dunhuang audio files retain a large non-audio prefix as their first audio packet, even after two stream-copy passes; strict decoding then fails. The encode fallback reads the same original bad packet and fails before reaching valid audio.
+- Correct behavior: Keep the 235 validated outputs, retry failures through a leading-metadata recovery path, preserve the source, and publish only after complete strict output decoding. Do not ignore decode errors or drop an entire packet that can include a valid audio frame.
+- Root cause: Remuxing adds a valid Xing frame ahead of the junk, which does not guarantee the next MP3 demuxer will discard that junk. The fallback never cleaned the elementary audio stream before encoding.
+- Regression test: `scripts/tests/test_standardize_mp3.py::test_large_leading_metadata_packet_is_cleaned_before_strict_encoding` creates actual MP3 audio with a large bad leading metadata packet, wraps it in MP4 and prepends ID3. It failed with the same first-packet decoder error before the fix. The recovery extracts packets, finds a coherent Layer III frame chain, removes only the prefix, re-encodes and validates. All six tests retain source hashes, failure isolation and resume protection.
+
 ## REG-072 — InkBridge marks its blank CanvasKit board ready before its first frame succeeds
 
 - Scope: `inkbridge/src/core/canvas-engine.mjs`, `inkbridge/src/renderer/app.mjs`.

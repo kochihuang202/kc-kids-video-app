@@ -79,6 +79,34 @@ class BatchTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", errors="replace"))
         self.assertIn("中文標題.mp3", result.stdout.decode("utf-8"))
 
+    def test_large_leading_metadata_packet_is_cleaned_before_strict_encoding(self):
+        path = self.source / "大段標籤.mp3"
+        subprocess.run([FFMPEG, "-nostdin", "-v", "error", "-f", "lavfi", "-i",
+                        "sine=frequency=440:duration=1", "-c:a", "libmp3lame",
+                        "-b:a", "128k", "-ar", "44100", "-ac", "2", "-y", str(path)], check=True,
+                       creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        data = path.read_bytes()
+        tag_end = 10 + sum(byte << shift for byte, shift in zip(data[6:10], (21, 14, 7, 0)))
+        first_end = tag_end + 144000 * 128 // 44100 + ((data[tag_end + 2] >> 1) & 1)
+        self.assertTrue(b"Info" in data[tag_end:first_end] or b"Xing" in data[tag_end:first_end])
+        # The first muxed Xing frame makes FFmpeg preserve this large non-audio
+        # packet across repeated stream-copy, as in the five production failures.
+        path.write_bytes(data[:first_end] + b"broken metadata\x00" * 24000 + data[first_end:])
+        wrapped = self.root / "wrapped.mp4"
+        subprocess.run([FFMPEG, "-nostdin", "-v", "error", "-f", "mp3", "-i", str(path),
+                        "-map", "0:a:0", "-c:a", "copy", "-f", "mp4", "-y", str(wrapped)],
+                       check=True, capture_output=True,
+                       creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        path.write_bytes(b"ID3\x03\x00\x00\x00\x00\x00\x00" + wrapped.read_bytes())
+        original = module.sha256(path)
+        result = self.run_batch()
+        self.assertEqual(result["failed"], 0, (self.output.parent / "輸出-processing/results.jsonl").read_text(encoding="utf-8"))
+        self.assertEqual(result["ok"], 1)
+        self.assertEqual(module.sha256(path), original)
+        module.Converter(self.source, self.output, FFMPEG).validate(self.output / path.name)
+        journal = (self.output.parent / "輸出-processing/results.jsonl").read_text(encoding="utf-8")
+        self.assertIn('"mode": "encode_cleaned_frames"', journal)
+
 
 if __name__ == "__main__":
     unittest.main()

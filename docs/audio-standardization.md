@@ -9,6 +9,7 @@ python scripts/standardize_mp3.py --source "<來源資料夾>" --output "<另一
 - 僅需要 Python 標準函式庫、Tkinter 與 FFmpeg。找不到系統 FFmpeg 時，會嘗試專案已安裝的 `node_modules/ffmpeg-static/ffmpeg.exe`。
 - 優先以 stream copy 重新封裝，不重新壓縮音訊。再次以真正的 MP3 demuxer 讀取中間檔，清掉錯誤 MP4／ID3 封包；不假設每個檔案的第一包都應刪除。
 - 無法 stream copy 時，才嘗試高品質 MP3 編碼；不使用音量、降噪、變速或裁切濾鏡。
+- 若大段開頭標籤仍被保留為無效音訊封包，先抽出音訊封包、定位連續三個完整 Layer III 影格，從真正音訊起點接續，再嚴格重新編碼。記錄移除的非音訊位元組與 `mode=encode_cleaned_frames`；不整包丟棄可能夾帶第一個有效影格的封包，也不放寬解碼驗證。
 - 每個輸出完整解碼驗證通過後才移入最終輸出資料夾。失敗列入報告，不留下可誤認為完成的半成品。
 - 預設同時處理兩檔，網路原檔每檔只複製一次到本機暫存；不啟動數百個 FFmpeg。可用 `--workers 1` 降低負載。
 - 同一組參數重跑可接續：核對來源大小／修改時間與既有輸出 SHA-256，已完成且未變更的檔案略過。
@@ -23,6 +24,8 @@ python scripts/standardize_mp3.py --source "<來源資料夾>" --output "<另一
 
 使用者隨後要求第三季整季統一輸出，自行貼回，不另備份、不持續消耗 AI 監視。當時只有第一至第三季，第三季共 240 個 MP3、約 1.57 GB，含各故事子資料夾。
 
+2026-11-04，首輪結果為 235 成功、5 失敗。敦煌故事的 29-1、29-2、30-1、30-2、31-2 帶有特別大的無效開頭資料；其中一例首包 349,245 bytes，真正音訊從 348,828 bytes 開始。兩次重新封裝仍將標籤保留為音訊封包，後備編碼又直接讀原檔，因嚴格解碼在第一包中止。新增清除開頭非音訊資料的後備路徑，維持逐檔完整解碼與來源不變。重跑同一輸出可跳過原先成功的 235 個，只重做五個失敗項目。
+
 ## 維護測試
 
-設定 `TEST_FFMPEG` 後執行 `python -m unittest discover -s scripts/tests -p test_standardize_mp3.py -v`。使用真實 FFmpeg 檢查正常 MP3、偽裝 MP3 的 MP4＋ID3、來源不變、損壞檔無最終輸出、續作校驗及變更後重做。這是媒體批次工具，不需要重跑網站 Playwright。
+設定 `TEST_FFMPEG` 後執行 `python -B -m unittest discover -s scripts/tests -p test_standardize_mp3.py -v`。六項真實 FFmpeg 測試包含大段標籤混入 MP4 音訊的失敗重現（修改前失敗、修改後成功），以及正常格式、來源不變、真正損壞檔不輸出、續作校驗與中文 CLI。這是媒體批次工具，不需要重跑網站 Playwright。

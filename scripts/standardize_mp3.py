@@ -5,6 +5,7 @@ import argparse
 import concurrent.futures
 import hashlib
 import json
+import mmap
 import os
 from pathlib import Path
 import queue
@@ -42,6 +43,41 @@ def is_mp3(path: Path) -> bool:
             stream.seek(end)
     return (len(head) >= 4 and head[0] == 255 and head[1] & 224 == 224
             and head[1] & 6 != 0 and (head[1] >> 3) & 3 != 1)
+
+
+def first_audio_frame(path: Path) -> int:
+    """Find a coherent Layer III frame chain, not a sync-like byte in cover art."""
+    with path.open("rb") as stream, mmap.mmap(stream.fileno(), 0, access=mmap.ACCESS_READ) as data:
+        def header(position):
+            if position + 4 > len(data):
+                return None
+            first, second, third, _ = data[position:position + 4]
+            if first != 255 or second & 224 != 224 or (second >> 1) & 3 != 1:
+                return None
+            version, rate_index, bitrate_index = (second >> 3) & 3, (third >> 2) & 3, third >> 4
+            if version == 1 or rate_index == 3 or bitrate_index in (0, 15):
+                return None
+            rate = (44100, 48000, 32000)[rate_index] // {3: 1, 2: 2, 0: 4}[version]
+            bitrates = ((0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320)
+                        if version == 3 else (0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160))
+            length = (144000 if version == 3 else 72000) * bitrates[bitrate_index] // rate + ((third >> 1) & 1)
+            return length, version, rate
+        position = 0
+        while True:
+            position = data.find(b"\xff", position)
+            if position < 0:
+                raise RuntimeError("找不到連續且完整的 MP3 音訊影格。")
+            initial = header(position)
+            if initial:
+                cursor = position
+                for _ in range(3):
+                    next_header = header(cursor)
+                    if not next_header or next_header[1:] != initial[1:] or cursor + next_header[0] > len(data):
+                        break
+                    cursor += next_header[0]
+                else:
+                    return position
+            position += 1
 
 
 class Converter:
@@ -84,6 +120,27 @@ class Converter:
         # Decode every sample. A filename/header-only check cannot detect a bad tail.
         self.command(["-xerror", "-i", str(path), "-map", "0:a:0", "-f", "null", os.devnull])
 
+    def encode(self, source: Path, destination: Path, force_mp3: bool = False) -> None:
+        self.command(["-xerror", *(["-f", "mp3"] if force_mp3 else []), "-i", str(source), "-map", "0:a:0",
+                      "-c:a", "libmp3lame", "-q:a", "2", "-ar", "44100", "-ac", "2",
+                      "-map_metadata", "-1", "-id3v2_version", "3", "-f", "mp3", "-y", str(destination)])
+        self.validate(destination)
+
+    def recover_leading_metadata(self, source: Path, work: Path, destination: Path) -> int:
+        raw, clean = work / "packets.data", work / "clean-frames.data"
+        self.command(["-i", str(source), "-map", "0:a:0", "-c:a", "copy", "-f", "data", "-y", str(raw)])
+        offset = first_audio_frame(raw)
+        if not offset:
+            raise RuntimeError("沒有可清除的開頭標籤，不能將其他解碼錯誤視為此問題。")
+        with raw.open("rb") as reader, clean.open("wb") as writer:
+            reader.seek(offset)
+            shutil.copyfileobj(reader, writer)
+        # Do not drop a whole packet: the bad metadata packet can also contain
+        # the first valid audio frame. Preserve every frame from its true start.
+        # Re-encoding restores a clean reservoir/header after the damaged prefix.
+        self.encode(clean, destination, force_mp3=True)
+        return offset
+
     def convert(self, path: Path, previous: dict) -> dict:
         relative = path.relative_to(self.source)
         destination = self.output / relative
@@ -112,13 +169,16 @@ class Converter:
                 self.validate(final)
             except (RuntimeError, subprocess.TimeoutExpired) as error:
                 warnings.append(str(error))
-                mode = "encode"
-                # Only use encoding if MP3 stream-copy is impossible. No loudness,
-                # tempo, trim or volume filters; fail on actual decode errors.
-                self.command(["-xerror", "-i", str(local), "-map", "0:a:0",
-                              "-c:a", "libmp3lame", "-q:a", "2", "-ar", "44100", "-ac", "2",
-                              "-map_metadata", "-1", "-id3v2_version", "3", "-f", "mp3", "-y", str(final)])
-                self.validate(final)
+                try:
+                    offset = self.recover_leading_metadata(local, work, final)
+                    mode = "encode_cleaned_frames"
+                    warnings.append(f"Removed {offset} leading non-audio bytes before strict encoding.")
+                except (RuntimeError, subprocess.TimeoutExpired, ValueError) as recovery_error:
+                    warnings.append(str(recovery_error))
+                    mode = "encode"
+                    # Other codecs can still be converted, but genuine decode
+                    # errors remain fatal. Never weaken the output validation.
+                    self.encode(local, final)
             destination.parent.mkdir(parents=True, exist_ok=True)
             digest = sha256(final)
             output_size = final.stat().st_size
