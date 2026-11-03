@@ -15,3 +15,7 @@ InkBridge 不導入已排除的帳號／登入服務；以版本標籤替代原�
 沿用 check-save-indicator，增加：版本文字來自 package、舊底欄 hooks 不可見、燈號無內文、設定和燈號 hit target 28×28 px、真實滑鼠 hover 顯示最後備份與日期、實際點設定開啟真實 dialog、版本選單點回收站進入原版 trash 頁面。原有主／子視窗紅綠狀態、離線待送與恢復、無成功 toast、正常關閉一起通過。
 
 已保存並目視檢查隔離截圖 `TEMP/inkbridge-original-modules-save-light-890Ux8/footer.png`：版本靠左、狀態和齒輪靠右、黑色原版 tooltip 顯示備份時間；截圖為發布版本號提升前，當時顯示 0.5.2。這不是原版執行期全功能／所有設定頁的等效驗收，沒有重跑無關套件。
+
+## 交付
+
+0.5.3／發布序號 4 已針對三個已交付基底產生直接升級包並放進指定 OneDrive 根目錄：0.5.0 與 0.5.1 各 155,062 bytes／12 個檔案，0.5.2 為 132,661 bytes／8 個檔案。三份皆通過實際 Windows helper Stage 簽章／檔案驗證及複製內容核對。releaseId 依序為 202eb3d6-7bd1-41d6-87bb-00b9281cf89c、39c45112-a0df-408d-a532-a335f69fdf4d、a263585b-2920-413b-8154-f8b245f2206d。私人發布紀錄為 release/footer-delivery.json，不提交封裝或私鑰。
