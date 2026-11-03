@@ -24,6 +24,7 @@ async function buildPortable(){
   await fs.writeFile(path.join(output,'Start-InkBridge.bat'),launcher.join('\r\n'));
   await fs.writeFile(path.join(output,'使用說明.txt'),`InkBridge 墨橋 ${version}\r\n本次版本：${commit}\r\n\r\n首次換用（兩台各做一次）\r\n1. 完整解壓此 ZIP 到本機獨立資料夾，例如 C:\\Apps\\InkBridge。不要直接在 ZIP 或 OneDrive 交換根目錄中執行。\r\n2. 雙擊 Start-InkBridge.bat。不需要安裝 Node.js、npm 或 FlexNote。\r\n3. 左下角齒輪 → 儲存與同步 → 瀏覽，選此電腦的 OneDrive 交換資料夾，按套用。\r\n4. 若列出不同工作區，以保存時間、電腦名稱、白板和卡片數選定同一份工作區，只需設定一次；原資料保留，不自動合併。\r\n5. 舊開發版資料不會自動搬動：先在舊版 Ctrl+S 建立快照，再關閉舊版，於此版本選擇那份工作區。\r\n\r\n日常使用\r\n啟動、回到前景、休眠恢復與交換檔案到達時檢查。同一工作區的完整後續版本且本機無修改時，直接在原視窗更新。真正雙邊修改保留分支，再請您選擇。缺檔時自動重試，也可選「使用本機版」。\r\nCtrl+S、正常關閉、每 10 分鐘有變更時及切到背景會嘗試保存。右上角顯示保存結果；交換區不可用時先保存本機待送快照，恢復後重試。這不是 OneDrive 已上傳完成的保證。\r\n本機 v503｜快照 v501 是本機提交與快照的對照，不是快照份數；時間、電腦名稱可於設定查看。\r\n\r\n後續程式更新\r\n發現 OneDrive 已到達且相容的簽章增量包時，右上角顯示「更新並重新啟動」。按一次即可保存、更新及重開，不需手動解壓。檔案不完整會等待，失敗會保留或回復舊程式；開發用 Git 目錄不會被更新器覆寫。\r\n\r\n本機筆記、附件及設定：%LOCALAPPDATA%\\InkBridge\r\n本包不含既有筆記、帳號、私鑰或預設同步路徑。只供私人本機測試，不發布公開 Release。\r\n`,'utf8');
   const files=[];
+  const readme=path.join(output,'使用說明.txt');await fs.writeFile(readme,(await fs.readFile(readme,'utf8')).replace('儲存與同步','本地存儲與備份').replace('右上角顯示保存結果','左下角以紅綠燈顯示保存狀態，滑鼠移上去可查看備份時間'));
   async function walk(dir){for(const entry of await fs.readdir(dir,{withFileTypes:true})){
     const file=path.join(dir,entry.name),relative=path.relative(output,file).replaceAll('\\','/');
     if(entry.isSymbolicLink())throw Error('Portable build refuses symlinks: '+relative);

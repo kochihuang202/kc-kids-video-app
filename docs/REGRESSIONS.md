@@ -981,3 +981,9 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - User explicitly removes visible save, local/snapshot revisions and saved text; keeps a dot with backup-time hover, adds installed software version and requests native settings sizing/trash placement.
 - Native78507 puts trash in its user/application menu; footer icon hit targets are 28px with 14px settings glyph and native58432 tooltip. Adapt account entry to InkBridge version menu without mounting excluded login/cloud services. Keep existing real settings/trash routes and internal hidden lifecycle hooks.
 - check-save-indicator passes actual hover/date, 28px bounds, current package version, no lamp text/legacy footer controls, real settings dialog and menu-to-trash navigation, plus the related multiwindow save/offline/normal-close flow. Screenshot personally inspected; see inkbridge/docs/SIDEBAR_FOOTER.md.
+
+## REG-128 — Settings shell must preserve native layout, focus and real handlers across tabs
+
+- User requests the native Settings frame and exactly editor/custom UI/shortcuts/local backup/attachments/about; current storage controls belong to local backup. Keep unimplemented categories as explicit frames, not fake controls.
+- Use native78507.iO Modal93/96211 and vertical Tabs71521/2692 within the existing provider; preserve existing storage fields and IPC via stable mounted DOM sections. Keep native settingPanelOpen state and move focus into the actual dialog, restoring focus after asynchronous operations.
+- Initial candidates exposed ModalContent id override, nav width:100% squeezing the panel, and focus remaining on the footer so Esc never reached the modal. Product contracts were fixed; expectations retained. check-settings-frame verifies readable panel width, native dimensions, real name/check/backup/scan actions, values across tabs and Esc. Screenshots inspected; no unrelated full suite.

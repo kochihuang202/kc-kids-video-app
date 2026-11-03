@@ -1,3 +1,4 @@
+import {settingsFields} from './settings-frame.mjs';
 // InkBridge-owned exchange settings. Does not invoke FlexNote cloud/account services.
 import {installStartupSnapshotNotice} from './startup-snapshot-notice.mjs';
 import {enterWorkspace,localTime} from './operation-ui.mjs';
@@ -5,32 +6,22 @@ export function installStorageSettings() {
   const button = document.createElement('button');
   button.id = 'open-storage-settings'; button.textContent = '⚙'; button.title = '設定'; button.setAttribute('aria-label', '設定');
   document.querySelector('.sidebar-footer').append(button);
-  const dialog = document.createElement('dialog'); dialog.id = 'storage-settings';
-  dialog.innerHTML = `<style>
-    #storage-settings{width:min(620px,85vw);max-height:85vh;overflow:auto;border:1px solid #dedee3;border-radius:14px;padding:24px;color:#25252b;background:white;box-shadow:0 12px 50px #0003}
-    #storage-settings::backdrop{background:#0003}#storage-settings h2{font-size:20px;margin:0 0 16px}#storage-settings h3{margin:18px 0 8px;font-weight:600}
-    #storage-settings p{font-size:13px;margin:8px 0;line-height:1.6}#storage-settings input{width:100%;border:1px solid #ccc;border-radius:6px;padding:9px;font-size:13px;box-sizing:border-box}
-    #storage-settings button{border:1px solid #d4d4db;border-radius:6px;padding:6px 12px;margin:8px 6px 0 0;background:#f7f7fa}#storage-settings button:disabled{opacity:.45}#storage-settings footer{text-align:right;margin-top:16px}
-    #storage-settings-status{white-space:pre-wrap;min-height:42px}#storage-settings .local-path{overflow-wrap:anywhere;color:#666}
-  </style><h2>設定</h2><h3>儲存與同步</h3>
-  <p>各電腦保留自己的本機資料庫。OneDrive 交換資料夾將用於不可變快照與共用附件。</p>
-  <label for="exchange-directory">OneDrive 交換資料夾</label><input id="exchange-directory" readonly placeholder="尚未設定，請按瀏覽選擇">
-  <button id="browse-exchange">瀏覽…</button><button id="check-exchange">檢查資料夾</button><button id="open-exchange">開啟已設定資料夾</button><button id="create-workspace-snapshot">建立快照</button>
-  <p id="storage-settings-status" role="status"></p><p id="storage-version-summary"></p>
-  <h3>本機工作資料</h3><p class="local-path" id="local-directory"></p><button id="open-local-data">開啟本機資料夾</button>
-  <label for="sync-computer-name">這台電腦的名稱</label><input id="sync-computer-name" maxlength="64" placeholder="例如：公司電腦、家裡電腦"><button id="save-computer-name">保存名稱</button>
-  <h3>工作區快照</h3><button id="scan-workspace-snapshots">重新掃描快照</button><div id="workspace-snapshot-list" style="max-height:220px;overflow:auto;font-size:12px"></div>
-  <p>啟動與回到前景會自動接力，無衝突時直接更新原視窗。Ctrl+S、每 10 分鐘及關閉會保存有變更的版本。OneDrive 上傳由您確認。</p>
-  <h3>程式版本</h3><button id="check-program-update">檢查程式更新</button>
-  <footer><button id="cancel-storage-settings">取消</button><button id="apply-storage-settings">套用</button></footer>`;
+  const dialog=document.createElement('div');dialog.id='storage-settings-fields';dialog.hidden=true;dialog.innerHTML=settingsFields;
+  const local=dialog.querySelector('#settings-panel-sync');local.id='settings-panel-local';local.querySelector('h2').textContent='本地存儲與備份';local.append(dialog.querySelector('#settings-panel-workspace'),dialog.querySelector('#settings-panel-backup'));
+  for(const [key,label,description]of [['editor','編輯器','文字與卡片的編輯偏好'],['appearance','外觀定制','介面與白板的顯示偏好'],['shortcuts','快捷鍵','鍵盤操作與快捷鍵偏好']]){const section=document.createElement('section');section.id='settings-panel-'+key;section.className='settings-fields';section.innerHTML=`<h2>${label}</h2><p class="intro">${description}</p><div class="settings-empty">相關設定將在後續版本提供。</div>`;dialog.append(section);}
+  const attachments=document.createElement('section');attachments.id='settings-panel-attachments';attachments.className='settings-fields';attachments.innerHTML='<h2>附件管理</h2><p class="intro">目前工作區使用的圖片、PDF 與其他原始檔案。</p><div class="settings-card"><h3>本機附件</h3><div id="settings-attachment-summary" class="settings-metrics"></div><p>附件以獨立檔案保留，備份版本共用相同內容。</p></div>';dialog.append(attachments);
   document.body.append(dialog);
-  const $ = selector => dialog.querySelector(selector), call = request => window.inkbridge.storageSettings(request);
+  const $ = selector => document.querySelector(selector), call = request => window.inkbridge.storageSettings(request);
   let busy = false;
+  const frame=window.__inkbridgeSettingsFrame={open:false,busy:false,close:()=>{if(!busy)dialog.close();}};
+  const changed=()=>window.dispatchEvent(new Event('inkbridge:settings-frame'));
+  dialog.showModal=()=>{frame.open=true;changed();};dialog.close=()=>{frame.open=false;changed();};
+  const fieldsButtons=()=>document.querySelectorAll('.settings-fields button,.settings-bottom button');
   const run = async action => {
-    if (busy) return; busy = true;
-    dialog.querySelectorAll('button').forEach(el => el.disabled = true);
+    if (busy) return;const previousFocus=document.activeElement;busy = true;frame.busy=true;changed();
+    fieldsButtons().forEach(el => el.disabled = true);
     try { await action(); } catch (error) { $('#storage-settings-status').textContent = error.message; }
-    finally { busy = false; dialog.querySelectorAll('button').forEach(el => el.disabled = false); }
+    finally { busy = false;frame.busy=false;changed(); fieldsButtons().forEach(el => el.disabled = false);const modal=document.querySelector('#storage-settings');if(frame.open&&modal&&!modal.contains(document.activeElement)){const target=previousFocus?.isConnected&&modal.contains(previousFocus)?previousFocus:modal.querySelector('[role=tab][aria-selected=true]');target?.focus({preventScroll:true});} }
   };
   button.onclick = () => { dialog.showModal(); return run(async () => {
     const settings = await call({method:'read'});
@@ -40,6 +31,7 @@ export function installStorageSettings() {
     $('#storage-settings-status').textContent = settings.exchangeDirectory ? '已記住此電腦的交換路徑。可以建立或掃描快照。' : '尚未設定交換資料夾；仍可在本機編輯。';
     const version=await call({method:'snapshotStatus'});$('#storage-version-summary').textContent=`本機 v${version.localRevision}｜最近快照 ${version.baseRevision===null?'尚無':`v${version.baseRevision}`}（本機提交紀錄，不代表 OneDrive 已上傳）`;
     $('#sync-computer-name').value=(await window.inkbridge.sync({method:'preferences'})).computerName;
+    const graph=await window.inkbridge.load(),info=await window.inkbridge.info();$('#settings-app-version').textContent='InkBridge '+info.version;$('#settings-workspace-summary').textContent=`${graph.boards.filter(row=>!row.attributes?.isTrashed).length} 張白板 · ${graph.contents.length} 張卡片`;$('#settings-workspace-id').textContent=graph.workspaceId;const total=(graph.files||[]).reduce((sum,f)=>sum+(f.size||0),0);$('#settings-attachment-summary').textContent=`${(graph.files||[]).length} 個附件 · ${(total/1024/1024).toFixed(2)} MB`;
   }); };
   $('#browse-exchange').onclick = () => run(async () => {
     const result = await call({method:'choose'}); if (result.cancelled) return;
