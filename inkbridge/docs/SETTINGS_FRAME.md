@@ -28,3 +28,7 @@
 check-settings-frame：六個分類文字與順序、原版視窗／可讀內容欄尺寸、保存電腦名稱的實際 IPC、資料夾可讀寫檢查、真實 SQLite 快照及掃描、跨頁欄位保留、附件數量、About 版本、套用、重新開啟、Esc 關閉及 renderer errors 皆通過。相關 check-save-indicator 的底欄／設定開關、保存燈號、多視窗與正常關閉通過；未跑無關全套。
 
 最後隔離場景：TEMP/inkbridge-original-modules-settings-frame-81c8qb。目視檢查先前 b6RnPU 的 local/about 截圖，確認修正內容欄後可正常閱讀；最後測試也保存 0.5.4 與原版對應圖示的截圖。未改動正式資料、未自動清理備份。
+
+## 增量交付
+
+0.5.4／發布序號 5 已對已交付 0.5.0、0.5.1、0.5.2、0.5.3 各建立直接相容增量。包大小依序 162,867／162,867／140,466／125,788 bytes。四份均經實際 Windows helper Stage 驗證簽章與更新檔，再複製至使用者指定 OneDrive 根目錄並核對內容。releaseId 依序：08634bd1-da41-478e-9c53-f80fe03f9d19、ef500009-afe7-43b5-80cf-b10c0adb8ebe、0c16f8aa-b774-47a8-a9d9-03441d159256、7b30fedb-f40b-4be4-9c2f-efb9b1508929。完整私人收據在 release/settings-delivery.json；更新器程式本身本輪未改，不重跑無關更新器全套。
