@@ -2,6 +2,8 @@ const {contextBridge,ipcRenderer,webUtils}=require('electron');
 const workspaceEpoch=ipcRenderer.sendSync('inkbridge:epoch');
 const invoke=(channel,payload)=>ipcRenderer.invoke(channel,payload,workspaceEpoch);
 contextBridge.exposeInMainWorld('inkbridge',{
+  saveState:()=>invoke('inkbridge:save-state'),editingState:value=>invoke('inkbridge:editing-state',value),
+  onSaveStateChanged:callback=>{const listener=()=>callback();ipcRenderer.on('inkbridge:save-state-changed',listener);return ()=>ipcRenderer.removeListener('inkbridge:save-state-changed',listener);},
   programUpdate:request=>invoke('inkbridge:program-update',request),
   sync:request=>invoke('inkbridge:sync',request),
   operations:()=>invoke('inkbridge:operations'),

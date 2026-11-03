@@ -18,7 +18,10 @@ const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javas
 let server,window,database,databaseClient,liveSync,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer,closing=false;
 const queue=require('../../src/main/operation-queue.cjs').createOperationQueue();
 const operations=new Map();
-function notify(value){if(value.key!=='startup-retry')operations.set(value.key,value);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:operation',value);}
+const editingStates=new Map();
+app.on('web-contents-created',(_event,contents)=>{contents.on('did-start-navigation',(_e,_url,_inPlace,isMain)=>{if(isMain)editingStates.delete(contents.id);});contents.once('destroyed',()=>{editingStates.delete(contents.id);saveStateChanged();});});
+function saveStateChanged(){if(closing)return;for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed()&&!w.webContents.isDestroyed())w.webContents.send('inkbridge:save-state-changed');}
+function notify(value){if(value.key==='save'&&value.state!=='error')return;if(value.key!=='startup-retry')operations.set(value.key,value);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:operation',value);}
 const handle=ipcMain.handle.bind(ipcMain);
 ipcMain.handle=(channel,listener)=>handle(channel,(event,payload,epoch)=>{if(liveSync&&channel.startsWith('inkbridge:'))liveSync.assertEpoch(epoch);return listener(event,payload,epoch);});
 app.whenReady().then(async()=>{
@@ -27,6 +30,7 @@ app.whenReady().then(async()=>{
   await restore.recoverRestore(data);
   const filename=path.join(data,'Workspace','inkbridge.sqlite3');fs.mkdirSync(path.dirname(filename),{recursive:true});databaseClient=createDatabaseClient({filename});
   database=Object.fromEntries(['load','summary','commit','history','snapshot','close'].map(name=>[name,(...args)=>databaseClient[name](...args)]));
+  database.commit=async(...args)=>{const ack=await databaseClient.commit(...args);saveStateChanged();return ack;};
   const filesDir=path.join(data,'files');fs.mkdirSync(filesDir,{recursive:true});
   const attachments=require('../../src/main/attachment-store.cjs').createAttachmentStore(filesDir,bytes=>nativeImage.createFromBuffer(bytes).getSize());
   const exportsService=require('../../src/main/original-exports.cjs').createOriginalExports({directory:path.join(data,'exports'),load:()=>database.load(),attachments});
@@ -107,10 +111,12 @@ app.whenReady().then(async()=>{
   const storageSettings=require('../../src/main/storage-settings.cjs').createStorageSettings({filename:path.join(data,'Profile','storage-settings.json'),localDirectory:data,applicationDirectory:project});
   const selectedExchangeDirectories=new Set();
   const snapshots=require('../../src/main/sync-snapshots.cjs').createSyncSnapshots({localDirectory:data,database,getExchange:()=>storageSettings.read().exchangeDirectory,resolveAttachment:attachments.resolvePath});
+  ipcMain.handle('inkbridge:editing-state',(event,value)=>{if(!readable(event)||!Number.isSafeInteger(value?.serial)||typeof value.dirty!=='boolean')throw Error('Invalid editing state');const old=editingStates.get(event.sender.id);if(!old||value.serial>=old.serial)editingStates.set(event.sender.id,{...value});saveStateChanged();return {ok:true};});
+  ipcMain.handle('inkbridge:save-state',async event=>{if(!readable(event))throw Error('Unexpected sender');const ids=new Set(BrowserWindow.getAllWindows().filter(w=>!w.isDestroyed()).map(w=>w.webContents.id));return {...await snapshots.status(),editing:[...editingStates].some(([id,s])=>ids.has(id)&&s.dirty),ownDirty:!!editingStates.get(event.sender.id)?.dirty};});
   let snapshotTask;
   const createSnapshot=(reason,alreadyFlushed=false)=>{
     if(snapshotTask)return snapshotTask;
-    snapshotTask=(async()=>{if(!alreadyFlushed)await standalone.flushForSettings();if(!storageSettings.read().exchangeDirectory){notify({key:'save',state:'success',title:'已保存本機',time:new Date().toISOString()});return {configured:false,created:false};}const result=await snapshots.create(reason);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:snapshot-saved',result);notify({key:'save',state:result.pending?'waiting':'success',title:result.pending?'已保存本機，等待交換資料夾恢復':result.created?'已保存到 OneDrive 本機交換資料夾':'沒有新變更',time:result.createdAt});return result;})().finally(()=>{snapshotTask=null;});
+    snapshotTask=(async()=>{const edits=new Map([...editingStates].map(([id,s])=>[id,s.serial]));if(!alreadyFlushed)await standalone.flushForSettings();if(!storageSettings.read().exchangeDirectory){saveStateChanged();return {configured:false,created:false};}const result=await snapshots.create(reason);for(const [id,serial]of edits)if(editingStates.get(id)?.serial===serial)editingStates.get(id).dirty=false;for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:snapshot-saved',result);saveStateChanged();return result;})().finally(()=>{snapshotTask=null;});
     return snapshotTask;
   };
   ipcMain.handle('inkbridge:create-snapshot',(event,_request,epoch)=>{if(!readable(event)||closing||applyingSettings)throw Error('目前無法建立快照');liveSync.assertEpoch(epoch);return queue.run('save',()=>{liveSync.assertEpoch(epoch);return createSnapshot('manual');}).catch(error=>{notify({key:'save',state:'error',title:'保存未完成',message:error.message});throw error;});});

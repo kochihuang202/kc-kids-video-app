@@ -8,6 +8,7 @@ import {noteDocument} from '/inkbridge-core/rich-document.mjs';
 import {connectOriginalShell} from './original-shell.mjs';
 import {installStorageSettings} from './storage-settings.mjs';
 import {enterWorkspace,installOperationUI} from './operation-ui.mjs';
+import {installSaveIndicator} from './save-indicator.mjs';
 import {createOriginalNoteWriter} from '/inkbridge-core/original-note-writes.mjs';
 import {folderDeletionOperations} from '/inkbridge-core/original-folder-writes.mjs';
 import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
@@ -17,6 +18,7 @@ import {createOriginalConnections} from '/inkbridge-core/original-connections.mj
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
+const saveIndicator=installSaveIndicator();
 function report(error){state.errors.push({message:error.message,stack:error.stack});$('#persistence-status').textContent=error.message;$('#persistence-status').classList.add('save-error');}
 window.addEventListener('error',event=>report(event.error||Error(event.message)));
 window.addEventListener('unhandledrejection',event=>report(event.reason instanceof Error?event.reason:Error(String(event.reason))));
@@ -87,7 +89,7 @@ async function boot(){
         if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));
         readLiveEditor(editor,instances.get(nodeId)?.contentId);
       }
-    },onStatus:value=>{state.persistence=value;const snapshot=state.snapshotInfo;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`本機 v${value.revision}${snapshot?.configured?`｜快照 ${snapshot.baseRevision===null?'尚無':`v${snapshot.baseRevision}`}`:''}`;$('#persistence-status').title=snapshot?.baseSnapshotId?`最近成功快照：${snapshot.baseSnapshotId}\n本機版本號不是快照數量，也不表示 OneDrive 已上傳。`:'本機已提交版本，不代表其他電腦已收到。';}});
+    },onStatus:value=>{saveIndicator.persistence(value);state.persistence=value;const snapshot=state.snapshotInfo;$('#persistence-status').textContent=value.error?`未保存：${value.error}`:value.saving?'正在保存…':value.dirty?'有待保存內容':`本機 v${value.revision}${snapshot?.configured?`｜快照 ${snapshot.baseRevision===null?'尚無':`v${snapshot.baseRevision}`}`:''}`;$('#persistence-status').title=snapshot?.baseSnapshotId?`最近成功快照：${snapshot.baseSnapshotId}\n本機版本號不是快照數量，也不表示 OneDrive 已上傳。`:'本機已提交版本，不代表其他電腦已收到。';}});
   if(boardWindow){const recover=document.createElement('button');recover.id='board-window-recover';recover.textContent='保留草稿並重新載入';recover.hidden=true;recover.className='px-2 py-1 text-xs text-danger';$('#persistence-status').after(recover);
     const status=coordinator.onStatus;coordinator.onStatus=value=>{status(value);recover.hidden=!value.error;};
     recover.onclick=async()=>{try{document.body.inert=true;coordinator.dispose();await coordinator.flushTail.catch(()=>{});while(pendingExternal.size)await Promise.all([...pendingExternal]);await coordinator.beforeFlush();coordinator.dispose();

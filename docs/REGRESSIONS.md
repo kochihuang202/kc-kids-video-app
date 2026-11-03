@@ -967,3 +967,11 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Original48626 supplies connectionDefaults to Canvas10764; InkBridge omitted it. Actual endpoint dragging produced orthogonal in SQLite and failed the new assertion before the fix.
 - Restore the original parent prop contract, pin new normal links to bezier, retain native color/width/follow-path defaults and the actual toolbar/converter/persistence chain.
 - check-native-connections passes real drag, Canvas and SQLite bezier values, manual straight shape saved through restart, subsequent new link still curved, and existing arrow/color/deletion/cascade assertions. No unrelated full suite. Source hashes and scope in inkbridge/docs/CURVED_CONNECTION_DEFAULT.md.
+
+## REG-126 — Save lamp must distinguish local commits, unpublished Outbox and verified exchange publication
+
+- User requests a bottom-left red/green lamp and no recurring save-success toast; retain background supplementation, Ctrl+S, ten-minute and normal-close triggers. Cloud upload completion is not observable here.
+- Durable local head revision alone does not prove exchange publication. Check the current head's published receipt or verified adoption plus local exchange DB/Manifest availability; local revision must match captured revision. Unpublished Outbox remains red.
+- Main/child input and composition mark editing immediately through sender/epoch checked IPC. Local ACK never turns un-snapshotted changes green. Capture editing sequence before a snapshot flush and clear only unchanged sequences; late edits remain red. Discard sender state when its document navigates or window is destroyed.
+- check-save-indicator passes real typing, local ACK still red, manual snapshot green, child editing marks parent red, missing exchange retains red local Outbox, retry green, and absent save-success notification. sync-outbox verifies publication false offline and true only after real publication. No unrelated full suite or cleanup policy changes.
+- Added an actual normal-close assertion: the initial candidate broadcast to a destroyed WebContents during window teardown. Skip broadcasts while closing and check WebContents lifetime, so no main-process error modal interrupts close. This failure was found only in isolated pre-delivery tests; do not call an assertion log complete before process exit succeeds.

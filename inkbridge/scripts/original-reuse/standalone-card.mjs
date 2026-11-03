@@ -4,7 +4,9 @@
 import { PersistenceCoordinator } from '/inkbridge-core/persistence-coordinator.mjs';
 import { documentIdentity, standaloneServices } from '/inkbridge-core/note-version.mjs';
 import {installOperationUI} from './operation-ui.mjs';
+import {installSaveIndicator} from './save-indicator.mjs';
 import {noteDocument} from '/inkbridge-core/rich-document.mjs';
+const saveIndicator=installSaveIndicator();
 const r = window.__originalRequire, $ = s => document.querySelector(s);
 const state = window.__inkbridgeStandalone = { ready: false, errors: [], conflict: false };
 const rpc = async (method, payload) => { const response = await window.inkbridge.noteCall({ method, payload }); if (!response.ok)
@@ -48,7 +50,7 @@ async function boot() {
             title();
             state.conflict = false;
             return ack;
-        }, onStatus: value => { state.persistence = value; $('#standalone-status').dataset.error = String(!!value.error); $('#standalone-status').textContent = value.error ? '未保存：' + value.error : value.saving ? '正在保存…' : value.dirty ? '有待保存內容' : '已保存' + (recoveryPath ? '；舊草稿保留於 ' + recoveryPath : ''); $('#standalone-recover').hidden = !value.error; } });
+        }, onStatus: value => { saveIndicator.persistence(value);state.persistence = value; $('#standalone-status').dataset.error = String(!!value.error); $('#standalone-status').textContent = value.error ? '未保存：' + value.error : value.saving ? '正在保存…' : value.dirty ? '有待保存內容' : '已保存' + (recoveryPath ? '；舊草稿保留於 ' + recoveryPath : ''); $('#standalone-recover').hidden = !value.error; } });
     function register(value) { editor = value; state.editor = editor; stagedIdentity = documentIdentity(editor.getEditorState().toJSON()); editor.registerUpdateListener(({ tags }) => { if (tags.has('editor-force-update'))
         return; queueMicrotask(read); }); }
     async function flush() { while (pendingExternal.size)
