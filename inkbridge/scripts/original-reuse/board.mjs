@@ -15,6 +15,7 @@ import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
 import {createOriginalBookmarks} from '/inkbridge-core/original-bookmarks.mjs';
 import {createOriginalPdf} from '/inkbridge-core/original-pdf.mjs';
 import {createOriginalConnections} from '/inkbridge-core/original-connections.mjs';
+import {fitCardHeight,cardMaxHeight} from '/inkbridge-core/card-height.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -34,6 +35,10 @@ async function boot(){
   r(19281).YH.init('inkbridge-local',graph.workspaceId);
   const boardWindow=location.pathname==='/board-window',requestedBoard=new URL(location.href).searchParams.get('whiteboardId');
   const device=await window.inkbridge.sync({method:'deviceRead'}),windowKey=boardWindow?'board:'+requestedBoard:'main';
+  let maxCardHeight=cardMaxHeight(device.editorPreferences?.cardMaxHeight);
+  window.addEventListener('inkbridge:card-height-preference',event=>{maxCardHeight=cardMaxHeight(event.detail);});
+  const nativeNewNote=r(19281).YH.newNoteCardInstance.bind(r(19281).YH);
+  r(19281).YH.newNoteCardInstance=props=>({...nativeNewNote(props),isAutoHeight:false,inkbridgeManagedHeight:true});
   if(boardWindow&&!graph.boards.some(board=>board.id===requestedBoard&&!board.attributes?.isTrashed)){document.body.inert=false;$('#board').textContent='此白板已被移除';state.ready=true;window.inkbridge.onBridgeRequest(async()=>({saved:true}));window.inkbridge.ready();return;}
   let persistedGraph=structuredClone(graph),boardId=(boardWindow?requestedBoard:device.activeBoards?.[windowKey])||graph.boards.find(board=>!board.attributes?.isTrashed)?.id||graph.boards[0]?.id||'board-main',navigationChanging=false,navigationTail=Promise.resolve(),shell;
   if(!graph.boards.some(board=>board.id===boardId))boardId=graph.boards[0]?.id||'board-main';
@@ -72,7 +77,7 @@ async function boot(){
     for(const editor of new Set(peers))if(editor!==sourceEditor&&!editor.isComposing()&&JSON.stringify(bodyFromEditor(editor).document)!==JSON.stringify(document)){editor.setEditorState(editor.parseEditorState(document),{tag:'editor-force-update'});editor.update(()=>{},{discrete:true,tag:'editor-force-update'});editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));}
     const current=originalStore.getState();
     if(current.nodes.some(node=>node.data.objectId===content.id&&JSON.stringify(node.data.content)!==JSON.stringify(document))){
-      current.setNodes(nodes=>nodes.map(node=>node.data.objectId===content.id?{...node,data:{...node.data,content:document,title:helpers.LG(document),lastEditedTime:new Date().toISOString()}}:node));
+      current.setNodes(nodes=>nodes.map(node=>node.data.objectId===content.id?fitCardHeight({...node,data:{...node.data,content:document,title:helpers.LG(document),lastEditedTime:new Date().toISOString()}},engine,graphContext(),maxCardHeight):node));
     }
     for(const node of originalStore.getState().nodes)if(node.data.objectId===content.id)persistGeometry(node);
   }
@@ -108,12 +113,15 @@ async function boot(){
       const mediaCard={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content,type:'image'};
       return r(19281).YH.mediaCardInstanceToMediaCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},mediaCard);
     }
-    return r(19281).YH.convertNoteCardToNode({...content,content:noteDocument(content)},{isAutoHeight:true,scale:1,color:'#fff',...item.attributes,id:item.id,objectId:item.contentId,whiteboardId:item.boardId,x:item.x,y:item.y,width:item.width,height:item.height});
+    const node=r(19281).YH.convertNoteCardToNode({...content,content:noteDocument(content)},{isAutoHeight:true,scale:1,color:'#fff',...item.attributes,id:item.id,objectId:item.contentId,whiteboardId:item.boardId,x:item.x,y:item.y,width:item.width,height:item.height});
+    node.data.inkbridgeManagedHeight=item.attributes?.inkbridgeManagedHeight===true;
+    node.isFixedHeight=!node.data.isAutoHeight&&!node.data.isFolded;
+    return fitCardHeight(node,engine,graphContext(),maxCardHeight);
   }
   function addCard(title='',body='',point){
     const controls=state.controls,box=$('#board').getBoundingClientRect();point??=controls.screenToFlowPosition({x:box.x+box.width/2,y:box.y+box.height/2});
     const contentId=crypto.randomUUID(),instanceId=crypto.randomUUID(),content={id:contentId,title,body,document:title||body?noteDocument({title,body}):r(19281).YH.newEmptyEditorContent(),kind:'text',tone:'sage'};
-    putContent(content,body);const item={id:instanceId,contentId,boardId,x:point.x,y:point.y,width:520,height:200,z:instances.size};instances.set(item.id,item);coordinator.stage({type:'putInstance',data:item});
+    putContent(content,body);const item={id:instanceId,contentId,boardId,x:point.x,y:point.y,width:520,height:200,z:instances.size,attributes:{isAutoHeight:false,inkbridgeManagedHeight:true}};instances.set(item.id,item);coordinator.stage({type:'putInstance',data:item});coordinator.stage(catalogOperation('instance',{...item.attributes,id:item.id}));
     originalStore.getState().addNodes([toNode(item)]);return instanceId;
   }
   if(!graph.boards.length){const board={id:boardId,title:'靈感白板',view:{x:80,y:60,zoom:.8}};boards.set(boardId,board);coordinator.stage({type:'putBoard',data:board});}
@@ -174,6 +182,15 @@ async function boot(){
   globalThis.__inkbridgeRegisterSidebarEditor=registerModalEditor;
   const writeNoteBase=createOriginalNoteWriter({hydrateScene:sections.hydrate,navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
   const writeNote=async(method,payload)=>{const result=await writeNoteBase(method,payload);if(method==='registerFiles')for(const file of payload.files)files.set(file.id,file);if(['deleteNoteCardInstance','batchDeleteNoteCardInstances','batchDeleteCardsByType'].includes(method))connections.hydrate(await window.inkbridge.load());return result;};
+  globalThis.__inkbridgeResetHeight=async ids=>{
+    maxCardHeight=cardMaxHeight((await window.inkbridge.sync({method:'deviceRead'})).editorPreferences?.cardMaxHeight);
+    await coordinator.flush();
+    for(const id of ids){const node=originalStore.getState().nodes.find(n=>n.id===id);if(!node||node.type!=='NoteCard')continue;
+      const next=fitCardHeight({...node,data:{...node.data,isFolded:false,inkbridgeManagedHeight:true}},engine,graphContext(),maxCardHeight);
+      await writeNote('updateNoteCardInstance',{id,updates:{inkbridgeManagedHeight:true,isFolded:false,isAutoHeight:false,height:next.height}});
+    }
+  };
+  window.addEventListener('focus',()=>window.inkbridge.sync({method:'deviceRead'}).then(value=>{maxCardHeight=cardMaxHeight(value.editorPreferences?.cardMaxHeight);}).catch(report));
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
   const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});

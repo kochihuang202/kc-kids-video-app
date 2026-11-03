@@ -68,7 +68,8 @@ function installLiveSync({app,powerMonitor,windows,localDirectory,database,snaps
     if(request.method==='keepLocal'){await initialized;return queue.run('keep-local',async()=>{const wasInitial=initial;if(!initial)await windows.pause();try{await save('resolve-local',true);const graph=await database.summary();await bind(graph.workspaceId);const rows=await snapshots.index();settings.resolvedHeads=rows.filter(r=>r.workspaceId===graph.workspaceId&&r.relation==='branch').map(r=>r.snapshotId);await writeJSON(settingsFile,settings);initial=false;notify({key:'sync',state:'success',title:'已保留本機版本，其他分支仍保留'});return {kind:'ready'};}finally{if(!wasInitial)await windows.resume();}});}
     if(request.method==='deviceRead')return device;
     if(request.method==='deviceWrite'){
-      if(!['boardViews','activeBoards'].includes(request.key)||typeof request.value!=='object'||JSON.stringify(request.value).length>1024*1024)throw Error('Invalid device state');
+      if(!['boardViews','activeBoards','editorPreferences'].includes(request.key)||!request.value||typeof request.value!=='object'||JSON.stringify(request.value).length>1024*1024)throw Error('Invalid device state');
+      if(request.key==='editorPreferences'&&(!Number.isInteger(request.value.cardMaxHeight)||request.value.cardMaxHeight<160||request.value.cardMaxHeight>10000))throw Error('Invalid card height');
       device[request.key]={...(device[request.key]||{}),...request.value};deviceTail=deviceTail.catch(()=>{}).then(()=>writeJSON(deviceFile,device));await deviceTail;return {ok:true};
     }
     throw Error('Unknown sync operation');

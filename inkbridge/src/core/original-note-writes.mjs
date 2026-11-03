@@ -110,7 +110,9 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             const changed = new Map();
             for (const item of items) {
                 const existing = changed.get(item.id) || instances.get(item.id);
-                const nextAttributes = { ...existing.attributes, ...item.updates, id: item.id };
+                const updates={...item.updates};
+                if(updates.inkbridgeManagedHeight===undefined&&existing.attributes?.inkbridgeManagedHeight&&(updates.isAutoHeight===true||(updates.height!==undefined&&Math.abs(updates.height-existing.height)>1)))updates.inkbridgeManagedHeight=false;
+                const nextAttributes = { ...existing.attributes, ...updates, id: item.id };
                 const next = {...existing,attributes:nextAttributes};
                 for(const key of ['x','y','width','height'])if(item.updates[key]!==undefined)next[key]=item.updates[key];
                 coordinator.stage({type:'putInstance',data:next});

@@ -1,4 +1,5 @@
 import {settingsFields} from './settings-frame.mjs';
+import {installCardHeightSettings} from './card-height-settings.mjs';
 // InkBridge-owned exchange settings. Does not invoke FlexNote cloud/account services.
 import {installStartupSnapshotNotice} from './startup-snapshot-notice.mjs';
 import {enterWorkspace,localTime} from './operation-ui.mjs';
@@ -10,7 +11,7 @@ export function installStorageSettings() {
   const local=dialog.querySelector('#settings-panel-sync');local.id='settings-panel-local';local.querySelector('h2').textContent='本地存儲與備份';local.append(dialog.querySelector('#settings-panel-workspace'),dialog.querySelector('#settings-panel-backup'));
   for(const [key,label,description]of [['editor','編輯器','文字與卡片的編輯偏好'],['appearance','外觀定制','介面與白板的顯示偏好'],['shortcuts','快捷鍵','鍵盤操作與快捷鍵偏好']]){const section=document.createElement('section');section.id='settings-panel-'+key;section.className='settings-fields';section.innerHTML=`<h2>${label}</h2><p class="intro">${description}</p><div class="settings-empty">相關設定將在後續版本提供。</div>`;dialog.append(section);}
   const attachments=document.createElement('section');attachments.id='settings-panel-attachments';attachments.className='settings-fields';attachments.innerHTML='<h2>附件管理</h2><p class="intro">目前工作區使用的圖片、PDF 與其他原始檔案。</p><div class="settings-card"><h3>本機附件</h3><div id="settings-attachment-summary" class="settings-metrics"></div><p>附件以獨立檔案保留，備份版本共用相同內容。</p></div>';dialog.append(attachments);
-  document.body.append(dialog);
+  document.body.append(dialog);const cardHeightSettings=installCardHeightSettings(dialog);
   const $ = selector => document.querySelector(selector), call = request => window.inkbridge.storageSettings(request);
   let busy = false;
   const frame=window.__inkbridgeSettingsFrame={open:false,busy:false,close:()=>{if(!busy)dialog.close();}};
@@ -24,6 +25,7 @@ export function installStorageSettings() {
     finally { busy = false;frame.busy=false;changed(); fieldsButtons().forEach(el => el.disabled = false);const modal=document.querySelector('#storage-settings');if(frame.open&&modal&&!modal.contains(document.activeElement)){const target=previousFocus?.isConnected&&modal.contains(previousFocus)?previousFocus:modal.querySelector('[role=tab][aria-selected=true]');target?.focus({preventScroll:true});} }
   };
   button.onclick = () => { dialog.showModal(); return run(async () => {
+    await cardHeightSettings.read();
     const settings = await call({method:'read'});
     $('#exchange-directory').value = settings.exchangeDirectory;
     $('#local-directory').textContent = settings.localDirectory;

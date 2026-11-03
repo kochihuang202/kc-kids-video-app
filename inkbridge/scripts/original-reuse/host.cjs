@@ -77,6 +77,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-ui/styles.css')file=path.join(project,'src/renderer/styles.css');
     else if(pathname==='/inkbridge-core/persistence-coordinator.mjs')file=path.resolve(own,'../../src/core/persistence-coordinator.mjs');
     else if(pathname==='/inkbridge-core/rich-document.mjs')file=path.resolve(own,'../../src/core/rich-document.mjs');
+    else if(pathname==='/inkbridge-core/card-height.mjs')file=path.resolve(own,'../../src/core/card-height.mjs');
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
     else if(pathname==='/inkbridge-core/workspace-window-sync.mjs')file=path.resolve(own,'../../src/core/workspace-window-sync.mjs');
     else if(pathname==='/inkbridge-core/note-version.mjs')file=path.resolve(own,'../../src/core/note-version.mjs');

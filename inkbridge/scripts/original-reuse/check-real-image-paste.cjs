@@ -6,6 +6,9 @@ const {_electron,expect}=require('@playwright/test'),fs=require('node:fs/promise
  try{
   let page=await app.firstWindow();const renderErrors=[];page.on('pageerror',error=>renderErrors.push(error.message));page.on('console',m=>{if(m.type()==='error'&&/TypeError|ReferenceError|ErrorBoundary/.test(m.text()))renderErrors.push(m.text());});await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{},{timeout:30000});
   await app.evaluate(async({clipboard})=>{const saved=[];for(const item of await clipboard.read()){const payload={};for(const type of item.types){const value=await item.getType(type);payload[type]=typeof value?.arrayBuffer==='function'?new Blob([await value.arrayBuffer()],{type:value.type}):value;}saved.push(payload);}globalThis.__savedImageTestClipboard=saved;});savedClipboard=true;
+  // Empty workspaces no longer manufacture demo cards (REG-097). Create the
+  // explicit fixture used below for the card-library editor paste flow.
+  await page.evaluate(()=>window.__inkbridgeIntegrated.addCard('Image paste test'));
   const bytes=await app.evaluate(async({clipboard,ClipboardItem,nativeImage})=>{const pixels=Buffer.alloc(320*240*4);for(let i=0;i<pixels.length;i+=4){pixels[i]=25;pixels[i+1]=90;pixels[i+2]=220;pixels[i+3]=255;}const png=nativeImage.createFromBitmap(pixels,{width:320,height:240}).toPNG();await clipboard.write([new ClipboardItem({'image/png':new Blob([png],{type:'image/png'})})]);return Array.from(png);});
   let hash;
   await page.locator('#board').click({position:{x:650,y:550}});await page.keyboard.press('Control+v');await expect.poll(async()=>(await page.evaluate(()=>window.inkbridge.load())).contents.filter(c=>c.kind==='image').length,{timeout:20000}).toBe(1);

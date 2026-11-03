@@ -987,3 +987,11 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - User requests the native Settings frame and exactly editor/custom UI/shortcuts/local backup/attachments/about; current storage controls belong to local backup. Keep unimplemented categories as explicit frames, not fake controls.
 - Use native78507.iO Modal93/96211 and vertical Tabs71521/2692 within the existing provider; preserve existing storage fields and IPC via stable mounted DOM sections. Keep native settingPanelOpen state and move focus into the actual dialog, restoring focus after asynchronous operations.
 - Initial candidates exposed ModalContent id override, nav width:100% squeezing the panel, and focus remaining on the footer so Esc never reached the modal. Product contracts were fixed; expectations retained. check-settings-frame verifies readable panel width, native dimensions, real name/check/backup/scan actions, values across tabs and Esc. Screenshots inspected; no unrelated full suite.
+# REG-129 — New card height limits and original-size board image paste
+
+- User behavior: new text cards grow only to the configurable world-pixel cap; overflow scrolls internally. A native selection-toolbar reset restores this rule without changing width/content. Explicit auto height can expand the full document; existing manually sized placements are preserved.
+- Source: original94700 image-size helper capped at600×800; original19281 defaults auto height; native59745 toolbar and66597 bounds. Keep complete native paste/editor/scroll/service paths, adapt policy at the owned boundary.
+- Fix: original-size image placements; local editor setting (default832), explicit managed-placement marker; content-identity measurement cache key; clear isFixedHeight when returning to explicit auto height. Do not migrate all old placements.
+- Tests: check-card-height (real100-paragraph clipboard paste, actual scroll, real reset/auto-height buttons,1200×900 image,SQLite/restart), check-empty-new-card, check-card-toolbar-menu, check-settings-frame, check-real-image-paste. Manual1100px sizing is service-boundary coverage, not a physical resize-handle claim.
+- Historical test correction: real-image-paste now creates its own note fixture rather than relying on removed demo notes (REG-097); expectations retained. No unrelated full-suite run.
+
