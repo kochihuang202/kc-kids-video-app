@@ -11,3 +11,7 @@
 定向實測：check-save-indicator.cjs 通過真實輸入紅燈、本機 flush 仍紅、Ctrl+S 發布綠燈、獨立編輯視窗修改使主視窗紅燈、離線待送紅燈及恢復重試綠燈；保存成功不再顯示通知。sync-outbox.test.cjs 通過真實 SQLite 離線／重試／父鏈測試及 published 狀態。沒有重跑無關整套測試。
 
 保留現有版本與附件政策：有變更新增不可變 DB 快照，CAS 附件共用；本輪不自動刪除快照、Outbox、附件或程式更新包。
+
+交付：0.5.2／發布序號 3，已為 0.5.0-eb9b4a26f3f8-7c0531 與 0.5.1-2222f5e8ae29-3a2431 兩個基底各發布相容增量，兩者各 142,737 bytes、9 個變更檔案。releaseId 分別為 313f0eb0-fd15-4d09-9dd5-2dd5cd2341fc 與 bc4a45d9-93da-4b26-a3f7-82e41e7a83bc。Windows helper Stage 驗證簽章及所有更新檔通過後，唯一 ZIP／描述檔送至指定 OneDrive 根目錄並核對複製內容。正式程式未由代理直接關閉或替換；使用者按「更新並重新啟動」套用。
+
+正常關閉也由真實 BrowserWindow.close 驗證，完成後再釋放 Playwright 偵錯連線。早期隔離候選發現銷毀 WebContents 時廣播狀態會拋例外，已加關閉／生命週期檢查並通過重測；不把只有功能斷言成功卻關閉失敗列為通過。
