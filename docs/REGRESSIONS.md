@@ -995,3 +995,11 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Tests: check-card-height (real100-paragraph clipboard paste, actual scroll, real reset/auto-height buttons,1200×900 image,SQLite/restart), check-empty-new-card, check-card-toolbar-menu, check-settings-frame, check-real-image-paste. Manual1100px sizing is service-boundary coverage, not a physical resize-handle claim.
 - Historical test correction: real-image-paste now creates its own note fixture rather than relying on removed demo notes (REG-097); expectations retained. No unrelated full-suite run.
 
+## REG-130 — Native drawing, mindmaps and blank-canvas menu require complete parent and persistence integration
+
+- Trigger: drawing/mindmap creation buttons were gated off; initialDrawingStrokes=[] erased native hydration; blank Canvas onContextMenu was unbound. Mindmap SQLite data alone did not update the displayed text.
+- Fix: enable original48626 entry points, retain10764/64744/49871 gestures and tools, extract original parent mindmap callbacks using AST; map four new catalogs through existingSQLite and shared-window guards; register live Lexical mindmap updates. Connect original90214/31167 blank menu, keeping right-drag suppression and explicit capability exclusions.
+- Preservation: placement removal retains reusable tree content; partial node updates merge; general connection hydration preserves native tree edges; switching boards restores the corresponding strokes and layout.
+- Tests: check-drawing-mindmap-menu (real pen/highlighter/eraser, note/menu/toolbar creation, typing,Tab/Enter,Canvas text,root drag/fold,placement remove,board isolation/restart); check-native-multiselect-context before/after; check-native-connections; database/workspace-window-sync and drawing-mindmap unit contracts. No unrelated full-suite run.
+- Evidence boundary: PRD root folding/Enter behavior differed from actual sources; expectations follow the original source. Import, cross-tree detach/merge, global undo and hardware pen pressure remain uncertified; no claims based solely on DOM presence.
+

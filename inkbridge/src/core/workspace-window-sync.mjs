@@ -1,5 +1,5 @@
 import { documentIdentity } from './note-version.mjs';
-const fields = { folder: 'folders', 'whiteboard-instance': 'whiteboardInstances', card: 'cardMetadata', tag: 'tags', 'card-tag': 'cardTags', remark: 'cardRemarks', file: 'files', 'content-version': 'contentVersions', 'tag-group': 'tagGroups', collection: 'collections', 'collection-view': 'collectionViews', 'saved-tab': 'savedTabs', 'tab-group': 'tabGroups', connection: 'connections', section: 'sections' };
+const fields = { folder: 'folders', 'whiteboard-instance': 'whiteboardInstances', card: 'cardMetadata', tag: 'tags', 'card-tag': 'cardTags', remark: 'cardRemarks', file: 'files', 'content-version': 'contentVersions', 'tag-group': 'tagGroups', collection: 'collections', 'collection-view': 'collectionViews', 'saved-tab': 'savedTabs', 'tab-group': 'tabGroups', connection: 'connections', section: 'sections', 'drawing-stroke':'drawingStrokes',mindmap:'mindmaps','mindmap-node':'mindmapNodes','mindmap-instance':'mindmapInstances' };
 function ref(op) { const id = op.id || op.data?.id; if (op.type === 'putContent')
     return ['content', id]; if (op.type === 'putBoard')
     return ['board', id]; if (['putInstance', 'deleteInstance'].includes(op.type))

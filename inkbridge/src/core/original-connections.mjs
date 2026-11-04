@@ -45,7 +45,7 @@ export function createOriginalConnections({ r, navigate, coordinator, load, stor
     const rows = new Map(), names = new Set(['addConnection', 'updateConnection', 'deleteConnection', 'getConnectionsByWhiteboardId', 'getCardLinks']);
     const put = row => coordinator.stage(catalogOperation('connection', row));
     const hydrate = graph => { rows.clear(); for (const row of graph.connections || [])
-        rows.set(row.id, row); store.getState().setConnections([...rows.values()].filter(row => row.whiteboardId === getBoardId()).map(row => r(19281).YH.connectionToFlowConnection(row))); };
+        rows.set(row.id, row); store.getState().setConnections([...store.getState().connections.filter(row=>String(row.id).startsWith('mindmap-conn-')),...[...rows.values()].filter(row => row.whiteboardId === getBoardId()).map(row => r(19281).YH.connectionToFlowConnection(row))]); };
     const call = (name, payload) => navigate(async () => {
         await coordinator.flush();
         const graph = await load();
