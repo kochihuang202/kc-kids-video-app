@@ -1,0 +1,9 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+module.exports=function({root,changes}){function patch(id,from,to){const file=path.join(root,`source-modules/module-${id}.cjs`),before=fs.readFileSync(file,'utf8');if(before.includes(to))return;const count=before.split(from).length-1;if(!count)throw Error('Mindmap appearance source anchor missing: '+id);const after=before.split(from).join(to);fs.writeFileSync(file,after);changes.push({id,description:'Extend native mindmap appearance contract',count,beforeSha256:crypto.createHash('sha256').update(before).digest('hex'),afterSha256:crypto.createHash('sha256').update(after).digest('hex')});}
+ patch('81958','Oy: function () { return d; }','Oy: function () { return (...args) => globalThis.__inkbridgeMindmapLayout ? globalThis.__inkbridgeMindmapLayout(d,args,"initial") : d(...args); }');
+ patch('81958','jm: function () { return u; }','jm: function () { return (...args) => globalThis.__inkbridgeMindmapLayout ? globalThis.__inkbridgeMindmapLayout(u,args,"live") : u(...args); }');
+ patch('91413','let l = a.pH, c = a.wf,','let l = globalThis.__inkbridgeMindmapSpacing?.(s)?.padding ?? a.pH, c = globalThis.__inkbridgeMindmapSpacing?.(s)?.gap ?? a.wf,');
+ patch('91413','e.parent === t.parent ? a.if : a.U6','globalThis.__inkbridgeMindmapSpacing?.(e.data)?.gap === 28 ? (e.parent === t.parent ? 12 : 20) : (e.parent === t.parent ? a.if : a.U6)');
+ patch('10764','return { x: X, y: Z, width: q, height: $, scale: U, fontSize: G, padding: K,','return { x: X + (globalThis.__inkbridgeMindmapEditorInset?.(e) || 0) * nB.scale, y: Z, width: q - (globalThis.__inkbridgeMindmapEditorInset?.(e) || 0), height: $, scale: U, fontSize: G, padding: K,');
+ patch('5043','(0, i.jsx)(j, { borderStyle:','(!eT && globalThis.__inkbridgeMindmapControls) ? (0, i.jsx)(globalThis.__inkbridgeMindmapControls, {nodeId:e.id}) : (0, i.jsx)(j, { borderStyle:');
+};

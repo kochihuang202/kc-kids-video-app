@@ -1003,3 +1003,10 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Tests: check-drawing-mindmap-menu (real pen/highlighter/eraser, note/menu/toolbar creation, typing,Tab/Enter,Canvas text,root drag/fold,placement remove,board isolation/restart); check-native-multiselect-context before/after; check-native-connections; database/workspace-window-sync and drawing-mindmap unit contracts. No unrelated full-suite run.
 - Evidence boundary: PRD root folding/Enter behavior differed from actual sources; expectations follow the original source. Import, cross-tree detach/merge, global undo and hardware pen pressure remain uncertified; no claims based solely on DOM presence.
 
+## REG-131 — Mindmap appearance must share measurement, branch anchors and editor marker offsets
+
+- User-directed change: replace ordinary boxed topics and long empty spans with underline branches and compact curved joins; add independent leading markers. Root remains distinct. Keep native editing/layout/gesture behavior.
+- Fix: an own-source decorator on53861/81958 and rebuild hooks in91413/10764/5043; use identical measured widths for layout and drawing, reserve marker slots in editor overlays, relayout on committed text, store optional map/node appearance fields in existing SQLite catalogs. Keep original color conversion and explicit user colors.
+- Tests: check-mindmap-appearance uses isolated SQLite, native left/both-side layout, real marker/style controls, marked text input, inheritance and restart; check-drawing-mindmap-menu guards REG-130; marker and catalog unit tests3 passed; check-native-connections passed after explicitly reselecting its edge through the canvas following Escape (native Escape can clear selection; persistence expectations retained).
+- Evidence: own implementation/source notes in inkbridge/docs/MINDMAP_APPEARANCE.md. XMind static resources read only; full analysis hit unrelated native-keymap integrity mismatch. No claim of complete XMind parity, physical IME verification, or long-duration WASM profiling. No formal user data touched.
+

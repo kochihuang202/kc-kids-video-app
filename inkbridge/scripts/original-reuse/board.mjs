@@ -18,6 +18,8 @@ import {createOriginalConnections} from '/inkbridge-core/original-connections.mj
 import {fitCardHeight,cardMaxHeight} from '/inkbridge-core/card-height.mjs';
 import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
 import {createOriginalMindmaps} from '/inkbridge-core/original-mindmaps.mjs';
+import {installMindmapAppearance} from '/inkbridge-core/mindmap-appearance.mjs';
+import {installMindmapControls} from './mindmap-controls.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -33,6 +35,7 @@ async function boot(){
   r(64744);const React=r(27378),ReactDOM=r(31542),redux=r(63268).Z,Provider=r(16125).zt,Theme=r(2726).f,Canvas=r(10764).p,Flow=r(34883).R,CanvasProvider=r(64744).InkBridgeCanvasHostProvider;
   if(!CanvasProvider)throw Error('Apply the recorded original integration patches first');
   const kit=r(37757),K=await kit.zj();kit.nY(K);const fonts=r(65857).fO;await new Promise((resolve,reject)=>fonts.init(K,resolve).catch(reject));
+  installMindmapAppearance(r,K,fonts.getFontMgr());
   const graph=await window.inkbridge.load(),info=await window.inkbridge.info(),contents=new Map(graph.contents.map(content=>[content.id,content])),instances=new Map(graph.instances.map(instance=>[instance.id,instance])),files=new Map((graph.files||[]).map(file=>[file.id,file]));
   r(19281).YH.init('inkbridge-local',graph.workspaceId);
   const boardWindow=location.pathname==='/board-window',requestedBoard=new URL(location.href).searchParams.get('whiteboardId');
@@ -200,6 +203,7 @@ async function boot(){
   const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
   const drawings=createOriginalDrawings({navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});
   mindmaps=createOriginalMindmaps({r,graph,navigate,coordinator,catalogOperation,store:originalStore,getBoardId:()=>boardId,getBaseNodes:()=>sections.scene()});
+  installMindmapControls({r,React,mindmaps,onError:report});
   const hydrateBase=sections.hydrate;sections.hydrate=()=>{hydrateBase();mindmaps.hydrate();};mindmaps.hydrate();
   function applySharedGraph(next){
     const replace=(map,rows)=>{map.clear();for(const row of rows||[])map.set(row.id,row);};

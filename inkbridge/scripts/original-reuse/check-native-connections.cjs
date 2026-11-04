@@ -42,12 +42,16 @@ const { WorkspaceDatabase } = require('../../src/main/database.cjs');
         await page.getByRole('dialog').last().getByRole('button').nth(1).click();
         await page.keyboard.press('Escape');
         await expect.poll(async () => (await page.evaluate(() => window.inkbridge.load())).connections[0]?.beginStyle).toBe('arrow');
+        // Escape may also end the native edge selection after closing its popup.
+        // Re-select through the canvas before the next independent toolbar action.
+        await page.mouse.click((points[0].x + points[1].x) / 2, points[0].y);
         await page.getByRole('button', { name: await t('edgeLineColor'), exact: true }).click();
         const colors = page.getByRole('dialog').last().locator('[class~=grid-cols-12] > div[style*="background-color"]');
         await expect(colors.first()).toBeVisible();
         await colors.nth(3).click();
         await page.keyboard.press('Escape');
         await expect.poll(async () => (await page.evaluate(() => window.inkbridge.load())).connections[0]?.color).not.toBe(edge.color);
+        await page.mouse.click((points[0].x + points[1].x) / 2, points[0].y);
         await page.getByRole('button',{name:await t('pathType'),exact:true}).click();
         await page.getByRole('dialog').last().getByRole('button').nth(0).click();
         await page.keyboard.press('Escape');
