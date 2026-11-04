@@ -25,3 +25,10 @@
 - check-drawing-mindmap-menu：與本輪相同新渲染下，筆／螢光筆／橡皮擦、原生新增、Tab／Enter、拖曳、收合、切板、重開通過。
 - 相關 drawing-mindmap SQLite／shared-window測試2項及標記契約測試；一般連線回歸另記錄。未重跑無關全套。
 - 未驗證：實體中文IME、多媒體心智圖、長時間WASM記憶體、與FlexNote／XMind效能同等。原有新視窗／同步機制沿用，本輪沒有宣稱完成新的跨機實測。
+
+## 0.5.7 實際交付
+
+- 程式提交689bab2，發布序號8；完整可攜目錄：release/InkBridge-0.5.7-689bab2862fc-69cf88，入口Start-InkBridge.bat。
+- 實際以此目錄內runtime/electron.exe與app運行check-mindmap-appearance並重開通過；測試資料TEMP/inkbridge-original-modules-map-appearance-nLia5I，已目視檢查restart.png。來源版相關心智圖互動與一般連線亦通過。
+- 已為0.5.0–0.5.6七個已交付基底建立直接增量，每包6.05–6.10MB。所有包經實際Windows更新器Stage驗證簽章／逐檔雜湊，再以唯一名稱先ZIP後描述檔寫入既有OneDrive交換根目錄，副本雜湊一致。0.5.6→0.5.7 releaseId：4c2c477c-f72b-4b9e-907e-95b5f43d437e；完整私人收據release/appearance-delivery.json。
+- 不修改資料快照、assets或正式profile。沒有代按正式程式的更新按鈕，也不宣稱OneDrive已上傳完成；已到達的更新由既有程式內更新流程處理。
