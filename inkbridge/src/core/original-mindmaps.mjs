@@ -1,6 +1,7 @@
 // InkBridge SQLite boundary for native 19281/48626/81958 mindmaps. Layout,
 // keyboard handling, editor and canvas remain native; no substitute tree engine.
 import {validateMarkers,MAP_STYLES} from './mindmap-appearance.mjs';
+import {selectionAfterMindmapDelete} from './mindmap-keyboard.mjs';
 const copy=value=>JSON.parse(JSON.stringify(value));
 const list=value=>Array.isArray(value)?value:[value];
 const reads=new Set(['getMindMapById','getMindmapById','getAllMindMaps','getMindMapsByIds','getMindMapNodesByMindMapId','getMindMapInstancesByWhiteboardId']);
@@ -29,7 +30,7 @@ export function createOriginalMindmaps({r,graph,navigate,coordinator,catalogOper
  async function perform(name,payload){
   if(reads.has(name)){const id=typeof payload==='string'?payload:payload?.id||payload?.mindMapId||payload?.mindmapId;if(name==='getAllMindMaps')return {success:true,mindMaps:records().filter(row=>!row.isTrashed),mindmaps:records().filter(row=>!row.isTrashed)};if(name==='getMindMapsByIds'){const ids=Array.isArray(payload)?payload:payload.ids;return {success:true,mindMaps:records().filter(row=>ids.includes(row.id))};}if(name==='getMindMapNodesByMindMapId')return {success:true,nodes:[...nodes.values()].filter(row=>row.mindMapId===id)};if(name==='getMindMapInstancesByWhiteboardId')return {success:true,instances:[...instances.values()].filter(row=>row.whiteboardId===(typeof payload==='string'?payload:payload.whiteboardId))};const mindMap=record(id);return {success:!!mindMap,mindMap};}
   await coordinator.flush();
-  const before={mindmaps:new Map(mindmaps),nodes:new Map(nodes),instances:new Map(instances)};let refresh=false;
+  const before={mindmaps:new Map(mindmaps),nodes:new Map(nodes),instances:new Map(instances)},boardAtStart=getBoardId();let refresh=false,continuation;
   try{
    if(name==='addMindMap'){
     const map=copy(payload);if(!map?.id)throw Error('思維導圖識別碼不存在');const children=map.nodes||map.graph?.children||[];delete map.nodes;delete map.graph;mindmaps.set(map.id,{...mindmaps.get(map.id),...map});
@@ -51,10 +52,19 @@ export function createOriginalMindmaps({r,graph,navigate,coordinator,catalogOper
     const ids=name==='deleteMindMapInstance'?[typeof payload==='string'?payload:payload.id]:payload;for(const id of ids){instances.delete(id);remove('mindmap-instance',id);}refresh=true;
    }else if(name==='batchDeleteMindMapNodes'){
     const ids=new Set(payload),visit=id=>{for(const child of nodes.get(id)?.childNodeIds||[])if(!ids.has(child)){ids.add(child);visit(child);}};for(const id of [...ids])visit(id);
+    continuation=selectionAfterMindmapDelete([...nodes.values()],ids);
     for(const id of ids){const node=nodes.get(id);if(node?.isRoot)for(const [placementId,row]of instances)if(row.objectId===node.mindMapId){instances.delete(placementId);remove('mindmap-instance',placementId);}nodes.delete(id);remove('mindmap-node',id);}
     for(const [id,node]of nodes){if(!(node.childNodeIds||[]).some(child=>ids.has(child)))continue;const next={...node,childNodeIds:node.childNodeIds.filter(child=>!ids.has(child))};nodes.set(id,next);put('mindmap-node',next);}refresh=true;
    }else throw Error('Unsupported mindmap service: '+name);
    await coordinator.flush();if(refresh){publishRecords();hydrate();}
+   if(continuation&&getBoardId()===boardAtStart){
+    const state=store.getState();
+    // Do not steal a newer user selection while waiting for the SQLite ACK.
+    if(!state.selectedNodeIds.size||[...state.selectedNodeIds].every(id=>!state.nodes.some(node=>node.id===id))){
+     const ids=continuation.map(id=>state.nodes.find(node=>node.type==='MindmapNode'&&(node.id===id||node.data.id===id))?.id).filter(Boolean);
+     state.setSelectedNodeIds(new Set(ids));
+    }
+   }
    return {success:true,mindMap:typeof payload==='string'?record(payload):record(payload?.id||payload?.node?.mindMapId||payload?.objectId),relatedMindmaps:name==='createMindMapInstance'?list(payload).map(row=>record(row.objectId)).filter(Boolean):[]};
   }catch(error){mindmaps.clear();nodes.clear();instances.clear();for(const [target,source]of [[mindmaps,before.mindmaps],[nodes,before.nodes],[instances,before.instances]])for(const [id,row]of source)target.set(id,row);throw error;}
  }

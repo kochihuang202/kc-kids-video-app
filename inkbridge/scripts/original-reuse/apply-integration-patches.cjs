@@ -102,5 +102,6 @@ if(fs.readFileSync(path.join(root,'source-modules/module-90214.cjs'),'utf8').inc
 patch('90214','let { updateNodeDataById: t = () => { } } = e','let { updateNodeDataById: t = () => { }, inkbridgePageHiddenActions = [] } = e','Accept page-menu capability exclusions at the native parent boundary');
 patch('90214','hideActions: eN, placement: ex, onNewCardCreated: ej','hideActions: [...eN, ...inkbridgePageHiddenActions], placement: ex, onNewCardCreated: ej','Retain complete native blank-canvas menu while excluding unconnected creation actions');
 require('./apply-mindmap-appearance-patches.cjs')({root,changes});
+require('./apply-mindmap-keyboard-patches.cjs')({root,changes});
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));
 

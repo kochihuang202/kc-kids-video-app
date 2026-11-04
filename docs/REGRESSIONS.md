@@ -1010,3 +1010,10 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Tests: check-mindmap-appearance uses isolated SQLite, native left/both-side layout, real marker/style controls, marked text input, inheritance and restart; check-drawing-mindmap-menu guards REG-130; marker and catalog unit tests3 passed; check-native-connections passed after explicitly reselecting its edge through the canvas following Escape (native Escape can clear selection; persistence expectations retained).
 - Evidence: own implementation/source notes in inkbridge/docs/MINDMAP_APPEARANCE.md. XMind static resources read only; full analysis hit unrelated native-keymap integrity mismatch. No claim of complete XMind parity, physical IME verification, or long-duration WASM profiling. No formal user data touched.
 
+## REG-132 — Mindmap Delete must retain a usable selection and arrows must stay inside the map
+
+- Trigger: native10764 cleared selection before onNodesDelete; the SQLite adapter never chose a survivor. Arrow fallback searched all canvas objects, allowing unexpected jumps to unrelated cards.
+- Confirmed reference: installedXMind23.07 renderer/2907 df/ka/Ya structural navigation then aligned geometry, bR/OR deletion selection previous sibling then next then parent; source identity and limitations in inkbridge/docs/MINDMAP_KEYBOARD.md.
+- Fix: own candidate helper invoked at the native AST call boundary; retain native editing and viewport reveal. Compute delete continuation from the old tree, apply only after SQLiteACK/hydrate and on the same board without replacing a newer surviving selection. Preserve native input exclusions and explicitly ignore composing/229 events.
+- Tests: check-mindmap-keyboard fails on baseline (empty selection after deletingb), passes with real mouse/keys on right/left/dual maps, subtree removal, previous/next/parent fallback, Tab continuation, textDelete, composing event and restart. Unit3 plus relatedcatalog/appearance3 passed; check-drawing-mindmap-menu and check-mindmap-appearance passed. No full-suite rerun; physicalIME and originalXMind runtime not claimed.
+

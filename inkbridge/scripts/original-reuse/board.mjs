@@ -19,6 +19,7 @@ import {fitCardHeight,cardMaxHeight} from '/inkbridge-core/card-height.mjs';
 import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
 import {createOriginalMindmaps} from '/inkbridge-core/original-mindmaps.mjs';
 import {installMindmapAppearance} from '/inkbridge-core/mindmap-appearance.mjs';
+import {installMindmapKeyboard} from '/inkbridge-core/mindmap-keyboard.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
@@ -36,6 +37,7 @@ async function boot(){
   if(!CanvasProvider)throw Error('Apply the recorded original integration patches first');
   const kit=r(37757),K=await kit.zj();kit.nY(K);const fonts=r(65857).fO;await new Promise((resolve,reject)=>fonts.init(K,resolve).catch(reject));
   installMindmapAppearance(r,K,fonts.getFontMgr());
+  installMindmapKeyboard();
   const graph=await window.inkbridge.load(),info=await window.inkbridge.info(),contents=new Map(graph.contents.map(content=>[content.id,content])),instances=new Map(graph.instances.map(instance=>[instance.id,instance])),files=new Map((graph.files||[]).map(file=>[file.id,file]));
   r(19281).YH.init('inkbridge-local',graph.workspaceId);
   const boardWindow=location.pathname==='/board-window',requestedBoard=new URL(location.href).searchParams.get('whiteboardId');
