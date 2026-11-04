@@ -27,3 +27,9 @@
 - 一般連線刷新保留mindmap-conn樹邊，相關check-native-connections另測。
 
 沒有測試宣稱：完整XMind／Markdown導圖匯入、獨立導圖頁、多媒體／卡片拖入導圖、分支跨樹合併拆解、全域Undo／Redo、實體手寫筆壓感，以及與原版效能相同。這些不以新入口可見當作完成；本次沒有啟動或修改正式FlexNote、正式筆記與設定，沒有跑無關全套回歸。
+
+## 可攜版交付
+
+來源提交1596d0b，0.5.6發布序號7，可攜目錄release/InkBridge-0.5.6-1596d0b3d883-85bc27。以該目錄內的Electron及應用程式，重跑同一相關實際操作／重開測試通過，資料在TEMP/inkbridge-original-modules-draw-mindmap-OvTn2M，並目視檢查其導圖畫面。一般連線回歸通過，未重跑無關全套。
+
+已對0.5.0–0.5.5六個已交付基底產生直接簽章增量（約6.07–6.10MB）；每包經Windows helper Stage實際驗證簽章、ZIP／逐檔雜湊，先ZIP後描述檔複製至既有OneDrive根目錄並比對副本雜湊。releaseId依序91981fda-8ef6-4481-8fb9-426a90162d1d、246365b6-3dc8-4682-a58f-39e7bab2055f、568335b5-5ed1-4814-a381-a9181259ecbf、b8aeef72-3a60-4e55-af6b-8911d53bf72b、c6c603a1-d04c-45a4-b02a-e7ba56518265、9f12d0d6-1c03-4392-892b-1c8165437036。私人收據release/tools-delivery.json。未代按正式機器的更新，亦不宣稱OneDrive已完成上傳。
