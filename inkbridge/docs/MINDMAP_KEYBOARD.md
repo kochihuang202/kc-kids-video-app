@@ -26,3 +26,10 @@ original-mindmaps 在原子刪除提交前依舊樹計算接續節點，SQLite A
 - mindmap-keyboard單元3項：結構導航、隱藏／跨圖／一般卡片排除、前一／下一／父節點／批次刪除選取。
 - drawing-mindmap及appearance契約共3項通過。相關實際check-drawing-mindmap-menu與check-mindmap-appearance通過，沒有重跑無關全套。
 - 尚未驗證：實體中文IME、XMind runtime逐鍵對照、全域Undo／Redo、長時間效能。本輪未修改正式FlexNote／正式筆記。
+
+## 0.5.8 可攜版驗證與交付
+
+- Runtime程式提交3724f56，序號9；完整目錄release/InkBridge-0.5.8-3724f56e38ed-c339a5，入口Start-InkBridge.bat。
+- 以該包內的Electron及app跑同一鍵盤測試並正常重開通過；隔離資料TEMP/inkbridge-original-modules-map-keyboard-ihQGWR。測試快速送ArrowLeft/Delete時曾出現DOM游標先更新、Lexical選取尚未更新；維持所有文字刪除斷言，改為等待實際Lexical選取offset，沒有用固定睡眠，也沒有為此更換產品編輯器。
+- 八個已交付基底0.5.0–0.5.7皆有直接增量，約6.05–6.10MB；經Windows更新器Stage驗證簽章及逐檔雜湊，先ZIP後描述檔放入既有OneDrive交換根目錄，並核對複本雜湊。0.5.7→0.5.8 releaseId：a93d2dcb-b392-43f2-920c-cbdad6bd5312；私人收據release/keyboard-delivery.json。
+- 沒有修改snapshots、assets或正式profile，沒有代按正式程式更新；不宣稱OneDrive上傳已完成。
