@@ -739,12 +739,14 @@ async function verifyCapability(
 ) {
   const hash = await tokenHash(writeToken, env);
   const row = await env.DB.prepare(`
-    SELECT id, video_id, status, playback_mode, series_type_snapshot, child_id FROM view_sessions
+    SELECT id, video_id, status, playback_mode, series_type_snapshot, child_id,
+      played_seconds, last_position_seconds, last_heartbeat_seq FROM view_sessions
     WHERE id = ? AND child_device_id = ? AND write_token_hash = ?
   `).bind(sessionId, deviceId, hash).first<{
     id: string; video_id: string; status: string;
     playback_mode: "video" | "listen"; series_type_snapshot: "learning" | "leisure" | null;
     child_id: string | null;
+    played_seconds: number; last_position_seconds: number; last_heartbeat_seq: number;
   }>();
   if (!row) throw new HttpError("播放紀錄授權不正確。", 403, "INVALID_WRITE_TOKEN");
   return row;
@@ -771,10 +773,32 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
     ).bind(sessionId).first();
     return json({ ok: true, aggregate, duplicate: true });
   }
+  // Older installed clients may keep polling while currentTime is frozen.
+  // Acknowledge those requests without inserting empty history, recalculating
+  // quota or touching updated_at. A real seek / end still saves its metadata.
+  if (deltaSeconds === 0) {
+    if ((heartbeatSeq > session.last_heartbeat_seq && positionSeconds !== session.last_position_seconds)
+      || (status === "ended" && session.status !== "ended")) {
+      const now = new Date().toISOString();
+      await env.DB.prepare(`
+        UPDATE view_sessions SET
+          last_position_seconds = CASE WHEN ? >= last_heartbeat_seq THEN ? ELSE last_position_seconds END,
+          last_heartbeat_seq = MAX(last_heartbeat_seq, ?),
+          last_heartbeat_at = ?, updated_at = ?,
+          status = CASE WHEN ? = 'ended' THEN 'ended' ELSE status END,
+          ended_at = CASE WHEN ? = 'ended' THEN COALESCE(ended_at, ?) ELSE ended_at END
+        WHERE id = ? AND ((? > last_heartbeat_seq AND last_position_seconds <> ?) OR (? = 'ended' AND status <> 'ended'))
+      `).bind(heartbeatSeq, positionSeconds, heartbeatSeq, now, now, status, status, now,
+        sessionId, heartbeatSeq, positionSeconds, status).run();
+    }
+    const aggregate = await env.DB.prepare(
+      "SELECT played_seconds, last_position_seconds, last_heartbeat_seq, status FROM view_sessions WHERE id = ?",
+    ).bind(sessionId).first();
+    return json({ ok: true, aggregate });
+  }
   const accessState = await evaluateChildAccessState(env, session.child_id);
-  const closingWithoutPlayback = status === "ended" && deltaSeconds === 0;
-  if (accessState.state === "PAUSED_BY_PARENT" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "PAUSED_BY_PARENT");
-  if (!accessState.isRestrictionsPaused && accessState.state === "OUTSIDE_WINDOW" && !closingWithoutPlayback) throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
+  if (accessState.state === "PAUSED_BY_PARENT") throw new HttpError(accessState.message, 403, "PAUSED_BY_PARENT");
+  if (!accessState.isRestrictionsPaused && accessState.state === "OUTSIDE_WINDOW") throw new HttpError(accessState.message, 403, "OUTSIDE_WINDOW");
   if (!accessState.isRestrictionsPaused && session.playback_mode === "video") {
     const sessionCategories = await env.DB.prepare(
       "SELECT category_id FROM category_videos WHERE video_id = ?",
@@ -783,7 +807,7 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
     const limitedStates = (accessState.categoryStates || []).filter(
       (category) => categoryIds.has(category.categoryId) && category.remainingSeconds !== null,
     );
-    if (limitedStates.some((category) => category.isReached) && !closingWithoutPlayback) {
+    if (limitedStates.some((category) => category.isReached)) {
       throw new HttpError("這個系列今天的觀看時間到了。", 403, "CATEGORY_DAILY_LIMIT_REACHED");
     }
     if (limitedStates.length) {
@@ -791,13 +815,14 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
     }
   }
   if (!accessState.isRestrictionsPaused && session.playback_mode === "video" && session.series_type_snapshot === "leisure") {
-    if (accessState.remainingSeconds <= 0 && !closingWithoutPlayback) throw new HttpError("今天的休閒時間到了。", 403, "DAILY_LIMIT_REACHED");
+    if (accessState.remainingSeconds <= 0) throw new HttpError("今天的休閒時間到了。", 403, "DAILY_LIMIT_REACHED");
     deltaSeconds = Math.min(deltaSeconds, accessState.remainingSeconds);
   }
   await consumeRateLimit(env, await rateKey(env, "heartbeat", `${device!.id}:${sessionId}`), 30, 60);
   const now = new Date().toISOString();
   const heartbeatId = crypto.randomUUID();
   const rollupUpdates = await prepareDailyUsageRollupUpdates(env, {
+    heartbeatId,
     viewSessionId: sessionId,
     videoId: session.video_id,
     deltaSeconds,
@@ -817,17 +842,14 @@ export async function heartbeatViewSession(request: Request, env: AppEnv, sessio
     `).bind(heartbeatId, sessionId, heartbeatSeq, deltaSeconds, positionSeconds, intervalStartedAt, intervalEndedAt, now),
     env.DB.prepare(`
       UPDATE view_sessions SET
-        played_seconds = COALESCE((SELECT SUM(delta_seconds) FROM view_heartbeats WHERE view_session_id = ?), 0),
-        last_position_seconds = COALESCE((
-          SELECT position_seconds FROM view_heartbeats WHERE view_session_id = ?
-          ORDER BY heartbeat_seq DESC LIMIT 1
-        ), last_position_seconds),
-        last_heartbeat_seq = COALESCE((SELECT MAX(heartbeat_seq) FROM view_heartbeats WHERE view_session_id = ?), 0),
+        played_seconds = played_seconds + ?,
+        last_position_seconds = CASE WHEN ? >= last_heartbeat_seq THEN ? ELSE last_position_seconds END,
+        last_heartbeat_seq = MAX(last_heartbeat_seq, ?),
         last_heartbeat_at = ?, updated_at = ?,
         status = CASE WHEN ? = 'ended' THEN 'ended' ELSE status END,
         ended_at = CASE WHEN ? = 'ended' THEN COALESCE(ended_at, ?) ELSE ended_at END
-      WHERE id = ?
-    `).bind(sessionId, sessionId, sessionId, now, now, status, status, now, sessionId),
+      WHERE id = ? AND EXISTS (SELECT 1 FROM view_heartbeats WHERE id = ?)
+    `).bind(deltaSeconds, heartbeatSeq, positionSeconds, heartbeatSeq, now, now, status, status, now, sessionId, heartbeatId),
     ...rollupUpdates,
   ]);
   const aggregate = await env.DB.prepare(

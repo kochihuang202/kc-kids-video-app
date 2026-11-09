@@ -15,7 +15,7 @@
     "test:regression:keyboard-seek": "playwright test e2e/regressions/player-keyboard-seek.spec.ts",
     "test:regression:parent-devices": "playwright test e2e/regressions/parent-device-list.spec.ts",
     "test:regression:media-retry": "playwright test e2e/regressions/media-auto-retry.spec.ts",
-    "test:regression:d1-cost": "vitest run test/d1-cost-regressions.spec.ts test/learning-leisure.spec.ts",
+    "test:regression:d1-cost": "vitest run test/d1-cost-regressions.spec.ts test/heartbeat-cost.spec.ts test/learning-leisure.spec.ts",
     "test:regression:recents": "playwright test e2e/regressions/recent-card-width.spec.ts",
     "test:feature:learning-leisure": "playwright test e2e/features/learning-leisure-flow.spec.ts",
     "test:feature:downloads": "playwright test e2e/features/download-series.spec.ts",

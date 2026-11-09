@@ -367,6 +367,7 @@ async function ensureChildDailyUsageRollup(env: AppEnv, childId: string, targetD
 }
 
 export interface RollupHeartbeatInput {
+  heartbeatId: string;
   viewSessionId: string;
   videoId: string;
   deltaSeconds: number;
@@ -378,7 +379,11 @@ export interface RollupHeartbeatInput {
   childId?: string | null;
 }
 
-/** Builds atomic rollup updates for one new, non-duplicate heartbeat. */
+/**
+ * Build overlap-aware deltas. Every write is gated on this request's new row
+ * id inside the insert/session/rollup transaction: a concurrent retry may
+ * pass the earlier duplicate lookup but cannot apply these deltas twice.
+ */
 export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupHeartbeatInput) {
   if (env.RECORDING_ENABLED === "false" || input.deltaSeconds <= 0) return [] as D1PreparedStatement[];
 
@@ -487,13 +492,13 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
         listen_seconds = MAX(0, listen_seconds + ?),
         total_seconds = MAX(0, total_seconds + ?),
         updated_at = ?
-      WHERE usage_date = ?
-    `).bind(leisureDelta, learningDelta, listenDelta, totalDelta, input.receivedAt, dateStr));
+      WHERE usage_date = ? AND EXISTS (SELECT 1 FROM view_heartbeats WHERE id = ?)
+    `).bind(leisureDelta, learningDelta, listenDelta, totalDelta, input.receivedAt, dateStr, input.heartbeatId));
     for (const categoryId of categoryIds) {
       statements.push(env.DB.prepare(`
         INSERT INTO daily_category_usage_totals (
           usage_date, category_id, video_seconds, listen_seconds, updated_at
-        ) VALUES (?, ?, ?, ?, ?)
+        ) SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM view_heartbeats WHERE id = ?)
         ON CONFLICT(usage_date, category_id) DO UPDATE SET
           video_seconds = MAX(0, video_seconds + excluded.video_seconds),
           listen_seconds = MAX(0, listen_seconds + excluded.listen_seconds),
@@ -504,11 +509,12 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
         input.playbackMode === "video" ? Math.max(0, totalDelta) : 0,
         input.playbackMode === "listen" ? Math.max(0, totalDelta) : 0,
         input.receivedAt,
+        input.heartbeatId,
       ));
       statements.push(env.DB.prepare(`
         INSERT INTO child_category_daily_usage (
           child_id, usage_date, category_id, video_seconds, listen_seconds, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?)
+        ) SELECT ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM view_heartbeats WHERE id = ?)
         ON CONFLICT(child_id, usage_date, category_id) DO UPDATE SET
           video_seconds = MAX(0, video_seconds + excluded.video_seconds),
           listen_seconds = MAX(0, listen_seconds + excluded.listen_seconds),
@@ -520,12 +526,13 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
         input.playbackMode === "video" ? Math.max(0, childTotalDelta) : 0,
         input.playbackMode === "listen" ? Math.max(0, childTotalDelta) : 0,
         input.receivedAt,
+        input.heartbeatId,
       ));
     }
     statements.push(env.DB.prepare(`
       INSERT INTO child_daily_usage (
         child_id, usage_date, total_played_seconds, leisure_seconds, learning_seconds, video_seconds, listen_seconds, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM view_heartbeats WHERE id = ?)
       ON CONFLICT(child_id, usage_date) DO UPDATE SET
         total_played_seconds = MAX(0, total_played_seconds + ?),
         leisure_seconds = MAX(0, leisure_seconds + ?),
@@ -542,6 +549,7 @@ export async function prepareDailyUsageRollupUpdates(env: AppEnv, input: RollupH
       Math.max(0, childLeisureDelta),
       Math.max(0, childListenDelta),
       input.receivedAt,
+      input.heartbeatId,
       childTotalDelta,
       childLeisureDelta,
       childLearningDelta,

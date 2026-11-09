@@ -550,7 +550,7 @@ export function CategoryPage() {
         </Link>
       ) : (
         <div className="video-card-main" aria-disabled="true">
-          <div className="video-thumb-container"><CategoryThumbnail src={video.thumbnailUrl} alt="" categoryName={category?.name || "本機影片"} /><span className="locked-badge">🔒 尚未解鎖</span></div>
+          <div className="video-thumb-container"><CategoryThumbnail src={video.thumbnailUrl} alt="" categoryName={category?.name || "本機影片"} /><span className="locked-badge">{(category?.unlockLimit ?? 5) === 5 ? "🔒 先從前五部選擇" : "🔒 尚未解鎖"}</span></div>
           <div><h2>{video.parentLabel}</h2><p>{video.youtubeTitle}</p></div>
         </div>
       )}
@@ -765,6 +765,7 @@ export function WatchPage() {
   const sessionPromiseRef = useRef<Promise<Capability | null> | null>(null);
   const clientSessionIdRef = useRef(crypto.randomUUID());
   const heartbeatSeqRef = useRef(0);
+  const lastQueuedPositionRef = useRef(0);
   const queueRef = useRef<PendingHeartbeat[]>([]);
   const drainingRef = useRef(false);
   const playingStartPerfRef = useRef<number | null>(null);
@@ -867,6 +868,7 @@ export function WatchPage() {
     sessionPromiseRef.current = null;
     clientSessionIdRef.current = crypto.randomUUID();
     heartbeatSeqRef.current = 0;
+    lastQueuedPositionRef.current = 0;
     accumulatedPlayMsRef.current = 0;
     playingStartPerfRef.current = null;
     playingStartWallRef.current = null;
@@ -1325,6 +1327,16 @@ export function WatchPage() {
     }
     const deltaSeconds = Math.floor(accumulatedPlayMsRef.current / 1000);
     if (deltaSeconds > 0) accumulatedPlayMsRef.current -= deltaSeconds * 1000;
+    const positionSeconds = Math.round(playbackPosition);
+    const intervalStartedAt = playingStartWallRef.current;
+    // Even a skipped interval advances the wall-clock baseline, so a later
+    // real heartbeat cannot span the entire time that playback was stalled.
+    playingStartWallRef.current = playingStartPerfRef.current === null ? null : nowIso;
+    if (status === "active" && deltaSeconds === 0 && positionSeconds === lastQueuedPositionRef.current) {
+      void drainQueue();
+      return;
+    }
+    if (deltaSeconds === 0 && !capabilityRef.current && !sessionPromiseRef.current) return;
 
     const consumesLeisure = playbackMode === "video" && video?.seriesType === "leisure";
     if (deltaSeconds > 0 && consumesLeisure) {
@@ -1342,12 +1354,12 @@ export function WatchPage() {
       writeToken: capability.writeToken,
       heartbeatSeq: ++heartbeatSeqRef.current,
       deltaSeconds,
-      positionSeconds: Math.round(playbackPosition),
-      intervalStartedAt: playingStartWallRef.current,
-      intervalEndedAt: playingStartWallRef.current ? nowIso : null,
+      positionSeconds,
+      intervalStartedAt,
+      intervalEndedAt: intervalStartedAt ? nowIso : null,
       status,
     };
-    playingStartWallRef.current = playingStartPerfRef.current === null ? null : nowIso;
+    lastQueuedPositionRef.current = positionSeconds;
     queueRef.current.push({ sessionId: capability.id, payload, keepalive });
     void drainQueue();
   }, [device?.authorized, drainQueue, ensureSession, playbackMode, video?.seriesType]);
@@ -1661,6 +1673,7 @@ export function WatchPage() {
       sessionPromiseRef.current = null;
       clientSessionIdRef.current = crypto.randomUUID();
       heartbeatSeqRef.current = 0;
+      lastQueuedPositionRef.current = 0;
       accumulatedPlayMsRef.current = 0;
       playingStartPerfRef.current = null;
       playingStartWallRef.current = null;
