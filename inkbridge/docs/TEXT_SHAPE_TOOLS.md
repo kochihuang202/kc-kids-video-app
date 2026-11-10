@@ -16,3 +16,9 @@
 - text-elements單元2項：SQLite實際寫入、no-op、錯誤回滾、重開、刪除；多視窗前置版本／projection與衝突拒絕。
 - 本輪改動共用側欄、sections.extraNodes與48626工具列，因此僅回歸check-nested-sidebar-reveal及check-drawing-mindmap-menu，皆通過。不是全量回歸。最後的導航query修正只重跑本功能測試。
 - 隔離資料與實測畫面在TEMP/inkbridge-original-modules-text-shape-*。原版FlexNote、正式資料及設定不變。未宣稱物理IME、全域Undo、全文字／形狀雙鏈或連線相容性、長時間性能、兩台實機同步全部驗收。
+
+## 0.5.11 交付
+
+程式提交a92c367，發布序號12，可攜目錄release/InkBridge-0.5.11-a92c36742eec-c4e60f。以該目錄內Electron與app執行同一專項操作／正常重開通過；隔離資料TEMP/inkbridge-original-modules-text-shape-nNlq9u。另已目視檢查U7Bvuo/tools.png。
+
+0.5.0–0.5.10十一個舊基底的直接簽章增量均經Windows更新器Stage驗證簽章／逐檔雜湊，再先ZIP後描述檔複製至既有OneDrive交換根目錄，副本雜湊一致。0.5.10→0.5.11為6060701bytes／10檔，releaseId2f724b48-2ade-40c6-8e41-29f138c6d817；完整私人收據release/text-shape-delivery.json。未代按正式程式更新，不宣稱OneDrive雲端上傳完成。
