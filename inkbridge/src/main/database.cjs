@@ -265,7 +265,7 @@ class WorkspaceDatabase {
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else if(operation.type==='deleteCatalog'){
-          check(['folder','card-tag','saved-tab','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance'].includes(operation.kind),'Unsupported catalog deletion');
+          check(['folder','whiteboard-instance','card-tag','saved-tab','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance'].includes(operation.kind),'Unsupported catalog deletion');
           if(operation.kind==='connection')changed=this.deleteConnectionReferences(operation.id)||changed;
           if(operation.kind==='section'){const members=this.statement("SELECT value FROM meta WHERE key LIKE 'section:%' OR key LIKE 'instance:%'").all();check(!members.some(row=>JSON.parse(row.value).parentId===operation.id),'Group still has members');}
           const result=this.statement('DELETE FROM meta WHERE key=?').run(operation.kind+':'+identifier(operation.id,'catalog ID'));

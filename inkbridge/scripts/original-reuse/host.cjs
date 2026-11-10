@@ -82,6 +82,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-mindmaps.mjs')file=path.resolve(own,'../../src/core/original-mindmaps.mjs');
     else if(pathname==='/inkbridge-core/mindmap-appearance.mjs')file=path.resolve(own,'../../src/core/mindmap-appearance.mjs');
     else if(pathname==='/inkbridge-core/mindmap-keyboard.mjs')file=path.resolve(own,'../../src/core/mindmap-keyboard.mjs');
+    else if(pathname==='/inkbridge-core/nested-whiteboards.mjs')file=path.resolve(own,'../../src/core/nested-whiteboards.mjs');
     else if(pathname==='/inkbridge-core/original-catalog.mjs')file=path.resolve(own,'../../src/core/original-catalog.mjs');
     else if(pathname==='/inkbridge-core/workspace-window-sync.mjs')file=path.resolve(own,'../../src/core/workspace-window-sync.mjs');
     else if(pathname==='/inkbridge-core/note-version.mjs')file=path.resolve(own,'../../src/core/note-version.mjs');

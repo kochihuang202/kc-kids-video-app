@@ -19,7 +19,7 @@ export function createOriginalSections({graph,navigate,coordinator,instances,sto
     const sections=new Map((graph.sections||[]).map(row=>[row.id,row]));
     const scene=()=>[...sections.values()].filter(row=>row.whiteboardId===getBoardId()).sort((a,b)=>depth(a)-depth(b)).map(row=>projectGroupedNode(convertSection(row),sections)).concat([...instances.values()].filter(row=>row.boardId===getBoardId()).map(toNode));
     function depth(row){let count=0,seen=new Set([row.id]);while(row.parentId){if(seen.has(row.parentId))throw Error('Cyclic group hierarchy');seen.add(row.parentId);row=sections.get(row.parentId);if(!row)throw Error('Group parent is missing');count++;}return count;}
-    const hydrate=()=>store.getState().setNodes(scene());
+    const hydrate=()=>store.getState().setNodes([...scene(),...(api.extraNodes?.()||[])]);
     const has=name=>['createSection','updateSection','batchUpdateSections','batchDeleteSections'].includes(name);
     const call=(name,payload)=>navigate(async()=>{
         await coordinator.flush();
@@ -56,5 +56,5 @@ export function createOriginalSections({graph,navigate,coordinator,instances,sto
         try{await coordinator.flush();}catch(error){hydrate();throw error;}
         sections.clear();for(const [id,row]of pending)sections.set(id,row);for(const [id,row]of changedInstances)instances.set(id,row);hydrate();return {success:true};
     });
-    return {sections,has,call,scene,hydrate};
+    const api={sections,has,call,scene,hydrate};return api;
 }

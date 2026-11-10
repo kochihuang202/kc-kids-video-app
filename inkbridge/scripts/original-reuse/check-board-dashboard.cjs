@@ -47,7 +47,8 @@ const fs = require('node:fs/promises'), path = require('node:path'), os = requir
         assert(after.boards.find(b => b.id === boardId).attributes.isTrashed);
         assert.deepEqual(after.contents, before.contents);
         assert.deepEqual(after.instances, before.instances);
-        await page.locator('#open-trash').click();
+        await page.locator('#inkbridge-version-menu').click();
+        await page.locator('#footer-trash-action').click();
         await main.getByRole('button', { name: await t('Restore'), exact: true }).click();
         await expect.poll(async () => (await load()).boards.find(b => b.id === boardId).attributes.isTrashed).toBe(false);
         await open();

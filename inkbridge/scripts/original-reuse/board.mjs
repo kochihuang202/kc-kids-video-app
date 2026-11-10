@@ -20,6 +20,7 @@ import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
 import {createOriginalMindmaps} from '/inkbridge-core/original-mindmaps.mjs';
 import {installMindmapAppearance} from '/inkbridge-core/mindmap-appearance.mjs';
 import {installMindmapKeyboard} from '/inkbridge-core/mindmap-keyboard.mjs';
+import {installNestedWhiteboards} from '/inkbridge-core/nested-whiteboards.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
@@ -140,7 +141,8 @@ async function boot(){
   window.router=router;Object.defineProperty(globalThis,'__inkbridgeRoutePath',{configurable:true,get:()=>router.pathname});
   function navigate(operation){const task=navigationTail.catch(()=>{}).then(operation);navigationTail=task;return task;}
   function updateBoardTitle(){const title=boards.get(boardId)?.title||'';if(boardWindow)document.title=title+' — InkBridge';$('.breadcrumb strong').textContent=title;$('.board-heading h2').firstChild.textContent=title;const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=boardId;}
-  function switchBoard(id){return navigate(async()=>{
+  let nested;
+  async function switchBoard(id){if(nested&&id!==boardId)await nested.capture();return navigate(async()=>{
     if(!boards.has(id)||boards.get(id).attributes?.isTrashed)throw Error('白板不存在或已移至回收站');if(id===boardId&&!state.home)return;
     $('#board-navigation-status').textContent='正在保存並切換…';
     try{
@@ -213,9 +215,11 @@ async function boot(){
     replace(contents,next.contents);replace(instances,next.instances);replace(boards,next.boards);replace(files,next.files);replace(sections.sections,next.sections);
     for(const [editor,id]of modalEditors){const content=contents.get(id);if(!content){editor.setEditable(false);continue;}if(!editor.isComposing()&&documentIdentity(bodyFromEditor(editor).document)!==documentIdentity(content.document)){editor.setEditorState(editor.parseEditorState(content.document),{tag:'editor-force-update'});editor.update(()=>{},{discrete:true,tag:'editor-force-update'});editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));}}
     for(const content of contents.values())if(content.kind==='text')redux.dispatch(r(23407).yc.updateNoteCard({id:content.id,title:content.title,content:content.document}));
-    mindmaps.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
+    mindmaps.replace(next);nested.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
   }
   shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  nested=installNestedWhiteboards({r,graph,store:originalStore,getBoardId:()=>boardId,sections,navigate,coordinator,load:()=>window.inkbridge.load(),shell,rehydrate:()=>mindmaps.hydrate()});
+  await nested.refresh();
   let remoteTail=Promise.resolve(),closeEpoch=0;
   globalThis.__inkbridgeRemoteRequest=request=>{
     const task=remoteTail.catch(()=>{}).then(async()=>{
@@ -287,7 +291,7 @@ async function boot(){
   function NativeCanvas({flowContextValue,...props}){
     const nativeWrites=r(99665).U(props.nodes);
     const nativeDrop=r(97101).y({whiteboardId:props.whiteboardId});
-    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById,inkbridgePageHiddenActions:['importXmind','importMarkdown','Text','StickyNote','calendar','Shape','newVideoCard','newAudioCard','websiteCard','file','newWhiteboard','linkToWhiteboard','newPDFCard','newImageCard']});
+    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById,inkbridgePageHiddenActions:['importXmind','importMarkdown','Text','StickyNote','calendar','Shape','newVideoCard','newAudioCard','websiteCard','file','newPDFCard','newImageCard']});
     const nativeMaps=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.mindmaps);
     const mapActions=r(48626).InkBridgeUseMindmapActions({mindmaps:nativeMaps,theme:'light',dispatch:redux.dispatch,pushUndoSnapshot:flowContextValue.pushUndoSnapshot});
     return React.createElement(React.Fragment,null,
