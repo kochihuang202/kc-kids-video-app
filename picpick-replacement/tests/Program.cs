@@ -256,5 +256,8 @@ Test("close-all toolbar saves every tab and leaves a reusable editor with Ctrl+W
 Test("each tab X closes only that document and supports cancelling a close press", TabClosingUserFlows.HeaderX);
 Test("close all stops on save failure, retains pending tabs and can retry", TabClosingUserFlows.FailureAndRetry);
 Test("tab X commits the pending typed style before its automatic final save", TabClosingUserFlows.PendingStyle);
+Test("canvas click and zero-area drags copy the whole image through Ctrl+C", CanvasCopyUserFlows.EmptyArea);
+Test("rectangle, Ctrl+A and resized selections copy valid clipped pixels", CanvasCopyUserFlows.ValidAndClipped);
+Test("Ctrl+C keeps selected floating image pixels and full-image copy behavior", CanvasCopyUserFlows.ObjectCopy);
 Console.WriteLine($"{testCount - failures.Count}/{testCount} checks passed");
 return failures.Count == 0 ? 0 : 1;

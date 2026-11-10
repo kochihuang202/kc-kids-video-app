@@ -149,7 +149,7 @@ public sealed class ImageCanvas : ScrollableControl
         base.OnMouseUp(e); if (!drawing || e.Button != MouseButtons.Left) return; current = ImagePoint(e.Location); drawing = false; Capture = false;
         if (resizingCanvas) { resizingCanvas = false; canvasHandle = -1; if (canvasPreviewBounds != canvasStartBounds) ResizeCanvasBounds(canvasPreviewBounds); else Invalidate(); return; }
         if (dragging) { var mark = preview; preview = null; dragging = false; resizeHandle = -1; if (moved && mark != null) Save(() => Document.CommitMarks(Document.Marks.Select(m => m.Id == mark.Id ? mark : m))); else Changed?.Invoke("已選取標註"); Invalidate(); return; }
-        if (Tool == EditTool.Select) { Selection = Rect; Invalidate(); return; }
+        if (Tool == EditTool.Select) { var area = Rect; Selection = area.Width > 0 && area.Height > 0 ? area : Rectangle.Empty; Invalidate(); return; }
         if (Rect.Width < 2 && Rect.Height < 2) { Changed?.Invoke("已取消修改"); Invalidate(); return; }
         if (Tool == EditTool.Crop) {
             if (Rect.Width < 2 || Rect.Height < 2) return;

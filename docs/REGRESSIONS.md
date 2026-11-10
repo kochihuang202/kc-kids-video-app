@@ -490,6 +490,14 @@ Only important bugs that have occurred in the real app belong here.
 - Fix: Register native WinForms file-drop targets on the canvas and workspace, share file filtering/loading, and isolate per-file loading errors. Retain immediate object selection and direct dragging from REG-048.
 - Tests: `CanvasUserFlows.ExplorerImageDrop` delivers native `DataObject(FileDrop)` through the actual canvas DragEnter/DragDrop handlers, checks multiple sizes, filtering, dirty state and direct dragging, and covers the empty workspace binding. Desktop evidence and the automation limitation are recorded in `tests/UI-VERIFICATION.md`.
 
+## REG-136 — Ctrl+C after a canvas click attempts to clone a zero-area selection
+
+- Scope: `picpick-replacement/ImageCanvas.cs`, `WorkbenchForm.cs`.
+- Reproduction: In Select mode, click `(1391,509)` without dragging, then copy. The old code throws exactly `Rectangle '{X=1391,Y=509,Width=0,Height=0}' cannot have a width or height equal to 0.` Horizontal/vertical zero-area drags trigger the same path. A selection left over after reducing image dimensions can also exceed the new bitmap.
+- Root cause: `Rectangle.IsEmpty` recognizes the all-zero rectangle; a zero-area rectangle at another coordinate passes `!IsEmpty`. Copy cloned the unchecked selection directly.
+- Fix: Normalize zero-area selection gestures to `Rectangle.Empty`. At the copy boundary, intersect with the current image and require positive width and height before cloning. Otherwise retain selected-object/full-image fallback. All three copy cases share the same clipboard writer; no pixel/history/save-state mutation is introduced.
+- Tests: `CanvasCopyUserFlows.EmptyArea`, `ValidAndClipped`, `ObjectCopy` drive actual canvas mouse handlers, the form copy action and Ctrl+C/Ctrl+A command routing. They verify the exact reported coordinates, horizontal/vertical drags at 100%/50%, reverse selection, shrink/clipping/outside fallback, dimensions, pixels/alpha and floating-image copy. The zero-area and out-of-bounds cases failed before the fix; all 41 native checks pass afterward. The copy tests inject only the clipboard writer, preserving the user's actual clipboard; they do not claim physical keyboard or OS clipboard end-to-end verification.
+
 ## REG-072 — Bulk and tab-header close must save the intended document and retain failed tabs
 
 - Scope: `picpick-replacement/DocumentTabs.cs`, `WorkbenchForm.cs`.

@@ -4,7 +4,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 
 ## 執行
 
-可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.6)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.6/CaptureWorkbench.exe)。
+可直接從 [GitHub Release 下載 Windows x64 執行檔](https://github.com/kochihuang202/kc-kids-video-app/releases/tag/capture-workbench-v0.1.7)，不需要自行編譯。[直接下載 CaptureWorkbench.exe](https://github.com/kochihuang202/kc-kids-video-app/releases/download/capture-workbench-v0.1.7/CaptureWorkbench.exe)。
 
 執行 `artifacts/release/CaptureWorkbench.exe`。獨立發行版內含 .NET 執行環境，不需要安裝 SDK。
 
@@ -37,6 +37,7 @@ Windows 桌面截圖與物件編輯器：上方擷取模式列、框選、捲動
 - 拖曳畫布四邊與四角的八個外框控制點，可從對應方向調整實際輸出範圍。往外增加白色／透明空間，往內裁掉該側底圖；左側／上側調整會同步平移浮動物件座標，保留相對位置與原始像素。放開只產生一個復原步驟，Esc 取消。按「畫布大小」輸入寬高則固定左上角；「縮放圖片」會改變圖片與物件的像素尺寸。
 - 從檔案總管拖入圖片：目前有畫布時加入可直接拖曳與縮放的獨立物件，保留原始尺寸、不擴大畫布；空白工作台則每張圖片各開一個同尺寸分頁。支援多選拖入 PNG、JPEG、BMP、GIF、TIFF、ICO；非圖片略過，個別圖片載入失敗會顯示在狀態列，不中斷其他圖片。
 - `Ctrl+A` 全選圖片；`Ctrl+C` 複製選取區域、選中物件，或整張圖。PNG 剪貼簿格式保留透明度。
+- 「選取」工具下只單擊，或只拉出水平／垂直線，不算有效框選；這時 Ctrl+C 複製整張圖。縮小圖片後，舊選取會在複製時限制於目前圖片範圍，避免零面積或越界錯誤。
 - `Ctrl+Z` / `Ctrl+Y`：目前文件的復原／重做，不影響其他分頁。
 - 擷取完成自動保存；編輯、復原與重做只留在記憶體，不連續寫檔。按「保存」或 `Ctrl+S` 才寫入，成功後轉綠。關閉分頁或通知區「離開」也會保存；保存失敗保留視窗與編輯供重試。
 - 預設儲存於「文件\CaptureWorkbench」。日期資料夾內是目前的 PNG；`.documents` 保留原圖、版本與恢復資訊，**不要只保留 PNG 就刪除 `.documents`，否則無法恢復歷史**。

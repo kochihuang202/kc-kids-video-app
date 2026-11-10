@@ -8,6 +8,7 @@ namespace CaptureWorkbench;
 public sealed class WorkbenchForm : Form
 {
     readonly DocumentStore store;
+    readonly Action<Bitmap> writeClipboard = ClipboardImages.Write;
     readonly DocumentTabs tabs = new();
     readonly ToolStripButton closeAllButton = new("關閉全部分頁") { Enabled = false, AccessibleName = "關閉全部分頁", ToolTipText = "逐張保存並關閉所有圖片；保存失敗時保留分頁" };
     readonly ToolStripStatusLabel status = new() { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
@@ -38,6 +39,8 @@ public sealed class WorkbenchForm : Form
     float stroke = 3;
     ImageCanvas? Canvas => tabs.SelectedIndex >= 0 && tabs.SelectedIndex < tabs.TabCount ? tabs.TabPages[tabs.SelectedIndex].Tag as ImageCanvas : null;
     public WorkbenchForm(string[] args) : this(args, null, null) { }
+    internal WorkbenchForm(string[] args, DocumentStore documentStore, AppSettings initialSettings, Action<Bitmap> writeClipboard)
+        : this(args, documentStore, initialSettings) { this.writeClipboard = writeClipboard; }
     internal WorkbenchForm(string[] args, DocumentStore? documentStore, AppSettings? initialSettings)
         : this(args, documentStore, initialSettings, StartupRegistration.Read, StartupRegistration.Write, Environment.ProcessPath!) { }
     internal WorkbenchForm(string[] args, DocumentStore? documentStore, AppSettings? initialSettings, Func<string?> readStartup, Action<string?> writeStartup, string executablePath)
@@ -283,7 +286,21 @@ public sealed class WorkbenchForm : Form
         if (dialog.UseClipboardContent && clipboard != null) { AddTab(store.Create(clipboard)); Fit(); SetStatus("已從剪貼簿新增同尺寸圖片"); }
         else { using var image = NewCanvasForm.CreateImage(dialog.ImageSize.Width, dialog.ImageSize.Height, dialog.BackgroundColor); AddTab(store.Create(image, saveImmediately: false)); Fit(); SetStatus("已建立空白圖片 · Ctrl＋S 保存"); }
     }
-    void Copy() { if (Canvas == null) return; if (!Canvas.Selection.IsEmpty) { using var part = Canvas.Document.Image.Clone(Canvas.Selection, PixelFormat.Format32bppArgb); ClipboardImages.Write(part); } else if (Canvas.SelectedMark is { } mark) { var bounds = Rectangle.Ceiling(mark.Bounds); bounds.Inflate((int)Math.Ceiling(mark.Stroke * 6 + 2), (int)Math.Ceiling(mark.Stroke * 6 + 2)); using var image = new Bitmap(Math.Max(1, bounds.Width), Math.Max(1, bounds.Height), PixelFormat.Format32bppArgb); using (var g = Graphics.FromImage(image)) { g.TranslateTransform(-bounds.Left, -bounds.Top); AnnotationRenderer.Draw(g, mark); } ClipboardImages.Write(image); } else ClipboardImages.Write(Canvas.Document.Image); SetStatus("已複製到剪貼簿"); }
+    void Copy()
+    {
+        var canvas = Canvas; if (canvas == null) return;
+        // Rectangle.IsEmpty only recognizes (0,0,0,0), not a click at another coordinate.
+        var selection = Rectangle.Intersect(canvas.Selection, new Rectangle(Point.Empty, canvas.Document.Image.Size));
+        if (selection.Width > 0 && selection.Height > 0) {
+            using var part = canvas.Document.Image.Clone(selection, PixelFormat.Format32bppArgb); writeClipboard(part);
+        } else if (canvas.SelectedMark is { } mark) {
+            var bounds = Rectangle.Ceiling(mark.Bounds); bounds.Inflate((int)Math.Ceiling(mark.Stroke * 6 + 2), (int)Math.Ceiling(mark.Stroke * 6 + 2));
+            using var image = new Bitmap(Math.Max(1, bounds.Width), Math.Max(1, bounds.Height), PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(image)) { g.TranslateTransform(-bounds.Left, -bounds.Top); AnnotationRenderer.Draw(g, mark); }
+            writeClipboard(image);
+        } else writeClipboard(canvas.Document.Image);
+        SetStatus("已複製到剪貼簿");
+    }
     void Export()
     {
         if (Canvas == null) return;
