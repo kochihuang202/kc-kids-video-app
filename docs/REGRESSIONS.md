@@ -1031,3 +1031,9 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Fix: on successful creation, add the parentboard, its referenceIDs and ancestorfolders to the existing native expansion set. At startup reveal the active parent's already stored children once; ordinary refreshes preserve intentional manual collapse. No notebook data migration or production database edit.
 - Tests: check-nested-sidebar-reveal fails before fix with missing細節; after fix real groupedsidebar shows it immediately, nativeCollapse/Expand and refresh/restart pass. check-nested-whiteboards now asserts visibility without manualExpand and retains all create/drag/reference/delete/preview/restart checks. Two related unit tests validate cycle prevention and expansion identities; no unrelated suite.
 
+## REG-135 — Board overview and a board must not share sidebar selection; text/shape controls need persistence
+
+- Evidence: user screenshot shows bothboard andPerth selected; original-shell forcedboard for every non-library page and homeSelected retained oldwhiteboardId. Native48626 text/shape controls were gated and text-element SQLite/scene mapping absent.
+- Fix: choose overview only on its home route; clear stalequery on home navigation. Retain native48626/19281/34883/73866/99665/94700 tools, geometry, editor, drag/delete; add owntext-element catalog adapter and window projection. Dynamic scene includes text/shape through existingextraNodes.
+- Tests: check-text-shape-tools real two-way sidebar selection, nativeT andshape creation, text input, shape text, movement, style boundary,SQLite/restart anddelete. Two unit tests cover no-op,invalid rollback andmulti-window stale writes. Related childsidebar anddrawing/mindmap tests passed; no unrelated full-suite run. PhysicalIME/allstyle-options/connections/globalUndo not certified by this test.
+

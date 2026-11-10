@@ -104,5 +104,5 @@ patch('90214','hideActions: eN, placement: ex, onNewCardCreated: ej','hideAction
 require('./apply-mindmap-appearance-patches.cjs')({root,changes});
 require('./apply-mindmap-keyboard-patches.cjs')({root,changes});
 patch('48626','children: (0, i.jsx)(nK, { buttonId: "linkToWhiteboard" })','children: (0, i.jsx)("span", { "data-inkbridge-tool": "whiteboard", children: (0, i.jsx)(nK, { buttonId: "linkToWhiteboard" }) })','Identify native nested-whiteboard placement tool');
+require('./apply-text-shape-patches.cjs')({root,changes});
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));
-

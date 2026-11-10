@@ -20,6 +20,7 @@ import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
 import {createOriginalMindmaps} from '/inkbridge-core/original-mindmaps.mjs';
 import {installMindmapAppearance} from '/inkbridge-core/mindmap-appearance.mjs';
 import {installMindmapKeyboard} from '/inkbridge-core/mindmap-keyboard.mjs';
+import {createOriginalTextElements} from '/inkbridge-core/original-text-elements.mjs';
 import {installNestedWhiteboards} from '/inkbridge-core/nested-whiteboards.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
 
@@ -70,10 +71,12 @@ async function boot(){
     const parent=sectionWorldPosition(node.parentId,sections.sections),bounds=engine.getNodeBounds(node,graphContext()),next={...item,x:node.position.x-parent.x,y:node.position.y-parent.y,width:node.width||bounds.width,height:bounds.height};
     if(JSON.stringify(next)===JSON.stringify(item))return;instances.set(next.id,next);coordinator.stage({type:'putInstance',data:next});
   }
+  let elements;
   function acceptDocument(nodeId,document,body){
+    if(elements?.rows.has(nodeId)){const editor=editors.get(nodeId);if(editor)readLiveEditor(editor,nodeId);else elements.acceptContent(nodeId,document);return;}
     const item=instances.get(nodeId),editor=editors.get(nodeId);if(!item){if(mindmaps?.nodes.has(nodeId)){if(editor)readLiveEditor(editor,nodeId);else mindmaps.acceptContent(nodeId,document);}return;}if(editor){readLiveEditor(editor,item.contentId);return;}acceptContentDocument(item.contentId,document,body);
   }
-  function readLiveEditor(editor,contentId){if(editor.isComposing())return;const value=bodyFromEditor(editor),serialized=JSON.stringify(value.document);if(editorSnapshots.get(editor)===serialized)return;editorSnapshots.set(editor,serialized);if(mindmaps?.nodes.has(contentId)){mindmaps.acceptContent(contentId,value.document);return;}acceptContentDocument(contentId,value.document,value.body,editor);}
+  function readLiveEditor(editor,contentId){if(editor.isComposing())return;const value=bodyFromEditor(editor),serialized=JSON.stringify(value.document);if(editorSnapshots.get(editor)===serialized)return;editorSnapshots.set(editor,serialized);if(elements?.rows.has(contentId)){elements.acceptContent(contentId,value.document);return;}if(mindmaps?.nodes.has(contentId)){mindmaps.acceptContent(contentId,value.document);return;}acceptContentDocument(contentId,value.document,value.body,editor);}
   function acceptContentDocument(contentId,document,body,sourceEditor){
     const content=contents.get(contentId);if(!content)return;
     putContent({...content,document},body);
@@ -215,10 +218,11 @@ async function boot(){
     replace(contents,next.contents);replace(instances,next.instances);replace(boards,next.boards);replace(files,next.files);replace(sections.sections,next.sections);
     for(const [editor,id]of modalEditors){const content=contents.get(id);if(!content){editor.setEditable(false);continue;}if(!editor.isComposing()&&documentIdentity(bodyFromEditor(editor).document)!==documentIdentity(content.document)){editor.setEditorState(editor.parseEditorState(content.document),{tag:'editor-force-update'});editor.update(()=>{},{discrete:true,tag:'editor-force-update'});editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));}}
     for(const content of contents.values())if(content.kind==='text')redux.dispatch(r(23407).yc.updateNoteCard({id:content.id,title:content.title,content:content.document}));
-    mindmaps.replace(next);nested.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
+    mindmaps.replace(next);nested.replace(next);elements.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
   }
   shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   nested=installNestedWhiteboards({r,graph,store:originalStore,getBoardId:()=>boardId,sections,navigate,coordinator,load:()=>window.inkbridge.load(),shell,rehydrate:()=>mindmaps.hydrate()});
+  elements=createOriginalTextElements({r,graph,navigate,coordinator,store:originalStore,sections,getBoardId:()=>boardId});
   await nested.refresh();
   let remoteTail=Promise.resolve(),closeEpoch=0;
   globalThis.__inkbridgeRemoteRequest=request=>{
@@ -275,7 +279,7 @@ async function boot(){
   function FlowAdapter(props){
     const editorRef=React.useRef(null);
     React.useEffect(()=>()=>{const editor=editorRef.current;if(editor){try{const value=bodyFromEditor(editor);acceptDocument(props.nodeId,value.document,value.body);}catch(error){report(error);}if(editors.get(props.nodeId)===editor)editors.delete(props.nodeId);}},[props.nodeId]);
-    return React.createElement(Flow,{...props,onEditorReady:editor=>{editorRef.current=editor;editors.set(props.nodeId,editor);const contentId=instances.get(props.nodeId)?.contentId;if(contentId)registerModalEditor(contentId,editor);else if(mindmaps.nodes.has(props.nodeId)&&!editorSnapshots.has(editor)){
+    return React.createElement(Flow,{...props,onEditorReady:editor=>{editorRef.current=editor;editors.set(props.nodeId,editor);const contentId=instances.get(props.nodeId)?.contentId;if(contentId)registerModalEditor(contentId,editor);else if((mindmaps.nodes.has(props.nodeId)||elements.rows.has(props.nodeId))&&!editorSnapshots.has(editor)){
       editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));
       const read=()=>readLiveEditor(editor,props.nodeId),offUpdate=editor.registerUpdateListener(()=>queueMicrotask(read));let offRoot;offRoot=editor.registerRootListener(root=>{if(!root)queueMicrotask(()=>{read();offUpdate();offRoot?.();});});
     }state.lastEditorNode=props.nodeId;}});
@@ -291,7 +295,7 @@ async function boot(){
   function NativeCanvas({flowContextValue,...props}){
     const nativeWrites=r(99665).U(props.nodes);
     const nativeDrop=r(97101).y({whiteboardId:props.whiteboardId});
-    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById,inkbridgePageHiddenActions:['importXmind','importMarkdown','Text','StickyNote','calendar','Shape','newVideoCard','newAudioCard','websiteCard','file','newPDFCard','newImageCard']});
+    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById,inkbridgePageHiddenActions:['importXmind','importMarkdown','StickyNote','calendar','newVideoCard','newAudioCard','websiteCard','file','newPDFCard','newImageCard']});
     const nativeMaps=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.mindmaps);
     const mapActions=r(48626).InkBridgeUseMindmapActions({mindmaps:nativeMaps,theme:'light',dispatch:redux.dispatch,pushUndoSnapshot:flowContextValue.pushUndoSnapshot});
     return React.createElement(React.Fragment,null,
