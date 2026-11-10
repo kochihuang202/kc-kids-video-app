@@ -6,6 +6,10 @@
 
 新增check-nested-sidebar-reveal實測分組父白板新增、立即可見、手動收合後刷新仍收合、再次展開與重開，baseline失敗／修正後通過；既有check-nested-whiteboards移除手動Expand，其他斷言保留且通過。未修改正式資料。
 
+0.5.10／序號11，程式提交1693aa6，可攜目錄release/InkBridge-0.5.10-1693aa61504a-4150c6。使用封裝內runtime及app執行分組側欄專項通過，隔離資料TEMP/inkbridge-original-modules-sidebar-child-PGMSwT。另目視檢查47baBY/revealed.png，確認ESS→Perth→細節縮排位置正確。
+
+已將十個舊基底0.5.0–0.5.9的直接簽章增量經Windows更新器Stage驗證後放入既有OneDrive根目錄，複本雜湊一致。0.5.9→0.5.10僅112046bytes／4檔，releaseId6a877e12-a3f7-4a2a-8706-cfa2f1cd6fd9；私人收據release/reveal-delivery.json。未代按正式程式更新，不宣稱OneDrive雲端上傳完成。
+
 原版來源：FlexNote1.1.65的48626建立／拖放／白板選擇器、31167右鍵新增／引用、19281白板節點轉換、74582側欄遞迴樹、99665→94700批次移動／刪除。沿用完整原版互動與CanvasKit83552白板Drawer，未用自製卡片替代。
 
 白板內容與白板引用分離。whiteboard-instance catalog的containerType=whiteboard、containerId=父白板，whiteboardId=被引用的白板；folder類引用不變。原側欄只餵入folder引用，現在餵入所有有效子引用與對應白板資料，保留原版展開收合。新增及引用入口解鎖；工具列父元件原先裁切掉的選擇器與放置預覽一起接通，不只啟用圖示。
