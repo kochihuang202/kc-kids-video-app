@@ -7,6 +7,20 @@ export function validateBoardReference(graph, row) {
   visit(row.containerId);
 }
 
+export function sidebarRevealKeys(graph, boardId) {
+  const keys=new Set(),visited=new Set();
+  function visit(id){
+    if(visited.has(id))return;visited.add(id);keys.add(id);
+    for(const row of graph.whiteboardInstances||[]){
+      if(row.isTrashed||row.whiteboardId!==id)continue;
+      keys.add(row.id);
+      if(row.containerType==='folder')keys.add(row.containerId);
+      else if(row.containerType==='whiteboard')visit(row.containerId);
+    }
+  }
+  visit(boardId);return keys;
+}
+
 export function installNestedWhiteboards({r,graph,store,getBoardId,sections,navigate,coordinator,load,shell,rehydrate=()=>{}}){
   let current=graph;
   const replace=next=>{current=next;};
@@ -17,6 +31,14 @@ export function installNestedWhiteboards({r,graph,store,getBoardId,sections,navi
   const original=globalThis.__inkbridgeServices;
   const names=new Set(['batchUpdateWhiteboardInstances','batchDeleteWhiteboardInstances','deleteWhiteboardInstance']);
   const refresh=async()=>{replace(await load());sections.hydrate();rehydrate();shell.hydrate(current);};
+  function reveal(boardId){
+    const redux=r(63268).Z,expanded=new Set(redux.getState().boards.expandedFolders);
+    for(const id of sidebarRevealKeys(current,boardId))expanded.add(id);
+    redux.dispatch(r(17070).lH(expanded));r(58614).yx([...expanded]);
+  }
+  // Reveal the active parent's already saved children once on startup. Later
+  // refreshes preserve intentional manual collapse; only a new placement reveals.
+  if(current.whiteboardInstances?.some(row=>!row.isTrashed&&row.containerType==='whiteboard'&&row.containerId===getBoardId()))reveal(getBoardId());
   globalThis.__inkbridgeServices={has:name=>name==='saveWhiteboardPreview'||names.has(name)||original.has(name),call:async(name,payload)=>{
     if(name==='saveWhiteboardPreview'){
       const saved=await original.call('savePureBase64Image',{items:[{base64Image:payload.base64Image,fileName:'whiteboard-preview.png'}]});
@@ -25,7 +47,9 @@ export function installNestedWhiteboards({r,graph,store,getBoardId,sections,navi
     if(name==='createWhiteboardInstance'||name==='updateWhiteboardInstance'){
       const graph=await load(),old=graph.whiteboardInstances?.find(r=>r.id===payload.id);
       try{validateBoardReference(graph,{...old,...payload,...payload.updates});}catch(error){await refresh();throw error;}
-      const result=await original.call(name,payload);await refresh();return result;
+      const result=await original.call(name,payload);await refresh();
+      if(name==='createWhiteboardInstance'&&payload.containerType==='whiteboard')reveal(payload.containerId);
+      return result;
     }
     if(names.has(name))return navigate(async()=>{
       await coordinator.flush();const graph=await load(),refs=new Map((graph.whiteboardInstances||[]).map(row=>[row.id,row]));

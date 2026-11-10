@@ -1024,3 +1024,10 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Preview: retain original10764/50852 CanvasKit capture/resize/release flow and33552-compatible file lookup, store preview via existing SHA256 CAS; projection-only background leaves actual board backgrounds intact. Update on leaving a referenced board.
 - Tests: check-nested-whiteboards real create, expand child, rename, drag, enter, cycle rejection, content/CAS preview, restart, remove/reference existing and toolbar picker; check-board-dashboard retains original delete/restore assertions via the current footer menu;18 related SQLite/window/cycle unit tests passed. Shared drawing/mindmap toolbar regression passed. No unrelated full suite or cross-device performance claim.
 
+## REG-134 — Newly placed child boards stay hidden under collapsed grouped parents
+
+- Repro: ESS folder contains Perth via referenceperth-placement; createchild on Perth. SQLite and canvas contain the child but sidebar remains collapsed. Previous REG-133 manually clickedExpand and missed immediate visibility.
+- Source: native74582 uses the placementID for grouped-board expansion, boardID for unattached roots;17070.lH and58614.yx are its existing expansion/state-storage contracts. No replacement treeUI.
+- Fix: on successful creation, add the parentboard, its referenceIDs and ancestorfolders to the existing native expansion set. At startup reveal the active parent's already stored children once; ordinary refreshes preserve intentional manual collapse. No notebook data migration or production database edit.
+- Tests: check-nested-sidebar-reveal fails before fix with missing細節; after fix real groupedsidebar shows it immediately, nativeCollapse/Expand and refresh/restart pass. check-nested-whiteboards now asserts visibility without manualExpand and retains all create/drag/reference/delete/preview/restart checks. Two related unit tests validate cycle prevention and expansion identities; no unrelated suite.
+
