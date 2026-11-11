@@ -49,16 +49,20 @@
   固定網址不變。測試工作區為合成資料，沒有打開正式FlexNote或正式筆記。
 - 真實Cloudflare：512MiB PDF上傳／中斷後續傳、範圍讀取、固定網址更新、舊版本拒絕、
   配對一次性與停用新讀取。一次遠端非JSON錯誤曾中斷，已從同份紀錄續傳成功；
-  不把本機或模擬服務結果冒稱線上結果。續傳那次約110秒，發布端RSS峰值223MiB，
-  1851次心跳；這不是Worker isolate記憶體或跨設備速度承諾。
+  不把本機或模擬服務結果冒稱線上結果。標準索引stream測試約161秒，發布端RSS峰值233MiB，
+  2792次心跳；這不是Worker isolate記憶體或跨設備速度承諾。
+- 512MiB真實Cloudflare Chrome閱讀第3頁與Range通過，34次UI心跳；1131bytes小PDF
+  第3頁也通過，小於分段尺寸時保留全檔讀取。PDF.js4.4.168原生loader配置按需Range，
+  不自動預抓整份大PDF。原填大測試檔在xref前有巨大連續空白，lexer逐段掃描；保留
+  `large-pdf-fixture.cjs` 的whitespace診斷選項，正常大檔測試改用正式索引的獨立stream。
 - 真實Cloudflare Chrome：原生分頁、提示、圖片／圖庫、PDF第3頁、子孫跳轉、刷新、
   返回、導覽及拒絕未分享板；沒有外站請求或寫入。測試等待實際相機動畫穩定再點擊。
 - 本機Chrome：獨立reader/data路徑、512px預覽→放大清晰圖、版本固定／替換提示。
 - 尚未宣稱實體iPad驗收或所有使用者私有PDF、色彩配置、特殊BMP都可轉換；
   不適用圖片回退原檔。第一版不清除已發布歷史或附件。
 
-私人收據：`release/share-live-acceptance.json`、`release/share-pdf-browser-acceptance.json`
-（後者以實際檔案存在及通過為準）、`private-original-editor/web-share-research/browser-result.json`。
+私人收據：`release/share-live-acceptance.json`、`release/share-pdf-browser-acceptance.json`、
+`release/share-small-pdf-browser-acceptance.json`、`private-original-editor/web-share-research/browser-result.json`。
 發布驗收網址只含合成測試內容，不是使用者的正式白板。
 
 ## 重建與維護
@@ -79,3 +83,25 @@
 `check-cloud-live.cjs` 由Electron執行，明確opt-in512MiB；僅使用合成資料。
 可攜建置沿用 `build-portable.cjs`，帶入sharp/bmp-js實際runtime依賴閉包，
 不依賴另一台安裝Node.js。既有簽章增量更新通道維持使用。
+
+## 交付與啟動
+
+可攜程式基線commit `582e0cb8df4a`，版本0.6.0，buildId
+`7a1bf9f7b1748c53ec4fc20d6af12ee5a857d6daeee53ae027d63a2b97dfb9c0`，releaseSequence16。
+ZIP SHA-256：`80c9b836f0854f2ca6598306d3471e1dd26231c40f41807b618b2d40d1de351f`，233702406bytes。
+後續驗收／啟動器commit不改此已驗證的runtime內容。
+
+OneDrive交換根目錄的 `Start-InkBridge-0.6.0.bat` 會讀同名PS1/JSON，首次驗證ZIP與
+所有程式檔，原子安裝到 `%LOCALAPPDATA%\Programs\InkBridge\InkBridge-0.6.0-582e0cb8df4a-9f00c8`。
+之後直接開該本機程式，不以初始ZIP覆蓋已更新安裝。筆記仍在 `%LOCALAPPDATA%\InkBridge`。
+不把工作SQLite放在OneDrive，不需要安裝Node，也不需每次手動解壓。
+
+兩份真實簽章增量包已通過隔離PowerShell Stage：0.5.14→0.6.0及0.5.15→0.6.0，
+驗證簽章、基底、解壓與每檔雜湊，沒有套用到正式程式。既有可攜版仍可按更新並重新啟動。
+新版可攜包另在原始碼外啟動，使用包內Electron及實際WebP Worker，通過原生分享匯出。
+啟動器另以真實ZIP及BAT驗證首次安裝、原檔／筆記保留、無ZIP重用及損壞拒絕，約22秒。
+PowerShell5舊Expand-Archive對長路徑及`[locale]`例外，改用已檢查單根目錄的ZIP串流及
+Directory.Move原子安裝；暫存清理只限自建.pending目錄。
+從實際OneDrive入口又確認WindowsPowerShell5不可繼承PowerShell7模組路徑；BAT僅清除
+自身PSModulePath並保留錯誤碼。測試刻意注入無效模組路徑仍可首次安裝。此電腦已由
+實際OneDrive BAT執行NoLaunch，完成本機程式安裝，沒有啟動正式筆記。
