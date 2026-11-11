@@ -58,6 +58,16 @@ node scripts/original-reuse/check-content-blocks.cjs
 - `content-block-generation.test.cjs` **6/6**：完整原函式／宣告、單一 command、共用 NodeState、實際選單與輸出介面、依賴及入口漂移拒絕。屬於產生器單元測試。
 - `editor-169-port.test.cjs` **6/6**：既有回呼時機、停用、正常卡片節流及資源清理邊界。
 - `check-content-blocks.cjs` 真實 Electron／Lexical／SQLite：原生 slash 插入、三頁不同文字、切換、新增、刪除、重新命名、Emoji、拖曳排序、標題 Enter 接正文、提示類型與自訂圖示、Ctrl+S、正常關閉重開、舊文字 Tab、舊提示資料、無初始化假版本、獨立 Windows 編輯視窗與再次重開、原生提示 Markdown 標題／正文各保留一次。開發版證據：`%TEMP%/inkbridge-original-modules-content-blocks-JJvjKd`。
-- 直接相關回歸：`check-editor-169.cjs`、`check-native-exports.cjs`、`check-real-image-paste.cjs`；涵蓋共用渲染／保存、原有 Markdown／Word 與附件輸出、實際圖片解碼與保存重開。
+- 直接相關回歸：`check-editor-169.cjs`、`check-native-exports.cjs`、`check-real-image-paste.cjs`、`check-mindmap-appearance.cjs`；涵蓋共用渲染／保存、原有 Markdown／Word 與附件輸出、實際圖片解碼與保存重開，以及繼承此渲染類別的心智圖量測。
 - 檢查實際編輯及 Canvas 截圖。沒有跑不相關完整測試；沒有宣稱效能提升、硬體中文 IME、原版 runtime 對照或所有巢狀組合已驗收。
-- 原生區塊連結選單保留；其外部協定、跨裝置／跨工作區導航不屬於這輪已驗收項目。分頁的完整 Markdown 匯入還原格式亦未宣稱支援；SQLite／快照保留完整結構。
+- 原生區塊連結選單保留；其外部協定、跨裝置／跨工作區導航不屬於這輪已驗收項目。原生 Markdown 未提供 Tabs transformer，分頁內巢狀提示的標題亦不能保證保留；本輪提示 Markdown 測試限定單獨區塊，沒有宣稱分頁的完整 Markdown 匯出／匯入還原格式。SQLite／快照保留完整結構。
+
+## 可攜版與交換目錄交付
+
+- 程式 commit：`42f74fdf6d65`；發布序號15；build ID：`bef0166b5723f33f084cecffee758da7cb70cec5481e9414f00b74553c4359c4`。
+- 可執行入口：`release/InkBridge-0.5.14-42f74fdf6d65-18b8c0/Start-InkBridge.bat`。建置時 runtime source tree clean。
+- 可攜版跑同一 `check-content-blocks.cjs` 通過，證據：`%TEMP%/inkbridge-original-modules-content-blocks-nRWuAw`。主視窗與獨立視窗均操作實際 copied runtime，正常關閉重開後新資料完整保留，包含分頁內巢狀提示。
+- 可攜驗收發現：提示放在分頁內時，原生 Markdown 不能完整處理該巢狀格式。SQLite 保存及重開均正確；轉換測試明確限定單獨提示區塊，沒有改動或弱化任何既有歷史測試。
+- 已向既有 `C:\Users\ji3cp\OneDrive - Foxconn\01_Home\21_InkBridge` 發布兩份唯一簽章增量包，供0.5.12／0.5.13直接升級0.5.14。每份6,068,611 bytes、11個更新檔案；兩份皆經實際 Windows updater **Stage** 驗簽、基底／路徑／雜湊與暫存解壓驗證，再核對目的地複製雜湊。
+- 0.5.12更新ID：`d71239e3-c702-4138-a029-a74542060111`；0.5.13更新ID：`ed2c42fb-6f9d-4f5e-b07b-9e15d7431355`。收據：ignored `release/content-block-delivery.json`。
+- 以上證明本機交換目錄發布及更新器暫存驗證；不宣稱已上傳雲端或另一台已收到，也未重跑未修改的更新器完整失敗回復套件。snapshots、assets、正式 FlexNote 及正式筆記未被修改。
