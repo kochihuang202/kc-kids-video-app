@@ -55,3 +55,11 @@ The shipped generic paste converter accepts legacy `Mindmap` placements, while t
 No supported independent-child-subtree clipboard contract was found in this complete generic chain. That case now reports the limitation instead of displaying unpersisted nodes. Designing subtree duplication needs a separate confirmed contract. Native pen duplication remains its existing toolbar operation; a new pen clipboard format and cross-window structured-canvas clipboard transport are not claimed in this change. Editor text/image clipboard behavior remains native.
 
 Whiteboard-version-history GUI remains disabled; enabling undo/redo does not implicitly enable that separate feature. No schema migration or OneDrive protocol change is introduced.
+
+## Portable delivery, 0.5.12
+
+- Runtime commit: `bcc45bf300b4`; release sequence 13. Portable directory: `release/InkBridge-0.5.12-bcc45bf300b4-2b236c`, entry `Start-InkBridge.bat`.
+- Packaged runtime passed `check-clipboard-history.cjs` (including SQLite equality after normal restart) and `check-canvas-undo-kinds.cjs` using isolated temporary profiles. Its final scene screenshot was inspected. The clipboard test uses keyboard events without refocusing the contenteditable before each key, and waits for actual clipboard acknowledgement/caret collapse.
+- Published twelve uniquely named direct signed deltas for the recorded portable bases 0.5.0–0.5.11 into `C:\Users\ji3cp\OneDrive - Foxconn\01_Home\21_InkBridge`. Every package passed the real Windows update helper's signature/hash/path Stage checks and destination copy hash validation. This verifies the local exchange directory, not cloud upload or arrival on another PC.
+- Current 0.5.11 → 0.5.12 delta: `InkBridge-update-945b1025-57ea-46ab-afd7-286d68e9637f.zip` and matching `.json`, 6,059,548 bytes, 11 changed/new files. Existing snapshots/assets were not altered. Receipt: ignored `release/clipboard-delivery.json`.
+- Existing portable installations can use **更新並重新啟動** after their matching package arrives. Updates do not overwrite a development Git checkout. No new manual full-ZIP extraction is required for these recorded bases.
