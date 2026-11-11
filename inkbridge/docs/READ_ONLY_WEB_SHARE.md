@@ -50,3 +50,11 @@ REA保留證據：`ev_aee8649102fe6bc6564884decc35ed79ecb7d76ccf77d9dd475fd4154e
 重現：先 `npm run prepare:web-share`，再 `npm run test:web-share`；桌面入口 `npm run test:web-share:desktop`。Windows Electron測試需在可正常啟動其sandbox的本機權限執行，不能用關閉sandbox或改ACL替代。建置器沿用既有私人來源；沒有來源的乾淨checkout不能憑空重新產生原版registry。
 
 範圍：目前驗收Windows Chrome及指定卡片組合。未驗收實體行動裝置、其他瀏覽器、大型公開流量、音影音/網站嵌入、所有心智圖或PDF註記組合；沒有匯出私人歷史、帳號、Token或同步設定。第一版為靜態時間點分享，之後編輯需重新匯出及重新發布。
+
+## 本次交付實測收據
+
+- 程式提交 `7daf875a137c`，已push。可攜版 `release/InkBridge-0.5.15-7daf875a137c-f07a27/Start-InkBridge.bat`；build ID `c2503f32562ec5008a9fb534bbc0c47ace3ef85b3c786d2222f76b4f8dc60d38`，建置時程式碼乾淨。沒有寫入正式Profile。
+- **可攜版實跑** `check-desktop.cjs`：最新Lexical內容→SQLite→匯出；關閉提示後第二次匯出仍成功，兩包分開、前一包不變。資料位置 `%TEMP%/inkbridge-original-modules-web-export-S8XN8M`。
+- 從上述可攜版實際匯出後整理為 `release/InkBridge-Web-0.5.15-Demo-7daf875/`，再跑完整本輪唯讀Chrome流程通過；證據 `%TEMP%/inkbridge-web-share-oLZSP5`。展示包只含合成筆記、綠色PNG與3頁測試PDF。
+- **實際Start-Web.bat** 啟動本機伺服器後，另用Chrome開根網址並點入子白板成功、無pageerror；測試結束已關閉該伺服器。私人截圖 `private-original-editor/web-share-research/start-web.png`。
+- Demo ZIP：`release/InkBridge-Web-0.5.15-Demo-7daf875.zip`，SHA-256 `2361705bd219a1e70fade4f1fe7f91f327fc24e30e3864644fae4e432316f561`。發布到Cloudflare及實際網域仍屬下一步。
