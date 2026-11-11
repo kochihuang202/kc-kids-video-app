@@ -11,7 +11,7 @@ Backport two compatible behavior changes into the existing complete components. 
 | --- | --- |
 | Mindmap Flow changes immediately notify the Canvas parent | Port; normal note cards retain their 300 ms throttle and latest trailing value. This is callback timing, not a synchronous SQLite COMMIT guarantee. |
 | Canvas release exceptions do not abort subsequent owned releases | Port; retain all sixteen releases, ordering, lifecycle cancellation, surface disposal and host cleanup. Log errors rather than silently hide them. |
-| Tabs content and Callout header/type/icon editing | Deferred feature integration. The new editor registers additional plugins and node/data contracts. Mixing that whole new bundle into the existing registry is not a verified dependency-compatible patch. No interface-only imitation is added. |
+| Tabs content and Callout header/type/icon editing | Initially deferred in0.5.13; integrated separately in0.5.14 after dependency, node, renderer and persistence verification. See `TABS_CALLOUT_PORT.md`. The whole editor bundle is not replaced. |
 | Black edit border | Cosmetic change not included. No evidence that the color change fixes IME, long-text layout or flashing. |
 
 InkBridge already reads live mindmap Lexical state via `FlowAdapter` → `readLiveEditor` → `mindmaps.acceptContent` → layout. The immediate native parent callback complements that bridge; JSON equality guards suppress repeat content writes. No frame-time improvement is claimed from this alone.

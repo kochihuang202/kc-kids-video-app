@@ -1,7 +1,7 @@
 {
   "name": "inkbridge",
   "productName": "InkBridge",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "description": "InkBridge 墨橋 — independent CanvasKit whiteboard",
   "private": true,
   "main": "src/main/main.cjs",
@@ -32,6 +32,7 @@
     "@electron/packager": "20.3.0",
     "@playwright/test": "1.64.1",
     "electron": "45.1.0",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "postcss": "8.5.26"
   }
 }

@@ -34,6 +34,16 @@ for(const file of files){
     ts.forEachChild(node,visit);
   }visit(ast);
 }
+// Explicitly prepared additional factories are not in the baseline bundle.
+// Verify their allowlisted files/hashes; never scan arbitrary private scripts.
+const extraFile=path.join(root,'content-block-modules.json');
+if(fs.existsSync(extraFile))for(const [id,entry]of Object.entries(JSON.parse(fs.readFileSync(extraFile,'utf8')))){
+  if(!/^\d+$/.test(id)||entry.file!==`source-modules/module-${id}.cjs`||modules.has(id))throw Error('Conflicting extra native factory: '+id);
+  const source=fs.readFileSync(path.join(root,entry.file),'utf8');if(sha(source)!==entry.sha256)throw Error('Extra native factory hash mismatch: '+id);
+  const ast=ts.createSourceFile(id,source,99,true),factory=ast.statements[0]?.expression?.right;
+  if(ast.parseDiagnostics.length||!factory||!ts.isFunctionExpression(factory))throw Error('Invalid extra factory: '+id);
+  modules.set(id,{id,file:entry.file,start:factory.getStart(ast),end:factory.end,sha256:entry.referenceFactorySha256,bytes:Buffer.byteLength(source),requires:[],factory:factory.getText(ast)});
+}
 const runtimeFile=files.find(file=>path.basename(file).startsWith('webpack-'));if(!runtimeFile)throw Error('No original webpack runtime');
 const runtime=fs.readFileSync(runtimeFile,'utf8'),match=/([\w$]+)\.m=([\w$]+),/.exec(runtime);if(!match)throw Error('Runtime exposure anchor not found');
 const exposed=runtime.replace(match[0],`globalThis.__originalRequire=${match[1]},${match[0]}`);

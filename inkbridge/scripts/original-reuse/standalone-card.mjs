@@ -25,6 +25,7 @@ async function boot() {
     let content = initial.content, editor, stagedIdentity = documentIdentity(content.document), applying = false, setDocument, refreshing = Promise.resolve(), recoveryPath = '', closeEpoch = 0;
     r(19281).YH.init('inkbridge-local', initial.workspaceId);
     const pageProps = await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response => response.json());
+    await (await import('./content-blocks.mjs')).mergeContentBlockTranslations(pageProps);
     window.__NEXT_DATA__ = { buildId: 'LOq0EGi9XWnc3BD21aEGY', page: '/note-detail', query: { id, standalone: '1' }, props: pageProps, isFallback: false };
     const RouterContext = r(29242).RouterContext, pageLoader = new (r(43867).default)(window.__NEXT_DATA__.buildId, '');
     const router = r(51648).createRouter('/note-detail', { id, standalone: '1' }, '/zh-TW/note-detail?id=' + encodeURIComponent(id) + '&standalone=1', { initialProps: pageProps, pageLoader, App: r(64744).default, Component: r(75000).a, wrapApp: component => component, subscription: () => { }, isFallback: false, locale: 'zh-TW', locales: ['zh-TW', 'zh', 'en'], defaultLocale: 'zh-TW', isPreview: false });

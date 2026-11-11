@@ -107,4 +107,5 @@ patch('48626','children: (0, i.jsx)(nK, { buttonId: "linkToWhiteboard" })','chil
 require('./apply-text-shape-patches.cjs')({root,changes});
 require('./apply-clipboard-history-patches.cjs')({root,changes});
 require('./apply-editor-169-patches.cjs')({root,changes});
+require('./apply-content-block-patches.cjs')({root,changes});
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));

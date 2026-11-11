@@ -25,6 +25,7 @@ import {installNestedWhiteboards} from '/inkbridge-core/nested-whiteboards.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
 import {captureCanvasHistory,canvasHistoryOperations} from '/inkbridge-core/canvas-history.mjs';
 import {installOriginalClipboard} from '/inkbridge-core/original-clipboard.mjs';
+import {mergeContentBlockTranslations} from './content-blocks.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -146,7 +147,7 @@ async function boot(){
   }
   if(!graph.boards.length){const board={id:boardId,title:'靈感白板',view:{x:80,y:60,zoom:.8}};boards.set(boardId,board);coordinator.stage({type:'putBoard',data:board});}
   sections.hydrate();originalStore.getState().setConnections([]);
-  const pageProps=await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response=>response.json());window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/board',query:{},props:pageProps,isFallback:false};
+  const pageProps=await fetch('/_next/data/LOq0EGi9XWnc3BD21aEGY/zh-TW/board.json').then(response=>response.json());await mergeContentBlockTranslations(pageProps);window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/board',query:{},props:pageProps,isFallback:false};
   const RouterContext=r(29242).RouterContext,pageLoader=new(r(43867).default)(window.__NEXT_DATA__.buildId,'');
   const router=r(51648).createRouter('/flow',{whiteboardId:boardId},'/zh-TW/flow?whiteboardId='+encodeURIComponent(boardId),{initialProps:pageProps,pageLoader,App:r(64744).default,Component:Canvas,wrapApp:component=>component,subscription:()=>{throw Error('Navigation has not been connected to the InkBridge shell');},isFallback:false,locale:'zh-TW',locales:['zh-TW','zh','en'],defaultLocale:'zh-TW',isPreview:false});
   window.router=router;Object.defineProperty(globalThis,'__inkbridgeRoutePath',{configurable:true,get:()=>router.pathname});
