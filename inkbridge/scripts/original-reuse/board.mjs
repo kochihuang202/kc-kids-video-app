@@ -26,6 +26,7 @@ import {installMindmapControls} from './mindmap-controls.mjs';
 import {captureCanvasHistory,canvasHistoryOperations} from '/inkbridge-core/canvas-history.mjs';
 import {installOriginalClipboard} from '/inkbridge-core/original-clipboard.mjs';
 import {mergeContentBlockTranslations} from './content-blocks.mjs';
+import {installWebShare} from './web-share.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -442,6 +443,7 @@ async function boot(){
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
+  installWebShare({getBoardId:()=>boardId,isHome:()=>!!state.home,flush:()=>state.flush(),onError:report});
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   const storageUI=installStorageSettings();
   window.inkbridge.onSnapshotSaved(result=>{if(result.workspaceId===graph.workspaceId){state.snapshotInfo={configured:true,baseRevision:result.revision,baseSnapshotId:result.snapshotId};coordinator.status();}});

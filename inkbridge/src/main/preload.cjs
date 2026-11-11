@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   onBridgeRequest:callback=>{const listener=async(_event,request)=>{try{if(request.epoch!==workspaceEpoch)throw Object.assign(Error('Stale workspace request'),{code:'STALE_WORKSPACE_EPOCH'});ipcRenderer.send('inkbridge:bridge-result',{id:request.id,epoch:workspaceEpoch,ok:true,result:await callback(request.payload)});}catch(error){ipcRenderer.send('inkbridge:bridge-result',{id:request.id,epoch:workspaceEpoch,ok:false,error:{message:error.message,code:error.code}});}};ipcRenderer.on('inkbridge:bridge-request',listener);return ()=>ipcRenderer.removeListener('inkbridge:bridge-request',listener);},
   openAttachment:id=>invoke('inkbridge:open-attachment',id),
   exportArtifact:request=>invoke('inkbridge:export-artifact',request),
+  webShare:request=>invoke('inkbridge:web-share',request),
   history:request=>invoke('inkbridge:history',request),
   writeClipboardTextAndHtml:request=>invoke('inkbridge:writeClipboardTextAndHtml',request),
   savePastedImageBuffers:request=>invoke('inkbridge:savePastedImageBuffers',request),

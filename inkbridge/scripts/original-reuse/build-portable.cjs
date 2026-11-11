@@ -10,12 +10,14 @@ async function buildPortable(){
   const output=path.join(project,'release',name),app=path.join(output,'app');await fs.mkdir(app,{recursive:true});
   const copy=async(from,to)=>{await fs.mkdir(path.dirname(to),{recursive:true});await fs.cp(from,to,{recursive:true,errorOnExist:true,force:false,dereference:false});};
   await copy(path.join(project,'node_modules/electron/dist'),path.join(output,'runtime'));
-  for(const dir of ['src/main','src/core'])await copy(path.join(project,dir),path.join(app,dir));
+  for(const dir of ['src/main','src/core','src/web-share'])await copy(path.join(project,dir),path.join(app,dir));
   await copy(path.join(__dirname,'Recover-InkBridge.ps1'),path.join(output,'Recover-InkBridge.ps1'));
   for(const file of ['index.html','styles.css'])await copy(path.join(project,'src/renderer',file),path.join(app,'src/renderer',file));
   // Copy only runtime integration files; no tests, extraction tools or evidence.
   for(const file of await fs.readdir(__dirname))if(file.endsWith('.mjs')||['host.cjs','compact-shell.css','standalone-card.html','probe.js'].includes(file))await copy(path.join(__dirname,file),path.join(app,'scripts/original-reuse',file));
   const privateRoot=path.join(project,'private-original-editor');
+  require('../web-share/prepare.cjs').prepare();
+  await copy(path.join(privateRoot,'web-runtime'),path.join(app,'private-original-editor/web-runtime'));
   for(const file of ['runtime.js','register-original.js'])await copy(path.join(privateRoot,file),path.join(app,'private-original-editor',file));
   for(const dir of ['_next','canvaskit','fonts','pdfjs'])await copy(path.join(privateRoot,'vendor/app',dir),path.join(app,'private-original-editor/vendor/app',dir));
   await fs.writeFile(path.join(app,'package.json'),JSON.stringify({name:'inkbridge-portable',version,private:true,main:'scripts/original-reuse/host.cjs'},null,2));

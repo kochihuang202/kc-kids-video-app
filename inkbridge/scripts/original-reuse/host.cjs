@@ -185,6 +185,16 @@ app.whenReady().then(async()=>{
   });
   ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!readable(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
+  const webExports=new Map();
+  ipcMain.handle('inkbridge:web-share',async(event,request,epoch)=>{
+    if(!readable(event)||closing||applyingSettings)throw Error('目前無法匯出網頁');
+    if(request?.method==='open'){const directory=webExports.get(request.exportId);if(!directory)throw Error('匯出資料夾不存在');const error=await shell.openPath(directory);if(error)throw Error(error);return {success:true};}
+    if(request?.method!=='create'||typeof request.boardId!=='string')throw Error('Invalid web export request');
+    return queue.run('web-export',async()=>{liveSync.assertEpoch(epoch);await standalone.flushForSettings();liveSync.assertEpoch(epoch);
+      const graph=await database.load(),result=await require('../../src/main/web-share-export.cjs').exportWebShare({graph,rootBoardId:request.boardId,workspaceDirectory:data,projectDirectory:project,outputDirectory:path.join(data,'exports','web')});
+      const exportId=crypto.randomUUID();webExports.set(exportId,result.directory);return {...result,exportId};
+    });
+  });
   ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge',version:require('../../package.json').version,isTest:!portable,dataRoot:data,databasePath:filename};});
   ipcMain.handle('inkbridge:load',event=>{if(!readable(event))throw Error('Unexpected sender');return database.load();});
   ipcMain.handle('inkbridge:history',(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return database.history(request);});

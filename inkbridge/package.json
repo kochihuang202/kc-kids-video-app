@@ -1,7 +1,7 @@
 {
   "name": "inkbridge",
   "productName": "InkBridge",
-  "version": "0.5.14",
+  "version": "0.5.15",
   "description": "InkBridge 墨橋 — independent CanvasKit whiteboard",
   "private": true,
   "main": "src/main/main.cjs",
@@ -12,7 +12,10 @@
     "test:desktop": "npm run build && playwright test",
     "test": "npm run test:unit && npm run test:desktop",
     "package:win": "npm run build && node scripts/package.cjs",
-    "test:package": "node scripts/test-package.cjs"
+    "test:package": "node scripts/test-package.cjs",
+    "prepare:web-share": "node scripts/web-share/prepare.cjs",
+    "test:web-share": "node --test tests/web-share-data.test.cjs tests/web-share-export.test.cjs && node scripts/web-share/check-browser.cjs",
+    "test:web-share:desktop": "node scripts/web-share/check-desktop.cjs"
   },
   "dependencies": {
     "@lexical/code": "0.53.0",
