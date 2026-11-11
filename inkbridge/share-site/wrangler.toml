@@ -1,0 +1,7 @@
+name = "inkbridge-share"
+compatibility_date = "2026-08-28"
+pages_build_output_dir = "../release/share-site"
+
+[[r2_buckets]]
+binding = "SHARE_BUCKET"
+bucket_name = "inkbridge-share"

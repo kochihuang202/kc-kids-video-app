@@ -3,8 +3,7 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {DatabaseSync}=require('node:sqlite');
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-const digest=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
-async function hashFile(file){const hash=crypto.createHash('sha256');for await(const bytes of require('node:fs').createReadStream(file))hash.update(bytes);return hash.digest('hex');}
+const {hashFile,copyVerified}=require('./stream-files.cjs');
 async function durable(file,bytes){const handle=await fs.open(file,'wx');try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}}
 async function readJSON(file,fallback){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(e){if(e.code==='ENOENT')return fallback;throw e;}}
 function inspectDatabase(file){const db=new DatabaseSync(file,{readOnly:true});try{
@@ -53,23 +52,19 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
       if(head?.revision===captured.revision){await validate(root,path.join(root,'snapshots',captured.workspaceId,head.snapshotId));return {configured:true,created:false,snapshotId:head.snapshotId,workspaceId:captured.workspaceId,revision:captured.revision};}
       const assets=[];
       for(const file of captured.files){
-        const source=resolveAttachment(file.id),bytes=await fs.readFile(source),hash=digest(bytes);
-        if(hash!==file.id||file.sha256!==hash||bytes.length!==file.size)throw Error('附件內容與資料庫不一致');
+        const source=resolveAttachment(file.id),hash=await hashFile(source);
+        if(hash!==file.id||file.sha256!==hash||(await fs.stat(source)).size!==file.size)throw Error('附件內容與資料庫不一致');
         const objectPath=`assets/${hash.slice(0,2)}/${hash}${path.extname(source)}`,target=path.join(root,objectPath);await directory(path.dirname(objectPath));
-        try{await fs.access(target);}catch(e){
-          if(e.code!=='ENOENT')throw e;
-          const temporary=target+'.pending-'+crypto.randomUUID();
-          try{await durable(temporary,bytes);await fs.rename(temporary,target);}finally{await fs.rm(temporary,{force:true});}
-        }
+        await copyVerified(source,target,{sha256:hash,bytes:file.size});
         if(await hashFile(target)!==hash)throw Error('交換區附件不完整；保留既有版本，請修復後重試');
-        assets.push({fileId:file.id,logicalPath:file.filePath,objectPath,sha256:hash,bytes:bytes.length});
+        assets.push({fileId:file.id,logicalPath:file.filePath,objectPath,sha256:hash,bytes:file.size});
       }
       await fault('after-assets');
       const parentSnapshotId=head?.snapshotId||null;
       const manifest={format:'inkbridge-snapshot',version:1,workspaceId:captured.workspaceId,snapshotId:id,sourceComputerId:state.deviceId,parentSnapshotId,createdAt:new Date().toISOString(),appVersion,sqliteVersion:captured.sqliteVersion,revision:captured.revision,reason,database:{path:'database.sqlite3',sha256:await hashFile(candidate),bytes:(await fs.stat(candidate)).size},assets};
       await directory(path.join('snapshots',captured.workspaceId));
       const destination=path.join(root,'snapshots',captured.workspaceId,id);await fs.mkdir(destination);
-      await durable(path.join(destination,'database.sqlite3'),await fs.readFile(candidate));await fault('after-database');
+      await copyVerified(candidate,path.join(destination,'database.sqlite3'),{sha256:manifest.database.sha256,bytes:manifest.database.bytes});await fault('after-database');
       await durable(path.join(destination,'manifest.json'),JSON.stringify(manifest,null,2));
       await validate(root,destination);await fault('before-state');
       state.heads[key]={snapshotId:id,revision:captured.revision};await writeState(state);

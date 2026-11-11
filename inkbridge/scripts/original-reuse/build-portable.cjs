@@ -4,6 +4,8 @@ const {execFileSync}=require('node:child_process');
 const project=path.resolve(__dirname,'../..');
 const hash=async file=>{const h=crypto.createHash('sha256');for await(const bytes of fss.createReadStream(file))h.update(bytes);return h.digest('hex');};
 async function buildPortable(){
+  require('./prepare-sharing.cjs').prepareSharing();
+  execFileSync(process.execPath,[path.join(__dirname,'collect.cjs')],{cwd:project,windowsHide:true,stdio:'pipe'});
   const commit=execFileSync('git',['rev-parse','--short=12','HEAD'],{cwd:project,encoding:'utf8',windowsHide:true}).trim();
   const version=require('../../package.json').version;
   const name=`InkBridge-${version}-${commit}-${crypto.randomUUID().slice(0,6)}`;
@@ -11,6 +13,19 @@ async function buildPortable(){
   const copy=async(from,to)=>{await fs.mkdir(path.dirname(to),{recursive:true});await fs.cp(from,to,{recursive:true,errorOnExist:true,force:false,dereference:false});};
   await copy(path.join(project,'node_modules/electron/dist'),path.join(output,'runtime'));
   for(const dir of ['src/main','src/core','src/web-share'])await copy(path.join(project,dir),path.join(app,dir));
+  // Only the real image-worker dependency closure; never copy development tools.
+  const copiedPackages=new Set();
+  async function codecPackage(name,optional=false){
+    if(copiedPackages.has(name))return;
+    const from=path.join(project,'node_modules',name),metadata=path.join(from,'package.json');
+    if(!fss.existsSync(metadata)){if(optional)return;throw Error('Missing codec dependency: '+name);}
+    const pkg=JSON.parse(await fs.readFile(metadata,'utf8'));
+    if(pkg.os&&!pkg.os.includes('win32')||pkg.cpu&&!pkg.cpu.includes('x64')){if(optional)return;throw Error('Incompatible codec dependency: '+name);}
+    copiedPackages.add(name);await copy(from,path.join(app,'node_modules',name));
+    for(const dependency of Object.keys(pkg.dependencies||{}))await codecPackage(dependency);
+    for(const dependency of Object.keys(pkg.optionalDependencies||{}))await codecPackage(dependency,true);
+  }
+  await codecPackage('sharp');await codecPackage('bmp-js');
   await copy(path.join(__dirname,'Recover-InkBridge.ps1'),path.join(output,'Recover-InkBridge.ps1'));
   for(const file of ['index.html','styles.css'])await copy(path.join(project,'src/renderer',file),path.join(app,'src/renderer',file));
   // Copy only runtime integration files; no tests, extraction tools or evidence.

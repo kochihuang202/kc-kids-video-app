@@ -1,0 +1,29 @@
+// Actual Cloudflare acceptance. Uses only newly generated synthetic content.
+const {app,safeStorage,nativeImage}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const credentialProfile=process.env.INKBRIDGE_TEST_SHARE_PROFILE||path.join(process.env.LOCALAPPDATA,'InkBridge');app.setPath('userData',path.join(credentialProfile,'Profile'));
+app.whenReady().then(async()=>{
+ const project=path.resolve(__dirname,'../..'),data=process.env.INKBRIDGE_TEST_LIVE_DATA||await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-share-live-')),profile=process.env.INKBRIDGE_TEST_SHARE_PROFILE||path.join(process.env.LOCALAPPDATA,'InkBridge');
+ const config=await require('../../src/main/share-credentials.cjs').createShareCredentials({filename:path.join(profile,'Profile/share-device.json'),safeStorage}).clientConfig();
+ let existing;if(process.env.INKBRIDGE_TEST_LIVE_DATA){const folder=path.join(data,'jobs'),file=(await fs.readdir(folder)).find(f=>f.endsWith('.json'));existing=JSON.parse(await fs.readFile(path.join(folder,file)));}
+ const graph=await require('../../tests/helpers/web-share-fixture.cjs')(data);graph.workspaceId=existing?.workspaceId||'acceptance-'+crypto.randomUUID();graph.revision=1;
+ const large=process.env.INKBRIDGE_TEST_LARGE_PDF==='1';
+ if(large){const file=path.join(data,'512MiB.pdf');try{await fs.access(file);}catch{await require('../../tests/helpers/large-pdf-fixture.cjs')(file,512*1024*1024);}const record=(await require('../../src/main/attachment-store.cjs').createAttachmentStore(path.join(data,'files'),b=>nativeImage.createFromBuffer(b).getSize()).prepareFile(file)).fileRecord;const index=graph.files.findIndex(f=>f.type==='pdf'),old=graph.files[index].id;graph.files[index]=record;graph.cardMetadata.find(m=>m.fileId===old).fileId=record.id;}
+ const {exportWebShare}=require('../../src/main/web-share-export.cjs'),{createShareClient}=require('../../src/main/share-client.cjs');
+ const make=()=>exportWebShare({graph,rootBoardId:'root',selectedBoardIds:['root','child','grand'],contentOnly:true,readerBuild:config.readerBuild,workspaceDirectory:data,projectDirectory:project,outputDirectory:path.join(data,'packages')});
+ const pkg=existing?{directory:existing.packageDirectory}:await make(),firstOptions={workspaceId:graph.workspaceId,rootBoardId:'root',requestId:existing?.requestId||crypto.randomUUID(),expectedVersion:null,packageDirectory:pkg.directory,selection:['root','child','grand'],imagePreset:'clarity',readerBuild:config.readerBuild};
+ let puts=0,interrupted=!!existing,ticks=0,maxRSS=process.memoryUsage().rss;const monitor=setInterval(()=>{ticks++;maxRSS=Math.max(maxRSS,process.memoryUsage().rss);},50),start=Date.now();
+ const api=createShareClient({...config,jobDirectory:path.join(data,'jobs'),fetch:async(url,options)=>{if(large&&!existing&&options.method==='PUT'&&++puts===3){interrupted=true;throw Error('synthetic offline during real Cloudflare upload');}return fetch(url,options);}});
+ let first;
+ try{if(large&&!existing){await assert.rejects(api.publish(firstOptions),/synthetic offline/);}first=await api.publish(firstOptions);}finally{clearInterval(monitor);}
+ const publicURL=new URL(first.url),jsonURL=new URL('share.json',publicURL),published=await fetch(jsonURL).then(r=>r.json());assert.deepEqual(published.boardIds,['root','child','grand']);assert(!JSON.stringify(published).includes('SECRET_'));
+ const pdf=published.attachments.find(a=>a.contentType==='application/pdf');const response=await fetch(new URL(pdf.path,publicURL),{headers:{Range:'bytes=0-4'}});assert.equal(response.status,206);assert.equal(await response.text(),'%PDF-');
+ const image=published.attachments.find(a=>a.contentType?.startsWith('image/'));assert(image);assert.equal((await fetch(new URL(image.path,publicURL))).status,200);
+ graph.contents.find(c=>c.id==='note').title='Updated real Cloudflare acceptance';graph.revision=2;const nextPackage=await make();const second=await api.publish({...firstOptions,requestId:crypto.randomUUID(),expectedVersion:first.version,packageDirectory:nextPackage.directory});assert.equal(second.url,first.url);assert.notEqual(second.version,first.version);
+ await assert.rejects(api.publish({...firstOptions,requestId:crypto.randomUUID(),expectedVersion:first.version}),e=>e.status===409);
+ assert.equal((await fetch(new URL(pdf.path+'?v='+first.version,publicURL))).status,409);
+ const pairing=await api.createPairing(),joined=await api.redeemPairing({code:pairing.code}),other=createShareClient({...config,token:joined.token,jobDirectory:path.join(data,'other-jobs')});assert.equal((await other.status({workspaceId:graph.workspaceId,rootBoardId:'root'})).publicationId,first.publicationId);await assert.rejects(api.redeemPairing({code:pairing.code}));
+ const disabled=await other.setEnabled({publicationId:first.publicationId,expectedVersion:second.version,enabled:false});assert.equal((await fetch(jsonURL)).status,404);assert.equal((await fetch(new URL(image.path,publicURL))).status,404);
+ const enabled=await other.setEnabled({publicationId:first.publicationId,expectedVersion:disabled.version,enabled:true});
+ const receipt={actualCloudflare:true,site:config.baseUrl,url:first.url,data,exact512MiB:large,interrupted,resumed:large,fixedUrlUpdated:true,staleVersionRejected:true,devicePairing:true,disabledNewReads:true,rangePDF:true,threeBoards:true,seconds:(Date.now()-start)/1000,maxClientRSSMiB:Math.round(maxRSS/1048576),heartbeats:ticks,version:enabled.version};
+ await fs.mkdir(path.join(project,'release'),{recursive:true});await fs.writeFile(path.join(project,'release/share-live-acceptance.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify(receipt));app.quit();
+}).catch(error=>{console.error(error);app.exit(1);});

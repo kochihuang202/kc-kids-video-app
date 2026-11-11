@@ -1,0 +1,26 @@
+// Portable-only smoke: install the built app outside the source checkout so a
+// missing codec dependency cannot accidentally resolve from development modules.
+const {_electron,expect}=require('@playwright/test'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {WorkspaceDatabase}=require('../../src/main/database.cjs');
+(async()=>{
+ const candidate=process.env.INKBRIDGE_TEST_BUILD;if(!candidate)throw Error('Set INKBRIDGE_TEST_BUILD to a completed portable candidate directory');
+ const installSource=path.resolve(candidate),manifest=JSON.parse(await fs.readFile(path.join(installSource,'portable-build.json')));
+ const data=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-portable-share-')),installation=path.join(data,'Install'),local=path.join(data,'Local'),profile=path.join(local,'InkBridge');
+ await fs.cp(path.join(installSource,'app'),path.join(installation,'app'),{recursive:true,errorOnExist:true,force:false,dereference:false});
+ await fs.copyFile(path.join(installSource,'portable-build.json'),path.join(installation,'portable-build.json'));
+ const appRoot=path.join(installation,'app'),entry=path.join(appRoot,'scripts/original-reuse/host.cjs'),executable=path.join(installSource,'runtime/electron.exe');await fs.access(executable);
+ const graph=await require('../../tests/helpers/web-share-fixture.cjs')(profile),db=new WorkspaceDatabase(path.join(profile,'Workspace/inkbridge.sqlite3'));
+ const operations=[...graph.boards.map(data=>({type:'putBoard',data})),...graph.contents.map(data=>({type:'putContent',data:{tone:'sage',body:'',...data}})),...graph.instances.map(data=>({type:'putInstance',data})),...graph.cardMetadata.map(data=>({type:'putCatalog',kind:'card',data})),...graph.files.map(data=>({type:'putCatalog',kind:'file',data})),...graph.whiteboardInstances.map(data=>({type:'putCatalog',kind:'whiteboard-instance',data}))];
+ db.commit({requestId:crypto.randomUUID(),baseRevision:0,operations});db.close();const image=graph.files.find(f=>f.type==='png'),original=await fs.readFile(path.join(profile,image.filePath));
+ const env={...process.env,LOCALAPPDATA:local,INKBRIDGE_PORTABLE:'1',INKBRIDGE_ORIGINAL_VIEW:'board'};for(const name of ['ELECTRON_RUN_AS_NODE','NODE_PATH','NODE_OPTIONS','INKBRIDGE_ORIGINAL_PROBE_DATA','INKBRIDGE_TEST_SHARE_DEVICE'])delete env[name];
+ const app=await _electron.launch({args:[entry],executablePath:executable,env});let stage='startup';
+ try{
+  const page=await app.firstWindow();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready,{timeout:60000});await page.evaluate(()=>window.__inkbridgeIntegrated.switchBoard('root'));
+  const paths=await app.evaluate(({app},appRoot)=>{const path=require('node:path');return {userData:app.getPath('userData'),sharp:require.resolve(path.join(appRoot,'node_modules/sharp')),bmp:require.resolve(path.join(appRoot,'node_modules/bmp-js'))};},appRoot);
+  assert.equal(paths.userData,path.join(profile,'Profile'));assert(paths.sharp.startsWith(appRoot+path.sep));assert(paths.bmp.startsWith(appRoot+path.sep));
+  stage='native offline export';await page.getByRole('button',{name:'分享白板',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await expect(page.getByTestId('share-connection')).toBeVisible();await page.getByText('更多選項',{exact:true}).click();await page.getByRole('button',{name:'匯出離線網頁包',exact:true}).click();await expect(page.getByRole('button',{name:'開啟網頁包資料夾',exact:true})).toBeVisible({timeout:90000});
+  const output=path.join(profile,'exports/web'),names=(await fs.readdir(output)).filter(n=>n.startsWith('InkBridge-web-'));assert.equal(names.length,1);const directory=path.join(output,names[0]),publication=JSON.parse(await fs.readFile(path.join(directory,'share.json'))),attachment=publication.attachments.find(f=>f.source_file_id===image.id);assert(attachment);assert.equal(attachment.contentType,'image/webp');
+  const derived=await fs.readFile(path.join(directory,attachment.path));assert.equal(derived.toString('ascii',0,4),'RIFF');assert.equal(derived.toString('ascii',8,12),'WEBP');assert.equal(crypto.createHash('sha256').update(derived).digest('hex'),attachment.sha256);assert.deepEqual(await fs.readFile(path.join(profile,image.filePath)),original);assert.deepEqual(publication.boardIds,['root']);assert(!JSON.stringify(publication).includes('SECRET_NOT_PUBLISHED'));assert.deepEqual(errors,[]);
+  await page.screenshot({path:path.join(data,'portable-share-panel.png')});const report={data,buildId:manifest.buildId,version:manifest.version,builtRuntime:executable,appOutsideCheckout:appRoot,profile,codecPaths:paths,actualNativeSharePanel:true,actualWorkerWebP:true,sourceUnchanged:true,rootOnly:true,noInstalledNodeRequiredForApp:true};await fs.writeFile(path.join(data,'result.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+ }catch(error){await fs.writeFile(path.join(data,'failure.json'),JSON.stringify({stage,message:error.message},null,2));console.error({data,stage});throw error;}finally{await app.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

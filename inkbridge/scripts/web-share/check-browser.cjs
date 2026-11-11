@@ -3,10 +3,11 @@ const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:
 const {chromium,expect}=require('@playwright/test'),{exportWebShare}=require('../../src/main/web-share-export.cjs');
 (async()=>{
  const data=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-web-share-')),project=path.resolve(__dirname,'../..');
- const graph=await require('../../tests/helpers/web-share-fixture.cjs')(data);
- const result=process.env.INKBRIDGE_WEB_PACKAGE?{directory:process.env.INKBRIDGE_WEB_PACKAGE}:await exportWebShare({graph,rootBoardId:'root',workspaceDirectory:data,projectDirectory:project,outputDirectory:path.join(project,'release/web-shares')});
- const root=result.directory,prefix='/published/demo/',requests=[],errors=[],external=[],failed=[];
- const original=await fs.readFile(path.join(root,'share.json'),'utf8');
+ const live=process.env.INKBRIDGE_WEB_URL?new URL(process.env.INKBRIDGE_WEB_URL):null;if(live){live.search='';live.hash='';}
+ const graph=live?null:await require('../../tests/helpers/web-share-fixture.cjs')(data);
+ const result=live?{directory:null}:process.env.INKBRIDGE_WEB_PACKAGE?{directory:process.env.INKBRIDGE_WEB_PACKAGE}:await exportWebShare({graph,rootBoardId:'root',workspaceDirectory:data,projectDirectory:project,outputDirectory:path.join(project,'release/web-shares')});
+ const root=result.directory,prefix=live?live.pathname:'/published/demo/',requests=[],errors=[],external=[],failed=[];
+ const original=live?await fetch(new URL('share.json',live)).then(r=>r.text()):await fs.readFile(path.join(root,'share.json'),'utf8');
  const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.pdf':'application/pdf','.png':'image/png','.svg':'image/svg+xml','.woff2':'font/woff2'};
  const server=http.createServer(async(req,res)=>{try{
   requests.push({url:req.url,method:req.method});if(req.method!=='GET')throw Error('Read only');
@@ -14,16 +15,21 @@ const {chromium,expect}=require('@playwright/test'),{exportWebShare}=require('..
   const file=path.resolve(root,name.slice(prefix.length)||'index.html');if(path.relative(root,file).startsWith('..'))throw Error('Path escape');
   res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');res.end(await fs.readFile(file));
  }catch{res.statusCode=404;res.end('Not found');}});
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port+prefix;
+ if(!live)await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url=live?live.href:'http://127.0.0.1:'+server.address().port+prefix;
  const browser=await chromium.launch({headless:false,channel:'chrome'}).catch(error=>{server.close();throw error;});
  const page=await browser.newPage({viewport:{width:1500,height:1000}});page.setDefaultTimeout(10000);
+ if(live)page.setDefaultNavigationTimeout(120000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  page.on('requestfailed',r=>failed.push({url:r.url(),error:r.failure()?.errorText}));
- await page.route('**/*',route=>{if(new URL(route.request().url()).origin===new URL(url).origin)return route.continue();external.push(route.request().url());return route.abort();});
+ await page.route('**/*',route=>{if(new URL(route.request().url()).origin===new URL(url).origin){if(live)requests.push({url:route.request().url(),method:route.request().method()});return route.continue();}external.push(route.request().url());return route.abort();});
  let stage='boot';
  const inspect=()=>page.evaluate(()=>window.__inkbridgeWeb.inspect());
  const loaded=async id=>{await page.waitForFunction(id=>window.__inkbridgeWeb?.inspect?.().nodes.some(n=>n.id===id),id,{timeout:40000});};
- const click=async(id,dx=50,dy=40)=>{const point=await page.evaluate(({id,dx,dy})=>{
+ const click=async(id,dx=50,dy=40)=>{
+ // Native board navigation fits the camera after nodes enter the store. Use
+ // observed stable animation frames, not the earlier store coordinates.
+ await page.evaluate(()=>new Promise((resolve,reject)=>{let last='',stable=0,start=performance.now();function tick(){const next=JSON.stringify(window.__inkbridgeWeb.inspect().view);stable=next===last?stable+1:0;last=next;if(stable>=12)return resolve();if(performance.now()-start>10000)return reject(Error('Native camera did not settle'));requestAnimationFrame(tick);}requestAnimationFrame(tick);}));
+ const point=await page.evaluate(({id,dx,dy})=>{
   const s=window.__inkbridgeWeb.inspect(),node=s.nodes.find(n=>n.id===id),box=document.querySelector('canvas').getBoundingClientRect();
   return {x:box.x+s.view.translateX+(node.position.x+dx)*s.view.scale,y:box.y+s.view.translateY+(node.position.y+dy)*s.view.scale};
  },{id,dx,dy});await page.mouse.click(point.x,point.y);};
@@ -47,10 +53,12 @@ const {chromium,expect}=require('@playwright/test'),{exportWebShare}=require('..
   stage='browser back and breadcrumbs';await page.goBack();await expect(page).toHaveURL(/shareId=child/);await loaded('child-note-instance');await page.getByRole('navigation',{name:'白板導覽'}).getByText('根白板',{exact:true}).click();await loaded('note-instance');
   stage='direct child URL';const second=await browser.newPage();await second.goto(url+'?shareId=grand');await second.waitForFunction(()=>window.__inkbridgeWeb?.inspect?.().nodes.some(n=>n.id==='grand-note-instance'));await second.close();
   assert.deepEqual(errors,[]);
-  stage='reject unknown board';await page.goto(url+'?shareId=private');await expect(page.locator('#error')).toContainText('此白板不在分享包中');assert.equal(errors.length,1);assert(errors[0].includes('此白板不在分享包中'));
-  assert.equal(await fs.readFile(path.join(root,'share.json'),'utf8'),original);assert(!original.includes('SECRET_'));assert.deepEqual(external,[]);assert.deepEqual(failed,[]);assert(requests.every(r=>r.method==='GET'&&r.url.startsWith(prefix)));assert(!requests.some(r=>r.url.includes('/api/')));
-  const report={directory:root,data,nativeViewer:true,subdirectoryHosting:true,panZoom:true,tabs:true,callout:true,readOnly:true,inlineImage:true,imageGallery:true,pdfPage3:true,nestedRootChildGrandchild:true,reload:true,browserBack:true,breadcrumbs:true,directGrandchildURL:true,rejectUnpublishedBoard:true,noExternalRequests:true,noWriteRequests:true,publicationUnchanged:true};
+  stage='reject unknown board';const denied=await page.goto(url+'?shareId=private');
+  if(live){assert.equal(denied.status(),404);await expect(page.locator('body')).toContainText('Board not published');assert(!await page.locator('canvas').count());}
+  else{await expect(page.locator('#error')).toContainText('此白板不在分享包中');assert.equal(errors.length,1);assert(errors[0].includes('此白板不在分享包中'));}
+  assert.equal(live?await fetch(new URL('share.json',live)).then(r=>r.text()):await fs.readFile(path.join(root,'share.json'),'utf8'),original);assert(!original.includes('SECRET_'));assert.deepEqual(external,[]);assert.deepEqual(failed,[]);assert(requests.every(r=>r.method==='GET'&&(live?new URL(r.url).origin===live.origin:r.url.startsWith(prefix))));assert(!requests.some(r=>r.url.includes('/api/')));
+  const report={directory:root,data,actualCloudflare:!!live,url:live?.href,nativeViewer:true,subdirectoryHosting:true,panZoom:true,tabs:true,callout:true,readOnly:true,inlineImage:true,imageGallery:true,pdfPage3:true,nestedRootChildGrandchild:true,reload:true,browserBack:true,breadcrumbs:true,directGrandchildURL:true,rejectUnpublishedBoard:true,noExternalRequests:true,noWriteRequests:true,publicationUnchanged:true};
   await fs.writeFile(path.join(project,'private-original-editor/web-share-research/browser-result.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
  }catch(error){await fs.writeFile(path.join(data,'failure.json'),JSON.stringify({stage,errors,failed,requests,external,state:await page.evaluate(()=>window.__inkbridgeWeb?.inspect?.()||window.__inkbridgeWeb).catch(()=>null)},null,2));await page.screenshot({path:path.join(data,'failure.png')});console.error({stage,data,directory:root});throw error;
- }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+ }finally{await browser.close();if(!live)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

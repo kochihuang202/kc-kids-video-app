@@ -1,7 +1,9 @@
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict'), crypto = require('node:crypto');
 (async () => {
     const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-pdf-drop-')), file = path.join(data, '拖入測試.pdf'), bytes = require('../../tests/helpers/pdf-fixture.cjs')(3);
-    await fs.writeFile(file, bytes);
+    const large=process.env.INKBRIDGE_TEST_LARGE_PDF==='1';
+    if(large)await require('../../tests/helpers/large-pdf-fixture.cjs')(file,512*1024*1024);else await fs.writeFile(file, bytes);
+    const expectedSha=await require('../../src/main/stream-files.cjs').hashFile(file);
     const { WorkspaceDatabase } = require('../../src/main/database.cjs'), seed = new WorkspaceDatabase(path.join(data, 'Workspace/inkbridge.sqlite3'));
     seed.commit({ requestId: crypto.randomUUID(), baseRevision: 0, operations: [{ type: 'putBoard', data: { id: 'board-main', title: 'PDF_DROP_BOARD', view: { x: 0, y: 0, zoom: 1 } } }] });
     seed.close();
@@ -23,12 +25,14 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         const cdp = await page.context().newCDPSession(page), rect = await page.locator('#board').boundingBox(), x = rect.x + 250, y = rect.y + 230, dragData = { items: [], files: [file], dragOperationsMask: 1 };
         for (const type of ['dragEnter', 'dragOver', 'drop'])
             await cdp.send('Input.dispatchDragEvent', { type, x, y, data: dragData });
-        await expect.poll(async () => (await page.evaluate(() => window.inkbridge.load())).contents.filter(c => c.kind === 'pdf').length, { timeout: 10000 }).toBe(1);
+        await expect.poll(async () => (await page.evaluate(() => window.inkbridge.load())).contents.filter(c => c.kind === 'pdf').length, { timeout: large?90000:10000 }).toBe(1);
         await page.evaluate(() => window.__inkbridgeIntegrated.flush());
         const graph = await page.evaluate(() => window.inkbridge.load()), pdf = graph.contents.find(c => c.kind === 'pdf'), instance = graph.instances.find(i => i.contentId === pdf.id), fileRecord = graph.files.find(f => f.type === 'pdf');
         assert(instance);
-        assert.equal(fileRecord.sha256, crypto.createHash('sha256').update(bytes).digest('hex'));
-        assert.deepEqual([...await fs.readFile(path.join(data, 'files', fileRecord.id + '.pdf'))], [...bytes]);
+        assert.equal(fileRecord.sha256, expectedSha);
+        assert.equal(await require('../../src/main/stream-files.cjs').hashFile(path.join(data,'files',fileRecord.id+'.pdf')),expectedSha);
+        const partial=await page.evaluate(async id=>{const r=await fetch('flexnote://file/'+id,{headers:{Range:'bytes=0-4'}});return{status:r.status,length:(await r.arrayBuffer()).byteLength,range:r.headers.get('content-range')};},fileRecord.id);
+        assert.equal(partial.status,206);assert.equal(partial.length,5);
         const events = await page.evaluate(() => window.__dropEvents);
         assert(events.some(e => e.type === 'dragover' && e.prevented && e.effect === 'copy'));
         assert(events.some(e => e.type === 'drop' && e.trusted && e.paths.includes(file)));
@@ -44,7 +48,7 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         page = await app.firstWindow();
         await page.waitForFunction(() => window.__inkbridgeIntegrated?.ready);
         assert((await page.evaluate(() => window.inkbridge.load())).instances.some(i => i.contentId === pdf.id));
-        console.log(JSON.stringify({ childWindow: process.env.INKBRIDGE_DROP_CHILD === '1', nativePdfReader: true, parsedPages: 3, trustedFileDrop: true, nativeCopyCursor: true, realOsPath: true, onePdf: true, casBytes: true, sqliteInstance: true, restart: true, data }));
+        console.log(JSON.stringify({ childWindow: process.env.INKBRIDGE_DROP_CHILD === '1', exact512MiB:large,byteRange:true,nativePdfReader: true, parsedPages: 3, trustedFileDrop: true, nativeCopyCursor: true, realOsPath: true, onePdf: true, casBytes: true, sqliteInstance: true, restart: true, data }));
     }
     catch (error) {
         console.error(error);

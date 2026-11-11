@@ -11,7 +11,8 @@ export function makePayload(publication,boardId){
   else if(c.kind==='pdf'){item.type='PDFCard';pdfCards.push(item);pdfCardInstances.push(instance);}
   else throw Error('尚未支援分享的卡片種類：'+c.kind);
  }
- const boardRecord=b=>({...b.attributes,id:b.id,name:b.title,title:b.title,shareId:b.id,...(b.attributes?.inkbridgePreviewFileId?{backgroundImage:'flexnote://file/'+b.attributes.inkbridgePreviewFileId}:{})});
+ const boardRecord=b=>({...b.attributes,id:b.id,name:b.title,title:b.title,shareId:b.isUnshared?null:b.id,isUnshared:!!b.isUnshared,...(b.attributes?.inkbridgePreviewFileId?{backgroundImage:'flexnote://file/'+b.attributes.inkbridgePreviewFileId}:{})});
+ const unsharedBoards=[...new Set(g.whiteboardInstances.filter(r=>r.isUnshared).map(r=>r.whiteboardId))].map(id=>({id,title:'未分享',isUnshared:true,attributes:{}}));
  const scoped=name=>(g[name]||[]).filter(r=>(r.whiteboardId||r.boardId)===boardId);
  const empty=()=>({highlights:[],highlightInstances:[],relatedMindmaps:[],relatedPdfCards:[],relatedMediaCards:[]});
  const nestedShareMap=Object.fromEntries(publication.boardIds.map(id=>[id,id]));
@@ -22,7 +23,7 @@ export function makePayload(publication,boardId){
   mindmaps:g.mindmaps.map(m=>({...m,nodes:g.mindmapNodes.filter(n=>n.mindMapId===m.id)})),mindmapInstances:scoped('mindmapInstances'),
   pdfCards,pdfCardInstances,pdfFiles:g.files,mediaCards,mediaCardInstances,
   highlightResp:{...empty(),relatedCards:[],pdfCardsFromHighlight:[]},videoHighlightResp:{...empty(),videoCardsFromHighlight:[]},audioHighlightResp:{...empty(),audioCardsFromHighlight:[]},noteHighlightResp:{...empty(),noteCardsFromHighlight:[]},
-  whiteboardResp:{whiteboards:g.boards.map(boardRecord),whiteboardInstances:g.whiteboardInstances.filter(r=>r.containerId===boardId)},
+  whiteboardResp:{whiteboards:[...g.boards,...unsharedBoards].map(boardRecord),whiteboardInstances:g.whiteboardInstances.filter(r=>r.containerId===boardId)},
   fileInstances:{data:[]},websiteCardResp:{websiteCards:[],websiteInstances:[]},dailyNoteInstances:[]
  }};
 }

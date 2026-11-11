@@ -1,5 +1,5 @@
 // Isolated host for original modules; never starts the original Electron main.
-const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol,nativeImage,clipboard,ClipboardItem,shell,powerMonitor}=require('electron');
+const {app,BrowserWindow,session,ipcMain,dialog,Menu,protocol,nativeImage,clipboard,ClipboardItem,shell,powerMonitor,safeStorage}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const crypto=require('node:crypto');
 const {createDatabaseClient}=require('../../src/main/database-client.cjs');
@@ -34,7 +34,7 @@ app.whenReady().then(async()=>{
   const filesDir=path.join(data,'files');fs.mkdirSync(filesDir,{recursive:true});
   const attachments=require('../../src/main/attachment-store.cjs').createAttachmentStore(filesDir,bytes=>nativeImage.createFromBuffer(bytes).getSize());
   const exportsService=require('../../src/main/original-exports.cjs').createOriginalExports({directory:path.join(data,'exports'),load:()=>database.load(),attachments});
-  protocol.handle('flexnote',async request=>{try{const {bytes,ext}=attachments.readUrl(request.url);return new Response(bytes,{headers:{'Content-Type':types[ext]||'image/png','Access-Control-Allow-Origin':'*'}});}catch{return new Response('Not found',{status:404});}});
+  protocol.handle('flexnote',request=>require('../../src/main/attachment-response.cjs').attachmentResponse(request,attachments));
   server=http.createServer((request,response)=>{
     const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
     if(pathname==='/standalone'){
@@ -185,15 +185,19 @@ app.whenReady().then(async()=>{
   });
   ipcMain.handle('inkbridge:open-attachment',async(event,id)=>{if(!readable(event))throw Error('Unexpected sender');const graph=await database.load();if(!graph.files?.some(row=>row.id===id))throw Error('Attachment is not registered');const error=await shell.openPath(attachments.resolvePath(id));if(error)throw Error(error);return {success:true};});
   ipcMain.handle('inkbridge:export-artifact',async(event,request)=>{if(!readable(event)||!exportsService.has(request?.name))throw Error('Unexpected export request');return exportsService.call(request.name,request.payload);});
-  const webExports=new Map();
+  const shareCredentials=require('../../src/main/share-credentials.cjs').createShareCredentials({filename:path.join(data,'Profile','share-device.json'),safeStorage});
+  const shareCoordinator=require('../../src/main/share-coordinator.cjs').createShareCoordinator({data,project,credentials:shareCredentials,load:()=>database.load(),
+    capture:()=>queue.run('share-capture',async()=>{
+      if(closing||applyingSettings||!standalone.allReady())throw Error('編輯視窗仍在載入或保存，請稍後發布');
+      try{await standalone.prepareAll();return await database.load();}finally{await standalone.resumeAll();}
+    }),
+    onProgress:progress=>{for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:web-share-progress',progress);}
+  });
+  app.on('before-quit',()=>shareCoordinator.cancelAll());
   ipcMain.handle('inkbridge:web-share',async(event,request,epoch)=>{
-    if(!readable(event)||closing||applyingSettings)throw Error('目前無法匯出網頁');
-    if(request?.method==='open'){const directory=webExports.get(request.exportId);if(!directory)throw Error('匯出資料夾不存在');const error=await shell.openPath(directory);if(error)throw Error(error);return {success:true};}
-    if(request?.method!=='create'||typeof request.boardId!=='string')throw Error('Invalid web export request');
-    return queue.run('web-export',async()=>{liveSync.assertEpoch(epoch);await standalone.flushForSettings();liveSync.assertEpoch(epoch);
-      const graph=await database.load(),result=await require('../../src/main/web-share-export.cjs').exportWebShare({graph,rootBoardId:request.boardId,workspaceDirectory:data,projectDirectory:project,outputDirectory:path.join(data,'exports','web')});
-      const exportId=crypto.randomUUID();webExports.set(exportId,result.directory);return {...result,exportId};
-    });
+    if(!readable(event)||closing||applyingSettings)throw Error('目前無法分享網頁');liveSync.assertEpoch(epoch);
+    const result=await shareCoordinator.call(request);
+    if(request?.method==='open'){const error=await shell.openPath(result.directory);if(error)throw Error(error);return {success:true};}return result;
   });
   ipcMain.handle('inkbridge:info',event=>{if(!readable(event))throw Error('Unexpected sender');return {product:'InkBridge',version:require('../../package.json').version,isTest:!portable,dataRoot:data,databasePath:filename};});
   ipcMain.handle('inkbridge:load',event=>{if(!readable(event))throw Error('Unexpected sender');return database.load();});
@@ -209,8 +213,8 @@ app.whenReady().then(async()=>{
     if(!Array.isArray(items)||items.length>100)throw Error('Invalid image batch');
     return items.map(item=>{const match=/^data:image\/[a-zA-Z0-9.+-]+;base64,([a-zA-Z0-9+/=\s]+)$/.exec(item.base64Image||'');if(!match)throw Error('Invalid image data URL');return attachments.prepare(Buffer.from(match[1],'base64'),item.fileName);});
   });
-  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const stat=fs.statSync(source);if(!stat.isFile()||stat.size>64*1024*1024)throw Error('Invalid selected file size');const item=attachments.prepare(fs.readFileSync(source),path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
-  ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');return files.map(file=>{if(typeof file.path!=='string'||!path.isAbsolute(file.path)||fs.statSync(file.path).size>64*1024*1024)throw Error('Invalid selected file');return {path:file.path,sha256:crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex')};});});
+  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const item=await attachments.prepareFile(source,path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
+  ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');const results=[];for(const file of files){if(typeof file.path!=='string'||!path.isAbsolute(file.path))throw Error('Invalid selected file');const info=await require('../../src/main/stream-files.cjs').scanFile(file.path,{maxBytes:512*1024*1024});results.push({path:file.path,sha256:info.sha256});}return results;});
   ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
   ipcMain.on('inkbridge:renderer-ready',(event,epoch)=>{if(epoch!==liveSync.epoch)return;if(allowed(event)){rendererReady=true;updater.health().catch(()=>{});updater.check().catch(()=>{});}standalone.markReady(event);liveSync.markedReady(event.sender.id);});
   const finishClose=async()=>{if(snapshotTask)await snapshotTask;if(rendererReady){await standalone.prepareAll();await createSnapshot('close',true);}await database.close();standalone.destroyAll();approvedClose=true;window.close();};

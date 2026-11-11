@@ -22,16 +22,28 @@ function prepare(){
   // Missing thumbnails use the native placeholder, never a custom protocol.
   if(id==='69666')source=replace(source,'"pattern" === r && s ? a(s, n) : i;', '"pattern" === r && s ? a(s, n) : i.startsWith("flexnote:") ? "" : i;');
   if(id==='48626'){
+   source=replace(source,'let t = String(e.data.objectId), n = null !== (r = null !== (i = e.data.title)', 'if(globalThis.__inkbridgeUnsharedBoards?.has(String(e.data.objectId))){a();return;} let t = String(e.data.objectId), n = null !== (r = null !== (i = e.data.title)');
    source=replace(source,'t5 = (0, r.useCallback)(async (e) => { tP();','t5 = (0, r.useCallback)(async (e) => { if (_) return; tP();');
    source=replace(source,'enableShortcuts: !0, historyScopeId: eF','enableShortcuts: !_, historyScopeId: eF');
    source=replace(source,'onEdgesDelete: nl,','onEdgesDelete: _ ? void 0 : nl,');
    source=replace(source,'onDrop: ez,','onDrop: _ ? void 0 : ez,');
   }
   // The native reader uses the same packaged PDF.js version as the desktop.
+  if(id==='33158'){
+   if(meta.sha256!=='3e3d5e69bd8d91e014731f96ae58b5dcf1ad7184632933241f563c3d28e8500b')throw Error('Recheck changed native image resolution source');
+   // Keep the native bucket cache, visible-load queue, worker decoding and
+   // invalidation. Only choose the bytes for an already-requested resolution.
+   source=replace(source,'let o = i ? await this.loadSvgImageElement(t, n) : await this.loadImageElement(t);','let o = i ? await this.loadSvgImageElement(t, n) : await this.loadImageElement(globalThis.__inkbridgeWebImageSource?.(t,n)||t);');
+   source=replace(source,'this.naturalSizes.set(t, { width: o.naturalWidth, height: o.naturalHeight });','this.naturalSizes.set(t, globalThis.__inkbridgeWebImageDimensions?.get(t)||{ width: o.naturalWidth, height: o.naturalHeight });');
+  }
   if(id==='96895'){
    source=source.replaceAll('https://unpkg.com/pdfjs-dist@4.4.168/','/pdfjs/');
    source=replace(source,'"/pdfjs/build/pdf.worker.min.mjs"','new URL("pdfjs/build/pdf.worker.min.mjs",globalThis.__inkbridgeWebBase).href');
    source=replace(source,'"/pdfjs/cmaps/"','new URL("pdfjs/cmaps/",globalThis.__inkbridgeWebBase).href');
+   // PDF.js4.4.168 supports bounded range loading. For remote R2 documents,
+   // disable automatic full-file prefetch instead of downloading512MiB while
+   // the user reads one page. Keep the native loader/worker/render lifecycle.
+   source=replace(source,'let r = { ...this.props, ownerDocument: e,','let r = { ...this.props, disableAutoFetch: true, disableStream: true, rangeChunkSize: 1024*1024, ownerDocument: e,');
    source=replace(source,'(0, eU.KD)("updateTotalPages", { id: this.props.id, totalPages: e._pdfInfo.numPages });','window.ipc && (0, eU.KD)("updateTotalPages", { id: this.props.id, totalPages: e._pdfInfo.numPages });');
    for(const method of ['updatePdfCardCurrentPage','updatePdfCardViewPrefs'])source=replace(source,'(0, eU.KD)("'+method+'",','window.ipc && (0, eU.KD)("'+method+'",');
    source=replace(source,'}, eY = async function (e, t) {','}, eY = async function (e, t) { if (!window.ipc) return;');

@@ -2,6 +2,7 @@
 // startup rollback journal. Previous working directories are retained locally.
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {inspectDatabase,hashFile}=require('./workspace-snapshots.cjs');
+const {copyVerified}=require('./stream-files.cjs');
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 async function exists(file){try{await fs.stat(file);return true;}catch(e){if(e.code==='ENOENT')return false;throw e;}}
 async function writeAtomic(file,value){const temp=file+'.'+crypto.randomUUID()+'.tmp',h=await fs.open(temp,'wx');try{await h.writeFile(value);await h.sync();}finally{await h.close();}await fs.rename(temp,file);}
@@ -32,7 +33,7 @@ async function stageRestore({local,exchange,workspaceId,snapshotId,snapshots,sha
   for(const name of ['Workspace','files','previous'])await fs.mkdir(path.join(staging,name),{recursive:true});
   const databaseFile=path.join(staging,'Workspace','inkbridge.sqlite3');await copyDurable(path.join(source,'database.sqlite3'),databaseFile);
   if(await hashFile(databaseFile)!==manifest.database.sha256)throw Error('還原資料庫複製驗證失敗');inspectDatabase(databaseFile);
-  for(const asset of manifest.assets){const target=path.join(sharedAssets?local:staging,asset.logicalPath);if(!await exists(target))await require('./sync-files.cjs').atomic(target,await fs.readFile(path.join(exchange,asset.objectPath)));if(await hashFile(target)!==asset.sha256)throw Error('還原附件複製驗證失敗');}
+  for(const asset of manifest.assets){const target=path.join(sharedAssets?local:staging,asset.logicalPath);await copyVerified(path.join(exchange,asset.objectPath),target,{sha256:asset.sha256,bytes:asset.bytes});if(await hashFile(target)!==asset.sha256)throw Error('還原附件複製驗證失敗');}
   const state=path.join(local,'Profile','snapshot-state.json');if(await exists(state))await copyDurable(state,path.join(staging,'previous','snapshot-state.json'));
   return {id,manifest,sharedAssets};
 }

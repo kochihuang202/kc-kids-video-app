@@ -3,6 +3,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {createWorkspaceSnapshots,inspectDatabase,hashFile}=require('./workspace-snapshots.cjs');
 const {json,exists,atomic,writeJSON,UUID}=require('./sync-files.cjs');
 const {startupSnapshotStatus}=require('./startup-snapshot-status.cjs');
+const {copyVerified}=require('./stream-files.cjs');
 function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachment,deviceName=os.hostname()}){
   const validator=createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAttachment});
   const stateFile=path.join(localDirectory,'Profile/snapshot-state.json'),outbox=path.join(localDirectory,'Outbox');
@@ -13,7 +14,7 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
   async function publish(m,dir){
     const root=await fs.realpath(getExchange());
     async function target(relative){const file=path.join(root,relative);await fs.mkdir(path.dirname(file),{recursive:true});const real=await fs.realpath(path.dirname(file)),r=path.relative(root,real);if(r.startsWith('..')||path.isAbsolute(r))throw Error('交換區路徑越界');return file;}
-    async function copy(source,relative,sha){const file=await target(relative);if(await exists(file)){if(await hashFile(file)!==sha)throw Error('交換檔案尚未到齊或雜湊不符');return;}const bytes=await fs.readFile(source);if(crypto.createHash('sha256').update(bytes).digest('hex')!==sha)throw Error('本機附件完整性驗證失敗');await atomic(file,bytes);}
+    async function copy(source,relative,sha){const file=await target(relative);await copyVerified(source,file,{sha256:sha});}
     await fs.mkdir(path.join(root,'assets'),{recursive:true});
     for(const asset of m.assets)await copy(resolveAttachment(asset.fileId),asset.objectPath,asset.sha256);
     const relative=`snapshots/${m.workspaceId}/${m.snapshotId}`;

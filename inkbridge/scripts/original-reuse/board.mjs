@@ -365,6 +365,7 @@ async function boot(){
       redux.dispatch(r(23407)._z({id:''}));
     },[home,nodes,request]);return null;
   }
+  const ShareControls=installWebShare({getBoardId:()=>boardId,isHome:()=>!!state.home,flush:()=>state.flush(),onError:report});
   function App(){
     const onlyTitle=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.onlyDisplayCardTitle),smallTextSize=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.textSizeAtSmallZoom);
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes),sceneConnections=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().connections),mode=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.controlMode);state.setMode=value=>redux.dispatch(r(23407).Uw(value));state.controls=r(23).wf();
@@ -438,12 +439,11 @@ async function boot(){
           onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
           onDoubleClick:(_event,point)=>{const id=addCard('','',point);originalStore.getState().setSelectedNodeIds(new Set([id]));requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent('canvaskit-open-node-editor',{detail:{nodeId:id}})));},
           onLoadingChange:loading=>{if(!loading){$('#loading').hidden=true;state.ready=true;}}
-        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod),React.createElement(NativeReferenceFocus,{home,nodes})))))));
+        }),React.createElement(shell.ShellPortals,{home,page}),React.createElement(ShareControls,{home,boardId:activeBoardId}),React.createElement(CanvasPasteListener),React.createElement(NativeZoomLod),React.createElement(NativeReferenceFocus,{home,nodes})))))));
   }
   const Translated=r(1643).Jc(App);const reactRoot=ReactDOM.createRoot($('#board'));reactRoot.render(React.createElement(Translated,{pageProps:pageProps.pageProps}));
   originalStore.subscribe(current=>{const count=current.nodes.length;$('#card-count').textContent=count;$('#sidebar-count').textContent=count;$('#zoom-reset').textContent=`${Math.round(current.view.scale*100)}%`;$('#visible-count').textContent=count;$('#lod').textContent='原版';$('#render-stat').textContent='原版 Canvas / NoteCard / Lexical';const selected=current.nodes.find(node=>current.selectedNodeIds.has(node.id));$('#inspector').textContent=selected?helpers.LG(selected.data.content):'點卡片進入原版編輯器';});
   state.inspect=()=>({boardId,nodes:originalStore.getState().nodes,view:originalStore.getState().view,selectedNodeIds:[...originalStore.getState().selectedNodeIds],editingNodeId:originalStore.getState().editingNodeId,editors:[...editors.keys()],errors:state.errors});state.addCard=addCard;
-  installWebShare({getBoardId:()=>boardId,isHome:()=>!!state.home,flush:()=>state.flush(),onError:report});
   state.bounds=id=>engine.getNodeBounds(originalStore.getState().nodes.find(node=>node.id===id),graphContext());
   const storageUI=installStorageSettings();
   window.inkbridge.onSnapshotSaved(result=>{if(result.workspaceId===graph.workspaceId){state.snapshotInfo={configured:true,baseRevision:result.revision,baseSnapshotId:result.snapshotId};coordinator.status();}});

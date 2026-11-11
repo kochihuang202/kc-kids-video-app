@@ -3,17 +3,21 @@
 const clone=value=>JSON.parse(JSON.stringify(value));
 const pick=(record,keys)=>Object.fromEntries(keys.filter(k=>record?.[k]!==undefined).map(k=>[k,record[k]]));
 const visibleKeys=['title','name','fileId','mediaType','caption','width','height','currentPage','totalPages','pageCount','scale','isAutoHeight','color','fontSize','padding','topPadding','style','backgroundColor','lastEditedTime','createdTime','fixedConnection','canvasBackground','backgroundType','backgroundImage','inkbridgePreviewFileId','cornerRadius','textAlign','verticalAlign','highlightHeader','isPinned','pinStyle','pinColor','pinPosition','isFolded','rotationAngle','displayType','parentId','isAutoWidth'];
-function scopeWebShare(graph,rootBoardId){
+const {normalizeSelection}=require('./share-selection.cjs');
+function scopeWebShare(graph,rootBoardId,{selectedBoardIds}={}){
  const boards=new Map((graph.boards||[]).filter(b=>!b.attributes?.isTrashed).map(b=>[b.id,b]));
  if(!boards.has(rootBoardId))throw Error('分享白板不存在');
- const ids=new Set(),links=(graph.whiteboardInstances||[]).filter(r=>!r.isTrashed&&r.containerType==='whiteboard');
- function visit(id){if(ids.has(id))return;if(!boards.has(id))throw Error('子白板不存在：'+id);ids.add(id);for(const row of links.filter(r=>r.containerId===id))visit(row.whiteboardId);}visit(rootBoardId);
+ const ids=new Set(normalizeSelection(graph,rootBoardId,selectedBoardIds)),links=(graph.whiteboardInstances||[]).filter(r=>!r.isTrashed&&r.containerType==='whiteboard');
+ // A generated board preview can contain a descendant that was not selected.
+ // It is a rendering cache, not the user's chosen background image.
+ const sanitizePreview=(a,generated=a.inkbridgePreviewFileId)=>{if(selectedBoardIds!==undefined){delete a.inkbridgePreviewFileId;if(generated&&(a.backgroundImage===generated||a.backgroundImage==='flexnote://file/'+generated))delete a.backgroundImage;}return a;};
+ const boardAttributes=b=>sanitizePreview(pick(b.attributes,visibleKeys));
  const trashed=new Set((graph.cardMetadata||[]).filter(r=>r.isTrashed).map(r=>r.id));
  const instances=(graph.instances||[]).filter(r=>ids.has(r.boardId)&&!r.attributes?.isTrashed&&!trashed.has(r.contentId)).map(r=>({...pick(r,['id','contentId','boardId','x','y','width','height','z','parentId']),attributes:pick(r.attributes,visibleKeys)})),contentIds=new Set(instances.map(r=>r.contentId));
  const contents=(graph.contents||[]).filter(r=>contentIds.has(r.id)).map(r=>pick(r,['id','title','body','document','kind','tone']));if(contents.length!==contentIds.size)throw Error('分享卡片內容缺失');
  const sectionRows=(graph.sections||[]).filter(r=>ids.has(r.whiteboardId||r.boardId)),mapInstances=(graph.mindmapInstances||[]).filter(r=>ids.has(r.whiteboardId)),mapIds=new Set(mapInstances.map(r=>r.objectId));
- const scoped={boards:[...ids].map(id=>({id,title:boards.get(id).title,attributes:pick(boards.get(id).attributes,visibleKeys)})),instances,contents,
-  whiteboardInstances:links.filter(r=>ids.has(r.containerId)).map(r=>pick(r,['id','whiteboardId','containerId','containerType','x','y','width','height',...visibleKeys])),cardMetadata:(graph.cardMetadata||[]).filter(r=>contentIds.has(r.id)&&!r.isTrashed).map(r=>pick(r,['id',...visibleKeys])),sections:sectionRows,
+ const scoped={boards:[...ids].map(id=>({id,title:boards.get(id).title,attributes:boardAttributes(boards.get(id))})),instances,contents,
+  whiteboardInstances:links.filter(r=>ids.has(r.containerId)).map(r=>ids.has(r.whiteboardId)?sanitizePreview(pick(r,['id','whiteboardId','containerId','containerType','x','y','width','height',...visibleKeys]),r.inkbridgePreviewFileId||boards.get(r.whiteboardId)?.attributes?.inkbridgePreviewFileId):({...pick(r,['id','whiteboardId','containerId','containerType','x','y','width','height']),isUnshared:true,name:'未分享'})),cardMetadata:(graph.cardMetadata||[]).filter(r=>contentIds.has(r.id)&&!r.isTrashed).map(r=>pick(r,['id',...visibleKeys])),sections:sectionRows,
   textElements:(graph.textElements||[]).filter(r=>ids.has(r.whiteboardId||r.boardId)),drawingStrokes:(graph.drawingStrokes||[]).filter(r=>ids.has(r.whiteboardId||r.boardId)),
   mindmapInstances:mapInstances,mindmaps:(graph.mindmaps||[]).filter(r=>mapIds.has(r.id)),mindmapNodes:(graph.mindmapNodes||[]).filter(r=>mapIds.has(r.mindMapId)),
   connections:(graph.connections||[]).filter(r=>ids.has(r.whiteboardId||r.boardId))};
