@@ -23,6 +23,8 @@ import {installMindmapKeyboard} from '/inkbridge-core/mindmap-keyboard.mjs';
 import {createOriginalTextElements} from '/inkbridge-core/original-text-elements.mjs';
 import {installNestedWhiteboards} from '/inkbridge-core/nested-whiteboards.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
+import {captureCanvasHistory,canvasHistoryOperations} from '/inkbridge-core/canvas-history.mjs';
+import {installOriginalClipboard} from '/inkbridge-core/original-clipboard.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
@@ -53,7 +55,8 @@ async function boot(){
   if(!graph.boards.some(board=>board.id===boardId))boardId=graph.boards[0]?.id||'board-main';
   for(const board of graph.boards)if(device.boardViews?.[board.id])board.view=device.boardViews[board.id];
   const boards=new Map(graph.boards.map(board=>[board.id,board])),originalStore=r(23).gt,editors=new Map(),modalEditors=new Map(),editorSnapshots=new WeakMap(),helpers=r(45828),engine=r(66597).L;
-  let mindmaps;
+  let mindmaps,historyTask=null,inflightOperations=[];
+  globalThis.__inkbridgeCaptureHistory=()=>captureCanvasHistory(projectWindowOperations(projectWindowOperations(persistedGraph,inflightOperations),[...coordinator.pending.values()]),boardId);
   const pendingExternal=new Set();globalThis.__inkbridgeTrackOperation=operation=>{let task;try{task=Promise.resolve(operation());}catch(error){task=Promise.reject(error);}pendingExternal.add(task);task.then(()=>pendingExternal.delete(task),error=>{pendingExternal.delete(task);report(error);});return task;};
   function stageBoardView(view,id=boardId){if(state.home||navigationChanging||!boards.has(id))return;const board={...boards.get(id),view};boards.set(id,board);window.inkbridge.sync({method:'deviceWrite',key:'boardViews',value:{[id]:view}}).catch(report);window.inkbridge.sync({method:'deviceWrite',key:'activeBoards',value:{[windowKey]:id}}).catch(report);}
   const graphContext=()=>({CanvasKit:K,fontMgr:fonts.getFontMgr(),view:originalStore.getState().view,theme:'light',locale:'zh-TW'});
@@ -94,11 +97,15 @@ async function boot(){
     for(const node of originalStore.getState().nodes)if(node.data.objectId===content.id)persistGeometry(node);
   }
   const coordinator=new PersistenceCoordinator({revision:graph.revision,commit:async request=>{
+    inflightOperations=request.operations;
+    try{
     const result=boardWindow?await window.inkbridge.noteCall({method:'workspaceCommit',payload:{request,expected:windowExpectations(persistedGraph,request.operations)}}):await window.inkbridge.commit(request);
     if(!result.ok)throw Object.assign(Error(result.error.message),{code:result.error.code});
     const ack=boardWindow?result.result.ack:result.ack;
     if(boardWindow)persistedGraph=advanceWindowBaseline(persistedGraph,result.result.graph,request.operations);
+    else persistedGraph=projectWindowOperations(persistedGraph,request.operations);
     state.lastAck=ack;if(ack.changed){window.dispatchEvent(new Event('inkbridge:references-committed'));if(!boardWindow)window.inkbridge.workspaceCommitted();}return ack;
+    }finally{inflightOperations=[];}
   },
     beforeFlush:async()=>{
       for(const [editor,contentId]of [...modalEditors]){if(editor.isComposing())await new Promise(resolve=>editor.getRootElement().addEventListener('compositionend',()=>queueMicrotask(resolve),{once:true}));readLiveEditor(editor,contentId);}
@@ -131,6 +138,7 @@ async function boot(){
     return fitCardHeight(node,engine,graphContext(),maxCardHeight);
   }
   function addCard(title='',body='',point){
+    if(state.ready)originalStore.getState().pushUndoSnapshot();
     const controls=state.controls,box=$('#board').getBoundingClientRect();point??=controls.screenToFlowPosition({x:box.x+box.width/2,y:box.y+box.height/2});
     const contentId=crypto.randomUUID(),instanceId=crypto.randomUUID(),content={id:contentId,title,body,document:title||body?noteDocument({title,body}):r(19281).YH.newEmptyEditorContent(),kind:'text',tone:'sage'};
     putContent(content,body);const item={id:instanceId,contentId,boardId,x:point.x,y:point.y,width:520,height:200,z:instances.size,attributes:{isAutoHeight:false,inkbridgeManagedHeight:true}};instances.set(item.id,item);coordinator.stage({type:'putInstance',data:item});coordinator.stage(catalogOperation('instance',{...item.attributes,id:item.id}));
@@ -152,6 +160,11 @@ async function boot(){
       await coordinator.flush();
       ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();
       navigationChanging=true;boardId=id;
+      // Next updates the route before its native children render. Our manual
+      // router must do likewise; otherwise their creation callbacks capture the
+      // previous board even though the canvas already shows the new one.
+      const query=router.query.whiteboardId===id?{...router.query,whiteboardId:id}:{whiteboardId:id};
+      Object.assign(router.state,{pathname:'/flow',route:'/flow',query,asPath:'/zh-TW/flow?'+new URLSearchParams(query)});
       await window.inkbridge.sync({method:'deviceWrite',key:'activeBoards',value:{[windowKey]:id}});
       const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=id;
       ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());sections.hydrate();state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
@@ -189,7 +202,8 @@ async function boot(){
     for(const operation of ops)coordinator.stage(operation);await coordinator.flush();boards.set(id,board);
     if(id===boardId)updateBoardTitle();return {board,boardInstance};
   });}
-  const flushAll=async()=>{do{if(pendingExternal.size)await Promise.all([...pendingExternal]);await navigationTail.catch(()=>{});}while(pendingExternal.size);return coordinator.flush();};state.flush=flushAll;
+  const settleWrites=async()=>{do{if(pendingExternal.size)await Promise.all([...pendingExternal]);await navigationTail.catch(()=>{});}while(pendingExternal.size);return coordinator.flush();};
+  const flushAll=async()=>{if(historyTask)await historyTask;return settleWrites();};state.flush=flushAll;
   function registerModalEditor(contentId,editor){if(modalEditors.has(editor))return;modalEditors.set(editor,contentId);editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));const read=()=>readLiveEditor(editor,contentId);const offUpdate=editor.registerUpdateListener(({tags})=>{if(tags.has('editor-force-update')){editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));return;}queueMicrotask(read);});let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();modalEditors.delete(editor);});}});}
   function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([,id])=>id===contentId).map(([editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
   globalThis.__inkbridgeRegisterSidebarEditor=registerModalEditor;
@@ -212,7 +226,9 @@ async function boot(){
   mindmaps=createOriginalMindmaps({r,graph,navigate,coordinator,catalogOperation,store:originalStore,getBoardId:()=>boardId,getBaseNodes:()=>sections.scene()});
   installMindmapControls({r,React,mindmaps,onError:report});
   const hydrateBase=sections.hydrate;sections.hydrate=()=>{hydrateBase();mindmaps.hydrate();};mindmaps.hydrate();
-  function applySharedGraph(next){
+  function applySharedGraph(next,{preserveHistory=false}={}){
+    if(!preserveHistory)originalStore.setState({undoStack:[],redoStack:[]});
+    persistedGraph=structuredClone(next);
     const replace=(map,rows)=>{map.clear();for(const row of rows||[])map.set(row.id,row);};
     for(const key of Object.keys(graph))delete graph[key];Object.assign(graph,structuredClone(next));
     replace(contents,next.contents);replace(instances,next.instances);replace(boards,next.boards);replace(files,next.files);replace(sections.sections,next.sections);
@@ -223,6 +239,32 @@ async function boot(){
   shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   nested=installNestedWhiteboards({r,graph,store:originalStore,getBoardId:()=>boardId,sections,navigate,coordinator,load:()=>window.inkbridge.load(),shell,rehydrate:()=>mindmaps.hydrate()});
   elements=createOriginalTextElements({r,graph,navigate,coordinator,store:originalStore,sections,getBoardId:()=>boardId});
+  installOriginalClipboard({navigate,coordinator,load:()=>window.inkbridge.load(),elements,connections,rehydrate:applySharedGraph});
+  globalThis.__inkbridgeRunHistory=(direction)=>{
+    if(historyTask||state.home)return false;
+    const store=originalStore.getState();if(!(direction==='undo'?store.canUndo():store.canRedo()))return false;
+    const wasInert=document.body.inert;document.body.inert=true;
+    historyTask=(async()=>{
+      // Drain actual paste/gesture writes before capturing redo. No idle timer.
+      await settleWrites();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await settleWrites();
+      const before=originalStore.getState(),stacks={undoStack:before.undoStack,redoStack:before.redoStack},current=await window.inkbridge.load();let restore;
+      try{
+        before[direction](snapshot=>{restore=snapshot;});
+        if(!restore?.inkbridgeGraph||restore.historyScopeId!==boardId)throw Error('白板復原記錄已失效');
+        const operations=canvasHistoryOperations(restore.inkbridgeGraph,current);
+        for(const operation of operations)coordinator.stage(operation);
+        await coordinator.flush();
+        applySharedGraph(await window.inkbridge.load(),{preserveHistory:true});
+        r(66963).Ro();engine.clearCache();engine.requestRender(true);
+      }catch(error){
+        // The restoration is one transaction. A rejected COMMIT leaves the old
+        // database intact; discard only this attempt and restore its stack.
+        coordinator.pending.clear();coordinator.error=null;coordinator.status();
+        originalStore.setState(stacks);applySharedGraph(await window.inkbridge.load(),{preserveHistory:true});throw error;
+      }
+    })().finally(()=>{document.body.inert=wasInert;historyTask=null;});
+    historyTask.catch(report);return true;
+  };
   await nested.refresh();
   let remoteTail=Promise.resolve(),closeEpoch=0;
   globalThis.__inkbridgeRemoteRequest=request=>{
@@ -270,7 +312,7 @@ async function boot(){
   };
   window.inkbridge.onBridgeRequest(request=>globalThis.__inkbridgeRemoteRequest(request));
   if(boardWindow){let refreshTail=Promise.resolve();window.inkbridge.onWorkspaceUpdated(()=>{const barrier=coordinator.flushTail;refreshTail=refreshTail.catch(()=>{}).then(()=>barrier.catch(()=>{})).then(async()=>{
-    if(!state.ready||coordinator.pending.size||coordinator.inflight||[...modalEditors.keys()].some(editor=>editor.isComposing()))return;
+    if(!state.ready||historyTask||coordinator.pending.size||coordinator.inflight||[...modalEditors.keys()].some(editor=>editor.isComposing()))return;
     await navigationTail.catch(()=>{});const next=await window.inkbridge.load();for(const [editor,id]of modalEditors)readLiveEditor(editor,id);
     if(coordinator.pending.size||coordinator.inflight)return;
     applySharedGraph(next);persistedGraph=structuredClone(next);coordinator.revision=next.revision;coordinator.status();
@@ -287,6 +329,7 @@ async function boot(){
   function CanvasPasteListener(){
     if(typeof r(64744).InkBridgeUseCanvasPaste!=='function')throw Error('Native canvas paste hook is not exported');
     r(64744).InkBridgeUseCanvasPaste();
+    r(64744).InkBridgeUseCanvasCopy();
     return null;
   }
   function NativeZoomLod(){const zoom=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().view.scale),lod=r(48626).InkBridgeUseZoomLod(zoom);React.useEffect(()=>lod.zoomchange({zoom}),[zoom]);return null;}
@@ -326,6 +369,8 @@ async function boot(){
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
     const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
     const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
+    const routeContext=React.useMemo(()=>Object.create(router,{query:{value:{...router.query}},pathname:{value:router.pathname},route:{value:router.route},asPath:{value:router.asPath}}),[activeBoardId,home,page]);
+    const nativeHistory=r(37883).E({historyScopeId:activeBoardId,enableShortcuts:!home});
     React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-zoom-controls').inert=home;},[home]);
     const FlowContext=r(48626).FLowContext;
     const flowContextValue=React.useMemo(()=>({
@@ -366,15 +411,16 @@ async function boot(){
       },
       onlyDisplayCardTitle:onlyTitle,
       textSizeAtSmallZoom:smallTextSize,
-      onMindmapNodeChangeForUndo:()=>{},
-      pushUndoSnapshot:()=>{},
+      onMindmapNodeChangeForUndo:()=>nativeHistory.pushUndoSnapshot(),
+      pushUndoSnapshot:nativeHistory.pushUndoSnapshot,
       screenToFlowPosition:point=>state.controls?.screenToFlowPosition(point)||point,
       getNodes:()=>originalStore.getState().nodes,
       requestCanvasRender:()=>state.controls?.requestRender?.(),
     }),[activeBoardId,onlyTitle,smallTextSize]);
-    return React.createElement(RouterContext.Provider,{value:router},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
+    return React.createElement(RouterContext.Provider,{value:routeContext},React.createElement(Provider,{store:redux},React.createElement(Theme,{attribute:'class',defaultTheme:'light',enableSystem:false},React.createElement(CanvasProvider,null,
       React.createElement(FlowContext.Provider,{value:flowContextValue},
         React.createElement(React.Fragment,null,React.createElement(NativeCanvas,{flowContextValue,nodes,readOnly:home,whiteboardId:activeBoardId,textEditorAdapter:FlowAdapter,controlMode:mode,canvasNavMode:'mouse',canvasBackground:'dots',locale:'zh-TW',defaultViewport:boards.get(activeBoardId)?.view||{x:80,y:60,zoom:.8},
+          pushUndoSnapshot:nativeHistory.pushUndoSnapshot,
           nodeToolbar:r(19395).z,
           connections:sceneConnections,
           // Native48626 passes this contract to Canvas10764. Keep new links curved

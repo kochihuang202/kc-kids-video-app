@@ -42,13 +42,24 @@ export function cardLinks(graph, cardId) {
     return { success: true, whiteboardLinks: [...groups.values()], linksInNoteCards, linksInDailyNotes: [], linksInMindmaps: [], linksInPdfHighlights: [], linksInVideoHighlights: [], linksInWebsiteCards: [], linksInNoteHighlights: [], linksInRelations: [], mindmapIdList: [], appearInMindmaps: [], selfCard, fileRecord: file || graph.files?.find(file => file.id === selfCard?.fileId) || null };
 }
 export function createOriginalConnections({ r, navigate, coordinator, load, store, catalogOperation, getBoardId }) {
-    const rows = new Map(), names = new Set(['addConnection', 'updateConnection', 'deleteConnection', 'getConnectionsByWhiteboardId', 'getCardLinks']);
+    const rows = new Map(), names = new Set(['addConnection', 'updateConnection', 'deleteConnection', 'batchAddConnections','batchUpdateConnections','batchDeleteConnections','batchDeleteEdges', 'getConnectionsByWhiteboardId', 'getCardLinks']);
     const put = row => coordinator.stage(catalogOperation('connection', row));
     const hydrate = graph => { rows.clear(); for (const row of graph.connections || [])
         rows.set(row.id, row); store.getState().setConnections([...store.getState().connections.filter(row=>String(row.id).startsWith('mindmap-conn-')),...[...rows.values()].filter(row => row.whiteboardId === getBoardId()).map(row => r(19281).YH.connectionToFlowConnection(row))]); };
     const call = (name, payload) => navigate(async () => {
         await coordinator.flush();
         const graph = await load();
+        if(name.startsWith('batch')){
+            if(!Array.isArray(payload))throw Error('Invalid connection batch');
+            const proposed=[];
+            if(name==='batchDeleteConnections'||name==='batchDeleteEdges')for(const id of payload)coordinator.stage({type:'deleteCatalog',kind:'connection',id});
+            else for(const item of payload){const old=(graph.connections||[]).find(row=>row.id===item.id),row=name==='batchUpdateConnections'?{...old,...item}:item;
+                const exists=id=>graph.instances.some(r=>r.id===id&&r.boardId===row.whiteboardId)||(graph.sections||[]).some(r=>r.id===id&&r.whiteboardId===row.whiteboardId)||(graph.textElements||[]).some(r=>r.id===id&&r.whiteboardId===row.whiteboardId)||(graph.whiteboardInstances||[]).some(r=>r.id===id&&r.containerId===row.whiteboardId)||(graph.mindmapInstances||[]).some(r=>r.id===id&&r.whiteboardId===row.whiteboardId)||(graph.connections||[]).some(r=>r.id===id&&r.whiteboardId===row.whiteboardId)||payload.some(r=>r.id===id&&r.whiteboardId===row.whiteboardId);
+                if(!row.id||!row.whiteboardId||![row.beginId,row.endId].every(exists))throw Error('Connection endpoint missing');proposed.push(row);
+            }
+            for(const row of proposed)put(row);
+            await coordinator.flush();hydrate(await load());return {success:true};
+        }
         if (name === 'getCardLinks')
             return cardLinks(graph, typeof payload === 'string' ? payload : payload.cardId || payload.objectId);
         if (name === 'getConnectionsByWhiteboardId')
