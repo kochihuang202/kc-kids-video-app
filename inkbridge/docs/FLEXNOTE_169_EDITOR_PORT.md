@@ -46,6 +46,13 @@ node scripts/original-reuse/check-editor-169.cjs
 
 Original sources stay private/ignored. The two `.before-editor-169` backups and `integration-patches.json` retain before/after hashes. To roll back only this port, remove its pipeline invocation, restore those two files from their specific backups, then collect again; do not restore the much older generic integration backups.
 
+Private editable-file hashes at first application (including earlier InkBridge patches):
+
+| File | Before | After |
+| --- | --- | --- |
+| module-34883.cjs | `f944b6a79e13bb3882c290e2cd7e18962a394019a462b3f6f47a26ba9342ecf2` | `da16d1a4f9fd7b048af9525680eb47263f97649549bf82480a60b94258ba2503` |
+| module-10764.cjs | `0913c47ac42ba3ac2afc117d8308bef6695f92937886a4b3c116f7adcb718e33` | `58494c1265d7512a3fa2daf9efa9fe1cc7c33441a85645545833027a7d388c91` |
+
 ## Targeted acceptance, 2026-11-11
 
 - Before editing: maintained `check-mindmap-keyboard.cjs` and `check-mindmap-appearance.cjs` passed on the Git baseline.
@@ -55,3 +62,11 @@ Original sources stay private/ignored. The two `.before-editor-169` backups and 
 - Actual failure-injection/restart evidence: `%TEMP%/inkbridge-original-modules-editor169-3ZQQba`; earlier map-only acceptance: `%TEMP%/inkbridge-original-modules-editor169-vJgiU3`. Editing screenshot inspected.
 - Related regressions after editing: `check-mindmap-keyboard.cjs` and `check-mindmap-appearance.cjs` passed again, preserving branch style, markers, left/both-side navigation, delete continuation, editing and restart.
 - Physical Windows IME and long-duration memory/performance improvement are not certified. Unicode input and the maintained composing-key guard are tested; they are not a physical IME claim. No unrelated full-suite run, schema migration, sync-protocol change or formal-data write.
+
+## Delivered portable 0.5.13
+
+- Runtime commit `b62e229d332f`, release sequence14. Directory: `release/InkBridge-0.5.13-b62e229d332f-baf2d8`; entry `Start-InkBridge.bat`.
+- The packaged runtime passed `check-editor-169.cjs` against its own copied application/runtime, with isolated temporary data: `%TEMP%/inkbridge-original-modules-editor169-n2wxNX`. It passed both real editor/save/restart cases and the actual mounted teardown failure injection.
+- Published the unique signed **0.5.12 → 0.5.13** delta `InkBridge-update-e3c0f222-73a3-4b09-8deb-93f1ac0c8d50.zip` and matching `.json` to `C:\Users\ji3cp\OneDrive - Foxconn\01_Home\21_InkBridge`. Size6,017,613 bytes, four changed files (registry, app version, user instructions and portable manifest). Older builds can first use the previously published matching0.5.12 deltas, then this update.
+- The actual Windows helper's **Stage** mode verified signature, base/hash/path and extraction. Destination copy hashes matched. This is local exchange publication and staging verification, not a new full update/restart acceptance run or proof of cloud arrival. Existing updater logic was not changed.
+- Receipt: ignored `release/editor169-delivery.json`. Snapshots/assets and formal profiles were not modified. Publisher private key remains private.
