@@ -4,10 +4,22 @@
 // Uses a temporary synthetic workspace only.
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict'), sharp = require('sharp');
 (async () => {
-    const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-')), env = { ...process.env, INKBRIDGE_ORIGINAL_PROBE_DATA: data, INKBRIDGE_ORIGINAL_VIEW: 'board' };
+    const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-'));
+    // INKBRIDGE_TEST_BUILD: run the same flow against a completed portable build, copied
+    // outside the source checkout with its own runtime and an isolated LOCALAPPDATA.
+    const candidate = process.env.INKBRIDGE_TEST_BUILD;
+    let env, entry = path.join(__dirname, 'host.cjs'), executable = require('electron'), privateRoot = path.resolve(__dirname, '../../private-original-editor');
+    if (candidate) {
+        const installation = path.join(data, 'Install');
+        await fs.cp(path.join(candidate, 'app'), path.join(installation, 'app'), { recursive: true, errorOnExist: true, force: false, dereference: false });
+        await fs.copyFile(path.join(candidate, 'portable-build.json'), path.join(installation, 'portable-build.json'));
+        entry = path.join(installation, 'app/scripts/original-reuse/host.cjs'); executable = path.join(path.resolve(candidate), 'runtime/electron.exe'); privateRoot = data;
+        env = { ...process.env, LOCALAPPDATA: path.join(data, 'Local'), INKBRIDGE_PORTABLE: '1', INKBRIDGE_ORIGINAL_VIEW: 'board' };
+        for (const name of ['NODE_PATH', 'NODE_OPTIONS', 'INKBRIDGE_ORIGINAL_PROBE_DATA']) delete env[name];
+    }
+    else env = { ...process.env, INKBRIDGE_ORIGINAL_PROBE_DATA: data, INKBRIDGE_ORIGINAL_VIEW: 'board' };
     delete env.ELECTRON_RUN_AS_NODE;
-    const privateRoot = path.resolve(__dirname, '../../private-original-editor');
-    const app = await _electron.launch({ args: [path.join(__dirname, 'host.cjs')], executablePath: require('electron'), env });
+    const app = await _electron.launch({ args: [entry], executablePath: executable, env });
     let page;
     try {
         page = await app.firstWindow();
@@ -117,7 +129,7 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         const graph = await page.evaluate(() => window.inkbridge.load());
         assert.equal(graph.contents.filter(c => /zebrakey/i.test(JSON.stringify(c.body))).length, 2);
         assert.deepEqual(await page.evaluate(() => window.__inkbridgeIntegrated.errors), []);
-        console.log(JSON.stringify({ originalButton: true, originalPanel: true, matches: 2, navigation: true, noResult: true, escapeClose: true, highlightKeptAfterEscape: !!highlightAfterEscape, closeButtonClears: true, toggleClose: true, errors: 0, highlightPainted: true, highlightCleared: true, highlightPaintMs: timings }));
+        console.log(JSON.stringify({ portableBuild: candidate ? JSON.parse(await fs.readFile(path.join(candidate, 'portable-build.json'), 'utf8')).version : null, originalButton: true, originalPanel: true, matches: 2, navigation: true, noResult: true, escapeClose: true, highlightKeptAfterEscape: !!highlightAfterEscape, closeButtonClears: true, toggleClose: true, errors: 0, highlightPainted: true, highlightCleared: true, highlightPaintMs: timings }));
     }
     catch (e) {
         console.error(e);
