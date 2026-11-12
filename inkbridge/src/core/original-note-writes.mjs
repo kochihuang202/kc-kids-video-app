@@ -1,7 +1,19 @@
 // SQLite/write-boundary adaptation. All creation/selection/layout UI and the
 // add-to-whiteboard placement algorithm remain original modules 31167/94700.
 import {documentIdentity} from './note-version.mjs';
+// A MediaCard instance may hold an image or a (path-linked) video content row.
+const kindMatches=(type,kind)=>({NoteCard:['text'],PDFCard:['pdf'],MediaCard:['image','video'],image:['image'],video:['video']}[type]||[]).includes(kind);
 export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene }) {
+    // The original 31167 video flow sends addMediaCardInstance before addMediaCard. An
+    // instance row cannot precede its content, so hold it until that card arrives.
+    const pendingMediaInstances = new Map();
+    const stageMediaInstance = item => {
+        const instanceRow = { id: item.id, contentId: item.objectId, boardId: item.whiteboardId, x: item.x, y: item.y, width: item.width || 400, height: item.height || 300, z: instances.size };
+        coordinator.stage({ type: 'putInstance', data: instanceRow });
+        coordinator.stage(catalogOperation('instance', { ...item, type: 'MediaCard' }));
+        return [item.id, { ...instanceRow, attributes: { ...item, type: 'MediaCard' } }];
+    };
+    const showInstances = () => hydrateScene ? hydrateScene() : store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
     return (method, payload) => navigate(async () => {
         await coordinator.flush();
         const versions=(await load()).contentVersions||[],stagedVersions=new Set();
@@ -31,7 +43,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         }
         if (method === 'batchInsertCardInstances'||method==='batchCreateNoteCardInstances'||method==='addNoteCardInstance') {
             const nativeRows=method==='batchInsertCardInstances'?payload.instances:(Array.isArray(payload)?payload:[payload]).map(row=>({...row,__type:'NoteCard'}));
-            if (!Array.isArray(nativeRows) || nativeRows.some(row => !contents.has(row.objectId)||!({NoteCard:'text',PDFCard:'pdf',MediaCard:'image',image:'image'}[row.__type]===contents.get(row.objectId)?.kind)))
+            if (!Array.isArray(nativeRows) || nativeRows.some(row => !contents.has(row.objectId)||!kindMatches(row.__type,contents.get(row.objectId)?.kind)))
                 throw Error('含有尚未接入的卡片類型，未變更資料');
             const rows = nativeRows.map((row, index) => ({ id: row.id, contentId: row.objectId, boardId: row.whiteboardId, x: row.x, y: row.y, width: row.width || 520, height: row.height || 480, z: instances.size + index }));
             for (let i = 0; i < rows.length; i++) {
@@ -46,7 +58,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         }
         if (method === 'batchDeleteCardsByType' || method === 'restoreNoteCard' || method === 'restoreAttachmentCard') {
             const targets = method !== 'batchDeleteCardsByType' ? [{ objectId: payload.id, objectType: method==='restoreNoteCard'?'NoteCard':payload.type }] : payload;
-            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','MediaCard','image','PDFCard'].includes(row.objectType)||({NoteCard:'text',MediaCard:'image',image:'image',PDFCard:'pdf'}[row.objectType]!==contents.get(row.objectId)?.kind)))
+            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','MediaCard','image','video','PDFCard'].includes(row.objectType)||!kindMatches(row.objectType,contents.get(row.objectId)?.kind)))
                 throw Error('這批卡片含有尚未接入的類型，未變更資料');
             const graph = await load(), ids = new Set(targets.map(row => row.objectId));
             for (const id of ids)
@@ -74,34 +86,29 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         if (method === 'addMediaCard') {
             const cards = Array.isArray(payload) ? payload : [payload];
             for (const card of cards) {
-                const content = { ...card, id: card.id, title: card.title || 'Image', body: '', kind: 'image', tone: 'sage', document: null };
+                const video = card.type === 'video';
+                if (video && !card.link && typeof card.path !== 'string') throw Error('Video card has no local path');
+                const content = { ...card, id: card.id, title: card.title || (video ? 'Video' : 'Image'), body: '', kind: video ? 'video' : 'image', tone: 'sage', document: null };
                 putContent(content);
-                coordinator.stage(catalogOperation('card', { ...card, id: card.id, type: 'MediaCard', createdTime: card.createdTime, lastEditedTime: card.lastEditedTime, isTrashed: false }));
+                coordinator.stage(catalogOperation('card', { ...card, id: card.id, type: video ? 'video' : 'MediaCard', createdTime: card.createdTime, lastEditedTime: card.lastEditedTime, isTrashed: false }));
             }
+            const released = [];
+            for (const card of cards) for (const [id, item] of pendingMediaInstances) if (item.objectId === card.id) { released.push(stageMediaInstance(item)); pendingMediaInstances.delete(id); }
             await coordinator.flush();
+            for (const [id, row] of released) instances.set(id, row);
+            if (released.length) showInstances();
             return { success: true, mediaCards: cards };
         }
         if (method === 'addMediaCardInstance') {
             const items = Array.isArray(payload) ? payload : [payload];
             const pendingInstances=[];
             for (const item of items) {
-                const instanceRow = {
-                    id: item.id,
-                    contentId: item.objectId,
-                    boardId: item.whiteboardId,
-                    x: item.x,
-                    y: item.y,
-                    width: item.width || 400,
-                    height: item.height || 300,
-                    z: instances.size
-                };
-                coordinator.stage({ type: 'putInstance', data: instanceRow });
-                coordinator.stage(catalogOperation('instance', { ...item, type: 'MediaCard' }));
-                pendingInstances.push([item.id, { ...instanceRow, attributes: { ...item, type: 'MediaCard' } }]);
+                if (!contents.has(item.objectId)) { pendingMediaInstances.set(item.id, item); continue; }
+                pendingInstances.push(stageMediaInstance(item));
             }
             await coordinator.flush();
             for(const [id,row]of pendingInstances)instances.set(id,row);
-            hydrateScene ? hydrateScene() : store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
+            if (pendingInstances.length) showInstances();
             return { success: true };
         }
         if (method === 'updateNoteCardInstance' || method === 'batchUpdateCardInstances' || method === 'batchUpdateMediaCardInstances') {

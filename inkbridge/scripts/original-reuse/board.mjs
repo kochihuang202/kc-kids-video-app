@@ -14,6 +14,7 @@ import {folderDeletionOperations} from '/inkbridge-core/original-folder-writes.m
 import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
 import {createOriginalBookmarks} from '/inkbridge-core/original-bookmarks.mjs';
 import {createOriginalPdf} from '/inkbridge-core/original-pdf.mjs';
+import {createOriginalVideo} from '/inkbridge-core/original-video.mjs';
 import {createOriginalConnections} from '/inkbridge-core/original-connections.mjs';
 import {fitCardHeight,cardMaxHeight} from '/inkbridge-core/card-height.mjs';
 import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
@@ -130,6 +131,7 @@ async function boot(){
   function toLocalNode(item){
     const content=contents.get(item.contentId);
     if(content?.kind==='pdf'){const card={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content};return r(19281).YH.pdfCardInstanceToPdfCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},card,files.get(card.fileId));}
+    if(content?.kind==='video'){const mediaCard={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content,type:'video'};return r(19281).YH.mediaCardInstanceToMediaCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},mediaCard);}
     if(content?.kind==='image'||item.attributes?.type==='MediaCard'||item.attributes?.type==='image'){
       const mediaCard={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content,type:'image'};
       return r(19281).YH.mediaCardInstanceToMediaCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},mediaCard);
@@ -177,6 +179,7 @@ async function boot(){
   function showHome(page='home'){return navigate(async()=>{await coordinator.flush();ReactDOM.flushSync(()=>{originalStore.getState().setEditingNode(null);originalStore.getState().setSelectedNodeIds(new Set());});await coordinator.flush();shell.homeSelected(page);ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page=page;state.renderPage(page);});});}
   function showNote(id){return navigate(async()=>{if(contents.get(id)?.kind!=='text')throw Error('筆記卡片不存在');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/note-detail',route:'/note-detail',query:{id},asPath:'/zh-TW/note-detail?id='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='note-detail';state.renderPage('note-detail');});await shell.selectedNote(id,contents.get(id).title);});}
   function showPdf(id){return navigate(async()=>{const content=contents.get(id);if(content?.kind!=='pdf')throw Error('PDF card missing');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();Object.assign(router.state,{pathname:'/pdf',route:'/pdf',query:{pdfId:id,fileId:content.fileId||graph.cardMetadata?.find(row=>row.id===id)?.fileId},asPath:'/zh-TW/pdf?pdfId='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='pdf';state.renderPage('pdf');});await shell.selectedNote(id,content.title,r(81638).R.PDFCard);});}
+  function showVideo(id,timeStamp){return navigate(async()=>{const content=contents.get(id);if(content?.kind!=='video')throw Error('Video card missing');await coordinator.flush();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await coordinator.flush();const query={videoCardId:id,fileId:content.fileId||graph.cardMetadata?.find(row=>row.id===id)?.fileId};if(timeStamp)query.timeStamp=String(timeStamp);Object.assign(router.state,{pathname:'/video',route:'/video',query,asPath:'/zh-TW/video?videoCardId='+encodeURIComponent(id)});ReactDOM.flushSync(()=>{state.home=true;state.renderHome(true);state.page='video';state.renderPage('video');});await shell.selectedNote(id,content.title,r(81638).R.MediaCard);});}
   function catalogOperation(kind,data){return {type:'putCatalog',kind,data:JSON.parse(JSON.stringify(data))};}
   function writeCatalog(method,payload){return navigate(async()=>{
     await coordinator.flush();const current=await window.inkbridge.load(),folders=current.folders||[],refs=current.whiteboardInstances||[],now=new Date().toISOString();let ops=[];
@@ -223,6 +226,7 @@ async function boot(){
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
   const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
+  const video=createOriginalVideo({navigate,coordinator,load:()=>window.inkbridge.load(),contents,putContent,catalogOperation,refreshNodes:()=>{if(!state.home)originalStore.getState().setNodes(nodes=>nodes.map(node=>{const row=instances.get(node.id);return row&&contents.get(row.contentId)?.kind==='video'?{...node,...toNode(row)}:node;}));},saveImages:request=>window.inkbridge.savePureBase64Image(request),registerFiles:files=>writeNote('registerFiles',{files}),copyImage:request=>window.inkbridge.copyImageToClipboard(request)});
   const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
   const drawings=createOriginalDrawings({navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});
   mindmaps=createOriginalMindmaps({r,graph,navigate,coordinator,catalogOperation,store:originalStore,getBoardId:()=>boardId,getBaseNodes:()=>sections.scene()});
@@ -238,7 +242,13 @@ async function boot(){
     for(const content of contents.values())if(content.kind==='text')redux.dispatch(r(23407).yc.updateNoteCard({id:content.id,title:content.title,content:content.document}));
     mindmaps.replace(next);nested.replace(next);elements.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
   }
-  shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  // Host workaround, root cause not traced: after the click that opens the original
+  // 47766 video overlay, the original Canvas store keeps isInteracting=true in this
+  // host, and the overlay then covers its own controls with its interaction shield.
+  // Once every mouse button is released while that overlay is open, the pointer
+  // interaction is over; clear the flag the original mouse-up path left set.
+  window.addEventListener('mouseup',event=>{if(event.buttons!==0)return;setTimeout(()=>{const store=originalStore.getState();if(store.isInteracting&&document.querySelector('[data-video-overlay-content]'))store.setIsInteracting(false);},0);},true);
+  shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,video,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,showVideo,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   nested=installNestedWhiteboards({r,graph,store:originalStore,getBoardId:()=>boardId,sections,navigate,coordinator,load:()=>window.inkbridge.load(),shell,rehydrate:()=>mindmaps.hydrate()});
   elements=createOriginalTextElements({r,graph,navigate,coordinator,store:originalStore,sections,getBoardId:()=>boardId});
   installOriginalClipboard({navigate,coordinator,load:()=>window.inkbridge.load(),elements,connections,rehydrate:applySharedGraph});
@@ -340,7 +350,7 @@ async function boot(){
   function NativeCanvas({flowContextValue,...props}){
     const nativeWrites=r(99665).U(props.nodes);
     const nativeDrop=r(97101).y({whiteboardId:props.whiteboardId});
-    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById,inkbridgePageHiddenActions:['importXmind','importMarkdown','StickyNote','calendar','newVideoCard','newAudioCard','websiteCard','file','newPDFCard','newImageCard']});
+    const menu=r(90214).av({updateNodeDataById:flowContextValue.updateNodeDataById,inkbridgePageHiddenActions:['importXmind','importMarkdown','StickyNote','calendar','newAudioCard','websiteCard','file','newPDFCard','newImageCard']});
     const nativeMaps=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.mindmaps);
     const mapActions=r(48626).InkBridgeUseMindmapActions({mindmaps:nativeMaps,theme:'light',dispatch:redux.dispatch,pushUndoSnapshot:flowContextValue.pushUndoSnapshot});
     return React.createElement(React.Fragment,null,
@@ -435,6 +445,11 @@ async function boot(){
           connectionToolbar:props=>React.createElement(r(32627).L,{...props,updateEdgeById:(id,updates)=>connections.updateEdge(id,updates).catch(report),setEdges:flowContextValue.setEdges,handleDeleteEdge:edges=>{for(const edge of edges)connections.call('deleteConnection',edge.id).catch(report);},clearSelectedEdge:()=>originalStore.getState().setSelectedConnectionId(null)}),
           labelEditor:r(75435).Z,
           pdfViewerComponent:r(96895).ZP,
+          videoPlayerComponent:r(41297).U,
+          // Original 47766 extension point (the original "…" menu with sidebar/modal/
+          // floating). InkBridge shows one direct entry to the record page instead
+          // (user decision 2026-11-12). It sits left of the original screenshot button.
+          videoToolbarMore:({node})=>React.createElement('button',{type:'button','data-inkbridge-video-record':'true','aria-label':'紀錄',title:'紀錄：在新分頁開啟影片，邊看邊記高亮',onMouseDown:event=>event.stopPropagation(),onClick:event=>{event.stopPropagation();const time=event.currentTarget.closest('[data-video-overlay-content]')?.querySelector('video')?.currentTime;showVideo(node.data.objectId,Number.isFinite(time)&&time>=1?Math.floor(time):undefined).catch(report);},style:{position:'absolute',right:56,top:0,height:24,padding:'0 8px',borderRadius:6,background:'rgba(255,255,255,.16)',color:'#fff',fontSize:12,lineHeight:'24px',whiteSpace:'nowrap',cursor:'pointer'}},'紀錄'),
           onNodeContentChange:(nodeId,document)=>acceptDocument(nodeId,document),
           onViewportChange:view=>{if(activeBoardId===boardId)stageBoardView(view);},
           onDoubleClick:(_event,point)=>{const id=addCard('','',point);originalStore.getState().setSelectedNodeIds(new Set([id]));requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent('canvaskit-open-node-editor',{detail:{nodeId:id}})));},

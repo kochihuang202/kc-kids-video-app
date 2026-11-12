@@ -2,7 +2,7 @@ const {createReadStream}=require('node:fs'),{Readable}=require('node:stream');
 // Protocol responses preserve bounded memory and PDF.js byte-range loading.
 async function attachmentResponse(request,attachments){
  try{
-  const file=await attachments.resolveUrl(request.url),headers={'Content-Type':file.ext==='.pdf'?'application/pdf':'image/'+file.ext.slice(1),'Accept-Ranges':'bytes','Access-Control-Allow-Origin':'*','ETag':'"'+file.sha256+'"','X-Content-Type-Options':'nosniff'};
+  const file=await attachments.resolveUrl(request.url),headers={'Content-Type':file.contentType||(file.ext==='.pdf'?'application/pdf':'image/'+file.ext.slice(1)),'Accept-Ranges':'bytes','Access-Control-Allow-Origin':'*','ETag':'"'+file.sha256+'"','X-Content-Type-Options':'nosniff'};
   if(file.ext==='.jpg')headers['Content-Type']='image/jpeg';
   let start=0,end=file.size-1,status=200;const range=request.headers.get('range'),ifRange=request.headers.get('if-range');
   if(range&&(!ifRange||ifRange===headers.ETag)){

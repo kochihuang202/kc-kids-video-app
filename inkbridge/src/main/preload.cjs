@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   savePureBase64Image:request=>invoke('inkbridge:savePureBase64Image',request),
   uploadFile:request=>invoke('inkbridge:uploadFile',request),
   inspectFiles:request=>invoke('inkbridge:inspectFiles',request),
+  pickVideoFile:()=>invoke('inkbridge:pickVideoFile'),inspectVideoFile:path=>invoke('inkbridge:inspectVideoFile',path),copyImageToClipboard:request=>invoke('inkbridge:copyImageToClipboard',request),
   ready:()=>ipcRenderer.send('inkbridge:renderer-ready',workspaceEpoch),
   onCloseRequested:callback=>{const listener=(_event,request)=>callback(request);ipcRenderer.on('inkbridge:prepare-close',listener);return ()=>ipcRenderer.removeListener('inkbridge:prepare-close',listener);},
   onCloseCancelled:callback=>{const listener=(_event,request)=>callback(request);ipcRenderer.on('inkbridge:close-cancelled',listener);return ()=>ipcRenderer.removeListener('inkbridge:close-cancelled',listener);},

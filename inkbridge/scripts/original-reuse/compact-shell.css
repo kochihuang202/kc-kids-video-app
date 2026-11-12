@@ -57,6 +57,11 @@ body{margin:0;overflow:hidden}
 #original-native-tools,#original-undo-controls,#original-board-caption{position:absolute;inset:0;pointer-events:none;z-index:30}
 #original-native-tools{right:var(--inkbridge-right-width,0px)}
 #original-native-tools .react-flow__panel{pointer-events:auto}
+/* Record page: the original 81072 container fills the area left of the side panel and
+   its fluid video.js player letterboxes inside the available height instead of overflowing. */
+#inkbridge-video-record-page .video-page-container{flex:1 1 auto;min-height:0;height:100%}
+#inkbridge-video-record-page .video-page-container [data-vjs-player]{width:100%;height:100%}
+#inkbridge-video-record-page .video-page-container .video-js.vjs-fluid{height:100%!important;padding-top:0!important}
 .native-tools-gate{position:absolute;inset:0;pointer-events:none}
 #original-native-tools fieldset,#original-undo-controls fieldset{border:0;margin:0;padding:0;min-width:0;position:absolute;inset:0;pointer-events:none}
 #original-native-tools button:disabled,#original-undo-controls button:disabled{cursor:not-allowed;opacity:.5}

@@ -175,7 +175,7 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:'],['sections','section:'],['textElements','text-element:'],['drawingStrokes','drawing-stroke:'],['mindmaps','mindmap:'],['mindmapNodes','mindmap-node:'],['mindmapInstances','mindmap-instance:']]){
+      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:'],['sections','section:'],['textElements','text-element:'],['drawingStrokes','drawing-stroke:'],['mindmaps','mindmap:'],['mindmapNodes','mindmap-node:'],['mindmapInstances','mindmap-instance:'],['videoHighlights','video-highlight:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -218,7 +218,7 @@ class WorkspaceDatabase {
           const body = text(data.body ?? '', 'body', 500000);
           const document = validateDocument(data.document);
           const kind = data.kind ?? 'text', tone = data.tone ?? 'sage';
-          check(['text', 'image', 'pdf'].includes(kind), 'Invalid card kind');
+          check(['text', 'image', 'pdf', 'video'].includes(kind), 'Invalid card kind');
           check(['sage', 'sand', 'rose', 'blue'].includes(tone), 'Invalid card tone');
           const old = this.statement('SELECT * FROM contents WHERE id=?').get(id);
           const different = !old || old.title !== title || old.body !== body || old.document_json !== document || old.kind !== kind || old.tone !== tone;
@@ -265,19 +265,20 @@ class WorkspaceDatabase {
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else if(operation.type==='deleteCatalog'){
-          check(['text-element','folder','whiteboard-instance','card-tag','saved-tab','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance'].includes(operation.kind),'Unsupported catalog deletion');
+          check(['text-element','folder','whiteboard-instance','card-tag','saved-tab','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance','video-highlight'].includes(operation.kind),'Unsupported catalog deletion');
           if(operation.kind==='connection')changed=this.deleteConnectionReferences(operation.id)||changed;
           if(operation.kind==='section'){const members=this.statement("SELECT value FROM meta WHERE key LIKE 'section:%' OR key LIKE 'instance:%'").all();check(!members.some(row=>JSON.parse(row.value).parentId===operation.id),'Group still has members');}
           const result=this.statement('DELETE FROM meta WHERE key=?').run(operation.kind+':'+identifier(operation.id,'catalog ID'));
           changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['text-element','folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['text-element','folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance','video-highlight'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
           if(operation.kind==='text-element'){const board=identifier(data.whiteboardId,'text board');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(board),'Text board is missing');validateDocument(data.content);for(const key of ['x','y'])number(data[key],'text '+key,-1e9,1e9);for(const key of ['width','height'])if(data[key]!=null)number(data[key],'text '+key,1,1e9);}
           if(operation.kind==='drawing-stroke'){
             identifier(data.whiteboardId,'stroke board');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(data.whiteboardId),'Stroke board is missing');
             check(['pen','highlighter','smart_shape'].includes(data.tool),'Invalid stroke tool');text(data.color,'stroke color',128);number(data.strokeWidth,'stroke width',.01,1000);
             check(data.pathData?.type==='polyline'&&Array.isArray(data.pathData.points)&&data.pathData.points.length>0&&data.pathData.points.length<=100000,'Invalid stroke path');for(const p of data.pathData.points){number(p.x,'stroke x',-1e9,1e9);number(p.y,'stroke y',-1e9,1e9);}
           }
+          if(operation.kind==='video-highlight'){text(data.sourceId,'video highlight source',255);number(data.timeStamp,'video highlight time',0,1e7);if(data.screenshotFileId)text(data.screenshotFileId,'video highlight screenshot',255);if(data.notes!=null)validateDocument(typeof data.notes==='string'?JSON.parse(data.notes):data.notes);}
           if(operation.kind==='mindmap-node'){identifier(data.mindMapId,'mindmap ID');check(!!this.statement('SELECT value FROM meta WHERE key=?').get('mindmap:'+data.mindMapId),'Mindmap is missing');check(Array.isArray(data.childNodeIds),'Invalid mindmap children');data.childNodeIds.forEach(child=>{identifier(child,'mindmap child');check(child!==id,'Mindmap cannot parent itself');});validateDocument(typeof data.content==='string'?JSON.parse(data.content):data.content);}
           if(operation.kind==='mindmap-instance'){identifier(data.objectId,'mindmap object ID');check(!!this.statement('SELECT value FROM meta WHERE key=?').get('mindmap:'+data.objectId),'Mindmap is missing');identifier(data.whiteboardId,'mindmap board');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(data.whiteboardId),'Mindmap board is missing');for(const key of ['x','y'])number(data[key],'mindmap '+key,-1e9,1e9);}
           if(operation.kind==='connection'){for(const endpoint of [data.beginId,data.endId]){identifier(endpoint,'connection endpoint');check(!!this.statement('SELECT id FROM instances WHERE id=? AND board_id=?').get(endpoint,data.whiteboardId)||(()=>{const edge=this.statement('SELECT value FROM meta WHERE key=?').get('connection:'+endpoint);return edge&&JSON.parse(edge.value).whiteboardId===data.whiteboardId;})(),'Connection endpoint is missing');}}

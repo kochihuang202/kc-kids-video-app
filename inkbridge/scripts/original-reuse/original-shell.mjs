@@ -4,7 +4,8 @@ import {createSettingsFrame} from './settings-frame.mjs';
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord,attachmentRecord} from '/inkbridge-core/original-catalog.mjs';
-export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
+import {videoRecord,VIDEO_EXTENSIONS} from '/inkbridge-core/original-video.mjs';
+export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,video,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,showVideo,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
   const SidebarFooter=createSidebarFooter(React,r);
   const SettingsFrame=createSettingsFrame(React,r);
   function NativeNavigationControls(){
@@ -46,16 +47,30 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   const noteReads=new Set(['getTag','getNoteCardById','getTagsByCardId','getWhiteboardsByCardId','getCardLinks','getTagPropertyList','getCardRemark']);
   const cardInstanceWrites=new Set(['restoreNoteCardContentVersion','batchCreateNoteCards','batchCreateNoteCardInstances','addNoteCardInstance','batchDeleteNoteCardInstances','updateNoteCardInstance','batchUpdateCardInstances','batchUpdateMediaCardInstances','deleteNoteCardInstance','addMediaCard','addMediaCardInstance']);
   globalThis.__inkbridgeControlledNoteSaves=true;window.onGlobalModalClose=async()=>{await flushAll();redux.dispatch(r(22676).aV({show:false}));redux.dispatch(r(11473).f4());};
-  globalThis.__inkbridgeServices={has:name=>drawings.has(name)||mindmaps.has(name)||name==='openStandaloneWindow'||name==='openFileInShell'||sections.has(name)||['exportNoteCardToMarkdown','saveDocxFromXml','resolveExportImages'].includes(name)||['globalSearch','searchBlocksWithIds'].includes(name)||connections.has(name)||['checkExistingUploadFiles','getMediaCardById','getMediaCardByFileId'].includes(name)||pdf.has(name)||name==='updateTabConfig'||bookmarks.has(name)||tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
+  // fileId -> linked local path, from our own upload boundary until the original
+  // 31167 flow creates the card (its newMediaCard call carries no path).
+  const linkedVideoPaths=new Map(),isVideoFile=file=>VIDEO_EXTENSIONS.includes(String(file||'').split('.').pop().toLowerCase());
+  const mediaRecord=(graph,content)=>content.kind==='video'?videoRecord(graph,content):attachmentRecord(graph,content);
+  globalThis.__inkbridgeServices={has:name=>video.has(name)||drawings.has(name)||mindmaps.has(name)||name==='openStandaloneWindow'||name==='openFileInShell'||sections.has(name)||['exportNoteCardToMarkdown','saveDocxFromXml','resolveExportImages'].includes(name)||['globalSearch','searchBlocksWithIds'].includes(name)||connections.has(name)||['checkExistingUploadFiles','getMediaCardById','getMediaCardByFileId'].includes(name)||pdf.has(name)||name==='updateTabConfig'||bookmarks.has(name)||tags.has(name)||name==='writeClipboardTextAndHtml'||noteReads.has(name)||cardInstanceWrites.has(name)||['batchInsertCardInstances','batchDeleteCardsByType','addNoteCard','updateNoteCard','upsertCardRemark','getWhiteboardsByCardId','getNoteCardContentVersions','openNoteCardWindow','savePastedImageBuffers','savePureBase64Image','uploadFile','getFileById'].includes(name)||libraryReads.has(name)||['getBoardListByIds','getFolders','getWhiteboard','getTrash','restoreCard','findTargetsByCardIdAndType'].includes(name)||management.has(name)||catalogServices.has(name)||historyNames.has(name),call:async(name,payload)=>{
     if(name==='openFileInShell')return window.inkbridge.openAttachment(typeof payload==='string'?payload:payload.id);
+    if(video.has(name,payload))return video.call(name,payload);
+    if(name==='addMediaCard'){
+      const cards=(Array.isArray(payload)?payload:[payload]).map(card=>card?.type==='video'&&!card.link?{...card,platform:card.platform||'local',path:card.path??linkedVideoPaths.get(card.fileId)}:card);
+      const result=await writeNote(name,cards);for(const card of cards)if(card?.type==='video')linkedVideoPaths.delete(card.fileId);window.dispatchEvent(new Event(r(92344).kB));return result;
+    }
     if(drawings.has(name))return drawings.call(name,payload);
     if(mindmaps.has(name))return mindmaps.call(name,payload);
     if(sections.has(name))return sections.call(name,payload);
     if(['exportNoteCardToMarkdown','saveDocxFromXml','resolveExportImages'].includes(name)){await flushAll();const result=await window.inkbridge.exportArtifact({name,payload});if(name!=='resolveExportImages')r(55153).fz({title:'InkBridge 匯出完成',description:result.zipPath||result.filePath,color:'success'});return result;}
     if(name==='globalSearch'||name==='searchBlocksWithIds'){await flush();const graph=await window.inkbridge.load();return name==='globalSearch'?searchGraph(graph,payload):searchBlocks(graph,payload.keyword);}
     if(connections.has(name))return connections.call(name,payload);
+    if(name==='checkExistingUploadFiles'&&payload.files.every(file=>isVideoFile(file.path))){
+      // A linked video is identified by its path; never hash a multi-gigabyte file here.
+      await flush();const graph=await window.inkbridge.load(),known=new Set((graph.cardMetadata||[]).filter(meta=>meta.type==='video'&&!meta.isTrashed&&meta.path).map(meta=>meta.path.toLowerCase()));
+      return {existingPaths:payload.files.filter(file=>known.has(String(file.path).toLowerCase())).map(file=>file.path)};
+    }
     if(name==='checkExistingUploadFiles'){await flush();const graph=await window.inkbridge.load(),files=await window.inkbridge.inspectFiles(payload.files);return {existingPaths:files.filter(file=>graph.contents.some(content=>content.kind===payload.cardType&&graph.cardMetadata?.some(meta=>meta.id===content.id&&meta.fileId===file.sha256))).map(file=>file.path)};}
-    if(name==='getMediaCardById'||name==='getMediaCardByFileId'){await flush();const graph=await window.inkbridge.load(),content=graph.contents.find(row=>row.kind==='image'&&(name==='getMediaCardById'?row.id===payload:graph.cardMetadata?.some(meta=>meta.id===row.id&&meta.fileId===payload)));return {success:!!content,mediaCard:content?attachmentRecord(graph,content):null};}
+    if(name==='getMediaCardById'||name==='getMediaCardByFileId'){await flush();const graph=await window.inkbridge.load(),content=graph.contents.find(row=>(row.kind==='image'||row.kind==='video')&&(name==='getMediaCardById'?row.id===payload:graph.cardMetadata?.some(meta=>meta.id===row.id&&meta.fileId===payload)));return {success:!!content,mediaCard:content?mediaRecord(graph,content):null};}
     if(pdf.has(name)){const result=await pdf.call(name,payload);if(name==='addPdfCard')window.dispatchEvent(new Event(r(92344).kB));return result;}
     if(name==='updateTabConfig'){
       await flush();const saved=(await window.inkbridge.load()).savedTabs?.find(tab=>tab.id===payload.id);
@@ -73,7 +88,16 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     if(name==='openNoteCardWindow'){await flushAll();return window.inkbridge.openNoteWindow(payload);}
     if(name==='getAllFiles'){await flush();return ((await window.inkbridge.load()).files||[]).map(file=>({...file,metadata:typeof file.metadata==='string'?JSON.parse(file.metadata):file.metadata}));}
     if(name==='savePastedImageBuffers'||name==='savePureBase64Image')return globalThis.__inkbridgeTrackOperation(async()=>{const res=await window.inkbridge[name](payload);await writeNote('registerFiles',{files:res.map(item=>item.fileRecord)});return res;});
-    if(name==='uploadFile'){const result=await window.inkbridge.uploadFile(payload);await writeNote('registerFiles',{files:[result.fileRecord]});return result;}
+    if(name==='uploadFile'){
+      const result=await window.inkbridge.uploadFile(payload);
+      if(result.linked){
+        // Path-linked video: no attachment record. Reuse the card that already links this file.
+        await flush();const graph=await window.inkbridge.load(),existing=graph.contents.find(row=>row.kind==='video'&&graph.cardMetadata?.some(meta=>meta.id===row.id&&meta.fileId===result.file.id&&!meta.isTrashed));
+        linkedVideoPaths.set(result.file.id,result.file.path);
+        return {...result,isAlreadyExist:!!existing,mediaCard:existing?videoRecord(graph,existing):undefined};
+      }
+      await writeNote('registerFiles',{files:[result.fileRecord]});return result;
+    }
     if(name==='getFileById'){await flush();const file=((await window.inkbridge.load()).files||[]).find(f=>f.id===(typeof payload==='string'?payload:payload.id));return {success:!!file,file:file?{...file,metadata:typeof file.metadata==='string'?JSON.parse(file.metadata):file.metadata}:undefined};}
     if(name==='getTag'){await flush();return {data:((await window.inkbridge.load()).tags||[]).find(tag=>tag.id===payload)||null};}
     if(noteReads.has(name)){await flush();const graph=await window.inkbridge.load(),id=typeof payload==='string'?payload:payload.cardId||payload.objectId,content=graph.contents.find(c=>c.id===id),record=content?noteRecord(graph,content):null;if(name==='getNoteCardById')return record;if(name==='getTagsByCardId')return {success:true,data:(graph.tags||[]).filter(tag=>(graph.cardTags||[]).some(link=>link.tagId===tag.id&&link.cardId===id))};if(name==='getWhiteboardsByCardId')return {success:true,data:record?.apprearedInWhiteboards||[]};if(name==='getCardRemark')return (graph.cardRemarks||[]).find(row=>row.id===id)||{content:''};if(name==='getTagPropertyList')return {data:{propertyList:[],propertyValues:[]}};return {whiteboardLinks:record?.apprearedInWhiteboards||[],appearInMindmaps:[],linksInNoteCards:[],linksInDailyNotes:[],linksInMindmaps:[],linksInPdfHighlights:[],linksInVideoHighlights:[],linksInNoteHighlights:[],selfCard:record,fileRecord:null,linksInRelations:[]};}
@@ -106,6 +130,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     const url=new URL(typeof destination==='string'?destination:destination.pathname+'?'+new URLSearchParams(destination.query),location.origin);
     const id=url.searchParams.get('whiteboardId');
     if(/\/pdf\/?$/.test(url.pathname)){await showPdf(url.searchParams.get('pdfId'));return true;}
+    if(/\/video\/?$/.test(url.pathname)){await showVideo(url.searchParams.get('videoCardId'),url.searchParams.get('timeStamp'));return true;}
     if(/\/note-detail\/?$/.test(url.pathname)){await showNote(url.searchParams.get('id'));return true;}
     if(/\/home\/?$/.test(url.pathname)){try{await showHome();return true;}catch(error){onError(error);return false;}}
     if(/\/(?:board|card-list)\/?$/.test(url.pathname)){try{await showHome(url.pathname.endsWith('card-list')?'card-list':'board');return true;}catch(error){onError(error);return false;}}
@@ -140,6 +165,34 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   // epoch, which that hash does include, whenever the stored highlight changes.
   function NativeKeywordHighlightRepaint(){const highlight=r(16125).v9(state=>state.ui.keywordSearchHighlight),first=React.useRef(true);React.useEffect(()=>{if(first.current){first.current=false;return;}r(22818).xB.bumpEpoch();},[highlight]);return null;}
   function NativeNewCard(){const [open,setOpen]=React.useState(false),{t,i18n}=r(1643).$G('common'),Menu=r(31167),Popover=r(41278).j,Trigger=r(16938).b,Content=r(48933).g,Button=r(17015).A;return React.createElement(Popover,{isOpen:open,onOpenChange:setOpen,placement:'bottom'},React.createElement(Trigger,null,React.createElement(Button,{id:'native-new-card',isIconOnly:true,size:'sm',variant:'light','aria-label':t('newCard'),className:'h-7 min-w-7 w-7 p-0'},'＋')),React.createElement(Content,null,open?React.createElement(Menu.TS,{inFlowPage:false,position:{x:0,y:0},clickPosition:{x:0,y:0},t,i18n,hideActions:Object.values(Menu.wR).filter(value=>!['newNoteCard','newPDFCard'].includes(value)),onClose:()=>setOpen(false),onNewCardCreated:(type,note)=>{setOpen(false);redux.dispatch(r(11473).f4());redux.dispatch(r(22676).aV({show:true,params:{card:{...note,type,autoFocus:true}}}));}}):null));}
+  // The original 81072 page selects the subtitle view on mount (22676.lx). The record
+  // page opens on the original 79719 highlight panel instead (user decision 2026-11-12).
+  // 22676.lx toggles the sidebar closed when asked for the view already shown, so only
+  // dispatch for a different (or hidden) view.
+  const showVideoSideView=view=>{const ui=redux.getState().ui;if(ui.viewDefaultView!==view||!ui.rightSidebarShow)redux.dispatch(r(22676).lx({view}));};
+  function VideoRecordDefaultView(){React.useEffect(()=>{showVideoSideView(r(22676).VU.videoHighlight);},[]);return null;}
+  // Host control: the original header buttons that switch the video side panel are not
+  // ported. Highlight is the default; subtitles stay reachable (user decision 2026-11-12).
+  function VideoRecordViewSwitch(){const view=r(16125).v9(state=>state.ui.viewDefaultView),VU=r(22676).VU,{t}=r(1643).$G('common');
+    const tab=(key,label)=>React.createElement('button',{type:'button',role:'tab','aria-selected':view===key,'data-inkbridge-video-view':key,onClick:()=>showVideoSideView(key),style:{height:24,padding:'0 10px',borderRadius:6,fontSize:12,lineHeight:'24px',cursor:'pointer',color:view===key?'#111':'#e5e5e5',background:view===key?'#fff':'transparent'}},label);
+    return React.createElement('div',{role:'tablist','aria-label':'影片側欄',id:'inkbridge-video-view-switch',style:{position:'absolute',left:10,top:10,zIndex:5,display:'flex',gap:2,padding:2,borderRadius:8,background:'rgba(0,0,0,.55)'}},tab(VU.videoHighlight,t('Highlight')==='Highlight'?'高亮':t('Highlight')),tab(VU.videoSubtitles,'字幕'));}
+  // A local video is linked by path only. When the file is not at that path on this
+  // computer the highlights and notes still open; playback needs the user to point at
+  // the file again. The card keeps its fileId, so existing highlights stay attached.
+  function VideoRecordPage(){
+    const cardId=router.query.videoCardId,[version,setVersion]=React.useState(0),[missing,setMissing]=React.useState(null),[busy,setBusy]=React.useState(false);
+    React.useEffect(()=>{let cancelled=false;setMissing(null);(async()=>{const result=await globalThis.__inkbridgeServices.call('getMediaCardById',cardId),card=result?.mediaCard;if(cancelled||!card||card.link)return;const state=card.path?await window.inkbridge.inspectVideoFile(card.path):{exists:false};if(!cancelled&&!state.exists)setMissing({path:card.path||''});})().catch(onError);return()=>{cancelled=true;};},[cardId,version]);
+    const relink=async()=>{setBusy(true);try{const picked=await window.inkbridge.pickVideoFile();if(picked.canceled)return;await globalThis.__inkbridgeServices.call('updateMediaCard',{id:cardId,updates:{path:picked.file.path,fileSuffix:picked.file.type,platform:'local'}});setVersion(value=>value+1);}catch(error){onError(error);}finally{setBusy(false);}};
+    return React.createElement(React.Fragment,null,
+      React.createElement(r(81072).default,{key:cardId+':'+version}),
+      React.createElement(VideoRecordDefaultView,{key:'view:'+cardId}),
+      React.createElement(VideoRecordViewSwitch),
+      missing?React.createElement('div',{id:'inkbridge-video-missing',role:'alert',style:{position:'absolute',inset:0,zIndex:4,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:24,textAlign:'center',color:'#e5e5e5',background:'rgba(0,0,0,.88)'}},
+        React.createElement('div',{style:{fontSize:15,fontWeight:600}},'在這台電腦找不到影片檔案'),
+        React.createElement('div',{style:{fontSize:12,color:'#a3a3a3',maxWidth:'80%',wordBreak:'break-all'}},missing.path||'尚未指定位置'),
+        React.createElement('div',{style:{fontSize:12,color:'#a3a3a3'}},'右側的高亮與筆記仍可查看；重新指定位置後即可播放。'),
+        React.createElement('button',{type:'button',id:'inkbridge-video-relink',disabled:busy,onClick:relink,style:{height:32,padding:'0 14px',borderRadius:8,background:'#fff',color:'#111',fontSize:13,cursor:busy?'wait':'pointer'}},'重新指定位置')):null);
+  }
   function AddToWhiteboard(){const state=r(16125).v9(state=>state.ui.addToWhiteboard);return state.show?React.createElement(r(84974).Z,{show:true}):null;}
   function NativeCardOverlays(){const pinned=r(16125).v9(state=>state.ui.pinnedGlobalModalCard)||[];return React.createElement(React.Fragment,null,React.createElement(r(34060).GZ),...pinned.map((card,index)=>React.createElement(r(64744).InkBridgeCardModal,{key:card.id,isPinned:true,pinnedCard:card,floatingIndex:index,onBeforeClose:flushAll,onEditorReady:registerModalEditor,inkbridgeNoAi:true})));}
   function ShellPortals({home,page}){const [outlineOpen,setOutlineOpen]=React.useState(false);React.useEffect(()=>{const update=()=>setOutlineOpen(!document.querySelector('#original-flow-outline').hidden);window.addEventListener('inkbridge:outline-visibility',update);return ()=>window.removeEventListener('inkbridge:outline-visibility',update);},[]);return React.createElement(React.Fragment,null,
@@ -167,7 +220,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     ReactDOM.createPortal(React.createElement('div',{onClickCapture:event=>{const button=event.target.closest('[aria-label]');if(button?.getAttribute('aria-label')===r(1643).ag.t('newTab',{ns:'common'})){event.preventDefault();event.stopPropagation();document.querySelector('#board-navigation-status').textContent='新增分頁的其他卡片服務尚未接入；可從清單開啟白板。';}}},React.createElement(HistoryTabs)),document.querySelector('#original-history-tabs')),
     React.createElement(r(64744).InkBridgeCreateWhiteboard),
     React.createElement(r(64744).InkBridgeCreateFolder),
-    home?ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col',style:{position:'absolute',inset:0,zIndex:300,overflow:'auto',background:'white'}},page==='trash'?React.createElement(TrashView):page==='note-detail'?React.createElement(r(58439).default,{onEditorReady:registerModalEditor}):page==='pdf'?React.createElement(r(89091).default):React.createElement(page==='card-list'?r(57152).default:r(13177).default)),document.querySelector('#original-board-home')):null,
+    home?ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col',id:page==='video'?'inkbridge-video-record-page':undefined,style:page==='video'?{position:'absolute',top:0,bottom:0,left:0,right:'var(--inkbridge-right-width,0px)',zIndex:300,overflow:'hidden',background:'#000'}:{position:'absolute',inset:0,zIndex:300,overflow:'auto',background:'white'}},page==='trash'?React.createElement(TrashView):page==='note-detail'?React.createElement(r(58439).default,{onEditorReady:registerModalEditor}):page==='pdf'?React.createElement(r(89091).default):page==='video'?React.createElement(VideoRecordPage,{key:router.query.videoCardId}):React.createElement(page==='card-list'?r(57152).default:r(13177).default)),document.querySelector('#original-board-home')):null,
     ReactDOM.createPortal(React.createElement('div',{className:'flex h-full min-h-0 flex-col'},React.createElement(SidebarTree)),document.querySelector('#original-board-list')));
   }
   function homeSelected(page='home'){Object.assign(router.state,{pathname:'/'+page,route:'/'+page,query:{},asPath:'/zh-TW/'+page});}

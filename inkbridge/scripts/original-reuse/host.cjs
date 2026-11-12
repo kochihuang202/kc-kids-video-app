@@ -34,7 +34,10 @@ app.whenReady().then(async()=>{
   const filesDir=path.join(data,'files');fs.mkdirSync(filesDir,{recursive:true});
   const attachments=require('../../src/main/attachment-store.cjs').createAttachmentStore(filesDir,bytes=>nativeImage.createFromBuffer(bytes).getSize());
   const exportsService=require('../../src/main/original-exports.cjs').createOriginalExports({directory:path.join(data,'exports'),load:()=>database.load(),attachments});
-  protocol.handle('flexnote',request=>require('../../src/main/attachment-response.cjs').attachmentResponse(request,attachments));
+  const linkedVideoFiles=require('../../src/main/linked-videos.cjs'),linkedVideos=linkedVideoFiles.createLinkedVideos({load:()=>database.load()});
+  {const commit=database.commit;database.commit=async(...args)=>{const ack=await commit(...args);linkedVideos.invalidate();return ack;};}
+  // Linked local videos resolve from their recorded path; everything else stays in the attachment store.
+  protocol.handle('flexnote',async request=>{let linked=null;try{linked=await linkedVideos.resolveUrl(request.url);}catch{return new Response('Not found',{status:404});}return require('../../src/main/attachment-response.cjs').attachmentResponse(request,linked?{resolveUrl:async()=>linked}:attachments);});
   server=http.createServer((request,response)=>{
     const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
     if(pathname==='/standalone'){
@@ -42,7 +45,7 @@ app.whenReady().then(async()=>{
     }
     if(pathname==='/'||pathname==='/board-window'){
       response.setHeader('Content-Type','text/html; charset=utf-8');
-      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");
+      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; media-src 'self' blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'");
       const originalScripts='<script src="/runtime.js"></script><script src="/register-original.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_buildManifest.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_ssgManifest.js"></script>';
       if(boardMode){
         let html=fs.readFileSync(path.join(project,'src/renderer/index.html'),'utf8');
@@ -95,6 +98,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-tags.mjs')file=path.resolve(own,'../../src/core/original-tags.mjs');
     else if(pathname==='/inkbridge-core/original-bookmarks.mjs')file=path.resolve(own,'../../src/core/original-bookmarks.mjs');
     else if(pathname==='/inkbridge-core/original-pdf.mjs')file=path.resolve(own,'../../src/core/original-pdf.mjs');
+    else if(pathname==='/inkbridge-core/original-video.mjs')file=path.resolve(own,'../../src/core/original-video.mjs');
     else if(pathname==='/inkbridge-core/original-connections.mjs')file=path.resolve(own,'../../src/core/original-connections.mjs');
     else if(pathname==='/inkbridge-core/original-search.mjs')file=path.resolve(own,'../../src/core/original-search.mjs');
     else if(pathname.startsWith('/files/'))file=path.join(filesDir,path.basename(pathname));
@@ -213,7 +217,10 @@ app.whenReady().then(async()=>{
     if(!Array.isArray(items)||items.length>100)throw Error('Invalid image batch');
     return items.map(item=>{const match=/^data:image\/[a-zA-Z0-9.+-]+;base64,([a-zA-Z0-9+/=\s]+)$/.exec(item.base64Image||'');if(!match)throw Error('Invalid image data URL');return attachments.prepare(Buffer.from(match[1],'base64'),item.fileName);});
   });
-  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');const item=await attachments.prepareFile(source,path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
+  ipcMain.handle('inkbridge:uploadFile',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const source=typeof request==='string'?request:request?.filePath;if(typeof source!=='string'||!path.isAbsolute(source))throw Error('Invalid selected file');if(linkedVideoFiles.isVideoPath(source)){const file=await linkedVideoFiles.inspect(source);return {success:true,linked:true,file};}const item=await attachments.prepareFile(source,path.basename(source));return {success:true,file:{...item.fileRecord,metadata:item.metadata,destPath:item.filePath},fileRecord:item.fileRecord};});
+  ipcMain.handle('inkbridge:pickVideoFile',async event=>{if(!allowed(event))throw Error('Unexpected sender');const result=await dialog.showOpenDialog(window,{properties:['openFile'],filters:[{name:'Video',extensions:linkedVideoFiles.EXTENSIONS}]});if(result.canceled||!result.filePaths[0])return {canceled:true};return {canceled:false,file:await linkedVideoFiles.inspect(result.filePaths[0])};});
+  ipcMain.handle('inkbridge:inspectVideoFile',async(event,source)=>{if(!readable(event))throw Error('Unexpected sender');try{return {exists:true,file:await linkedVideoFiles.inspect(source)};}catch{return {exists:false};}});
+  ipcMain.handle('inkbridge:copyImageToClipboard',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const info=attachments.readUrl(String(request?.src||''));const image=nativeImage.createFromBuffer(info.bytes);if(image.isEmpty())throw Error('Image could not be decoded');clipboard.writeImage(image);return {success:true};});
   ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');const results=[];for(const file of files){if(typeof file.path!=='string'||!path.isAbsolute(file.path))throw Error('Invalid selected file');const info=await require('../../src/main/stream-files.cjs').scanFile(file.path,{maxBytes:512*1024*1024});results.push({path:file.path,sha256:info.sha256});}return results;});
   ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});
   ipcMain.on('inkbridge:renderer-ready',(event,epoch)=>{if(epoch!==liveSync.epoch)return;if(allowed(event)){rendererReady=true;updater.health().catch(()=>{});updater.check().catch(()=>{});}standalone.markReady(event);liveSync.markedReady(event.sender.id);});
