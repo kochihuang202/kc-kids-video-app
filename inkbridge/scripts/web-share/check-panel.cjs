@@ -21,7 +21,8 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   // by the new native share entry rather than a separate Save command.
   const point=await page.evaluate(()=>{const s=window.__inkbridgeIntegrated.inspect(),n=s.nodes.find(n=>n.id==='note-instance'),b=document.querySelector('#board').getBoundingClientRect();return{x:b.x+s.view.translateX+(n.position.x+50)*s.view.scale,y:b.y+s.view.translateY+(n.position.y+50)*s.view.scale};});
   await page.mouse.dblclick(point.x,point.y);const editor=page.locator('#board [contenteditable=true]').first();await expect(editor).toBeVisible();await editor.press('Control+End');await page.keyboard.press('Enter');await page.keyboard.insertText('原版分享面板最新內容');
-  await expect(page.locator('#export-web-share')).toHaveCount(0);await page.getByRole('button',{name:'分享白板',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
+  const shareLabel=await page.evaluate(()=>window.__originalRequire(1643).ag.t('share.title',{ns:'common'}));
+  await expect(page.locator('#export-web-share')).toHaveCount(0);await expect(page.locator('#original-share-controls')).toHaveCount(0);await page.locator('#original-native-tools .react-flow__panel').getByRole('button',{name:shareLabel,exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
   if(online){
    await page.getByRole('textbox',{name:'分享網站網址'}).fill(pairing.baseUrl);await page.getByRole('textbox',{name:'裝置配對碼'}).fill(pairing.code);await page.getByRole('button',{name:'連接裝置',exact:true}).click();pairing=null;
    const tree=page.getByTestId('share-board-tree');await expect(tree).toBeVisible();

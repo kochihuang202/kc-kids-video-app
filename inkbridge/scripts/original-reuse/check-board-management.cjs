@@ -15,7 +15,7 @@ const {_electron,expect}=require('@playwright/test'),fs=require('node:fs/promise
  dialog=page.getByRole('dialog');await dialog.locator('input').fill('Renamed board');await dialog.getByRole('button',{name:await label('Submit'),exact:true}).click();
  await expect.poll(async()=>(await page.evaluate(()=>window.inkbridge.load())).boards.find(b=>b.id===id)?.title).toBe('Renamed board');
  assert.deepEqual((await page.evaluate(()=>window.inkbridge.load())).boards.find(b=>b.id===id).view,view);
- await page.getByRole('button',{name:'zoom-in',exact:true}).click();await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
+ await page.locator('#original-native-tools').getByRole('button',{name:await label('zoom'),exact:true}).nth(2).click();await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
  assert.equal((await page.evaluate(()=>window.inkbridge.load())).boards.find(b=>b.id===id).title,'Renamed board');
  await list.getByText('Renamed board',{exact:true}).click({button:'right'});await page.getByRole('button',{name:await label('Delete'),exact:true}).click();
  dialog=page.getByRole('dialog');await dialog.getByRole('button',{name:await label('Cancel'),exact:true}).click();assert(!(await page.evaluate(()=>window.inkbridge.load())).boards.find(b=>b.id===id).attributes.isTrashed);

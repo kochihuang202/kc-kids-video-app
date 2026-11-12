@@ -17,6 +17,9 @@ function prepareSharing(){
   if(!source.includes('original factory SHA-256 '+expected))throw Error('Native sharing source identity changed: '+id);
   if(id==='46979'){
    source=once(source,'n.d(t, { z7:', 'n.d(t, { InkBridgeSharePopover: function () { return n2; }, z7:');
+   source=once(source,'window.ipc.invoke("get-share-status", { whiteboard_id: ef })','globalThis.__inkbridgeShareInvoke("get-share-status", { whiteboard_id: ef })');
+   source=once(source,'(0, l.useEffect)(() => { eN(); }, [eN]);','(0, l.useEffect)(() => { eN(); const refresh = event => { if (!event.detail || event.detail === ef) eN(); }; window.addEventListener("inkbridge:share-refresh", refresh); return () => window.removeEventListener("inkbridge:share-refresh", refresh); }, [eN, ef]);');
+   source=once(source,'onOpenChange: e => { e || eN(); }','onOpenChange: () => { eN(); }');
    source=once(source,'children: t.map(e => { let { key: t, label: n, icon: i } = e;', 'children: t.filter(e => e.key === "web").map(e => { let { key: t, label: n, icon: i } = e;');
    source=once(source,'"web" === g && c("share.web_desc")','"web" === g && "發布到自己的網站，持有連結即可觀看。只有按發布或更新才上傳；本機保存不會自動公開。"');
   }else{

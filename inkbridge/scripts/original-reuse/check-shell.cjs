@@ -25,9 +25,12 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   // The original list schedules a 400ms fit after selection. Await its actual
   // centering result before testing zoom, rather than racing that animation.
   await expect.poll(()=>page.evaluate(()=>{const s=window.__originalRequire(23).gt.getState(),n=s.nodes.find(n=>n.id==='instance-main'),rect=(s.containerElement||s.canvasElement).getBoundingClientRect();return (n.position.x+n.width/2)*s.view.scale+s.view.translateX-rect.width/2;})).toBeCloseTo(0,3);
+  const zoomLabel=await page.evaluate(()=>window.__originalRequire(1643).ag.t('zoom',{ns:'common'})),fitLabel=await page.evaluate(()=>window.__originalRequire(1643).ag.t('fitToScreen',{ns:'common'})),shareLabel=await page.evaluate(()=>window.__originalRequire(1643).ag.t('share.title',{ns:'common'}));
+  const zoomButtons=page.locator('#original-native-tools').getByRole('button',{name:zoomLabel,exact:true});
+  await expect(zoomButtons).toHaveCount(3);
   const zoomBefore=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view.scale);
-  await page.getByRole('button',{name:'zoom-in',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view.scale)).toBeGreaterThan(zoomBefore);
-  await page.getByRole('button',{name:'zoom',exact:true}).click();await page.getByRole('button',{name:'70%',exact:true}).click();
+  await zoomButtons.nth(2).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view.scale)).toBeGreaterThan(zoomBefore);
+  await zoomButtons.nth(1).click();await page.getByRole('button',{name:'70%',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().view.scale)).toBeCloseTo(.7,6);
   async function edit(){const state=await page.evaluate(()=>window.__inkbridgeIntegrated.inspect()),box=await page.locator('#board').boundingBox(),node=state.nodes[0];await page.mouse.dblclick(box.x+state.view.translateX+(node.position.x+200)*state.view.scale,box.y+state.view.translateY+(node.position.y+90)*state.view.scale);const editor=page.locator('#board [contenteditable="true"]');await editor.waitFor();await editor.press('Control+End');return editor;}
   await edit();await page.keyboard.insertText('LATEST_BEFORE_NAV');
@@ -39,10 +42,14 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   assert.equal(await page.evaluate(()=>window.__shellSwitched),false);assert.equal(await page.evaluate(()=>window.__inkbridgeIntegrated.inspect().boardId),'board-main');
   await cdp.send('Input.insertText',{text:'NAV_IME_COMMITTED'});await page.evaluate(()=>window.__shellSwitch);
   graph=await page.evaluate(()=>window.inkbridge.load());assert(graph.contents.find(c=>c.id==='content-main').body.includes('NAV_IME_COMMITTED'));
-  await page.getByRole('button',{name:'fit-view',exact:true}).click();await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
+  await zoomButtons.nth(1).click();await page.getByRole('button',{name:fitLabel,exact:true}).click();await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
   // Repeated original navigation must not create more React roots/providers.
   for(const name of ['Alpha board','Beta board','Alpha board','Beta board']){await list.getByText(name,{exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__inkbridgeIntegrated.inspect().boardId)).toBe(name.startsWith('Alpha')?'board-main':'board-two');}
-  assert.equal(await page.locator('#original-zoom-controls [aria-label="zoom-in"]').count(),1);
+  assert.equal(await page.locator('#original-zoom-controls button').count(),0);
+  assert.equal(await zoomButtons.count(),3);
+  assert.equal(await page.locator('#original-native-tools .react-flow__panel').getByRole('button',{name:shareLabel,exact:true}).count(),1);
+  const bottomBoxes=await page.evaluate(()=>{const left=document.querySelector('#original-native-tools div.action-panel-container.h-8')?.getBoundingClientRect(),right=document.querySelector('#original-native-tools .react-flow__panel')?.getBoundingClientRect();return left&&right?{leftRight:left.right,rightLeft:right.left,leftBottom:left.bottom,rightBottom:right.bottom}:null;});
+  assert(bottomBoxes&&bottomBoxes.leftRight+16<=bottomBoxes.rightLeft&&Math.abs(bottomBoxes.leftBottom-bottomBoxes.rightBottom)<=1);
   await list.getByText('Alpha board',{exact:true}).click({button:'right'});const renameLabel=await page.evaluate(()=>window.__originalRequire(1643).ag.t('Rename',{ns:'common'}));await expect(page.getByRole('button',{name:renameLabel,exact:true})).toBeVisible();await page.keyboard.press('Escape');
   await page.evaluate(()=>window.__inkbridgeIntegrated.flush());const expected=await page.evaluate(()=>window.inkbridge.load());
   assert.equal(expected.boards.find(b=>b.id==='board-main').title,'Alpha board');assert.equal(expected.boards.find(b=>b.id==='board-two').title,'Beta board');

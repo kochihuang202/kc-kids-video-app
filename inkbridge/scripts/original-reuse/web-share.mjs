@@ -27,7 +27,7 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
   }
   if(channel==='get-cloud-usage')return {success:true,usedBytes:state(getBoardId()).bytes||0,quotaBytes:0};
   if(channel==='update-share-status'){
-   const current=state(getBoardId());try{const receipt=await window.inkbridge.webShare({method:'setEnabled',boardId:getBoardId(),publicationId:current.publicationId,expectedVersion:current.version,enabled:payload.isEnabled});update(getBoardId(),receipt);return{success:true};}catch(error){failure(error);return{success:false,error:error.message};}
+   const id=getBoardId(),current=state(id);try{const receipt=await window.inkbridge.webShare({method:'setEnabled',boardId:id,publicationId:current.publicationId,expectedVersion:current.version,enabled:payload.isEnabled});update(id,receipt);window.dispatchEvent(new CustomEvent('inkbridge:share-refresh',{detail:id}));return{success:true};}catch(error){failure(error);return{success:false,error:error.message};}
   }
   throw Error('Unsupported native sharing boundary: '+channel);
  };
@@ -39,7 +39,7 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
   await flush();const current=state(boardId),config=settings.get(boardId)||{};
   const request={method:'publish',boardId,selectedBoardIds,imagePreset:config.imagePreset||current.imagePreset||'clarity',losslessImageIds:config.losslessImageIds||current.losslessImageIds||[],expectedVersion:current.version??null,requestId:config.requestId||crypto.randomUUID()};
   settings.set(boardId,{...config,requestId:request.requestId});update(boardId,{error:null,progress:{phase:'capture'}});
-  try{const receipt=await window.inkbridge.webShare(request);settings.set(boardId,{...config,requestId:null});update(boardId,{...receipt,selection:selectedBoardIds,progress:null});return receipt;}catch(error){settings.set(boardId,{...config,requestId:null});failure(error);throw error;}
+  try{const receipt=await window.inkbridge.webShare(request);settings.set(boardId,{...config,requestId:null});update(boardId,{...receipt,selection:selectedBoardIds,progress:null});window.dispatchEvent(new CustomEvent('inkbridge:share-refresh',{detail:boardId}));return receipt;}catch(error){settings.set(boardId,{...config,requestId:null});failure(error);throw error;}
  };
  const Button=require(17015).A,Checkbox=require(19764).K;
  function Connection({hasAccess}){
@@ -88,11 +88,7 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
  }
  window.__inkbridgeShareTree=Tree;window.__inkbridgeShareConnection=Connection;window.__inkbridgeShareExtras=Extras;
  window.inkbridge.onWebShareProgress?.(progress=>update(progress.boardId||getBoardId(),progress.phase==='error'?{progress:null,error:progress.message}:progress.phase==='complete'?{progress:null}:{progress}));
- const native=require(46979),SharePopover=native.InkBridgeSharePopover,Icon=require(73176).default;
+ const native=require(46979),SharePopover=native.InkBridgeSharePopover;
  if(!SharePopover)throw Error('Apply prepare-sharing.cjs before starting InkBridge');
- return function ShareControls({boardId=getBoardId(),home=isHome()}){
-  if(home)return null;
-  return DOM.createPortal(h('div',{id:'original-share-controls',className:native.uR,style:{position:'absolute',right:16,bottom:16,zIndex:20}},
-   h(SharePopover,{whiteboardId:boardId,onOpenChange:open=>{if(open)status(boardId).catch(()=>{});}},h('button',{type:'button',className:native.V4,'aria-label':'分享白板',title:'分享白板'},h(Icon,{className:'h-4 w-4'})))),document.querySelector('.canvas-wrap'));
- };
+ return function ShareControls(){return null;};
 }

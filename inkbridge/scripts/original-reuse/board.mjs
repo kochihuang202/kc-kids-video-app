@@ -374,7 +374,7 @@ async function boot(){
     const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
     const routeContext=React.useMemo(()=>Object.create(router,{query:{value:{...router.query}},pathname:{value:router.pathname},route:{value:router.route},asPath:{value:router.asPath}}),[activeBoardId,home,page]);
     const nativeHistory=r(37883).E({historyScopeId:activeBoardId,enableShortcuts:!home});
-    React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-zoom-controls').inert=home;},[home]);
+    React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-native-tools').inert=home;if($('#original-zoom-controls'))$('#original-zoom-controls').inert=home;},[home]);
     const FlowContext=r(48626).FLowContext;
     const flowContextValue=React.useMemo(()=>({
       clickMention:()=>{},

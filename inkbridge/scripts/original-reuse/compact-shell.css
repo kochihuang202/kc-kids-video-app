@@ -56,6 +56,7 @@ body{margin:0;overflow:hidden}
 #toggle-sidebar,#toggle-outline{height:28px;width:28px;border-radius:6px;flex-shrink:0;display:grid;place-items:center;color:#52525b;font-size:17px}
 #original-native-tools,#original-undo-controls,#original-board-caption{position:absolute;inset:0;pointer-events:none;z-index:30}
 #original-native-tools{right:var(--inkbridge-right-width,0px)}
+#original-native-tools .react-flow__panel{pointer-events:auto}
 .native-tools-gate{position:absolute;inset:0;pointer-events:none}
 #original-native-tools fieldset,#original-undo-controls fieldset{border:0;margin:0;padding:0;min-width:0;position:absolute;inset:0;pointer-events:none}
 #original-native-tools button:disabled,#original-undo-controls button:disabled{cursor:not-allowed;opacity:.5}

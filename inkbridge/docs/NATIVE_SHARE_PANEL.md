@@ -1,10 +1,12 @@
 # Native sharing panel integration
 
 The original complete `46979.n2` share modal mounts the complete `78178.M`
-web-sharing panel inside the existing Canvas/Flow/Redux/Theme providers. The
-share entry uses the original `46979.uR` / `46979.V4` control styles and icon
-`73176`. The previous top-right export button and separate result notification
-are removed. Offline packages are available under **More options** in the panel.
+web-sharing panel inside the existing Canvas/Flow/Redux/Theme providers. On
+editable desktop whiteboards, the share entry is rendered in place by the
+original `46979.ZP` bottom-right control bar (`46979.uR` / `46979.V4`, share
+icon `54375`). The previous top-right export button, separate result
+notification, and duplicate standalone bottom-right zoom/share overlays are
+removed. Offline packages are available under **More options** in the panel.
 
 ## Source and reproducible adaptation
 

@@ -16,6 +16,7 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await page.mouse.move(340, box.y + 100, { steps: 6 });
         await page.mouse.up();
         await expect.poll(() => page.locator('#board').evaluate(el => Math.round(el.getBoundingClientRect().x))).toBe(340);
+        await page.evaluate(() => { window.__inkbridgeIntegrated.addCard('Resize card', 'Fixture', { x: 40, y: 40 }); return window.__inkbridgeIntegrated.flush(); });
         await page.locator('#toggle-outline').click();
         await expect(page.locator('#original-flow-outline [role=option]').first()).toBeVisible();
         const handle = page.locator('#original-flow-outline .cursor-ew-resize').first(), right = await handle.boundingBox();
@@ -32,7 +33,8 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await expect.poll(() => page.evaluate(() => window.__originalRequire(63268).Z.getState().ui.onlyDisplayCardTitle)).toBe(false);
         await page.evaluate(() => window.__originalRequire(63268).Z.dispatch(window.__originalRequire(22676).Tx({ show: false, isWhiteboardSearch: true })));
         await expect.poll(() => page.evaluate(() => window.__originalRequire(63268).Z.getState().ui.onlyDisplayCardTitle)).toBe(true);
-        console.log(JSON.stringify({ geometry: await page.evaluate(() => Object.fromEntries(['#persistence-status', '#original-zoom-controls button[aria-label="zoom-in"]', '.original-sidebar'].map(s => { const e = document.querySelector(s), b = e?.getBoundingClientRect(); return [s, b ? { x: b.x, y: b.y, w: b.width, h: b.height, at: document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2)?.id } : null]; }))) }));
+        assert(await page.evaluate(() => { const p = document.querySelector('#original-native-tools .react-flow__panel')?.getBoundingClientRect(), o = document.querySelector('#original-flow-outline')?.getBoundingClientRect(); return p && o && p.right <= o.left; }));
+        console.log(JSON.stringify({ geometry: await page.evaluate(() => Object.fromEntries(['#persistence-status', '#original-native-tools .react-flow__panel button', '.original-sidebar'].map(s => { const e = document.querySelector(s), b = e?.getBoundingClientRect(); return [s, b ? { x: b.x, y: b.y, w: b.width, h: b.height, at: document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2)?.id } : null]; }))) }));
         await page.evaluate(() => window.__inkbridgeIntegrated.controls.setViewport({ zoom: 1 }));
         await expect.poll(() => page.evaluate(() => window.__originalRequire(63268).Z.getState().ui.onlyDisplayCardTitle)).toBe(false);
         const origin = new URL(page.url()).origin;
@@ -49,7 +51,7 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
     }
     catch (e) {
         console.error(e);
-        console.log(await page.evaluate(() => Object.fromEntries(['#persistence-status', '#original-zoom-controls button[aria-label=zoom-in]', '.brand', '#original-flow-outline .cursor-ew-resize'].map(s => { const e = document.querySelector(s), b = e?.getBoundingClientRect(); return [s, b ? { x: b.x, y: b.y, w: b.width, h: b.height, at: document.elementFromPoint(b.right - 2, b.y + 100)?.outerHTML.slice(0, 170), parents: Array.from((function* (n) { while (n) {
+        console.log(await page.evaluate(() => Object.fromEntries(['#persistence-status', '#original-native-tools .react-flow__panel button', '.brand', '#original-flow-outline .cursor-ew-resize'].map(s => { const e = document.querySelector(s), b = e?.getBoundingClientRect(); return [s, b ? { x: b.x, y: b.y, w: b.width, h: b.height, at: document.elementFromPoint(b.right - 2, b.y + 100)?.outerHTML.slice(0, 170), parents: Array.from((function* (n) { while (n) {
                     yield n;
                     n = n.parentElement;
                 } })(e)).slice(0, 7).map(n => ({ tag: n.tagName, id: n.id, c: n.className, pe: getComputedStyle(n).pointerEvents, z: getComputedStyle(n).zIndex, overflow: getComputedStyle(n).overflow })) } : null]; }))));
