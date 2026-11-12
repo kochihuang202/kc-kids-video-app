@@ -51,7 +51,8 @@ body{margin:0;overflow:hidden}
 #loading{position:absolute;inset:0;display:grid;place-items:center;background:#f4f3ee;white-space:pre-wrap;z-index:40}
 #loading[hidden]{display:none}
 #original-flow-outline[hidden]{display:none!important}
-#original-flow-outline{position:absolute;right:0;top:0;bottom:0;z-index:60;width:auto!important;min-width:0!important}
+/* Below the original modal layer (z-50): a dialog must never be covered by the side panel. */
+#original-flow-outline{position:absolute;right:0;top:0;bottom:0;z-index:40;width:auto!important;min-width:0!important}
 #original-card-sidebar #_flowSidebarRightRoot{margin-top:0!important;height:100%;right:0!important}
 #toggle-sidebar,#toggle-outline{height:28px;width:28px;border-radius:6px;flex-shrink:0;display:grid;place-items:center;color:#52525b;font-size:17px}
 #original-native-tools,#original-undo-controls,#original-board-caption{position:absolute;inset:0;pointer-events:none;z-index:30}

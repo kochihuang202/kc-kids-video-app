@@ -29,7 +29,7 @@ function createLinkedVideos({load}){
   const match=pattern.exec(decodeURIComponent(url.pathname.slice(1)));if(!match)return null;
   const file=await lookup(match[1]);if(!file)return null;
   const stat=await fs.promises.stat(file);if(!stat.isFile()||!stat.size)throw Error('Linked video is missing');
-  return {filePath:file,size:stat.size,ext:'.'+match[2],sha256:`linked-${stat.size}-${Math.trunc(stat.mtimeMs)}`,contentType:TYPES[extensionOf(file)]||TYPES[match[2]]};
+  return {filePath:file,size:stat.size,ext:'.'+match[2],sha256:`linked-${stat.size}-${Math.trunc(stat.mtimeMs)}`,contentType:TYPES[extensionOf(file)]||TYPES[match[2]],cacheControl:'no-store'};
  }
  return {resolveUrl,invalidate};
 }

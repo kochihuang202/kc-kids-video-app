@@ -77,6 +77,9 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
             const card = { ...previous, ...updates, lastEditedTime: new Date().toISOString() };
             const meta = { ...card }; delete meta.title;
             put('card', meta);
+            // A linked file's identity follows its path (the player URL is derived from it, and
+            // Chromium keeps the failed load of the old URL). Highlights follow in the same commit.
+            if (card.fileId !== previous.fileId && previous.fileId) for (const row of graph.videoHighlights || []) if (row.sourceId === previous.fileId) put('video-highlight', { ...row, sourceId: card.fileId });
             if (updates.title !== undefined) putContent({ ...contents.get(id), title: String(updates.title) });
             await coordinator.flush();
             contents.set(id, { ...contents.get(id), ...card, kind: 'video' });

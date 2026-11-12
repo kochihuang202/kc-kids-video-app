@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-104 — Video highlight markers recorded at 00:00 or up to one second late
+
+- Original 79719 marks with a time polled once per second, and binds its `<video>` only two seconds after mounting (never in the embedded sidebar player when the load callback is missed). A marker pressed before binding was stored as 0; others could be up to 1s stale. A linked local video also tainted the capture canvas, so screenshots failed.
+- Fix (user approved): resolve the player at press time and read its exact `currentTime`; bind after 300ms; load local video with `crossorigin`. Patches in `apply-video-record-patches.cjs`.
+- Test: `check-video-record.cjs` marks at 7.36s while paused and while playing and asserts the stored time equals the player's, plus a stored PNG screenshot. Sidebar-embedded marking (second phase) is not yet covered.
+
 ## REG-103 — Original sidebar needs its parent, content identity and shared editor updates
 
 - Mount full41.n instead of substituting a modal. Original95077 sidebar action spreads instance data after the content ID and overwrites it; match19395's working call contract by placing content ID last and passing cardInstanceId separately. Reference ordering uses updateTabConfig, which checks saved tabs then history tabs and merges config, matching the original background.

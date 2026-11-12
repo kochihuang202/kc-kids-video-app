@@ -37,7 +37,7 @@ app.whenReady().then(async()=>{
   const linkedVideoFiles=require('../../src/main/linked-videos.cjs'),linkedVideos=linkedVideoFiles.createLinkedVideos({load:()=>database.load()});
   {const commit=database.commit;database.commit=async(...args)=>{const ack=await commit(...args);linkedVideos.invalidate();return ack;};}
   // Linked local videos resolve from their recorded path; everything else stays in the attachment store.
-  protocol.handle('flexnote',async request=>{let linked=null;try{linked=await linkedVideos.resolveUrl(request.url);}catch{return new Response('Not found',{status:404});}return require('../../src/main/attachment-response.cjs').attachmentResponse(request,linked?{resolveUrl:async()=>linked}:attachments);});
+  protocol.handle('flexnote',async request=>{let linked=null;try{linked=await linkedVideos.resolveUrl(request.url);}catch{return new Response('Not found',{status:404,headers:{'Cache-Control':'no-store','Access-Control-Allow-Origin':'*'}});}return require('../../src/main/attachment-response.cjs').attachmentResponse(request,linked?{resolveUrl:async()=>linked}:attachments);});
   server=http.createServer((request,response)=>{
     const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
     if(pathname==='/standalone'){
