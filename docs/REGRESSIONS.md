@@ -3,8 +3,8 @@
 ## REG-147 — Clicking a playing video card does not select it; its toolbar appears only after a drag
 
 - Reproduction: once a video card plays, the original 47766 overlay covers it and its root stops mousedown, and the player inside stops it first; the canvas never selects the card, so its toolbar stays hidden until the card is dragged. The original FlexNote behaves the same (user report 2026-11-13, fix requested).
-- Fix: the overlay root selects its own node in the capture phase (; Shift/Ctrl adds to the selection) and still stops the event, so playback controls behave as before.
-- Test:  deselects, clicks the playing overlay and asserts the card is selected and its toolbar visible.
+- Fix: the overlay root selects its own node in the capture phase (`__inkbridgeSelectVideoNode`; Shift/Ctrl adds to the selection) and still stops the event, so playback controls behave as before.
+- Test: `check-video-toolbar-insert.cjs` deselects, clicks the playing overlay and asserts the card is selected and its toolbar visible.
 
 ## REG-146 — Side-panel video markers stored as 00:00 and a highlight card's 📍 lost its time
 
