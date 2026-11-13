@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-148 — Highlight list shows "Expand All" in English; cover button in simplified Chinese
+
+- Reproduction: the original zh-TW bundle has no `expandAll`/`collapseAll` (highlight list header, 41 component q) nor `setCurrentFrameAsCover`/`setVideoCoverSuccess`/`setVideoCoverFailedRetry` (95823 subtitle panel), so the original UI fell back to English or to its simplified-Chinese defaultValue.
+- Fix: `original-shell.mjs` fills only those missing zh-TW keys when the shell first renders (the i18n instance does not exist when the shell connects); existing translations are never overwritten.
+- Test: hovering the panel header button shows 展開所有; the record page subtitle tab's 將當前幀設為封面 changes the stored cover.
+
 ## REG-147 — Clicking a playing video card does not select it; its toolbar appears only after a drag
 
 - Reproduction: once a video card plays, the original 47766 overlay covers it and its root stops mousedown, and the player inside stops it first; the canvas never selects the card, so its toolbar stays hidden until the card is dragged. The original FlexNote behaves the same (user report 2026-11-13, fix requested).

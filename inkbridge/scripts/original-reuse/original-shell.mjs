@@ -27,6 +27,13 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   function NativeRightSidebar(){const shown=r(16125).v9(state=>state.ui.rightSidebarShow),width=r(16125).v9(state=>state.ui.rightSidebarWidth);React.useLayoutEffect(()=>document.documentElement.style.setProperty('--inkbridge-right-width',(shown?width:0)+'px'),[shown,width]);React.useLayoutEffect(()=>{document.querySelector('#original-flow-outline').hidden=!shown;document.body.classList.toggle('outline-open',shown);document.querySelector('#toggle-outline').setAttribute('aria-expanded',String(shown));window.dispatchEvent(new Event('inkbridge:outline-visibility'));},[shown]);return React.createElement('div',{id:'original-card-sidebar',style:{display:'contents'}},React.createElement(r(41).n));}
   const ListView=r(74582).ListView,SidebarTree=r(79509).SortableTree,BottomRightControls=r(46979).ZP,HistoryTabs=r(23733).InkBridgeHistoryTabs,FlowOutline=r(41).InkBridgeFlowOutline;
   const SidebarNavigation=r(78507).InkBridgeSidebarNavigation,NativeFlowUi=r(48626);
+  // The original zh-TW bundle lacks these keys, so the original UI fell back to English
+  // ("Expand All") or to the simplified-Chinese defaultValue. Fill only missing keys, worded
+  // as the original's own defaults; existing translations are never overwritten.
+  let translationsFilled=false;
+  const fillMissingTranslations=()=>{const i18n=r(1643).ag;if(translationsFilled||!i18n)return;translationsFilled=true;const missing={expandAll:'展開所有',collapseAll:'折疊所有',setCurrentFrameAsCover:'將當前幀設為封面',setVideoCoverSuccess:'當前幀已設為封面',setVideoCoverFailedRetry:'設定失敗，點擊重試'};
+   for(const [key,value]of Object.entries(missing))if(i18n.getResource('zh-TW','common',key)===undefined)i18n.addResource('zh-TW','common',key,value);};
+
   if(!SidebarNavigation||!NativeFlowUi.InkBridgeCreationToolbar)throw Error('Apply native shell UI export patches first');
   // Open the supported original whiteboard view, through its own saved view key.
   // Collections have a separate native catalog, not the history-tab table.
@@ -214,7 +221,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   }
   function AddToWhiteboard(){const state=r(16125).v9(state=>state.ui.addToWhiteboard);return state.show?React.createElement(r(84974).Z,{show:true}):null;}
   function NativeCardOverlays(){const pinned=r(16125).v9(state=>state.ui.pinnedGlobalModalCard)||[];return React.createElement(React.Fragment,null,React.createElement(r(34060).GZ),...pinned.map((card,index)=>React.createElement(r(64744).InkBridgeCardModal,{key:card.id,isPinned:true,pinnedCard:card,floatingIndex:index,onBeforeClose:flushAll,onEditorReady:registerModalEditor,inkbridgeNoAi:true})));}
-  function ShellPortals({home,page}){const [outlineOpen,setOutlineOpen]=React.useState(false);
+  function ShellPortals({home,page}){fillMissingTranslations();const [outlineOpen,setOutlineOpen]=React.useState(false);
     // On the record page the side panel is the highlight list, not the whiteboard outline.
     const sideView=r(16125).v9(state=>state.ui.viewDefaultView),flowView=r(16125).v9(state=>state.ui.flowSidebarView),onVideo=home&&page==='video',boardHighlight=!home&&boardHighlightViews().includes(flowView);React.useEffect(()=>{const update=()=>setOutlineOpen(!document.querySelector('#original-flow-outline').hidden);window.addEventListener('inkbridge:outline-visibility',update);return ()=>window.removeEventListener('inkbridge:outline-visibility',update);},[]);return React.createElement(React.Fragment,null,
     React.createElement(r(55153).VW,{toastOffset:50,maxVisibleToasts:1,placement:'top-right',regionProps:{className:'flexnote-global-toast-region'}}),
