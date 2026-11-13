@@ -60,6 +60,17 @@ module.exports=({root,changes})=>{
   }
   return source;
  });
+ // 47766 video overlay: its root stops mousedown so the canvas never sees the click, and a
+ // playing card could only be selected by dragging it (the card toolbar stayed hidden; the
+ // original behaves the same). Keep stopping the event, and also select the overlay's own
+ // node (user request 2026-11-13).
+ // Capture phase: the player inside (video.js) stops the bubbling mousedown first.
+ patch('47766','Select the video card when its playing overlay is pressed, so the card toolbar appears',source=>{
+  const original='"data-video-overlay-content": !0, onMouseDown: e => e.stopPropagation(),';
+  const earlier='"data-video-overlay-content": !0, onMouseDown: e => { e.stopPropagation(); S && S.node && globalThis.__inkbridgeSelectVideoNode && globalThis.__inkbridgeSelectVideoNode(S.node.id, e); },';
+  if(source.includes(earlier))source=source.replace(earlier,()=>original);
+  return once(source,original,'"data-video-overlay-content": !0, onMouseDownCapture: e => { S && S.node && globalThis.__inkbridgeSelectVideoNode && globalThis.__inkbridgeSelectVideoNode(S.node.id, e); }, onMouseDown: e => e.stopPropagation(),','overlay press');
+ });
  // 84539 'open in sidebar' helpers decide whether a whiteboard is showing from
  // window.location, which never contains /flow in this host. A highlight card's 📍 then fell
  // back to the reference list and lost its time. Ask the host instead.

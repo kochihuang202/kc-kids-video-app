@@ -1,5 +1,6 @@
 // Real Electron check: the left creation toolbar's 視頻 placement opens the original 67569 video
 // dialog (toolbar child 6). Cancel leaves no card; create stores a path-linked card that plays.
+// Clicking the playing overlay selects the card and shows its toolbar.
 // The media button is enabled (image and video connected, audio entry disabled) and the
 // original image dialog (child 7) stores an image card.
 // The record page tab uses the original 23733 "video" tab type: it has its icon and routes back.
@@ -29,6 +30,10 @@ try{
  const at=await page.evaluate(()=>{const s=window.__originalRequire(23).gt.getState(),n=s.nodes.find(n=>n.type==='MediaCard'),rect=(s.containerElement||s.canvasElement).getBoundingClientRect();return{x:rect.x+(n.position.x+n.width/2)*s.view.scale+s.view.translateX,y:rect.y+(n.position.y+n.height/2)*s.view.scale+s.view.translateY};});
  await page.mouse.click(at.x,at.y);await page.waitForTimeout(300);await page.mouse.click(at.x,at.y);
  await expect.poll(()=>page.evaluate(()=>{const v=document.querySelector('[data-video-overlay-content] video');return v?v.readyState:-1;}),{timeout:10000}).toBeGreaterThanOrEqual(2);res.plays=true;
+ // A click on the playing overlay selects its card, so the card toolbar shows (47766 patch).
+ await page.mouse.click(900,850);await expect.poll(()=>page.evaluate(()=>window.__originalRequire(23).gt.getState().selectedNodeIds.size)).toBe(0);
+ await page.mouse.click(at.x,at.y);
+ await expect.poll(()=>page.evaluate(()=>{const s=window.__originalRequire(23).gt.getState(),id=s.nodes.find(n=>n.type==='MediaCard')?.id;return s.selectedNodeIds.has(id)&&[...document.querySelectorAll('button')].some(b=>b.querySelector('svg.lucide-palette')&&b.getBoundingClientRect().width>0);})).toBe(true);res.toolbarOnClick=true;
  await page.locator('[data-inkbridge-video-record]').click();await page.waitForTimeout(1500);
  res.videoTabIcon=await page.evaluate(()=>{let e=[...document.querySelectorAll('*')].find(e=>e.childElementCount===0&&e.textContent.trim()==='sample'&&e.getBoundingClientRect().bottom<40);for(let i=0;e&&i<3;i++,e=e.parentElement)if(e.querySelector('svg'))return true;return false;});
  await page.screenshot({path:path.join(R,'private-original-editor','video-toolbar-insert.png')});
@@ -47,4 +52,4 @@ try{
   await expect.poll(async()=>(await page.evaluate(()=>window.inkbridge.load())).contents.filter(c=>c.kind==='image').length).toBe(1);res.imageStored=true;}
 
 }catch(e){res.error=e.message.slice(0,400);await page.screenshot({path:path.join(R,'private-original-editor','video-toolbar-insert-error.png')});}
-res.pageErrors=errs;console.log(JSON.stringify(res));await app.close();if(res.error||errs.length||!res.cancelLeavesNoCard||!res.stored||res.instances!==1||!res.plays||!res.videoTabIcon||!res.onBoard||!res.backOnVideo||!res.mediaEnabled||res.mediaOptions.join()!=='圖片:on,視頻:on,音頻:off'||!res.imageStored)process.exitCode=1;})();
+res.pageErrors=errs;console.log(JSON.stringify(res));await app.close();if(res.error||errs.length||!res.cancelLeavesNoCard||!res.stored||res.instances!==1||!res.plays||!res.videoTabIcon||!res.onBoard||!res.backOnVideo||!res.mediaEnabled||res.mediaOptions.join()!=='圖片:on,視頻:on,音頻:off'||!res.imageStored||!res.toolbarOnClick)process.exitCode=1;})();
