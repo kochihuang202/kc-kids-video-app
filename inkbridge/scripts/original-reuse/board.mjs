@@ -19,6 +19,7 @@ import {createOriginalConnections} from '/inkbridge-core/original-connections.mj
 import {fitCardHeight,cardMaxHeight} from '/inkbridge-core/card-height.mjs';
 import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
 import {createOriginalMindmaps} from '/inkbridge-core/original-mindmaps.mjs';
+import {installMindmapXmindKeys} from '/inkbridge-core/mindmap-xmind-keys.mjs';
 import {installMindmapAppearance} from '/inkbridge-core/mindmap-appearance.mjs';
 import {installMindmapKeyboard} from '/inkbridge-core/mindmap-keyboard.mjs';
 import {createOriginalTextElements} from '/inkbridge-core/original-text-elements.mjs';
@@ -233,6 +234,8 @@ async function boot(){
   const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
   const drawings=createOriginalDrawings({navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});
   mindmaps=createOriginalMindmaps({r,graph,navigate,coordinator,catalogOperation,store:originalStore,getBoardId:()=>boardId,getBaseNodes:()=>sections.scene()});
+  // XMind keys (docs/MINDMAP_XMIND.md); undo uses the original history of the active board.
+  installMindmapXmindKeys({store:originalStore,mindmaps,r,pushUndo:()=>globalThis.__inkbridgeMindmapPushUndo?.()});
   installMindmapControls({r,React,mindmaps,onError:report});
   const hydrateBase=sections.hydrate;sections.hydrate=()=>{hydrateBase();mindmaps.hydrate();video.hydrate();};mindmaps.hydrate();video.hydrate();
   function applySharedGraph(next,{preserveHistory=false}={}){
@@ -386,7 +389,7 @@ async function boot(){
     const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
     const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
     const routeContext=React.useMemo(()=>Object.create(router,{query:{value:{...router.query}},pathname:{value:router.pathname},route:{value:router.route},asPath:{value:router.asPath}}),[activeBoardId,home,page]);
-    const nativeHistory=r(37883).E({historyScopeId:activeBoardId,enableShortcuts:!home});
+    const nativeHistory=r(37883).E({historyScopeId:activeBoardId,enableShortcuts:!home});globalThis.__inkbridgeMindmapPushUndo=nativeHistory.pushUndoSnapshot;
     React.useEffect(()=>{$('#add-card').disabled=home;$('#add-card').hidden=home;$('#board').inert=home;$('#original-native-tools').inert=home;if($('#original-zoom-controls'))$('#original-zoom-controls').inert=home;},[home]);
     const FlowContext=r(48626).FLowContext;
     const flowContextValue=React.useMemo(()=>({

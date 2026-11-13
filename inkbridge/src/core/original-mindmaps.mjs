@@ -5,14 +5,14 @@ import {selectionAfterMindmapDelete} from './mindmap-keyboard.mjs';
 const copy=value=>JSON.parse(JSON.stringify(value));
 const list=value=>Array.isArray(value)?value:[value];
 const reads=new Set(['getMindMapById','getMindmapById','getAllMindMaps','getMindMapsByIds','getMindMapNodesByMindMapId','getMindMapInstancesByWhiteboardId']);
-const writes=new Set(['addMindMap','updateMindMap','deleteMindMap','restoreMindMap','addMindMapNode','updateMindMapNode','batchUpdateMindMapNodes','batchDeleteMindMapNodes','createMindMapInstance','updateMindMapInstance','batchUpdateMindMapInstances','deleteMindMapInstance','batchDeleteMindMapInstances']);
+const writes=new Set(['addMindMap','updateMindMap','deleteMindMap','restoreMindMap','addMindMapNode','updateMindMapNode','batchUpdateMindMapNodes','batchDeleteMindMapNodes','createMindMapInstance','updateMindMapInstance','batchUpdateMindMapInstances','deleteMindMapInstance','batchDeleteMindMapInstances','inkbridgePasteMindmapNodes']);
 export function createOriginalMindmaps({r,graph,navigate,coordinator,catalogOperation,store,getBoardId,measureNode,getBaseNodes=()=>[]}){
  const mindmaps=new Map(),nodes=new Map(),instances=new Map(),pending=new Set();
  const put=(kind,row)=>coordinator.stage(catalogOperation(kind,copy(row)));
  const remove=(kind,id)=>coordinator.stage({type:'deleteCatalog',kind,id});
  function replace(next){for(const [map,key]of [[mindmaps,'mindmaps'],[nodes,'mindmapNodes'],[instances,'mindmapInstances']]){map.clear();for(const row of next[key]||[])map.set(row.id,copy(row));}}
  replace(graph);
- function record(id){const map=mindmaps.get(id);if(!map)return null;const children=[...nodes.values()].filter(node=>node.mindMapId===id).map(node=>({...node,inkbridgeMapStyle:map.inkbridgeStyle||'branch'}));return {...map,nodes:children,graph:r(19281).YH.convertMindMapNodesToGraph(map,children)};}
+ function record(id){const map=mindmaps.get(id);if(!map)return null;const children=[...nodes.values()].filter(node=>node.mindMapId===id).map(node=>({...node,inkbridgeMapStyle:map.inkbridgeStyle||'xmind'}));return {...map,nodes:children,graph:r(19281).YH.convertMindMapNodesToGraph(map,children)};}
  const records=()=>[...mindmaps.keys()].map(record);
  function scene(){const result={nodes:[],connections:[]};for(const placement of instances.values()){
    if(placement.whiteboardId!==getBoardId())continue;const map=record(placement.objectId);if(!map||map.isTrashed||!map.nodes.some(node=>node.isRoot))continue;
@@ -50,6 +50,13 @@ export function createOriginalMindmaps({r,graph,navigate,coordinator,catalogOper
     if(rows.some(row=>!row||!instances.has(row.id)))throw Error('思維導圖位置不存在');for(const row of rows){const old=instances.get(row.id),next=copy({...old,...row.updates,id:row.id});instances.set(row.id,next);put('mindmap-instance',next);}refresh=true;
    }else if(name==='deleteMindMapInstance'||name==='batchDeleteMindMapInstances'){
     const ids=name==='deleteMindMapInstance'?[typeof payload==='string'?payload:payload.id]:payload;for(const id of ids){instances.delete(id);remove('mindmap-instance',id);}refresh=true;
+   }else if(name==='inkbridgePasteMindmapNodes'){
+    // XMind paste: whole subtrees with fresh IDs appended under one parent, in one commit.
+    const {parentId,nodes:rows,roots}=payload||{},parent=nodes.get(parentId);if(!parent)throw Error('思維導圖父節點不存在');
+    if(!Array.isArray(rows)||!rows.length||!Array.isArray(roots)||!roots.length||roots.some(id=>!rows.some(row=>row.id===id)))throw Error('貼上內容格式錯誤');
+    const proposed=new Map(nodes);for(const row of rows){if(proposed.has(row.id))throw Error('思維導圖節點已存在');const next=proposedNode({...row,mindMapId:parent.mindMapId,isRoot:false},undefined);proposed.set(next.id,next);}
+    proposed.set(parent.id,proposedNode({...parent,childNodeIds:[...(parent.childNodeIds||[]),...roots]},parent));checkCycles(proposed);
+    for(const [id,node]of proposed)if(JSON.stringify(node)!==JSON.stringify(nodes.get(id))){nodes.set(id,node);put('mindmap-node',node);}refresh=true;
    }else if(name==='batchDeleteMindMapNodes'){
     const ids=new Set(payload),visit=id=>{for(const child of nodes.get(id)?.childNodeIds||[])if(!ids.has(child)){ids.add(child);visit(child);}};for(const id of [...ids])visit(id);
     continuation=selectionAfterMindmapDelete([...nodes.values()],ids);

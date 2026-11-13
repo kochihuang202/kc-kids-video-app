@@ -1,11 +1,20 @@
-export const MAP_STYLES=['branch','boxed','plain'];
+export const MAP_STYLES=['xmind','branch','boxed','plain'];
+// XMind "Rainbow-#000229-MULTI_LINE_COLORS", read from the user's own .xmind theme (2026-11-13):
+// central #000229 rounded rect, main topics filled with the multi-line colours in order,
+// subtopics a light tint of their branch colour; curves from the centre, rounded elbows below.
+export const XMIND_ROOT='#000229';
+export const XMIND_BRANCH_COLORS=['#F9423A','#F6A04D','#F3D321','#00BC7B','#486AFF','#4D49BE'];
+const hex=value=>{const m=/^#?([0-9a-f]{6})$/i.exec(value||'');return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):[0,0,0];};
+export const xmindTint=(color,amount=.8)=>'#'+hex(color).map(c=>Math.round(c+(255-c)*amount).toString(16).padStart(2,'0')).join('');
+// Dark text on light fills (the yellow branch and every tint), light text elsewhere.
+export const xmindLightText=color=>{const [r,g,b]=hex(color);return (r*299+g*587+b*114)/1000<170;};
 export const MARKER_COLORS={red:'#ff5054',orange:'#ff9e35',yellow:'#e4bd00',green:'#18bc88',blue:'#4387f5',purple:'#8363d8',gray:'#9b9ba1'};
 export const MARKER_GROUPS={tag:Object.keys(MARKER_COLORS),priority:['1','2','3','4','5','6','7'],task:['0','25','50','75','100'],flag:Object.keys(MARKER_COLORS),star:Object.keys(MARKER_COLORS),symbol:['book','idea','heart','check']};
 export const SYMBOL_PATHS={flag:'M5 21V3m0 1c5-4 9 4 15 0v11c-6 4-10-4-15 0',star:'M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',book:'M3 4h7l2 2 2-2h7v15h-7l-2 2-2-2H3zm9 2v15',idea:'M8 17c0-3-3-4-3-8a7 7 0 0 1 14 0c0 4-3 5-3 8zm1 3h6m-5 3h4',heart:'M12 21 3 12C-3 3 7-2 12 5c5-7 15-2 9 7z',check:'M4 12l5 5L21 5'};
 export function validateMarkers(markers){if(!Array.isArray(markers)||markers.length>6||new Set(markers.map(m=>m.group)).size!==markers.length||markers.some(m=>!MARKER_GROUPS[m.group]?.includes(m.value)))throw Error('無效的節點標記');return markers;}
 export function replaceMarker(markers,group,value){const next=(markers||[]).filter(m=>m.group!==group);if(value)next.push({group,value});return validateMarkers(next);}
 export const markerInset=data=>(data?.inkbridgeMarkers?.length||0)*22;
-export function nodeStyle(data,map){return data?.inkbridgeNodeStyle||data?.inkbridgeMapStyle||map?.inkbridgeStyle||'branch';}
+export function nodeStyle(data,map){return data?.inkbridgeNodeStyle||data?.inkbridgeMapStyle||map?.inkbridgeStyle||'xmind';}
 export function installMindmapAppearance(r,K,fontMgr){
  const proto=r(53861).b.prototype,native={layout:proto.getLayout,measure:proto.measure,draw:proto.drawDefaultStyle,rich:proto.drawRichText};
  const paints=[],paths=new Map();let font;
@@ -22,19 +31,27 @@ export function installMindmapAppearance(r,K,fontMgr){
   if(marker.group==='task'){color('#18bc88',true);canvas.drawCircle(cx,cy,7,paint);const fraction=Number(marker.value)/100;if(fraction>0&&fraction<1){const a=-Math.PI/2+fraction*Math.PI*2,shape=`M8 8L8 1A7 7 0 ${fraction>.5?1:0} 1 ${8+Math.cos(a)*7} ${8+Math.sin(a)*7}Z`;color('#18bc88');canvas.save();canvas.translate(x,y);canvas.drawPath(path(shape),paint);canvas.restore();}if(fraction===1){color('#18bc88');canvas.drawCircle(cx,cy,7,paint);canvas.save();canvas.translate(x,y);canvas.scale(size/24,size/24);color('#fff',true);canvas.drawPath(path(SYMBOL_PATHS.check),paint);canvas.restore();}return;}
   const shape=SYMBOL_PATHS[marker.group==='flag'?'flag':marker.group==='star'?'star':marker.value];if(!shape)return;canvas.save();canvas.translate(x,y);canvas.scale(size/24,size/24);color(marker.group==='symbol'?'#64748b':col,marker.group!=='star'&&marker.value!=='heart');canvas.drawPath(path(shape),paint);canvas.restore();
  }
+ function drawXmind(canvas,element,ctx){const data=element.data,root=!!data.isRoot,level=root?0:data.inkbridgeDepth??2,branch=data.inkbridgeBranchColor||XMIND_BRANCH_COLORS[0];
+  const fill=root?XMIND_ROOT:level<=1?branch:xmindTint(branch),layout=this.getLayout(element,ctx),radius=root?10:6;
+  canvas.save();canvas.translate(element.x,element.y);color(fill);const rect=K.RRectXY(K.LTRBRect(0,0,layout.width,layout.height),radius,radius);canvas.drawRRect(rect,paint);
+  canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light'},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
+  (data.inkbridgeMarkers||[]).forEach((m,index)=>marker(canvas,m,element.x+layout.padding+index*22,element.y+(layout.height-16)/2));}
  proto.drawDefaultStyle=function(canvas,element,ctx){if(!managed(element.data))return native.draw.call(this,canvas,element,ctx);const style=nodeStyle(element.data,mapOf(element.data,ctx)),root=!!element.data.isRoot;
+  if(style==='xmind')return drawXmind.call(this,canvas,element,ctx);
   const data={...element.data,...style!=='boxed'?{borderStyle:root&&style==='branch'?'rounded':'none',color:element.data.color||'orange',edgeColor:element.data.edgeColor||element.data.color||'orange'}:{}};
   const shown={...element,data};native.draw.call(this,canvas,shown,ctx);const layout=this.getLayout(shown,ctx);
   if(style==='branch'&&!root){color(lineColor(element.data,ctx.theme),true);canvas.drawLine(element.x,element.y+layout.height-2,element.x+layout.width,element.y+layout.height-2,paint);}
   (data.inkbridgeMarkers||[]).forEach((m,index)=>marker(canvas,m,element.x+layout.padding+index*22,element.y+(layout.height-16)/2));
  };
- globalThis.__inkbridgeMindmapSpacing=data=>nodeStyle(data)==='boxed'?{gap:72,padding:12}:{gap:28,padding:0};
+ globalThis.__inkbridgeMindmapSpacing=data=>{const style=nodeStyle(data);return style==='boxed'?{gap:72,padding:12}:style==='xmind'?{gap:44,padding:8}:{gap:28,padding:0};};
  globalThis.__inkbridgeMindmapLayout=(original,args,kind)=>{
   const ctx={CanvasKit:K,fontMgr,view:{scale:1},theme:'light',getMindmap:id=>r(63268).Z.getState().flow.mindmaps.find(map=>map.id===id)};
   const result=kind==='initial'?original(args[0],args[1],row=>r(66597).L.getDrawer('MindmapNode').measure(row,ctx)):original(args[0],args[1],args[2],args[3],row=>r(66597).L.getDrawer('MindmapNode').measure(row,ctx));
-  const nodes=new Map(result.nodes.map(n=>[n.id,n]));
-  result.nodes=result.nodes.map(n=>{if(n.type!=='MindmapNode'||!managed(n.data))return n;const style=nodeStyle(n.data,ctx.getMindmap(n.data.mindMapId)),map=ctx.getMindmap(n.data.mindMapId);return {...n,data:{...n.data,inkbridgeMapStyle:map?.inkbridgeStyle||n.data.inkbridgeMapStyle||'branch',...style!=='boxed'?{borderStyle:n.data.isRoot&&style==='branch'?'rounded':'none'}:{}}};});
-  result.connections=result.connections.map(edge=>{const source=nodes.get(edge.source.nodeId),target=nodes.get(edge.target.nodeId);if(!target||nodeStyle(target.data,ctx.getMindmap(target.data.mindMapId))!=='branch')return edge;const anchor=(endpoint,node)=>node&&!node.data.isRoot&&managed(node.data)?{...endpoint,type:'fixed-relative',relativeOffset:{x:endpoint.side==='w'?0:1,y:(node.height-2)/node.height}}:endpoint;return {...edge,source:anchor(edge.source,source),target:anchor(edge.target,target),style:{...edge.style,color:lineColor(target.data,ctx.theme),strokeWidth:1.5}};});return result;
+  const nodes=new Map(result.nodes.map(n=>[n.id,n])),parentOf=new Map(result.connections.map(edge=>[edge.target.nodeId,edge.source.nodeId]));
+  // Branch colour = the main topic's position under the root, as XMind's multi-line colours.
+  const depthOf=id=>{let depth=0;for(let parent=parentOf.get(id);parent&&depth<64;parent=parentOf.get(parent))depth++;return depth;};const branchOf=id=>{let child=id,parent=parentOf.get(id);while(parent&&!nodes.get(parent)?.data?.isRoot){child=parent;parent=parentOf.get(parent);}const root=parent&&nodes.get(parent);if(!root)return XMIND_BRANCH_COLORS[0];const order=(root.data.childNodeIds||root.data.childrenIds||[]);const index=Math.max(0,order.indexOf(child));return XMIND_BRANCH_COLORS[index%XMIND_BRANCH_COLORS.length];};
+  result.nodes=result.nodes.map(n=>{if(n.type!=='MindmapNode'||!managed(n.data))return n;const style=nodeStyle(n.data,ctx.getMindmap(n.data.mindMapId)),map=ctx.getMindmap(n.data.mindMapId);return {...n,data:{...n.data,inkbridgeMapStyle:map?.inkbridgeStyle||n.data.inkbridgeMapStyle||'xmind',...n.data.isRoot?{}:{inkbridgeBranchColor:branchOf(n.id),inkbridgeDepth:depthOf(n.id)},...style!=='boxed'?{borderStyle:n.data.isRoot&&style==='branch'?'rounded':'none'}:{}}};});
+  result.connections=result.connections.map(edge=>{const source=nodes.get(edge.source.nodeId),target=nodes.get(edge.target.nodeId);if(target&&managed(target.data)&&nodeStyle(target.data,ctx.getMindmap(target.data.mindMapId))==='xmind'){const fromRoot=!!source?.data?.isRoot,left=target.data.side==='left',center=(endpoint,side)=>({nodeId:endpoint.nodeId,type:'fixed-side',side});return {...edge,source:fromRoot?edge.source:center(edge.source,left?'w':'e'),target:center(edge.target,left?'e':'w'),pathType:fromRoot?'mindmapCurve':'smoothStep',style:{...edge.style,color:branchOf(target.id),strokeWidth:fromRoot?3:2}};}if(!target||nodeStyle(target.data,ctx.getMindmap(target.data.mindMapId))!=='branch')return edge;const anchor=(endpoint,node)=>node&&!node.data.isRoot&&managed(node.data)?{...endpoint,type:'fixed-relative',relativeOffset:{x:endpoint.side==='w'?0:1,y:(node.height-2)/node.height}}:endpoint;return {...edge,source:anchor(edge.source,source),target:anchor(edge.target,target),style:{...edge.style,color:lineColor(target.data,ctx.theme),strokeWidth:1.5}};});return result;
  };
  // The native overlay remains the editor. Shift its left edge over the marker
  // slots so its padding, caret and the rendered text start at the same point.

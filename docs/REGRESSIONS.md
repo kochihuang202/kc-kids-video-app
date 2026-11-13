@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-150 — Mindmap drop beside a topic reordered it instead of nesting it; root Enter and cut/paste did nothing
+
+- Reproduction: dragging A to the right of sibling C showed the original "insert after C" marker (10764 only offered before/after outside a node), so A could become C's child only when dropped exactly on C. Enter on the central topic only started editing; editing Enter immediately created a sibling (not XMind's two steps); Ctrl+X/Ctrl+V did nothing for topics; a "+" sat beside every selected topic.
+- Fix (user-approved XMind parity, docs/MINDMAP_XMIND.md): child-side drop zone patch in 10764; "+" drawing and hit area removed in 53861; key layer re-dispatching original keys; subtree clipboard with `inkbridgePasteMindmapNodes`; original whole-map copy/paste left to the original paste.
+- Test: `check-mindmap-xmind.cjs`; older checks updated for the new Enter semantics. A pasted whole map (root copy) must still create a second placement (`check-canvas-undo-kinds`), which the first paste handler broke and was fixed by leaving canvas copies, images and files to the original.
+
 ## REG-149 — Video covers blank (frame 0); media filename setting unreachable
 
 - Reproduction: the original 42454 automatic cover calls 79719 `Hz(fileId, video, 0)`, but `Hz` ignores the time for a `<video>` and draws whatever frame the live player shows on first load, normally frame 0. Videos that open on a white or black frame got a white or black cover, which is what the card shows after restart until it plays. Separately, the original 顯示圖片和視頻檔名 switch lives in the bottom-right whiteboard settings popover (46979), whose button the host gate disabled.

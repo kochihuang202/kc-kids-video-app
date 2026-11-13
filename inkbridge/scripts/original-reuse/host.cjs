@@ -99,6 +99,7 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-bookmarks.mjs')file=path.resolve(own,'../../src/core/original-bookmarks.mjs');
     else if(pathname==='/inkbridge-core/original-pdf.mjs')file=path.resolve(own,'../../src/core/original-pdf.mjs');
     else if(pathname==='/inkbridge-core/original-video.mjs')file=path.resolve(own,'../../src/core/original-video.mjs');
+    else if(pathname==='/inkbridge-core/mindmap-xmind-keys.mjs')file=path.resolve(own,'../../src/core/mindmap-xmind-keys.mjs');
     else if(pathname==='/inkbridge-core/original-connections.mjs')file=path.resolve(own,'../../src/core/original-connections.mjs');
     else if(pathname==='/inkbridge-core/original-search.mjs')file=path.resolve(own,'../../src/core/original-search.mjs');
     else if(pathname.startsWith('/files/'))file=path.join(filesDir,path.basename(pathname));
