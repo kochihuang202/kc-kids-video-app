@@ -4,9 +4,11 @@ const {createWorkspaceSnapshots,inspectDatabase,hashFile}=require('./workspace-s
 const {json,exists,atomic,writeJSON,UUID}=require('./sync-files.cjs');
 const {startupSnapshotStatus}=require('./startup-snapshot-status.cjs');
 const {copyVerified}=require('./stream-files.cjs');
+const {createSnapshotRetention,readRetention,retainedAncestor,decidable}=require('./snapshot-retention.cjs');
 function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachment,deviceName=os.hostname()}){
   const validator=createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAttachment});
   const stateFile=path.join(localDirectory,'Profile/snapshot-state.json'),outbox=path.join(localDirectory,'Outbox');
+  const retention=createSnapshotRetention({localDirectory,getExchange,index:()=>index(),head:async id=>head(await state(),id)});
   async function state(){const value=await json(stateFile,{deviceId:crypto.randomUUID(),heads:{}});if(!UUID.test(value.deviceId)||!value.heads)throw Error('本機快照狀態無效');return value;}
   const head=(s,id)=>s.heads[id]||s.heads[getExchange()+'|'+id];
   async function saveHead(m,adopted=false){const s=await state();const entry={snapshotId:m.snapshotId,revision:m.revision,createdAt:m.createdAt,sourceComputerName:m.sourceComputerName||'',sourceComputerId:m.sourceComputerId,adopted};s.heads[m.workspaceId]=entry;if(getExchange())s.heads[getExchange()+'|'+m.workspaceId]=entry;await writeJSON(stateFile,s);}
@@ -43,6 +45,8 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
       await writeJSON(path.join(dir,'manifest.json'),m);await saveHead(m);created=true;
     }
     const flushed=await flushOutbox(),current=m||h;
+    // Retention never fails a save; it skips itself while anything is incomplete.
+    if(created&&!flushed.pending)await retention.prune({workspaceId:graph.workspaceId}).catch(error=>console.error('Snapshot retention skipped:',error.message));
     return {configured:!!getExchange(),created,pending:flushed.pending,error:flushed.error,snapshotId:current?.snapshotId,workspaceId:graph.workspaceId,revision:m?.revision??h?.revision??graph.revision,createdAt:current?.createdAt};
   }
   async function index(){const root=getExchange();if(!root)return [];const base=path.join(root,'snapshots'),s=await state(),current=await database.summary(),rows=[];
@@ -52,12 +56,13 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
         let m;try{m=await json(path.join(base,w.name,e.name,'manifest.json'),null);if(!m||m.format!=='inkbridge-snapshot'||m.version!==1||m.workspaceId!==w.name||m.snapshotId!==e.name||!UUID.test(m.sourceComputerId)||m.parentSnapshotId!==null&&!UUID.test(m.parentSnapshotId))throw Error('版本資料尚未到齊');rows.push({workspaceId:w.name,snapshotId:e.name,manifest:m,integrity:'complete',relation:'unknown'});}catch(error){rows.push({workspaceId:w.name,snapshotId:e.name,integrity:'incomplete',error:error.message,relation:'unknown'});}
       }
     }
-    const graph=new Map(rows.filter(r=>r.manifest).map(r=>[r.snapshotId,r.manifest]));
+    const graph=new Map(rows.filter(r=>r.manifest).map(r=>[r.snapshotId,r.manifest])),kept=new Map();
+    for(const id of new Set(rows.map(r=>r.workspaceId)))kept.set(id,await readRetention(root,id));
     function ancestors(id){const set=new Set();let complete=true;while(id){if(set.has(id)||!graph.has(id)){complete=false;break;}set.add(id);id=graph.get(id).parentSnapshotId;}return {set,complete};}
-    for(const row of rows){if(!row.manifest)continue;const h=head(s,row.workspaceId),a=ancestors(row.snapshotId),b=ancestors(h?.snapshotId);row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===h?.snapshotId?'current':h&&a.set.has(h.snapshotId)?'newer':h&&b.set.has(row.snapshotId)?'ancestor':h?(a.complete&&b.complete?'branch':'unknown'):'unbased';}
+    for(const row of rows){if(!row.manifest)continue;const h=head(s,row.workspaceId),a=ancestors(row.snapshotId),b=ancestors(h?.snapshotId);row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===h?.snapshotId?'current':h&&a.set.has(h.snapshotId)?'newer':h&&b.set.has(row.snapshotId)?'ancestor':h&&retainedAncestor(kept.get(row.workspaceId),row.snapshotId,h.snapshotId,ancestors,graph)?'ancestor':h?(decidable(a,kept.get(row.workspaceId))&&decidable(b,kept.get(row.workspaceId))?'branch':'unknown'):'unbased';}
     return rows;
   }
   async function startup(){if(!getExchange())return {configured:false,kind:'unconfigured'};const rows=await index(),graph=await database.summary(),s=await state();return {configured:true,...startupSnapshotStatus({rows:rows.filter(r=>r.workspaceId===graph.workspaceId),workspaceId:graph.workspaceId,localRevision:graph.revision,head:head(s,graph.workspaceId)})};}
-  return {create,flushOutbox,index,startup,status,setDeviceName:name=>{deviceName=name;},validate:validator.validate,scan:validator.scan,adopt:m=>saveHead(m,true),async manifest(w,id){if(!UUID.test(w)||!UUID.test(id))throw Error('無效的版本');const dir=path.join(getExchange(),'snapshots',w,id),m=await validator.validate(getExchange(),dir);return {...m,summary:m.summary||inspectDatabase(path.join(dir,'database.sqlite3')).summary};}};
+  return {create,flushOutbox,index,startup,status,prune:options=>retention.prune(options),setDeviceName:name=>{deviceName=name;},validate:validator.validate,scan:validator.scan,adopt:m=>saveHead(m,true),async manifest(w,id){if(!UUID.test(w)||!UUID.test(id))throw Error('無效的版本');const dir=path.join(getExchange(),'snapshots',w,id),m=await validator.validate(getExchange(),dir);return {...m,summary:m.summary||inspectDatabase(path.join(dir,'database.sqlite3')).summary};}};
 }
 module.exports={createSyncSnapshots};

@@ -4,6 +4,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {DatabaseSync}=require('node:sqlite');
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const {hashFile,copyVerified}=require('./stream-files.cjs');
+const {readRetention,retainedAncestor,decidable}=require('./snapshot-retention.cjs');
 async function durable(file,bytes){const handle=await fs.open(file,'wx');try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}}
 async function readJSON(file,fallback){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(e){if(e.code==='ENOENT')return fallback;throw e;}}
 function inspectDatabase(file){const db=new DatabaseSync(file,{readOnly:true});try{
@@ -82,12 +83,13 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
         rows.push(row);
       }
     }
-    const graph=new Map(rows.filter(r=>r.integrity==='complete').map(r=>[r.snapshotId,r.manifest]));
+    const graph=new Map(rows.filter(r=>r.integrity==='complete').map(r=>[r.snapshotId,r.manifest])),kept=new Map();
+    for(const id of new Set(rows.map(r=>r.workspaceId)))kept.set(id,await readRetention(root,id));
     const ancestors=id=>{const set=new Set();let complete=true;while(id){if(set.has(id)||!graph.has(id)){complete=false;break;}set.add(id);id=graph.get(id).parentSnapshotId;}return {set,complete};};
     for(const row of rows){if(row.integrity!=='complete')continue;
       const head=state.heads[root+'|'+row.workspaceId]?.snapshotId;
       const a=ancestors(row.snapshotId),b=ancestors(head);
-      row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===head?'current':head&&a.set.has(head)?'newer':head&&b.set.has(row.snapshotId)?'ancestor':head?(a.complete&&b.complete?'branch':'unknown'):'unbased';
+      row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===head?'current':head&&a.set.has(head)?'newer':head&&b.set.has(row.snapshotId)?'ancestor':head&&retainedAncestor(kept.get(row.workspaceId),row.snapshotId,head,ancestors,graph)?'ancestor':head?(decidable(a,kept.get(row.workspaceId))&&decidable(b,kept.get(row.workspaceId))?'branch':'unknown'):'unbased';
     }
     return rows;
   }
