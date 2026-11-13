@@ -71,6 +71,15 @@ module.exports=({root,changes})=>{
   if(source.includes(earlier))source=source.replace(earlier,()=>original);
   return once(source,original,'"data-video-overlay-content": !0, onMouseDownCapture: e => { S && S.node && globalThis.__inkbridgeSelectVideoNode && globalThis.__inkbridgeSelectVideoNode(S.node.id, e); }, onMouseDown: e => e.stopPropagation(),','overlay press');
  });
+ // 42454 automatic cover: the original captures whatever frame the live player shows when
+ // it first loads (79719 Hz ignores its time argument for a <video>), usually frame 0, which
+ // is blank for videos that open on white or black. Capture at 10% of the duration from a
+ // separate hidden <video> instead, so the video being watched is never seeked; on any
+ // failure (no duration, load error, 8s timeout) fall back to the original live capture
+ // (user decision 2026-11-13).
+ patch('42454','Automatic video cover at 10% of the duration from a hidden copy of the video',source=>once(source,
+  'let c = (0, r.Hz)(n, s, 0).then(',
+  "let inkbridgeCoverVideo = inkbridgeLive => new Promise(inkbridgeDone => { let inkbridgeSrc = inkbridgeLive && inkbridgeLive.tagName === \"VIDEO\" && (inkbridgeLive.currentSrc || inkbridgeLive.src); if (!inkbridgeSrc) return inkbridgeDone(inkbridgeLive); let inkbridgeHidden = document.createElement(\"video\"), inkbridgeSettled = !1, inkbridgeFinish = inkbridgeResult => { inkbridgeSettled || (inkbridgeSettled = !0, clearTimeout(inkbridgeTimer), inkbridgeResult !== inkbridgeHidden && inkbridgeHidden.remove(), inkbridgeDone(inkbridgeResult)); }, inkbridgeTimer = setTimeout(() => inkbridgeFinish(inkbridgeLive), 8e3); inkbridgeHidden.crossOrigin = \"anonymous\", inkbridgeHidden.muted = !0, inkbridgeHidden.preload = \"auto\", inkbridgeHidden.setAttribute(\"data-inkbridge-cover-probe\", \"\"), inkbridgeHidden.style.cssText = \"position:fixed;left:-10000px;top:0;width:4px;height:4px;opacity:0;pointer-events:none\", inkbridgeHidden.onerror = () => inkbridgeFinish(inkbridgeLive), inkbridgeHidden.onloadedmetadata = () => { let inkbridgeDuration = Number.isFinite(inkbridgeHidden.duration) && inkbridgeHidden.duration > 0 ? inkbridgeHidden.duration : Number(inkbridgeLive.duration); if (!(Number.isFinite(inkbridgeDuration) && inkbridgeDuration > 0)) return inkbridgeFinish(inkbridgeLive); inkbridgeHidden.onseeked = () => inkbridgeFinish(inkbridgeHidden), inkbridgeHidden.currentTime = .1 * inkbridgeDuration; }, document.body.appendChild(inkbridgeHidden), inkbridgeHidden.src = inkbridgeSrc; }); "+'let c = inkbridgeCoverVideo(s).then(inkbridgeFrame => (0, r.Hz)(n, inkbridgeFrame, 0).finally(() => { inkbridgeFrame !== s && inkbridgeFrame.remove(); })).then(','automatic cover time'));
  // 84539 'open in sidebar' helpers decide whether a whiteboard is showing from
  // window.location, which never contains /flow in this host. A highlight card's 📍 then fell
  // back to the reference list and lost its time. Ask the host instead.

@@ -2,7 +2,8 @@
 // (original 41.iM → tU list, nA media view, 79719 panel), the embedded player's markers,
 // dragging a highlight to the board (original 94700.KT → video-highlight-instance), the
 // card's 📍 (original openVideoInSidebar), removal paths, restart, and the left 高亮 page
-// (original 63526). Synthetic ffmpeg fixture and a temporary workspace only.
+// (original 63526), the automatic cover at 10% (42454 patch) and the bottom-right settings
+// popover with only its filename switch connected. Synthetic fixture and temporary workspace only.
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict');
 (async () => {
     const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-')), media = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-video-fixture-'));
@@ -29,6 +30,11 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await dialog.locator('button').filter({ hasText: /^(創建|创建|Create)$/ }).last().click(); await expect(dialog).toBeHidden();
         await expect.poll(async () => (await load()).contents.some(row => row.kind === 'video')).toBe(true);
         let graph = await load(); const content = graph.contents.find(row => row.kind === 'video');
+        // Automatic cover at 10% of the 30s fixture, captured from a hidden copy (42454 patch).
+        await expect.poll(async () => (await load()).cardMetadata.find(row => row.id === content.id)?.cover || '', { timeout: 20000 }).not.toBe('');
+        graph = await load(); const coverId = graph.cardMetadata.find(row => row.id === content.id).cover;
+        assert.match((graph.files || []).find(row => row.id === coverId)?.name || '', /-3(\.\d+)?\.png$/, 'automatic cover is the frame at 3s');
+        assert.equal(await page.evaluate(() => document.querySelectorAll('[data-inkbridge-cover-probe]').length), 0, 'the hidden cover video is removed');
         await page.keyboard.press('Escape'); await page.mouse.click(700, 820);
 
         // 2. Right panel 高亮: original list, then the video with its embedded highlight panel.
@@ -62,9 +68,22 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await expect(row(second.id)).toBeInViewport();
         await page.screenshot({ path: path.join(evidence, 'video-highlight-pin.png') });
 
-        // 6. Restart: the card comes back with its highlight and source video.
+        // 5b. Bottom-right settings (original 46979 popover): only 顯示圖片和視頻檔名 is connected.
+        await page.keyboard.press('Escape'); await page.mouse.click(700, 820);
+        const fileNameTitle = await t('showMediaFileNameOnCanvas');
+        await page.locator('button[aria-label="' + await t('settings') + '"]').click();
+        await expect(page.locator('[data-slot=content]').getByText(fileNameTitle, { exact: true })).toBeVisible();
+        await expect.poll(() => page.evaluate(title => { const pop = [...document.querySelectorAll('[data-slot=content]')].find(p => p.textContent.includes(title)), all = [...pop.querySelectorAll('button,input,select,textarea,[role=slider]')]; return { total: all.length > 5, enabled: all.filter(c => !c.disabled).length }; }, fileNameTitle)).toEqual({ total: true, enabled: 1 });
+        const otherUi = () => page.evaluate(() => { const u = window.__originalRequire(63268).Z.getState().ui; return JSON.stringify([u.canvasBackground, u.showHelperLines, u.focusModeEnabled, u.showCardPropertiesOnCanvas]); });
+        const uiBefore = await otherUi(); await page.locator('[data-slot=content] label').filter({ hasText: /^點$/ }).click({ force: true }).catch(() => {}); assert.equal(await otherUi(), uiBefore, 'a disabled setting does nothing');
+        await page.locator('[data-slot=content] div[class*=justify-between]').filter({ hasText: fileNameTitle }).locator('label').first().click();
+        await expect.poll(async () => (await ui()).showMediaFileNameOnCanvas).toBe(true);
+        await page.keyboard.press('Escape'); await page.mouse.click(700, 820);
+
+        // 6. Restart: the card comes back with its highlight and source video; the filename setting is kept.
         await app.close(); app = await launch(); await start();
         await expect.poll(cards).toEqual([{ id: placement.id, objectId: second.id, video: content.title }]);
+        assert.equal((await ui()).showMediaFileNameOnCanvas, true, 'filename setting kept after restart');
 
         // 7. Remove the card from the board: the placement goes, the highlight stays.
         await page.evaluate(id => { const s = window.__originalRequire(23).gt.getState(); s.setSelectedNodeIds(new Set([id])); }, placement.id);
@@ -99,7 +118,7 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await page.locator('#original-board-home').getByText(content.title, { exact: true }).click();
         await expect(page.locator('#inkbridge-video-record-page')).toBeVisible();
         assert.deepEqual(errors, []);
-        console.log(JSON.stringify({ rightHighlightTab: true, panelMarkerStartsPlayer: true, exactPanelMarkers: true, dragToBoard: true, cardSourceVideo: true, pinOpensAtTime: true, restart: true, removeCardKeepsHighlight: true, undoRestoresCard: true, deleteHighlightRemovesCard: true, leftHighlightPage: true, errors: 0 }));
+        console.log(JSON.stringify({ rightHighlightTab: true, panelMarkerStartsPlayer: true, exactPanelMarkers: true, dragToBoard: true, cardSourceVideo: true, pinOpensAtTime: true, restart: true, removeCardKeepsHighlight: true, undoRestoresCard: true, deleteHighlightRemovesCard: true, leftHighlightPage: true, coverAtTenPercent: true, settingsOnlyFileName: true, fileNameKept: true, errors: 0 }));
     } catch (error) { await page?.screenshot({ path: path.join(evidence, 'video-highlight-board-failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
     finally { await app.close(); }
 })();

@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-149 — Video covers blank (frame 0); media filename setting unreachable
+
+- Reproduction: the original 42454 automatic cover calls 79719 `Hz(fileId, video, 0)`, but `Hz` ignores the time for a `<video>` and draws whatever frame the live player shows on first load, normally frame 0. Videos that open on a white or black frame got a white or black cover, which is what the card shows after restart until it plays. Separately, the original 顯示圖片和視頻檔名 switch lives in the bottom-right whiteboard settings popover (46979), whose button the host gate disabled.
+- Fix (user decisions 2026-11-13): the cover is captured at 10% of the duration from a separate hidden `<video>` with the same source, so the video being watched is never seeked; on missing duration, a load error or an 8s timeout it falls back to the original live capture. The settings button is enabled; inside its portal popover only the filename switch is connected, and every other control stays visible but disabled and inert.
+- Test: `check-video-highlight-board.cjs` asserts the automatic cover is the 3s frame of the 30s fixture with no hidden video left behind. It then asserts the settings popover has exactly one enabled control, that a disabled background option changes nothing, and that turning the filename switch on survives a restart. A manual cover per card remains the original record page 字幕 → 將當前幀設為封面.
+
 ## REG-148 — Highlight list shows "Expand All" in English; cover button in simplified Chinese
 
 - Reproduction: the original zh-TW bundle has no `expandAll`/`collapseAll` (highlight list header, 41 component q) nor `setCurrentFrameAsCover`/`setVideoCoverSuccess`/`setVideoCoverFailedRetry` (95823 subtitle panel), so the original UI fell back to English or to its simplified-Chinese defaultValue.
