@@ -20,6 +20,7 @@
 | 編輯時 Enter | 結束編輯，節點保持選取；Shift+Enter 留給編輯器 |
 | F2／空白鍵 | 開始編輯（Tab 新增子節點不變）|
 | 拖曳 | 放在節點的子節點那一側（右側；左側分支為左側）且與節點同高：成為它的子節點；放在上下緣：插在前後；放在節點上：成為子節點 |
+| 節點工具列（2026-11-14 加） | 只選心智圖節點時，點一下不再彈出原版浮動工具列；右鍵時工具列與原版右鍵選單一起出現，選單自動移到工具列下方不遮擋；按工具列任一按鈕時先關閉右鍵選單；改選其他東西後再次隱藏。選其他類型（卡片、圖片…）照原版 |
 | 剪下／複製／貼上 | Ctrl+X／C 複製整個子樹（系統剪貼簿同時放縮排大綱文字）；貼上到選取節點底下。剪貼簿已換成別處的文字時，每行一個子節點。選取中心主題時的複製與畫布上的貼上照原版（整張導圖）|
 
 尚未做：XMind 的三種字級（中心 30／主分支 18／子主題 14pt，目前同字級）、直接打字取代內容進入編輯（中文輸入法下做不到可靠的攔截，請用空白鍵或 F2）。
@@ -28,6 +29,8 @@
 
 - `src/core/mindmap-appearance.mjs`：`xmind` 樣式（預設）、分支色與深度在版面計算時寫入節點、連線形狀／顏色／寬度與錨點。
 - `src/core/mindmap-xmind-keys.mjs`：按鍵層，在原版之前攔截。全部以重送原版按鍵完成（編輯中 Enter→原版 Escape；選取 Enter→原版「編輯後 Enter」；中心 Enter→原版 Tab；F2／空白→原版 Enter），剪貼用 `paste` 事件與既有 `writeClipboardTextAndHtml`（宿主不給剪貼簿權限）。
+- `mindmap-xmind-keys.mjs` 的 `installMindmapContextToolbar`：以 `visibility:hidden` 隱藏 `.selection-toolbar-container`（原版定位不受影響），右鍵後顯示；原版右鍵選單的 inline top 會被重繪，所以用 `translate` 下移；原版只在「外部點擊」時關閉選單，工具列按鈕不會冒泡，所以按下工具列時補一次 body click。
+- 原版繁中語系把 `collapseChildren`／`expandChildren` 填成德文，`original-shell.mjs` 只在值完全等於那兩句德文時改成「收合子節點／展開子節點」。
 - `src/core/original-mindmaps.mjs`：新服務 `inkbridgePasteMindmapNodes`，整批子樹一次提交，沿用既有驗證與循環檢查；預設樣式改 `xmind`。
 - `scripts/original-reuse/apply-mindmap-xmind-patches.cjs`（由 apply-integration-patches 串接）：53861 拿掉 ⊕ 的繪製與點擊；10764 拖曳的子節點側判定。
 - 復原：剪下與貼上前呼叫原版 `pushUndoSnapshot`。

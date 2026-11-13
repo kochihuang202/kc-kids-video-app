@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-151 — Mindmap toolbar on every click; context menu covered it; German labels
+
+- Request: a click on a topic should not pop the floating toolbar; its tools belong to the right-click (user chose "toolbar + original menu", 2026-11-14). Reproduction after the first version: the original context menu opened at the pointer over the toolbar, Escape cleared the selection but left the menu open, and toolbar popovers (節點標記) opened under the still-open menu. The original zh-TW bundle labels the collapse/expand-children buttons in German.
+- Fix: `installMindmapContextToolbar` (hide while only topics are selected, show on right-click, move the menu below the toolbar with `translate`, close it on a toolbar press); exact-value zh-TW label correction.
+- Test: `check-mindmap-xmind.cjs` (hidden on click, shown on right-click without overlap, 收合子節點 label, toolbar press closes the menu and the marker panel is usable, hidden after reselecting); appearance and drawing checks now right-click before using the toolbar; check-card-toolbar-menu unchanged.
+
 ## REG-150 — Mindmap drop beside a topic reordered it instead of nesting it; root Enter and cut/paste did nothing
 
 - Reproduction: dragging A to the right of sibling C showed the original "insert after C" marker (10764 only offered before/after outside a node), so A could become C's child only when dropped exactly on C. Enter on the central topic only started editing; editing Enter immediately created a sibling (not XMind's two steps); Ctrl+X/Ctrl+V did nothing for topics; a "+" sat beside every selected topic.

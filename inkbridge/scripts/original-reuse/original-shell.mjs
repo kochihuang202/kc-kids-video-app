@@ -32,7 +32,10 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   // as the original's own defaults; existing translations are never overwritten.
   let translationsFilled=false;
   const fillMissingTranslations=()=>{const i18n=r(1643).ag;if(translationsFilled||!i18n)return;translationsFilled=true;const missing={expandAll:'展開所有',collapseAll:'折疊所有',setCurrentFrameAsCover:'將當前幀設為封面',setVideoCoverSuccess:'當前幀已設為封面',setVideoCoverFailedRetry:'設定失敗，點擊重試'};
-   for(const [key,value]of Object.entries(missing))if(i18n.getResource('zh-TW','common',key)===undefined)i18n.addResource('zh-TW','common',key,value);};
+   for(const [key,value]of Object.entries(missing))if(i18n.getResource('zh-TW','common',key)===undefined)i18n.addResource('zh-TW','common',key,value);
+   // The original zh-TW bundle ships these two in German; replace only those exact values.
+   const wrong={collapseChildren:['Unterknoten ausblenden','收合子節點'],expandChildren:['Unterknoten einblenden','展開子節點']};
+   for(const [key,[bad,good]]of Object.entries(wrong))if(i18n.getResource('zh-TW','common',key)===bad)i18n.addResource('zh-TW','common',key,good);};
 
   if(!SidebarNavigation||!NativeFlowUi.InkBridgeCreationToolbar)throw Error('Apply native shell UI export patches first');
   // Open the supported original whiteboard view, through its own saved view key.

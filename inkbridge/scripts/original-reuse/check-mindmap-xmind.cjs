@@ -35,6 +35,17 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     await click('a');
     const hit = await page.evaluate(() => { const s = window.__originalRequire(23).gt.getState(), n = s.nodes.find(n => n.id === 'a'), drawer = window.__originalRequire(66597).L.getDrawer('MindmapNode'); const ctx = { CanvasKit: window.__originalRequire(66597).L.CanvasKit, selectedNodeIds: s.selectedNodeIds, hoveredNodeId: 'a', isSelecting: false, getMindmap: id => window.__originalRequire(63268).Z.getState().flow.mindmaps.find(m => m.id === id), view: s.view }; const element = { ...n, x: n.position.x, y: n.position.y }; const results = []; for (let dx = 0; dx <= 80; dx += 4) { const r = drawer.isHit?.(n.position.x + n.width + dx, n.position.y + n.height / 2, element, ctx); if (r && typeof r === 'object' && r.action) results.push(r.action); } return results; });
     assert(!hit.includes('add'), 'no add hit area beside a topic: ' + hit.join(','));
+    stage = 'toolbar only on right-click';
+    const toolbar = () => page.evaluate(() => { const t = document.querySelector('.selection-toolbar-container'), m = document.querySelector('[class*="context-menu"]'); const tb = t?.getBoundingClientRect(), mb = m?.getBoundingClientRect(); return { shown: !!t && getComputedStyle(t).visibility !== 'hidden' && tb.width > 0, menu: !!m, overlap: !!(tb && mb && mb.top < tb.bottom && mb.bottom > tb.top && mb.left < tb.right && mb.right > tb.left), labels: t ? [...t.querySelectorAll('button')].map(b => b.getAttribute('aria-label') || '') : [] }; });
+    await blank(); await click('a'); await page.waitForTimeout(300); assert.equal((await toolbar()).shown, false, 'a click shows no toolbar');
+    const pa = await pos('a'); await page.mouse.click(pa.x, pa.y, { button: 'right' });
+    await expect.poll(async () => { const t = await toolbar(); return t.shown && t.menu && !t.overlap; }).toBe(true);
+    const labels = (await toolbar()).labels; assert(labels.includes('收合子節點') && !labels.some(l => /Unterknoten/.test(l)), labels.join(','));
+    await page.locator('.selection-toolbar-container button[aria-label="節點標記"]').click();
+    await expect.poll(async () => (await toolbar()).menu).toBe(false);
+    await expect(page.getByRole('button', { name: '彩色圓點：紅', exact: true })).toBeVisible();
+    await blank(); await click('a'); await page.waitForTimeout(300); assert.equal((await toolbar()).shown, false, 'hidden again after reselecting');
+    await blank();
     stage = 'Enter adds a sibling, Enter ends editing';
     await click('b'); await page.keyboard.press('Enter');
     await expect.poll(async () => (await kids('root')).length).toBe(4);
@@ -75,7 +86,7 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     assert.equal(await tree(), '出發去動物園/ 麥當勞/  薯條/  可樂/   動物/ 要帶的物品!/  第一行/  第二行');
     assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'a').data.inkbridgeBranchColor), '#F9423A');
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, restart: true }));
+    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, toolbarOnRightClick: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, restart: true }));
   } catch (error) { console.error({ stage, data }); await page?.screenshot({ path: path.join(data, 'failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
   finally { await app.close(); }
 })();

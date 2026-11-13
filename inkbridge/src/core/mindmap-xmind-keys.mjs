@@ -136,3 +136,45 @@ export function installMindmapXmindKeys({ store, mindmaps, r, pushUndo = () => {
   window.addEventListener('paste', onPaste, true);
   return { dispose: () => { window.removeEventListener('keydown', onKeyDown, true); window.removeEventListener('paste', onPaste, true); } };
 }
+// The original floating selection toolbar stays hidden while only mindmap topics are selected
+// and appears, together with the original context menu, on a right-click (user decision
+// 2026-11-14). Any other selection keeps the original behaviour.
+export function installMindmapContextToolbar({ store }) {
+  const style = document.createElement('style');
+  style.textContent = 'body.inkbridge-mindmap-toolbar-hidden .selection-toolbar-container{visibility:hidden!important;pointer-events:none!important}';
+  document.head.append(style);
+  let revealed = false, lastKey = '';
+  const selection = () => { const state = store.getState(); return { state, ids: [...state.selectedNodeIds].sort() }; };
+  const onlyTopics = ({ state, ids }) => ids.length > 0 && ids.every(id => state.nodes.find(node => node.id === id)?.type === 'MindmapNode');
+  const update = () => {
+    const current = selection(), key = current.ids.join(',');
+    if (key !== lastKey) { lastKey = key; revealed = false; }
+    document.body.classList.toggle('inkbridge-mindmap-toolbar-hidden', onlyTopics(current) && !revealed);
+  };
+  const unsubscribe = store.subscribe(update);
+  // The original selects the topic on the same right-click; reveal after it has done so.
+  const onContextMenu = event => {
+    if (!event.target?.closest?.('#board')) return;
+    setTimeout(() => { const current = selection(); if (!onlyTopics(current)) return; lastKey = current.ids.join(','); revealed = true; update(); clearOverlap(); }, 30);
+  };
+  // The context menu opens at the pointer and can cover the toolbar; move it just below.
+  function clearOverlap(frames = 12) {
+    const toolbar = document.querySelector('.selection-toolbar-container')?.getBoundingClientRect();
+    const menu = [...document.querySelectorAll('[class*="context-menu"]')].find(element => element.getBoundingClientRect().width > 0);
+    if (!toolbar?.width || !menu) { if (frames > 0) requestAnimationFrame(() => clearOverlap(frames - 1)); return; }
+    menu.style.translate = '';
+    const box = menu.getBoundingClientRect();
+    // The original re-renders the menu's inline top; translate is left to us.
+    if (box.top < toolbar.bottom + 8 && box.bottom > toolbar.top - 8 && box.left < toolbar.right && box.right > toolbar.left) menu.style.translate = '0 ' + Math.round(toolbar.bottom + 8 - box.top) + 'px';
+  }
+  // Using the toolbar closes the context menu (the original closes it on an outside click,
+  // which the toolbar's own buttons do not let through), so popovers are not covered.
+  const onToolbarPress = event => {
+    if (!event.target?.closest?.('.selection-toolbar-container') || !document.querySelector('[class*="context-menu"]')) return;
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  };
+  window.addEventListener('contextmenu', onContextMenu, true);
+  window.addEventListener('pointerdown', onToolbarPress, true);
+  update();
+  return { dispose: () => { unsubscribe(); window.removeEventListener('contextmenu', onContextMenu, true); window.removeEventListener('pointerdown', onToolbarPress, true); style.remove(); document.body.classList.remove('inkbridge-mindmap-toolbar-hidden'); } };
+}
