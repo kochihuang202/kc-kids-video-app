@@ -1,5 +1,6 @@
 // Real Electron check: the left creation toolbar's 視頻 placement opens the original 67569 video
 // dialog (toolbar child 6). Cancel leaves no card; create stores a path-linked card that plays.
+// The record page tab uses the original 23733 "video" tab type: it has its icon and routes back.
 // Synthetic ffmpeg fixture and a temporary workspace only.
 const R=require('node:path').resolve(__dirname,'../..');
 const {_electron,expect}=require(R+'/node_modules/@playwright/test'),fs=require('fs/promises'),path=require('path'),os=require('os'),assert=require('assert/strict');
@@ -26,6 +27,12 @@ try{
  const at=await page.evaluate(()=>{const s=window.__originalRequire(23).gt.getState(),n=s.nodes.find(n=>n.type==='MediaCard'),rect=(s.containerElement||s.canvasElement).getBoundingClientRect();return{x:rect.x+(n.position.x+n.width/2)*s.view.scale+s.view.translateX,y:rect.y+(n.position.y+n.height/2)*s.view.scale+s.view.translateY};});
  await page.mouse.click(at.x,at.y);await page.waitForTimeout(300);await page.mouse.click(at.x,at.y);
  await expect.poll(()=>page.evaluate(()=>{const v=document.querySelector('[data-video-overlay-content] video');return v?v.readyState:-1;}),{timeout:10000}).toBeGreaterThanOrEqual(2);res.plays=true;
+ await page.locator('[data-inkbridge-video-record]').click();await page.waitForTimeout(1500);
+ res.videoTabIcon=await page.evaluate(()=>{let e=[...document.querySelectorAll('*')].find(e=>e.childElementCount===0&&e.textContent.trim()==='sample'&&e.getBoundingClientRect().bottom<40);for(let i=0;e&&i<3;i++,e=e.parentElement)if(e.querySelector('svg'))return true;return false;});
  await page.screenshot({path:path.join(R,'private-original-editor','video-toolbar-insert.png')});
+ await page.mouse.click(405,18);await page.waitForTimeout(1000);res.onBoard=await page.evaluate(()=>!document.querySelector('#inkbridge-video-record-page'));await page.waitForTimeout(800);
+ await page.mouse.click(515,18);await page.waitForTimeout(1500);
+ res.backOnVideo=await page.evaluate(()=>!!document.querySelector('#inkbridge-video-record-page .video-page-container video'));
+
 }catch(e){res.error=e.message.slice(0,400);await page.screenshot({path:path.join(R,'private-original-editor','video-toolbar-insert-error.png')});}
-res.pageErrors=errs;console.log(JSON.stringify(res));await app.close();if(res.error||errs.length||!res.cancelLeavesNoCard||!res.stored||res.instances!==1||!res.plays)process.exitCode=1;})();
+res.pageErrors=errs;console.log(JSON.stringify(res));await app.close();if(res.error||errs.length||!res.cancelLeavesNoCard||!res.stored||res.instances!==1||!res.plays||!res.videoTabIcon||!res.onBoard||!res.backOnVideo)process.exitCode=1;})();

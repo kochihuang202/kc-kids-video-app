@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-144 — Video record tab has no icon
+
+- Reproduction: 紀錄 opens the record page, but its tab shows no icon. The host created the history tab with type `MediaCard`; the original 23733 strip keys the /video page, its icon and its tab routing on type `video`.
+- Fix: create the tab with `video`, and answer the strip's `findTargetsByCardIdAndType` for `video` from the video cards. Existing tabs keep their stored type until closed and reopened.
+- Test: `check-video-toolbar-insert.cjs` asserts the tab icon and that switching away and clicking the tab returns to the video page; `check-video-record.cjs` restart has no page errors.
+
 ## REG-143 — Toolbar video placement leaves a blank unsaved video card
 
 - Reproduction: left creation toolbar → 媒體 → 視頻 → click the board. The original 48626 places a pending MediaCard and calls its video dialog setter, but the host's UI-only toolbar composition omitted toolbar child 6 (the original 67569 video dialog). Result: a black, file-less card with the record button, never written to SQLite and gone after restart.

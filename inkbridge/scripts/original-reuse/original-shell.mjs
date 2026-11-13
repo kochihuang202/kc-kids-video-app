@@ -114,6 +114,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
       if(payload.cardType==='NodeGroup')return (graph.sections||[]).filter(row=>ids.has(row.id)&&graph.boards.some(board=>board.id===row.whiteboardId&&!board.attributes?.isTrashed));
       if(payload.cardType==='Whiteboard')return graph.boards.filter(board=>ids.has(board.id)).map(board=>({...board.attributes,id:board.id,name:board.title}));
       if(['PDFCard','MediaCard','image'].includes(payload.cardType))return graph.contents.filter(content=>ids.has(content.id)&&['image','pdf'].includes(content.kind)).map(content=>attachmentRecord(graph,content));
+      if(payload.cardType==='video')return graph.contents.filter(content=>ids.has(content.id)&&content.kind==='video').map(content=>videoRecord(graph,content));
       if(payload.cardType==='NoteCard')return graph.contents.filter(content=>ids.has(content.id)&&content.kind==='text').map(content=>noteRecord(graph,content));
       throw Error('尚未接入此引用類型：'+payload.cardType);
     }
