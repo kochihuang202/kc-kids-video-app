@@ -24,6 +24,13 @@ test('video content and highlights commit, reject invalid rows whole, soft delet
  assert.equal(graph.contents.find(row=>row.id==='video-card').kind,'video');
  assert.deepEqual(graph.videoHighlights,[{...highlight,isTrashed:true}]);
  assert.equal(graph.cardMetadata.find(row=>row.id==='video-card').path,'C:\\media\\lesson.mp4');
+ // A whiteboard placement refers to an existing highlight on an existing board; invalid rows reject the batch.
+ commit([catalog('video-highlight-instance',{id:'place-1',objectId:'mark-1',whiteboardId:'board',x:10,y:20,width:400,height:400,isAutoHeight:true})]);
+ assert.deepEqual(db.load().videoHighlightInstances.map(row=>row.objectId),['mark-1']);
+ assert.throws(()=>commit([catalog('video-highlight-instance',{id:'place-2',objectId:'missing',whiteboardId:'board',x:0,y:0})]));
+ assert.throws(()=>commit([catalog('video-highlight-instance',{id:'place-3',objectId:'mark-1',whiteboardId:'no-board',x:0,y:0})]));
+ assert.throws(()=>commit([catalog('video-highlight-instance',{id:'place-4',objectId:'mark-1',whiteboardId:'board',x:Infinity,y:0})]));
+ commit([{type:'deleteCatalog',kind:'video-highlight-instance',id:'place-1'}]);assert.deepEqual(db.load().videoHighlightInstances||[],[]);
  commit([{type:'deleteCatalog',kind:'video-highlight',id:'mark-1'}]);assert.deepEqual(db.load().videoHighlights||[],[],'an empty collection is omitted from the graph');
  db.close();
 });

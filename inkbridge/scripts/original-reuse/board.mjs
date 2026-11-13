@@ -172,7 +172,7 @@ async function boot(){
       await window.inkbridge.sync({method:'deviceWrite',key:'activeBoards',value:{[windowKey]:id}});
       const b=$('#board');if(b)b.dataset.flowCanvasWhiteboardId=id;
       ReactDOM.flushSync(()=>{originalStore.getState().setSelectedNodeIds(new Set());sections.hydrate();state.renderActive(id);state.home=false;state.renderHome(false);state.page='flow';state.renderPage('flow');});
-      connections.hydrate(await window.inkbridge.load());mindmaps.hydrate();
+      connections.hydrate(await window.inkbridge.load());mindmaps.hydrate();video.hydrate();
       await state.controls.setViewport(boards.get(id).view,{duration:0});await shell.selected();updateBoardTitle();
     }finally{navigationChanging=false;$('#board-navigation-status').textContent='';}
   });}
@@ -226,12 +226,13 @@ async function boot(){
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
   const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
-  const video=createOriginalVideo({navigate,coordinator,load:()=>window.inkbridge.load(),contents,putContent,catalogOperation,refreshNodes:()=>{if(!state.home)originalStore.getState().setNodes(nodes=>nodes.map(node=>{const row=instances.get(node.id);return row&&contents.get(row.contentId)?.kind==='video'?{...node,...toNode(row)}:node;}));},saveImages:request=>window.inkbridge.savePureBase64Image(request),registerFiles:files=>writeNote('registerFiles',{files}),copyImage:request=>window.inkbridge.copyImageToClipboard(request)});
+  globalThis.__inkbridgeOnWhiteboard=()=>!state.home;
+  const video=createOriginalVideo({navigate,coordinator,load:()=>window.inkbridge.load(),contents,putContent,catalogOperation,refreshNodes:()=>{if(!state.home)originalStore.getState().setNodes(nodes=>nodes.map(node=>{const row=instances.get(node.id);return row&&contents.get(row.contentId)?.kind==='video'?{...node,...toNode(row)}:node;}));},saveImages:request=>window.inkbridge.savePureBase64Image(request),registerFiles:files=>writeNote('registerFiles',{files}),copyImage:request=>window.inkbridge.copyImageToClipboard(request),r,store:originalStore,getBoardId:()=>boardId,graph});
   const connections=createOriginalConnections({r,navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});connections.hydrate(graph);
   const drawings=createOriginalDrawings({navigate,coordinator,load:()=>window.inkbridge.load(),store:originalStore,catalogOperation,getBoardId:()=>boardId});
   mindmaps=createOriginalMindmaps({r,graph,navigate,coordinator,catalogOperation,store:originalStore,getBoardId:()=>boardId,getBaseNodes:()=>sections.scene()});
   installMindmapControls({r,React,mindmaps,onError:report});
-  const hydrateBase=sections.hydrate;sections.hydrate=()=>{hydrateBase();mindmaps.hydrate();};mindmaps.hydrate();
+  const hydrateBase=sections.hydrate;sections.hydrate=()=>{hydrateBase();mindmaps.hydrate();video.hydrate();};mindmaps.hydrate();video.hydrate();
   function applySharedGraph(next,{preserveHistory=false}={}){
     if(!preserveHistory)originalStore.setState({undoStack:[],redoStack:[]});
     persistedGraph=structuredClone(next);
@@ -240,7 +241,7 @@ async function boot(){
     replace(contents,next.contents);replace(instances,next.instances);replace(boards,next.boards);replace(files,next.files);replace(sections.sections,next.sections);
     for(const [editor,id]of modalEditors){const content=contents.get(id);if(!content){editor.setEditable(false);continue;}if(!editor.isComposing()&&documentIdentity(bodyFromEditor(editor).document)!==documentIdentity(content.document)){editor.setEditorState(editor.parseEditorState(content.document),{tag:'editor-force-update'});editor.update(()=>{},{discrete:true,tag:'editor-force-update'});editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));}}
     for(const content of contents.values())if(content.kind==='text')redux.dispatch(r(23407).yc.updateNoteCard({id:content.id,title:content.title,content:content.document}));
-    mindmaps.replace(next);nested.replace(next);elements.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
+    mindmaps.replace(next);video.replace(next);nested.replace(next);elements.replace(next);sections.hydrate();connections.hydrate(next);mindmaps.hydrate();drawings.hydrate(next);shell?.hydrate(next);updateBoardTitle();
   }
   // Host workaround, root cause not traced: after the click that opens the original
   // 47766 video overlay, the original Canvas store keeps isInteracting=true in this

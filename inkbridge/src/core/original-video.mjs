@@ -7,8 +7,54 @@ export function videoRecord(graph, content) {
     const meta = graph.cardMetadata?.find(row => row.id === content.id) || {};
     return { createdTime: null, lastEditedTime: null, isTrashed: false, propertiesConfig: [], link: '', cover: '', ...meta, id: content.id, title: content.title, type: 'video' };
 }
-export function createOriginalVideo({ navigate, coordinator, load, contents, putContent, catalogOperation, refreshNodes, saveImages, registerFiles, copyImage }) {
-    const names = new Set(['addVideoHighlight', 'updateVideoHighlight', 'getVideoHighlightsBySourceId', 'updateMediaCard', 'updateVideoCover', 'saveVideoScreenshot', 'copyImageToClipboard', 'getVideoPositionSeconds', 'updateVideoPositionSeconds']);
+// Whiteboard placements of a highlight (original 94700.KT, 44321 menu, 10764 VideoHighlight
+// node) are 'video-highlight-instance' catalog rows. A card shows the same highlight, never
+// a copy; removing a placement keeps the highlight.
+const placementNames = new Set(['addVideoHighlightInstance', 'batchCreateVideoHighlightInstances', 'batchUpdateVideoHighlightInstances', 'batchDeleteVideoHighlightInstances']);
+export function createOriginalVideo({ navigate, coordinator, load, contents, putContent, catalogOperation, refreshNodes, saveImages, registerFiles, copyImage, r, store, getBoardId, graph }) {
+    const names = new Set(['addVideoHighlight', 'updateVideoHighlight', 'getVideoHighlightsBySourceId', 'getVideoHighlight', 'getVideoList', 'updateMediaCard', 'updateVideoCover', 'saveVideoScreenshot', 'copyImageToClipboard', 'getVideoPositionSeconds', 'updateVideoPositionSeconds', ...placementNames]);
+    const placements = new Map(), highlightRows = new Map(), videoCards = new Map();
+    const sourceCard = row => [...videoCards.values()].find(card => card.fileId === row.sourceId) || null;
+    function replace(next) {
+        placements.clear(); highlightRows.clear(); videoCards.clear();
+        for (const row of next.videoHighlightInstances || []) placements.set(row.id, { ...row });
+        for (const row of next.videoHighlights || []) highlightRows.set(row.id, present(row));
+        for (const content of next.contents || []) if (content.kind === 'video') videoCards.set(content.id, videoRecord(next, content));
+    }
+    function toNode(placement) {
+        const row = highlightRows.get(placement.objectId);
+        if (!row || row.isTrashed) return null;
+        const node = r(19281).YH.videoHighlightInstanceToNode(placement, row);
+        node.data.videoCard = sourceCard(row);
+        return node;
+    }
+    // Same order as the original placement: highlights and their video cards enter the
+    // flow store before the nodes that read them.
+    function hydrate() {
+        if (!store || !r) return;
+        const board = getBoardId(), list = [...placements.values()].filter(row => row.whiteboardId === board).map(toNode).filter(Boolean), redux = r(63268).Z;
+        if (list.length) redux.dispatch(r(6104).F0(list.map(node => node.data.highlight)));
+        const cardsInUse = [...new Set(list.map(node => node.data.videoCard).filter(Boolean))];
+        if (cardsInUse.length) redux.dispatch(r(23407).Gk({ mediaCards: cardsInUse, noteCards: [], mindmaps: [], pdfCards: [] }));
+        const state = store.getState();
+        state.setNodes([...state.nodes.filter(node => node.type !== 'VideoHighlight'), ...list]);
+        r(66597).L.clearCache(); r(66597).L.requestRender();
+    }
+    // A highlight edited elsewhere (panel, record page) updates its cards in place, so an
+    // open card editor is not remounted.
+    function refreshHighlight(row) {
+        highlightRows.set(row.id, row);
+        if (!store) return;
+        store.getState().setNodes(nodes => nodes.map(node => node.type === 'VideoHighlight' && node.data?.objectId === row.id ? { ...node, data: { ...node.data, highlight: row } } : node));
+        r(66597).L.clearCache(); r(66597).L.requestRender();
+    }
+    function attachCards(pending, tries = 40) {
+        if (!store || !pending.size) return;
+        const ids = new Set(store.getState().nodes.filter(node => pending.has(node.id)).map(node => node.id));
+        if (ids.size) store.getState().setNodes(nodes => nodes.map(node => ids.has(node.id) ? { ...node, data: { ...node.data, videoCard: node.data?.videoCard || pending.get(node.id) } } : node));
+        for (const id of ids) pending.delete(id);
+        if (pending.size && tries > 0) setTimeout(() => attachCards(pending, tries - 1), 50);
+    }
     // The original player (59771) resumes each file where it stopped. That is a per-device
     // viewing position, not workspace content: keep it out of SQLite revisions and snapshots.
     const positionKey = fileId => 'inkbridge-video-position:' + String(fileId || '');
@@ -17,6 +63,7 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
     const highlight = (graph, id) => (graph.videoHighlights || []).find(row => row.id === id);
     // The original list reads highlight.fileSuffix for its screenshot gallery URL.
     const present = row => ({ ...row, notes: typeof row.notes === 'string' ? JSON.parse(row.notes) : row.notes });
+    if (graph) replace(graph);
     const has = (name, payload) => names.has(name) || name === 'batchDeleteCardsByType' && Array.isArray(payload) && payload.length > 0 && payload.every(row => row?.objectType === 'VideoHighlight');
     const call = (name, payload) => {
         // Capture and clipboard do not touch the workspace revision order.
@@ -32,6 +79,40 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
         return navigate(async () => {
             await coordinator.flush();
             const graph = await load();
+            if (name === 'getVideoList') return { success: true, videoList: graph.contents.filter(row => row.kind === 'video').map(row => videoRecord(graph, row)).filter(row => !row.isTrashed), videoHighlights: (graph.videoHighlights || []).filter(row => !row.isTrashed).map(present) };
+            if (name === 'getVideoHighlight') {
+                const id = typeof payload === 'string' ? payload : payload?.id, row = highlight(graph, id);
+                if (!row) throw Error('Video highlight missing');
+                return { ...present(row), videoCard: cardBySource(graph, row.sourceId) };
+            }
+            if (name === 'batchDeleteVideoHighlightInstances') {
+                const ids = (Array.isArray(payload) ? payload : [payload]).map(item => typeof item === 'string' ? item : item?.id);
+                if (ids.some(id => !id)) throw Error('Video highlight placement missing');
+                for (const id of ids) { placements.delete(id); coordinator.stage({ type: 'deleteCatalog', kind: 'video-highlight-instance', id }); }
+                await coordinator.flush();
+                // Keyboard deletion reaches here through the original 94700 batch delete; the
+                // host canvas does not drop this node type by itself.
+                if (store) { store.getState().setNodes(nodes => nodes.filter(node => !ids.includes(node.id))); r(66597).L.clearCache(); r(66597).L.requestRender(); }
+                return { success: true };
+            }
+            if (name === 'batchUpdateVideoHighlightInstances') {
+                const list = Array.isArray(payload) ? payload : [payload];
+                if (list.some(item => !placements.has(item?.id))) throw Error('Video highlight placement missing');
+                for (const item of list) { const next = { ...placements.get(item.id), ...(item.updates || {}), id: item.id }; placements.set(item.id, next); put('video-highlight-instance', next); }
+                await coordinator.flush();
+                return { success: true };
+            }
+            if (name === 'addVideoHighlightInstance' || name === 'batchCreateVideoHighlightInstances') {
+                const list = Array.isArray(payload) ? payload : [payload];
+                if (list.some(item => !item?.id || !highlight(graph, item.objectId) || highlight(graph, item.objectId).isTrashed)) throw Error('Video highlight missing');
+                for (const item of list) { placements.set(item.id, { ...item }); put('video-highlight-instance', item); }
+                await coordinator.flush();
+                for (const item of list) { const row = highlight(graph, item.objectId); highlightRows.set(row.id, present(row)); }
+                // The original adds the node after this call returns; then give it its source video
+                // card (header title and the 📍 / openPdf target).
+                attachCards(new Map(list.map(item => [item.id, cardBySource(graph, highlight(graph, item.objectId).sourceId)])));
+                return { success: true, data: list };
+            }
             if (name === 'getVideoHighlightsBySourceId') {
                 const sourceId = typeof payload === 'string' ? payload : payload?.sourceId;
                 return { success: true, list: (graph.videoHighlights || []).filter(row => row.sourceId === sourceId && !row.isTrashed).map(present), videoCard: cardBySource(graph, sourceId) };
@@ -43,6 +124,7 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
                 const row = { ...payload, isTrashed: false };
                 put('video-highlight', row);
                 await coordinator.flush();
+                highlightRows.set(row.id, present(row));
                 return { success: true, data: present(row) };
             }
             if (name === 'updateVideoHighlight') {
@@ -54,6 +136,7 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
                 const row = { ...previous, ...updates, lastEditedTime: new Date().toISOString() };
                 put('video-highlight', row);
                 await coordinator.flush();
+                refreshHighlight(present(row));
                 return { success: true, data: present(row) };
             }
             if (name === 'batchDeleteCardsByType') {
@@ -63,6 +146,10 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
                 // Soft delete, as the original trash model; screenshots stay in the store.
                 for (const row of rows) put('video-highlight', { ...row, isTrashed: true, lastEditedTime: now });
                 await coordinator.flush();
+                // Cards of a deleted highlight leave the board; their placements stay stored
+                // and come back if the highlight is restored.
+                for (const row of rows) highlightRows.set(row.id, { ...present(row), isTrashed: true });
+                hydrate();
                 return { success: true };
             }
             // updateMediaCard / updateVideoCover
@@ -87,5 +174,5 @@ export function createOriginalVideo({ navigate, coordinator, load, contents, put
             return { success: true, mediaCard: card };
         });
     };
-    return { has, call };
+    return { has, call, hydrate, replace, placements };
 }

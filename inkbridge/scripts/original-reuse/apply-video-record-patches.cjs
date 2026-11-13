@@ -34,6 +34,18 @@ module.exports=({root,changes})=>{
    handler=handler.replace(head,()=>'let ej = async () => { let inkbridgeVideo = eh || (e.showVideo ? Y.current && Y.current.querySelector("video") : document.querySelector(".video-page-container video")) || null; inkbridgeVideo && !eh && (ep(inkbridgeVideo), inkbridgeVideo.pause()); eS(); let inkbridgeTime = inkbridgeVideo && Number.isFinite(inkbridgeVideo.currentTime) ? inkbridgeVideo.currentTime : C; "number" == typeof inkbridgeTime && O(inkbridgeTime); let t = async (t) => { let i = w.YH.newVideoHighlight(inkbridgeTime, ').replace(capture,()=>'eC(e.fileId, inkbridgeVideo || ek(), inkbridgeTime)');
    source=source.slice(0,begin)+handler+source.slice(finish);
   }
+  // The embedded side-panel player shows only its cover until clicked, so there is no
+  // <video> to read and the original stored 0 (the 00:00 rows). Start it, wait for its
+  // metadata, then read the exact time. A local video that cannot load adds no marker.
+  {const head='let ej = async () => { let inkbridgeVideo = eh || (e.showVideo ? Y.current && Y.current.querySelector("video") : document.querySelector(".video-page-container video")) || null;';
+   source=once(source,head,head+' if (!inkbridgeVideo && e.showVideo && Y.current) { let inkbridgeCover = Y.current.querySelector("img[alt=\\"video cover\\"]"); if (inkbridgeCover) { inkbridgeCover.parentElement.click(); for (let k = 0; k < 80 && !((inkbridgeVideo = Y.current && Y.current.querySelector("video")) && inkbridgeVideo.readyState >= 1); k++) await new Promise(r => setTimeout(r, 100)); if (!inkbridgeVideo || inkbridgeVideo.readyState < 1) return; } }','marker starts the embedded player');}
+  // Opened with a time (a card's 📍 → original openVideoInSidebar → media view), the
+  // embedded player stayed on its cover and the time was lost. Start it at that time, and
+  // focus and scroll to the highlight at that time with the panel's own focus state.
+  // Earlier form of the next patch did not re-run once the video card loaded.
+  if(source.includes('}, [e.showVideo, e.initialTimeStamp, e.fileId]);')&&source.includes('cover.parentElement.click(); } for (let k = 0; k < 80 && !stop'))source=source.replace('}, [e.showVideo, e.initialTimeStamp, e.fileId]);','}, [e.showVideo, e.initialTimeStamp, e.fileId, null == m ? void 0 : m.id]);');
+  {const at='let eR = ei ? en.filter(e => e.sourceId === ei) : [], eL = [...eR];';
+   source=once(source,at,at+' (0, x.useEffect)(() => { let ts = Number(e.initialTimeStamp); if (!e.showVideo || !Y.current || !Number.isFinite(ts) || ts <= 0) return; let stop = !1; (async () => { let v = Y.current && Y.current.querySelector("video"); if (!v) { let cover = Y.current && Y.current.querySelector("img[alt=\\"video cover\\"]"); cover && cover.parentElement.click(); } for (let k = 0; k < 80 && !stop && !((v = Y.current && Y.current.querySelector("video")) && v.readyState >= 1); k++) await new Promise(r => setTimeout(r, 100)); if (stop || !v || v.readyState < 1) return; Math.abs(v.currentTime - ts) > .25 && (v.currentTime = ts); v.pause(); })(); return () => { stop = !0; }; }, [e.showVideo, e.initialTimeStamp, e.fileId, null == m ? void 0 : m.id]); (0, x.useEffect)(() => { let ts = Number(e.initialTimeStamp); if (!e.showVideo || !Number.isFinite(ts) || ts <= 0 || !eR.length) return; let h = eR.reduce((a, b) => Math.abs(b.timeStamp - ts) < Math.abs(a.timeStamp - ts) ? b : a); if (Math.abs(h.timeStamp - ts) > 1) return; n(h.id); let id = setTimeout(() => { let el = document.querySelector("[data-video-marker-id=\\"" + h.id + "\\"]"); el && el.scrollIntoView({ block: "center" }); }, 80); return () => clearTimeout(id); }, [e.showVideo, e.initialTimeStamp, eR.length]);','open at a time');}
   source=once(source,'eC(e.fileId, ek(), C)','eC(e.fileId, ek(), '+live+')','screenshot time');
   // Bind the record page's player promptly instead of after two seconds.
   source=once(source,'r && ev(r); }, 2e3); return () => { t = !0, window.clearTimeout(i); };','r && ev(r); }, 300); return () => { t = !0, window.clearTimeout(i); };','player binding delay');
@@ -47,5 +59,12 @@ module.exports=({root,changes})=>{
    source=source.slice(0,start)+'(0, i.jsxs)(d.g, { children: ['+[seek(-5,'r("videoRewindTips")'),seek(-1,'"−1s (Shift+←)"'),play,seek(1,'"+1s (Shift+→)"'),seek(5,'r("videoForwardTips")')].join(', ')+'] })'+source.slice(end+endMark.length);
   }
   return source;
+ });
+ // 84539 'open in sidebar' helpers decide whether a whiteboard is showing from
+ // window.location, which never contains /flow in this host. A highlight card's 📍 then fell
+ // back to the reference list and lost its time. Ask the host instead.
+ patch('84539','Ask the host whether a whiteboard is showing before opening media in the side panel',source=>{
+  const from='window.location.pathname.includes("/flow")',to='(globalThis.__inkbridgeOnWhiteboard ? globalThis.__inkbridgeOnWhiteboard() : window.location.pathname.includes("/flow"))';
+  if(source.includes('__inkbridgeOnWhiteboard'))return source;if(source.split(from).length!==4)throw Error('Video record anchor missing: 84539 flow checks');return source.split(from).join(to);
  });
 };

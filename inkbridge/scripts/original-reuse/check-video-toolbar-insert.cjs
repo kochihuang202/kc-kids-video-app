@@ -1,5 +1,7 @@
 // Real Electron check: the left creation toolbar's 視頻 placement opens the original 67569 video
 // dialog (toolbar child 6). Cancel leaves no card; create stores a path-linked card that plays.
+// The media button is enabled (image and video connected, audio entry disabled) and the
+// original image dialog (child 7) stores an image card.
 // The record page tab uses the original 23733 "video" tab type: it has its icon and routes back.
 // Synthetic ffmpeg fixture and a temporary workspace only.
 const R=require('node:path').resolve(__dirname,'../..');
@@ -33,6 +35,16 @@ try{
  await page.mouse.click(405,18);await page.waitForTimeout(1000);res.onBoard=await page.evaluate(()=>!document.querySelector('#inkbridge-video-record-page'));await page.waitForTimeout(800);
  await page.mouse.click(515,18);await page.waitForTimeout(1500);
  res.backOnVideo=await page.evaluate(()=>!!document.querySelector('#inkbridge-video-record-page .video-page-container video'));
+ // Media button: enabled (image and video connected); its audio entry stays disabled; the
+ // original image dialog (toolbar child 7) uploads and stores an image card.
+ const home=await page.evaluate(()=>!!document.querySelector('#inkbridge-video-record-page'));if(home){await page.mouse.click(405,18);await page.waitForTimeout(800);}
+ res.mediaEnabled=await page.evaluate(()=>{const b=document.querySelector('[data-inkbridge-tool=media]')?.closest('button');return !!b&&!b.disabled;});
+ await page.mouse.click(301,536);await page.waitForTimeout(400);
+ res.mediaOptions=await page.evaluate(()=>[...document.querySelectorAll('[data-inkbridge-creation-options] button')].filter(b=>b.getBoundingClientRect().width).map(b=>b.textContent.trim()+':'+(b.disabled?'off':'on')));
+ {const png=path.join(media,'picture.png');require('node:child_process').execFileSync('ffmpeg',['-loglevel','error','-y','-f','lavfi','-i','testsrc2=size=320x200','-frames:v','1',png]);
+  await page.getByText(/^(圖片|图片)$/).first().click();await page.mouse.click(600,300);const dlg=page.getByRole('dialog');await expect(dlg).toBeVisible();
+  await dlg.getByText('上傳',{exact:true}).click();await dlg.locator('input[type=file]').first().setInputFiles(png);await page.waitForTimeout(800);await dlg.getByRole('button',{name:'確認'}).click();
+  await expect.poll(async()=>(await page.evaluate(()=>window.inkbridge.load())).contents.filter(c=>c.kind==='image').length).toBe(1);res.imageStored=true;}
 
 }catch(e){res.error=e.message.slice(0,400);await page.screenshot({path:path.join(R,'private-original-editor','video-toolbar-insert-error.png')});}
-res.pageErrors=errs;console.log(JSON.stringify(res));await app.close();if(res.error||errs.length||!res.cancelLeavesNoCard||!res.stored||res.instances!==1||!res.plays||!res.videoTabIcon||!res.onBoard||!res.backOnVideo)process.exitCode=1;})();
+res.pageErrors=errs;console.log(JSON.stringify(res));await app.close();if(res.error||errs.length||!res.cancelLeavesNoCard||!res.stored||res.instances!==1||!res.plays||!res.videoTabIcon||!res.onBoard||!res.backOnVideo||!res.mediaEnabled||res.mediaOptions.join()!=='圖片:on,視頻:on,音頻:off'||!res.imageStored)process.exitCode=1;})();

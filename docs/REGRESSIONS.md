@@ -1,5 +1,17 @@
 # Regression Memory
 
+## REG-146 — Side-panel video markers stored as 00:00 and a highlight card's 📍 lost its time
+
+- Reproduction: whiteboard → right panel 高亮 → a video. The original embedded player (80716) shows only its cover until clicked, so there is no `<video>` and the original 79719 stored the marker at 0 (the 00:00 rows in FlexNote too). A dragged highlight card's 📍 (original openVideoInSidebar, 84539) decided from `window.location` whether a board was showing; this host's URL never contains /flow, so it added the video to the reference list instead and the time was lost. Even in the media view the player stayed on its cover and ignored the time.
+- Fix (79719 / 84539 patches in `apply-video-record-patches.cjs`): a marker first starts the embedded player and waits for its metadata, then reads the exact time (a local video that cannot load adds no marker); 84539 asks the host (`__inkbridgeOnWhiteboard`); opened with a time, the panel starts the player at that time and focuses and scrolls to that highlight with its own focus state. The time effect re-runs when the video card finishes loading.
+- Test: `check-video-highlight-board.cjs` marks before the player exists (time equals the started player's), marks at 7.36s, drags to the board, clicks 📍 and asserts the side player is within 0.3s of the highlight and the row is in view.
+
+## REG-145 — Highlight card left on the board after Delete; toolbar media button greyed out
+
+- Reproduction: Delete on a dragged highlight card removed its `video-highlight-instance` row (original 94700 batch delete) but the node stayed; the host canvas only drops node types it rebuilds itself. Separately, the left toolbar's media button was disabled by the host tool gate although its popover worked, and its image entry hit the same missing-dialog problem as REG-143 (toolbar child 7).
+- Fix: the delete service also removes the nodes; undo's instance lookup includes video highlight placements. The media button is identified (`data-inkbridge-tool=media`) and allowed; toolbar child 7 (original image dialog) is mounted; the audio entry (not ported) stays visible but disabled.
+- Test: `check-video-highlight-board.cjs` deletes a card (highlight kept), undoes (card back), deletes again; `check-video-toolbar-insert.cjs` asserts the media button is enabled, 圖片/視頻 on and 音頻 off, and an uploaded 320×200 image is stored. A 2×2 image is still rejected with "Invalid width" (not examined).
+
 ## REG-144 — Video record tab has no icon
 
 - Reproduction: 紀錄 opens the record page, but its tab shows no icon. The host created the history tab with type `MediaCard`; the original 23733 strip keys the /video page, its icon and its tab routing on type `video`.

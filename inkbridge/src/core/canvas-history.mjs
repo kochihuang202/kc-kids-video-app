@@ -3,7 +3,7 @@
 // to InkBridge's schema and one atomic transaction. Never undo files/history or
 // delete content objects merely because their canvas placement was undone.
 import {documentIdentity} from './note-version.mjs';
-const catalogs={'section':'sections','text-element':'textElements','drawing-stroke':'drawingStrokes','mindmap':'mindmaps','mindmap-node':'mindmapNodes','mindmap-instance':'mindmapInstances','whiteboard-instance':'whiteboardInstances','connection':'connections'};
+const catalogs={'section':'sections','text-element':'textElements','drawing-stroke':'drawingStrokes','mindmap':'mindmaps','mindmap-node':'mindmapNodes','mindmap-instance':'mindmapInstances','video-highlight-instance':'videoHighlightInstances','whiteboard-instance':'whiteboardInstances','connection':'connections'};
 const clone=value=>structuredClone(value),same=(a,b)=>documentIdentity(a)===documentIdentity(b);
 export function captureCanvasHistory(graph,boardId){
  let value={workspaceId:graph.workspaceId,contents:graph.contents,instances:graph.instances,cardMetadata:graph.cardMetadata||[],...Object.fromEntries(Object.values(catalogs).map(key=>[key,graph[key]||[]]))};
