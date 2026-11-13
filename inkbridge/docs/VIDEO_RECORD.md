@@ -5,7 +5,7 @@ REA 過程與原始碼定位見 [VIDEO_RECORD_REA.md](VIDEO_RECORD_REA.md)。
 
 ## 使用方式
 
-- 白板空白處右鍵 →「視頻卡片」→ 原版對話框「本地視頻」選檔 → 建立。影片只記路徑，不複製進
+- 白板空白處右鍵 →「視頻卡片」，或左側工具列 → 媒體 →「視頻」再點白板放置 → 原版對話框「本地視頻」選檔 → 建立（取消則不留卡片）。影片只記路徑，不複製進
   InkBridge，也不進快照或分享。
 - 點影片卡片即在白板上播放；右上角直接有「紀錄」按鈕（不在「…」裡）。原版的側邊欄／彈層／
   浮窗開啟方式不提供。
@@ -59,6 +59,7 @@ REA 過程與原始碼定位見 [VIDEO_RECORD_REA.md](VIDEO_RECORD_REA.md)。
   原版對話框建立、只記路徑且附件庫為空、白板播放、紀錄分頁與版面、高亮／字幕切換、頂部頁籤為「高亮」、
   ±1／±5 秒（暫停與播放中）、暫停與播放中標記時間精確、截圖為實際 PNG、原版筆記編輯並入庫、
   點時間跳轉、刪除與確認、正常關閉重開完全一致、檔案搬走後筆記仍可看、重新指定後可播放且高亮保留、無頁面錯誤。
+- `node scripts/original-reuse/check-video-toolbar-insert.cjs`：左側工具列放置後開出原版對話框，取消不留卡片，建立後入庫並可播放（REG-143）。
 - `node --test tests/video-record.test.cjs`：資料庫驗證／整批拒絕／軟刪除／重開；路徑供應範圍、Range、重新指定。
 - 相關既有回歸通過：資料庫／持久化／附件／目錄／視窗同步單元測試 36 項；`check-shell`、
   `check-native-resize-lod`、`check-real-image-paste`、`check-native-pdf`、`check-board-search`、

@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-143 — Toolbar video placement leaves a blank unsaved video card
+
+- Reproduction: left creation toolbar → 媒體 → 視頻 → click the board. The original 48626 places a pending MediaCard and calls its video dialog setter, but the host's UI-only toolbar composition omitted toolbar child 6 (the original 67569 video dialog). Result: a black, file-less card with the record button, never written to SQLite and gone after restart.
+- Fix: include child 6 in the UI-only toolbar (`apply-integration-patches.cjs`). The original dialog then opens after placement; cancel removes the pending card through the original `t8`.
+- Test: `check-video-toolbar-insert.cjs` places via the toolbar, cancels (no card left), then creates with a synthetic MP4 and asserts one stored path-linked card that plays. Toolbar 圖片／音頻 placements were not examined in this fix.
+
 ## REG-104 — Video highlight markers recorded at 00:00 or up to one second late
 
 - Original 79719 marks with a time polled once per second, and binds its `<video>` only two seconds after mounting (never in the embedded sidebar player when the load callback is missed). A marker pressed before binding was stored as 0; others could be up to 1s stale. A linked local video also tainted the capture canvas, so screenshots failed.
