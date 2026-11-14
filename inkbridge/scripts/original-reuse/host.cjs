@@ -121,7 +121,7 @@ app.whenReady().then(async()=>{
   const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://');if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
   // Links in notes: like the original main process, hand them to the system (open-links.cjs).
-  const links=require('../../src/main/open-links.cjs').createLinkOpener({shell,dialog});
+  const links=require('../../src/main/open-links.cjs').createLinkOpener({shell,dialog,appOrigin:origin});
   const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({openLink:links.open,ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load(),assertEpoch:value=>liveSync?.assertEpoch(value),getEpoch:()=>liveSync?.epoch||0});
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   const readable=event=>allowed(event)||!!standalone.child(event);

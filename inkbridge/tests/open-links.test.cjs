@@ -17,11 +17,17 @@ test('opener: external directly, local only after confirmation, refused never',a
  const calls=[];let answer=1;
  const shell={openExternal:async url=>calls.push(['external',url]),openPath:async p=>{calls.push(['path',p]);return '';}};
  const dialog={showMessageBox:async(...args)=>{calls.push(['ask',(args.length>1?args[1]:args[0]).detail]);return {response:answer};}};
- const {open}=createLinkOpener({shell,dialog});
+ const stat=async p=>p==='C:\\missing'?Promise.reject(Object.assign(Error('missing'),{code:'ENOENT'})):{isDirectory:()=>p==='C:\\Users\\ji3cp\\Documents\\ESS'};
+ const {open}=createLinkOpener({shell,dialog,stat,appOrigin:'http://127.0.0.1:4000'});
  assert.deepEqual(await open('https://example.com/a'),{success:true,mode:'external'});
  assert.deepEqual(await open('C:\\tools\\run.bat'),{success:false,reason:'cancelled'});
  answer=0;assert.deepEqual(await open('C:\\tools\\run.bat'),{success:true,mode:'local'});
  assert.deepEqual(await open('search-ms:query=x'),{success:true,mode:'external'});
  assert.deepEqual(await open('javascript:alert(1)'),{success:false,reason:'scheme-javascript'});
- assert.deepEqual(calls,[['external','https://example.com/a'],['ask','C:\\tools\\run.bat'],['ask','C:\\tools\\run.bat'],['path','C:\\tools\\run.bat'],['ask','search-ms:query=x'],['external','search-ms:query=x']]);
+ assert.deepEqual(calls.splice(0),[['external','https://example.com/a'],['ask','C:\\tools\\run.bat'],['ask','C:\\tools\\run.bat'],['path','C:\\tools\\run.bat'],['ask','search-ms:query=x'],['external','search-ms:query=x']]);
+ // Folders open without asking; a missing path only says so; the app's own address is refused.
+ answer=1;assert.deepEqual(await open('C:\\Users\\ji3cp\\Documents\\ESS'),{success:true,mode:'folder'});
+ assert.deepEqual(await open('C:\\missing'),{success:false,reason:'not-found'});
+ assert.deepEqual(await open('http://127.0.0.1:4000/server/share'),{success:false,reason:'app-origin'});
+ assert.deepEqual(calls,[['path','C:\\Users\\ji3cp\\Documents\\ESS'],['ask','C:\\missing']]);
 });

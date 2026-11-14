@@ -32,6 +32,8 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   // ("Expand All") or to the simplified-Chinese defaultValue. Fill only missing keys, worded
   // as the original's own defaults; existing translations are never overwritten.
   installTooltipTitlebarFix();
+  // Windows folder/file paths can be links in the desktop app (apply-link-path-patches.cjs).
+  globalThis.__inkbridgeLocalLinks=true;
   let translationsFilled=false;
   const fillMissingTranslations=()=>{const i18n=r(1643).ag;if(translationsFilled||!i18n)return;translationsFilled=true;const missing={expandAll:'展開所有',collapseAll:'折疊所有',setCurrentFrameAsCover:'將當前幀設為封面',setVideoCoverSuccess:'當前幀已設為封面',setVideoCoverFailedRetry:'設定失敗，點擊重試'};
    for(const [key,value]of Object.entries(missing))if(i18n.getResource('zh-TW','common',key)===undefined)i18n.addResource('zh-TW','common',key,value);

@@ -111,4 +111,5 @@ require('./apply-editor-169-patches.cjs')({root,changes});
 require('./apply-content-block-patches.cjs')({root,changes});
 require('./apply-video-record-patches.cjs')({root,changes});
 require('./apply-mindmap-xmind-patches.cjs')({root,changes});
+require('./apply-link-path-patches.cjs')({root,changes});
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));

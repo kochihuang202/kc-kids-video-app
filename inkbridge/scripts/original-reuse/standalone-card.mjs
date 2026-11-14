@@ -100,7 +100,10 @@ async function boot() {
     // Re-read after that flush finishes instead of permanently skipping the event.
     window.inkbridge.onWorkspaceUpdated(() => { const barrier = coordinator.flushTail; refreshing = refreshing.catch(() => { }).then(() => barrier.catch(() => { })).then(refresh); });
     const forwarded = new Set(standaloneServices);
-    globalThis.__inkbridgeServices = { has: name => forwarded.has(name) || ['updateNoteCard', 'savePureBase64Image', 'savePastedImageBuffers', 'uploadFile'].includes(name), call: async (name, payload) => {
+    // Windows paths as links (apply-link-path-patches.cjs); links open through the system (open-links.cjs).
+    globalThis.__inkbridgeLocalLinks = true;
+    globalThis.__inkbridgeServices = { has: name => forwarded.has(name) || ['updateNoteCard', 'savePureBase64Image', 'savePastedImageBuffers', 'uploadFile', 'openUrl'].includes(name), call: async (name, payload) => {
+            if (name === 'openUrl') return window.inkbridge.openLink(typeof payload === 'string' ? payload : payload?.url);
             if (name === 'updateNoteCard') {
                 read();
                 return;

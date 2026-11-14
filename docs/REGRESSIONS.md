@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-156 — Windows folder/file paths in notes could not be opened
+
+- Report: a pasted path such as `C:\Users\ji3cp\Documents\ESS` could not be opened (2026-11-14). Same as the original FlexNote 1.1.70: its auto-link recognises only web addresses, e-mail and `flexnote://` (73866), and its link editor turns every other address into `about:blank` (91362). User decision: add it in the desktop app.
+- Fix: `apply-link-path-patches.cjs` (chained from apply-integration-patches): with `globalThis.__inkbridgeLocalLinks` (set by the desktop main and standalone windows, not the web reader) auto-link recognises `C:\…` and `\\server\…` up to the next space, and the link editor keeps such paths. A click reads the stored address and goes through `openUrl`; `open-links.cjs` opens folders in Explorer without asking, asks before opening files, and only reports a path missing on this computer. A relative link resolved to InkBridge's own address is refused. The link node's DOM href stays sanitised.
+- Test: `tests/open-links.test.cjs`; `check-note-links.cjs` (pasted folder path becomes a link and opens directly; pencil link editor accepts a path; missing path reported; local file asks; web links click/Ctrl+click). Regressions: `check-standalone-windows`, `check-shell`, `check-browser` (web reader) pass. `check-content-blocks` "legacy callout migration" failed in some runs: opening the old note migrates its callout in an editor update that rewrites the title input; when the test typed before that update (about 50 ms after opening) the text was overwritten. The test now waits 400 ms before typing; not re-run after that change.
+
 ## REG-155 — Links in note cards did nothing
 
 - Report: a Teams/SharePoint link pasted into a card showed its short name but could not be opened (2026-11-14). Cause: the original opens a web link with a click while editing (service `openUrl`) or Ctrl+click (`window.open`); FlexNote 1.1.70's main process hands both to `shell.openExternal`. InkBridge had no `openUrl` service and its window-open handler denied everything without handing off. 複製鏈接 in the card menu copies the card's own `flexnote://` link by original design; the URL itself is in the link editor (pencil).
