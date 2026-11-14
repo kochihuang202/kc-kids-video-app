@@ -20,6 +20,7 @@ import {fitCardHeight,cardMaxHeight} from '/inkbridge-core/card-height.mjs';
 import {createOriginalDrawings} from '/inkbridge-core/original-drawings.mjs';
 import {createOriginalMindmaps} from '/inkbridge-core/original-mindmaps.mjs';
 import {installMindmapXmindKeys,installMindmapContextToolbar} from '/inkbridge-core/mindmap-xmind-keys.mjs';
+import {installMediaFileNames} from './media-file-names.mjs';
 import {installMindmapAppearance} from '/inkbridge-core/mindmap-appearance.mjs';
 import {installMindmapKeyboard} from '/inkbridge-core/mindmap-keyboard.mjs';
 import {createOriginalTextElements} from '/inkbridge-core/original-text-elements.mjs';
@@ -237,6 +238,8 @@ async function boot(){
   // XMind keys (docs/MINDMAP_XMIND.md); undo uses the original history of the active board.
   installMindmapXmindKeys({store:originalStore,mindmaps,r,pushUndo:()=>globalThis.__inkbridgeMindmapPushUndo?.()});
   installMindmapContextToolbar({store:originalStore});
+  // Image/video file names per board (media-file-names.mjs); saved in the board's attributes.
+  installMediaFileNames({React,r,getBoard:()=>boards.get(boardId),save:(id,value)=>globalThis.__inkbridgeServices.call('updateBoard',{id,inkbridgeMediaFileNames:value})});
   installMindmapControls({r,React,mindmaps,onError:report});
   const hydrateBase=sections.hydrate;sections.hydrate=()=>{hydrateBase();mindmaps.hydrate();video.hydrate();};mindmaps.hydrate();video.hydrate();
   function applySharedGraph(next,{preserveHistory=false}={}){

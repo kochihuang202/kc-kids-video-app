@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-157 — Image and video file names: separate switches, per board
+
+- Request (2026-11-14): split 顯示圖片和視頻檔名 into image and video switches, and let each whiteboard keep its own choice. The original has one global switch (`showMediaFileNameOnCanvas`, localStorage and UI slice) read by the media drawer (176) and the names pass (66597). User decisions: only the file-name switches are per board; a board without its own choice follows the current global switch.
+- Change: `media-file-names.mjs` stores a board's choice in its attributes as `inkbridgeMediaFileNames {image, video}` (through the existing `updateBoard` service; the first change saves both kinds) and answers `__inkbridgeMediaFileName(kind, ctx)`. `apply-media-file-name-patches.cjs` makes 176 decide per card kind (name above the card, placeholder title) and lets the 66597 names pass run when either kind is on. `prepare-sharing.cjs` replaces the 46979 settings row with two rows built from the original row and switch components; the settings gate in `original-shell.mjs` enables both.
+- Test: `check-media-file-names.cjs` (two rows, only they enabled; image on for one board saves `{image:true, video:false}` and draws the name above the image card; another board keeps the default and its own video switch does not change the first; restart keeps both). `check-video-highlight-board` updated to the video row and passes; `check-shell` passes.
+
 ## REG-156 — Windows folder/file paths in notes could not be opened
 
 - Report: a pasted path such as `C:\Users\ji3cp\Documents\ESS` could not be opened (2026-11-14). Same as the original FlexNote 1.1.70: its auto-link recognises only web addresses, e-mail and `flexnote://` (73866), and its link editor turns every other address into `about:blank` (91362). User decision: add it in the desktop app.

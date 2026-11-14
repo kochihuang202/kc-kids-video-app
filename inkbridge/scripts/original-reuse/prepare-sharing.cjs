@@ -22,6 +22,9 @@ function prepareSharing(){
    source=once(source,'onOpenChange: e => { e || eN(); }','onOpenChange: () => { eN(); }');
    source=once(source,'children: t.map(e => { let { key: t, label: n, icon: i } = e;', 'children: t.filter(e => e.key === "web").map(e => { let { key: t, label: n, icon: i } = e;');
    source=once(source,'"web" === g && c("share.web_desc")','"web" === g && "發布到自己的網站，持有連結即可觀看。只有按發布或更新才上傳；本機保存不會自動公開。"');
+   // Settings popover (46979 ii): the one global image+video file-name switch becomes two
+   // per-board switches (media-file-names.mjs; user decision 2026-11-14, REG-157).
+   source=once(source,'(0, a.jsx)($.d, { title: K("showMediaFileNameOnCanvas"), description: K("showMediaFileNameOnCanvasDesc"), className: n7, hideLine: !0, children: (0, a.jsx)(U.i, { className: "scale-75 origin-top-right", size: "sm", isSelected: !!d, onValueChange: () => { let e = !d; localStorage.setItem(A.Jr.SHOW_MEDIA_FILE_NAME_ON_CANVAS, String(e)), t((0, I.kG)(e)); } }) })','(0, a.jsx)(globalThis.__inkbridgeMediaFileNameRows, { Row: $.d, Switch: U.i, className: n7 })');
   }else{
    source=source.replaceAll('window.ipc.invoke(', 'globalThis.__inkbridgeShareInvoke(');
    const ast=ts.createSourceFile('share.js',source,99,true);let nested;function find(n){if(ts.isFunctionDeclaration(n)&&n.name?.text==='_')nested=n;ts.forEachChild(n,find);}find(ast);if(!nested)throw Error('Native nested-board function missing');

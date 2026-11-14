@@ -68,22 +68,23 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await expect(row(second.id)).toBeInViewport();
         await page.screenshot({ path: path.join(evidence, 'video-highlight-pin.png') });
 
-        // 5b. Bottom-right settings (original 46979 popover): only 顯示圖片和視頻檔名 is connected.
+        // 5b. Bottom-right settings (original 46979 popover): only the file-name switches are connected;
+        // image and video are separate and saved per board (media-file-names.mjs, REG-157).
         await page.keyboard.press('Escape'); await page.mouse.click(700, 820);
-        const fileNameTitle = await t('showMediaFileNameOnCanvas');
+        const fileNameTitle = '顯示影片檔名';
         await page.locator('button[aria-label="' + await t('settings') + '"]').click();
         await expect(page.locator('[data-slot=content]').getByText(fileNameTitle, { exact: true })).toBeVisible();
-        await expect.poll(() => page.evaluate(title => { const pop = [...document.querySelectorAll('[data-slot=content]')].find(p => p.textContent.includes(title)), all = [...pop.querySelectorAll('button,input,select,textarea,[role=slider]')]; return { total: all.length > 5, enabled: all.filter(c => !c.disabled).length }; }, fileNameTitle)).toEqual({ total: true, enabled: 1 });
+        await expect.poll(() => page.evaluate(title => { const pop = [...document.querySelectorAll('[data-slot=content]')].find(p => p.textContent.includes(title)), all = [...pop.querySelectorAll('button,input,select,textarea,[role=slider]')]; return { total: all.length > 5, enabled: all.filter(c => !c.disabled).length }; }, fileNameTitle)).toEqual({ total: true, enabled: 2 });
         const otherUi = () => page.evaluate(() => { const u = window.__originalRequire(63268).Z.getState().ui; return JSON.stringify([u.canvasBackground, u.showHelperLines, u.focusModeEnabled, u.showCardPropertiesOnCanvas]); });
         const uiBefore = await otherUi(); await page.locator('[data-slot=content] label').filter({ hasText: /^點$/ }).click({ force: true }).catch(() => {}); assert.equal(await otherUi(), uiBefore, 'a disabled setting does nothing');
         await page.locator('[data-slot=content] div[class*=justify-between]').filter({ hasText: fileNameTitle }).locator('label').first().click();
-        await expect.poll(async () => (await ui()).showMediaFileNameOnCanvas).toBe(true);
+        await expect.poll(async () => (await page.evaluate(() => window.inkbridge.load())).boards.some(b => b.attributes?.inkbridgeMediaFileNames?.video === true)).toBe(true);
         await page.keyboard.press('Escape'); await page.mouse.click(700, 820);
 
         // 6. Restart: the card comes back with its highlight and source video; the filename setting is kept.
         await app.close(); app = await launch(); await start();
         await expect.poll(cards).toEqual([{ id: placement.id, objectId: second.id, video: content.title }]);
-        assert.equal((await ui()).showMediaFileNameOnCanvas, true, 'filename setting kept after restart');
+        assert.equal(await page.evaluate(() => globalThis.__inkbridgeMediaFileName('video', {})), true, 'video file-name setting kept for the board after restart');
 
         // 7. Remove the card from the board: the placement goes, the highlight stays.
         await page.evaluate(id => { const s = window.__originalRequire(23).gt.getState(); s.setSelectedNodeIds(new Set([id])); }, placement.id);
