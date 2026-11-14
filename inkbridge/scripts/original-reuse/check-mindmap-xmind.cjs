@@ -49,7 +49,7 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     stage = 'menu colour recolours the branch';
     const branches = () => page.evaluate(() => Object.fromEntries(window.__originalRequire(23).gt.getState().nodes.filter(n => n.type === 'MindmapNode').map(n => [n.id, n.data.inkbridgeBranchColor || null])));
     const colours = async () => Object.fromEntries((await map()).map(n => [n.id, n.color || null]));
-    const swatch = async (id, rgb) => { const p = await pos(id); await click(id); await page.mouse.click(p.x, p.y, { button: 'right' }); await expect.poll(async () => (await toolbar()).menu).toBe(true);
+    const swatch = async (id, rgb) => { const p = await pos(id); await click(id); await page.mouse.click(p.x, p.y, { button: 'right' }); await expect.poll(async () => (await toolbar()).menu).toBe(true); await page.waitForTimeout(400); // the menu settles below the toolbar first
       const at = await page.evaluate(rgb => { const m = [...document.querySelectorAll('[class*="context-menu"]')].find(e => e.getBoundingClientRect().width > 0), e = [...m.querySelectorAll('div')].find(e => getComputedStyle(e).backgroundColor === rgb && e.getBoundingClientRect().width < 24); const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, rgb);
       await page.mouse.click(at.x, at.y); };
     await swatch('a', 'rgb(79, 173, 220)');
@@ -103,12 +103,19 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     stage = 'paste external text';
     await app.evaluate(({ clipboard }) => clipboard.writeText('第一行\n第二行'));
     await click('c'); await page.keyboard.press('Control+v'); await expect.poll(tree).toBe('出發去動物園/ 麥當勞/  薯條/  可樂/   動物/ 要帶的物品!/  第一行/  第二行');
+    stage = 'pasting an image keeps the map';
+    // Image paste goes through the media-card writer, whose scene refresh once dropped mindmap nodes.
+    await click('a1');
+    await page.evaluate(async () => { const c = document.createElement('canvas'); c.width = 120; c.height = 80; const g = c.getContext('2d'); g.fillStyle = '#3a7'; g.fillRect(0, 0, 120, 80); const blob = await new Promise(done => c.toBlob(done, 'image/png')); const dt = new DataTransfer(); dt.items.add(new File([blob], 'image.png', { type: 'image/png' })); (document.activeElement || document.body).dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+    await expect.poll(() => page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.some(n => n.type === 'MediaCard'))).toBe(true);
+    assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.filter(n => n.type === 'MindmapNode').length), (await map()).length, 'every topic is still on the canvas');
+    await blank();
     stage = 'restart';
     await page.evaluate(() => window.__inkbridgeIntegrated.flush()); await app.close(); app = await launch(); await ready();
     assert.equal(await tree(), '出發去動物園/ 麥當勞/  薯條/  可樂/   動物/ 要帶的物品!/  第一行/  第二行');
     assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'a').data.inkbridgeBranchColor), '#F9423A');
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, restart: true }));
+    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
   } catch (error) { console.error({ stage, data }); await page?.screenshot({ path: path.join(data, 'failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
   finally { await app.close(); }
 })();

@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-154 — Pasting an image made the mindmap disappear
+
+- Report: pasting an image on a board with a mindmap removed the map from the canvas (2026-11-14). Data stayed in SQLite; a restart brought it back. Cause: the note/media writer was created with `hydrateScene: sections.hydrate` before `board.mjs` wrapped `sections.hydrate` to also redraw mindmaps and video highlight cards, so its refresh after a media card replaced the scene without them. A closing render after the pasted image loaded also hit the mindmap paints freed on `beforeunload`.
+- Fix: pass `hydrateScene: () => sections.hydrate()` so the current refresh is used; do not free the mindmap paints on `beforeunload`. Also restores LF endings in four files that 23fb88e had converted to CRLF.
+- Test: `check-mindmap-xmind.cjs` (paste a synthetic PNG with a topic selected: media card added, every topic still on the canvas; no page errors through restart; run twice). Regressions: `check-video-toolbar-insert`, `check-video-highlight-board`, `check-mindmap-appearance`, `check-drawing-mindmap-menu` pass.
+
 ## REG-153 — Mindmap colour menu did nothing in the XMind style; custom colour picker under the menu
 
 - Report: picking a colour from a topic's right-click menu did not recolour its branch (2026-11-14), and the "+" custom colour picker opened under the menu. Cause: the XMind drawing took colours only from the main topic's position and never read the original `color`; the picker's portal had z-index 100000 and the menu 1000000000.

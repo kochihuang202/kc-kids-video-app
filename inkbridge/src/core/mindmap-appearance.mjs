@@ -64,5 +64,6 @@ export function installMindmapAppearance(r,K,fontMgr){
  // The native overlay remains the editor. Shift its left edge over the marker
  // slots so its padding, caret and the rendered text start at the same point.
  globalThis.__inkbridgeMindmapEditorInset=node=>node?.type==='MindmapNode'&&managed(node.data)?markerInset(node.data):0;
- const dispose=()=>{for(const p of paints)p.delete();for(const p of paths.values())p?.delete();font?.delete();};window.addEventListener('beforeunload',dispose,{once:true});return {dispose};
+ const dispose=()=>{for(const p of paints)p.delete();for(const p of paths.values())p?.delete();font?.delete();};// Not freed on beforeunload: a last render can still run after it (e.g. a just-pasted image loading), and unload frees everything anyway.
+ return {dispose};
 }
