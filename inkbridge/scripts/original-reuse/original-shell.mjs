@@ -1,6 +1,7 @@
 import {searchGraph,searchBlocks} from '/inkbridge-core/original-search.mjs';
 import {createSidebarFooter} from './sidebar-footer.mjs';
 import {createSettingsFrame} from './settings-frame.mjs';
+import {installTooltipTitlebarFix} from './tooltip-titlebar.mjs';
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord,attachmentRecord} from '/inkbridge-core/original-catalog.mjs';
@@ -30,6 +31,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
   // The original zh-TW bundle lacks these keys, so the original UI fell back to English
   // ("Expand All") or to the simplified-Chinese defaultValue. Fill only missing keys, worded
   // as the original's own defaults; existing translations are never overwritten.
+  installTooltipTitlebarFix();
   let translationsFilled=false;
   const fillMissingTranslations=()=>{const i18n=r(1643).ag;if(translationsFilled||!i18n)return;translationsFilled=true;const missing={expandAll:'展開所有',collapseAll:'折疊所有',setCurrentFrameAsCover:'將當前幀設為封面',setVideoCoverSuccess:'當前幀已設為封面',setVideoCoverFailedRetry:'設定失敗，點擊重試'};
    for(const [key,value]of Object.entries(missing))if(i18n.getResource('zh-TW','common',key)===undefined)i18n.addResource('zh-TW','common',key,value);

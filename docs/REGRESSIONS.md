@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-152 — Right panel header tooltips hidden under the window buttons
+
+- Report: hovering 折疊所有 in the right 高亮 panel showed a tooltip cut off by the minimise/maximise buttons (2026-11-14). The earlier fix only translated it. Cause: original tooltips open above their button, and InkBridge windows draw the native buttons over the top 36px (`titleBarOverlay`).
+- Fix: `scripts/original-reuse/tooltip-titlebar.mjs`, installed by the shell. A `[role=tooltip]` that overlaps the native button area (`navigator.windowControlsOverlay`) moves just below its trigger (`translate`). Other tooltips are unchanged.
+- Test: `check-tooltip-titlebar.cjs` (synthetic video with one marker; hovers each top-right button; 折疊所有 and 緊湊模式 moved, none covered). Regressions: `check-shell`, `check-video-highlight-board` pass.
+
 ## REG-151 — Mindmap toolbar on every click; context menu covered it; German labels
 
 - Request: a click on a topic should not pop the floating toolbar; its tools belong to the right-click (user chose "toolbar + original menu", 2026-11-14). Reproduction after the first version: the original context menu opened at the pointer over the toolbar, Escape cleared the selection but left the menu open, and toolbar popovers (節點標記) opened under the still-open menu. The original zh-TW bundle labels the collapse/expand-children buttons in German.
