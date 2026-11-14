@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-153 — Mindmap colour menu did nothing in the XMind style; custom colour picker under the menu
+
+- Report: picking a colour from a topic's right-click menu did not recolour its branch (2026-11-14), and the "+" custom colour picker opened under the menu. Cause: the XMind drawing took colours only from the main topic's position and never read the original `color`; the picker's portal had z-index 100000 and the menu 1000000000.
+- Fix: branch colour is the nearest chosen `color` (one that differs from its parent's; white means default), else rainbow; the root uses its own colour as fill. On update, descendants still carrying the old colour take the new one (the original copies the parent's colour into new children). While a context menu is open, overlays added to `<body>` are raised above it.
+- Test: `check-mindmap-xmind.cjs` (blue on 麥當勞 colours its branch, other branches unchanged; a copied child colour follows a change to red; custom picker usable above the menu; white restores rainbow; restart). Regressions: `check-mindmap-appearance`, `check-drawing-mindmap-menu`, `check-mindmap-keyboard` pass.
+
 ## REG-152 — Right panel header tooltips hidden under the window buttons
 
 - Report: hovering 折疊所有 in the right 高亮 panel showed a tooltip cut off by the minimise/maximise buttons (2026-11-14). The earlier fix only translated it. Cause: original tooltips open above their button, and InkBridge windows draw the native buttons over the top 36px (`titleBarOverlay`).

@@ -1,6 +1,6 @@
 // Real Electron check for the XMind-parity mindmap (docs/MINDMAP_XMIND.md): Rainbow style as
 // the default, no "+" beside topics, XMind keys (Enter/F2/Space, Enter ends editing), dropping
-// on a topic's child side, cut/copy/paste of subtrees and external text, undo and restart.
+// on a topic's child side, branch colour from the menu (custom picker above it), cut/copy/paste of subtrees and external text, undo and restart.
 // Synthetic SQLite workspace only.
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict'), crypto = require('node:crypto');
 const { WorkspaceDatabase } = require('../../src/main/database.cjs');
@@ -46,6 +46,28 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     await expect(page.getByRole('button', { name: '彩色圓點：紅', exact: true })).toBeVisible();
     await blank(); await click('a'); await page.waitForTimeout(300); assert.equal((await toolbar()).shown, false, 'hidden again after reselecting');
     await blank();
+    stage = 'menu colour recolours the branch';
+    const branches = () => page.evaluate(() => Object.fromEntries(window.__originalRequire(23).gt.getState().nodes.filter(n => n.type === 'MindmapNode').map(n => [n.id, n.data.inkbridgeBranchColor || null])));
+    const colours = async () => Object.fromEntries((await map()).map(n => [n.id, n.color || null]));
+    const swatch = async (id, rgb) => { const p = await pos(id); await click(id); await page.mouse.click(p.x, p.y, { button: 'right' }); await expect.poll(async () => (await toolbar()).menu).toBe(true);
+      const at = await page.evaluate(rgb => { const m = [...document.querySelectorAll('[class*="context-menu"]')].find(e => e.getBoundingClientRect().width > 0), e = [...m.querySelectorAll('div')].find(e => getComputedStyle(e).backgroundColor === rgb && e.getBoundingClientRect().width < 24); const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, rgb);
+      await page.mouse.click(at.x, at.y); };
+    await swatch('a', 'rgb(79, 173, 220)');
+    await expect.poll(async () => { const l = await branches(); return [l.a, l.a1, l.a2, l.b]; }).toEqual(['#4faddc', '#4faddc', '#4faddc', '#F6A04D']);
+    // A child carrying the copied colour (as the original does on creation) follows a new branch colour.
+    await page.evaluate(() => globalThis.__inkbridgeServices.call('updateMindMapNode', { node: { id: 'a1', color: '#4FADDC' } })); await blank();
+    await swatch('a', 'rgb(208, 69, 69)');
+    await expect.poll(async () => { const c = await colours(); return [c.a, c.a1, c.a2]; }).toEqual(['#D04545', '#D04545', null]);
+    await expect.poll(async () => (await branches()).a2).toBe('#d04545');
+    // The "+" custom colour picker opens above the menu and can be used.
+    await blank(); const pa2 = await pos('a'); await click('a'); await page.mouse.click(pa2.x, pa2.y, { button: 'right' }); await expect.poll(async () => (await toolbar()).menu).toBe(true);
+    await page.locator('[class*="context-menu"] button.z-10').first().click();
+    await expect.poll(() => page.evaluate(() => { const i = [...document.querySelectorAll('input')].find(i => /^#?[0-9A-F]{6}$/i.test(i.value)); if (!i) return 'none'; const r = i.getBoundingClientRect(), e = document.elementFromPoint(r.x + 5, r.y + 5); return e === i || i.contains(e); })).toBe(true);
+    // White (the original's default) restores the rainbow colours for the branch.
+    await page.keyboard.press('Escape'); await blank();
+    await swatch('a', 'rgb(255, 255, 255)');
+    await expect.poll(async () => { const l = await branches(); return [l.a, l.a1, l.a2]; }).toEqual(['#F9423A', '#F9423A', '#F9423A']);
+    await blank();
     stage = 'Enter adds a sibling, Enter ends editing';
     await click('b'); await page.keyboard.press('Enter');
     await expect.poll(async () => (await kids('root')).length).toBe(4);
@@ -86,7 +108,7 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     assert.equal(await tree(), '出發去動物園/ 麥當勞/  薯條/  可樂/   動物/ 要帶的物品!/  第一行/  第二行');
     assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'a').data.inkbridgeBranchColor), '#F9423A');
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, toolbarOnRightClick: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, restart: true }));
+    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, restart: true }));
   } catch (error) { console.error({ stage, data }); await page?.screenshot({ path: path.join(data, 'failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
   finally { await app.close(); }
 })();

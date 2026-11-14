@@ -42,7 +42,11 @@ export function createOriginalMindmaps({r,graph,navigate,coordinator,catalogOper
     const rows=name==='batchUpdateMindMapNodes'?payload.nodes:[payload.node],proposed=new Map(nodes);if(!Array.isArray(rows))throw Error('思維導圖節點更新格式錯誤');
     for(const row of rows){const old=proposed.get(row.id);if(name!=='addMindMapNode'&&!old)throw Error('思維導圖節點不存在');const next=proposedNode(row,old);proposed.set(next.id,next);}
     if(name==='addMindMapNode'&&payload.parentId){const parent=proposed.get(payload.parentId);if(!parent)throw Error('思維導圖父節點不存在');proposed.set(parent.id,proposedNode({...parent,childNodeIds:payload.parentChildNodeIds||[...parent.childNodeIds,payload.node.id]},parent));}
-    refresh=rows.some(row=>row.inkbridgeMarkers!==undefined||row.inkbridgeNodeStyle!==undefined);checkCycles(proposed);for(const [id,node]of proposed)if(JSON.stringify(node)!==JSON.stringify(nodes.get(id))){nodes.set(id,node);put('mindmap-node',node);}
+    // XMind: a colour picked on a topic recolours its branch. The original copies a parent's
+    // colour into new children, so descendants still carrying the old colour follow the new one;
+    // descendants with their own different colour keep it.
+    let recoloured=false;if(name!=='addMindMapNode')for(const row of rows){const old=nodes.get(row.id);if(row.color===undefined||!old||(old.color||'')===(row.color||''))continue;recoloured=true;const from=old.color||'',to=row.color||'',walk=id=>{for(const child of proposed.get(id)?.childNodeIds||[]){const node=proposed.get(child);if(!node||(from?node.color!==from:node.color))continue;proposed.set(child,{...node,color:to,lastEditedTime:Date.now()});walk(child);}};if(from)walk(row.id);}
+    refresh=recoloured||rows.some(row=>row.inkbridgeMarkers!==undefined||row.inkbridgeNodeStyle!==undefined);checkCycles(proposed);for(const [id,node]of proposed)if(JSON.stringify(node)!==JSON.stringify(nodes.get(id))){nodes.set(id,node);put('mindmap-node',node);}
    }else if(name==='createMindMapInstance'){
     const rows=list(payload);if(rows.some(placement=>!placement?.id||!mindmaps.has(placement.objectId)))throw Error('思維導圖位置或來源不存在');for(const placement of rows){instances.set(placement.id,copy(placement));put('mindmap-instance',placement);}refresh=true;
    }else if(name==='updateMindMapInstance'||name==='batchUpdateMindMapInstances'){

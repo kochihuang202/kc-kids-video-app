@@ -173,8 +173,21 @@ export function installMindmapContextToolbar({ store }) {
     if (!event.target?.closest?.('.selection-toolbar-container') || !document.querySelector('[class*="context-menu"]')) return;
     document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   };
+  // A popover opened from the context menu (the custom colour picker behind its "+") is a
+  // separate overlay with a lower z-index than the menu, so the menu covered it. While a menu
+  // is open, raise newly opened overlays above it.
+  const raise = new MutationObserver(records => {
+    const menu = [...document.querySelectorAll('[class*="context-menu"]')].find(element => element.getBoundingClientRect().width > 0); if (!menu) return;
+    const above = (Number(getComputedStyle(menu).zIndex) || 0) + 1;
+    // Overlays are portals added directly to <body>; only those are touched.
+    for (const record of records) for (const node of record.addedNodes) {
+      if (node.nodeType !== 1 || node.contains(menu)) continue;
+      for (const element of [node, ...node.querySelectorAll('[style*="z-index"]')]) { const z = Number(getComputedStyle(element).zIndex); if (Number.isFinite(z) && z < above && getComputedStyle(element).position !== 'static') element.style.zIndex = String(above); }
+    }
+  });
+  raise.observe(document.body, { childList: true });
   window.addEventListener('contextmenu', onContextMenu, true);
   window.addEventListener('pointerdown', onToolbarPress, true);
   update();
-  return { dispose: () => { unsubscribe(); window.removeEventListener('contextmenu', onContextMenu, true); window.removeEventListener('pointerdown', onToolbarPress, true); style.remove(); document.body.classList.remove('inkbridge-mindmap-toolbar-hidden'); } };
+  return { dispose: () => { unsubscribe(); raise.disconnect(); window.removeEventListener('contextmenu', onContextMenu, true); window.removeEventListener('pointerdown', onToolbarPress, true); style.remove(); document.body.classList.remove('inkbridge-mindmap-toolbar-hidden'); } };
 }
