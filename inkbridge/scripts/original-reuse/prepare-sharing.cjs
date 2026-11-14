@@ -49,6 +49,9 @@ function prepareSharing(){
    source=once(source,'d("share.settings.ignoreLargeFilesNotice") })] })] });','d("share.settings.ignoreLargeFilesNotice") })] }), (0, i.jsx)(globalThis.__inkbridgeShareExtras, {boardId:t, selectedBoardIds:[t,...A], isPublishing:S})] });');
    source=once(source,'(0, i.jsx)(a.A, { size: "sm", variant: "flat", radius: "lg", isDisabled: !p || N && !eo, isLoading: S, className: "shrink-0 text-default-600 hover:text-primary",','(0, i.jsx)(a.A, { size: "md", color: "primary", variant: "solid", radius: "lg", isDisabled: !p || N && !eo, isLoading: S, className: "shrink-0 font-medium", "data-inkbridge-publish": "update",');
    source=once(source,'(0, i.jsx)(a.A, { size: "md", color: "primary", isDisabled: N && !eo, isLoading: S, variant: "flat",','(0, i.jsx)(a.A, { size: "lg", color: "primary", isDisabled: N && !eo, isLoading: S, variant: "solid", className: "w-full max-w-[280px] font-medium", "data-inkbridge-publish": "first",');
+   // The host denies the web clipboard permission, so the original writeText silently failed
+   // while still showing "copied"; copy through the host clipboard and report failures.
+   source=once(source,'onPress: () => { navigator.clipboard.writeText(u), (0, o.fz)({ title: d("share.settings.copied"), color: "success" }); }','onPress: () => { globalThis.__inkbridgeCopyShareUrl(u).then(() => (0, o.fz)({ title: d("share.settings.copied"), color: "success" }), error => globalThis.__inkbridgeShareFailure(error)); }');
    source=once(source,'children: [m, " ", d("share.settings.views"), " \\xb7 ", y ?', 'children: [y ?');
   }
   const check=ts.createSourceFile(id,source,99,true);if(check.parseDiagnostics.length)throw Error('Sharing patch syntax rejected: '+id);

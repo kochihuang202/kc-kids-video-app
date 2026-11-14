@@ -57,7 +57,9 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
  }
  // Each published board has its own fixed URL (share site aliases, see share-site/_worker.js).
  const boardUrl=(root,id)=>{const current=state(root);return current.publicationId&&current.selection?.includes(id)?current.boardUrls?.[id]||null:null;};
- const copyUrl=async value=>{try{const safe=value.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));await window.inkbridge.writeClipboardTextAndHtml({text:value,html:'<a href="'+safe+'">'+safe+'</a>'});window.__originalRequire(55153).fz?.({title:'已複製網址',color:'success'});}catch(error){failure(error);}};
+ const writeUrl=value=>{const safe=value.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));return window.inkbridge.writeClipboardTextAndHtml({text:value,html:'<a href="'+safe+'">'+safe+'</a>'});};
+ window.__inkbridgeCopyShareUrl=writeUrl;
+ const copyUrl=async value=>{try{await writeUrl(value);window.__originalRequire(55153).fz?.({title:'已複製網址',color:'success'});}catch(error){failure(error);}};
  function Tree({items,selectedNestedIds,onSelectionChange,isPublishing}){
   useChanges();const root=items.find(b=>b.isCurrent)?.id||getBoardId(),tree=trees.get(root)||{rootBoardId:root,boards:items,links:[]},selected=new Set([root,...selectedNestedIds]),byId=new Map(items.map(b=>[b.id,b])),rows=[];
   const visit=(id,depth,path)=>{if(path.has(id))return;const item=byId.get(id);if(!item)return;rows.push({item,depth,key:[...path,id].join('/')});const next=new Set(path).add(id);for(const link of tree.links)if(link.containerId===id)visit(link.whiteboardId,depth+1,next);};visit(root,0,new Set());

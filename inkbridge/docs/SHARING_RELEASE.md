@@ -27,6 +27,7 @@
   - 最近那份發布被停用或已不含這張白板時，改用這張白板自己當根白板的發布；都沒有就是 404。
   - 這項改版前發布的分享沒有 alias：子白板的固定網址要在根白板再按一次「更新發布」後才有效；舊的 `?shareId=` 連結照常可用。
 - 分享視窗清單上，已發布的每張白板有「複製網址」，複製該白板自己的網址；視窗中的網址列顯示目前白板的固定網址。
+- 原版網址列的「複製」原本用瀏覽器剪貼簿（InkBridge 拒絕此權限），實際沒寫入卻顯示「已複製」；改走 InkBridge 剪貼簿（`__inkbridgeCopyShareUrl`），失敗時顯示錯誤。`check-panel-local.cjs` 驗證兩種複製，並在結束時還原使用者原本的剪貼簿文字。
 - 驗證：`tests/share-board-urls.test.cjs`（本機 workerd/R2：三層白板各一網址、子白板 302、子白板改以自己為根發布網址不變、最近發布優先、停用與移除後的回退）；`scripts/web-share/check-panel-local.cjs`（真實 Electron＋本機 HTTPS 分享站：預設子孫勾選、發布按鈕在選項之上且為大按鈕、三張白板網址、子白板轉址、複製網址）；`npm run test:share` 27 通過；`check-panel.cjs` 離線模式通過。尚未部署到 https://inkbridge-share.pages.dev，需重新部署 Pages 才生效。
 
 ## 已確認來源與接合

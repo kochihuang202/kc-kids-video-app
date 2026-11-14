@@ -17,8 +17,10 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
  const pairing=await(await local(site+'/api/pairings',{method:'POST',headers:{authorization:'Bearer synthetic-bootstrap','content-type':'application/json'},body:'{}'})).json();
  const env={...process.env,INKBRIDGE_ORIGINAL_VIEW:'board',INKBRIDGE_ORIGINAL_PROBE_DATA:data,NODE_TLS_REJECT_UNAUTHORIZED:'0'};delete env.ELECTRON_RUN_AS_NODE;delete env.INKBRIDGE_PORTABLE;
  const app=await _electron.launch({args:[path.join(__dirname,'../original-reuse/host.cjs')],executablePath:require('electron'),env});
- let page;
+ let page,savedClipboard=null;
  try{
+  // The check writes to the system clipboard; keep the user's text and put it back afterwards.
+  savedClipboard=await app.evaluate(({clipboard})=>clipboard.readText());
   page=await app.firstWindow();page.setDefaultTimeout(15000);await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);await page.evaluate(()=>window.__inkbridgeIntegrated.switchBoard('root'));
   const t=key=>page.evaluate(key=>window.__originalRequire(1643).ag.t(key,{ns:'common'}),key);
   await page.locator('#original-native-tools .react-flow__panel').getByRole('button',{name:await t('share.title'),exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
@@ -43,11 +45,16 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
   assert.equal(await page.locator('[data-inkbridge-publish="update"]').count(),1,'update button after publishing');
   // 4. Copy buttons per board copy that board's URL.
   await expect(tree.locator('[data-copy-board-url="grand"]')).toBeVisible();
-  await tree.locator('[data-copy-board-url="child"]').click();
-  await expect.poll(()=>app.evaluate(async({clipboard})=>clipboard.readText?clipboard.readText():(await clipboard.read?.())?.find?.(i=>i.types?.includes('text/plain'))?null:null)).toBe(receipt.boardUrls.child);
+  const clip=()=>app.evaluate(({clipboard})=>clipboard.readText()),reset=()=>app.evaluate(({clipboard})=>clipboard.writeText('inkbridge-check-sentinel'));
+  await reset();await tree.locator('[data-copy-board-url="child"]').click();
+  await expect.poll(clip).toBe(receipt.boardUrls.child);
+  // 5. The original 複製 button beside the link copies the current board's URL (it used the
+  // denied web clipboard before and only showed "copied").
+  await reset();await page.getByRole('dialog').getByRole('button',{name:await t('share.settings.copy'),exact:true}).click();
+  await expect.poll(clip).toBe(receipt.boardUrls.root);
   await page.screenshot({path:path.join(data,'share-local-after.png')});
   assert.deepEqual(await page.evaluate(()=>window.__inkbridgeIntegrated.errors),[]);
-  console.log(JSON.stringify({data,descendantsByDefault:true,publishPrimaryAboveOptions:true,boardUrls:Object.keys(receipt.boardUrls).length,childRedirect:true,copyBoardUrl:true,realSiteUntouched:true}));
+  console.log(JSON.stringify({data,descendantsByDefault:true,publishPrimaryAboveOptions:true,boardUrls:Object.keys(receipt.boardUrls).length,childRedirect:true,copyBoardUrl:true,nativeCopyButton:true,realSiteUntouched:true}));
  }catch(error){await page?.screenshot({path:path.join(data,'share-local-failure.png')}).catch(()=>{});console.error({data});throw error;}
- finally{await app.close().catch(()=>{});await mf.dispose();}
+ finally{if(savedClipboard!==null)await app.evaluate(({clipboard},text)=>clipboard.writeText(text),savedClipboard).catch(()=>{});await app.close().catch(()=>{});await mf.dispose();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
