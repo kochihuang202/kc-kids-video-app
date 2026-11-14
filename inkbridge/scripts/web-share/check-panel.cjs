@@ -27,7 +27,8 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
    await page.getByRole('textbox',{name:'分享網站網址'}).fill(pairing.baseUrl);await page.getByRole('textbox',{name:'裝置配對碼'}).fill(pairing.code);await page.getByRole('button',{name:'連接裝置',exact:true}).click();pairing=null;
    const tree=page.getByTestId('share-board-tree');await expect(tree).toBeVisible();
    const box=id=>tree.locator('[data-board-id="'+id+'"]').getByRole('checkbox');
-   await expect(box('root')).toBeChecked();await expect(box('child')).not.toBeChecked();await expect(box('grand')).not.toBeChecked();await expect(tree).not.toContainText('PRIVATE');
+   // Never published: descendants are selected by default (user decision 2026-11-14).
+   await expect(box('root')).toBeChecked();await expect(box('child')).toBeChecked();await expect(box('grand')).toBeChecked();await expect(tree).not.toContainText('PRIVATE');
    await box('grand').check();await expect(box('child')).toBeChecked();await box('child').uncheck();await expect(box('grand')).not.toBeChecked();await tree.getByRole('button',{name:'全選子孫',exact:true}).click();await expect(box('grand')).toBeChecked();
   }else{await expect(page.getByTestId('share-connection')).toBeVisible();await expect(page.getByRole('textbox',{name:'分享網站網址'})).toBeVisible();}
   await page.getByText('更多選項',{exact:true}).click();await page.getByRole('button',{name:'匯出離線網頁包',exact:true}).click();await expect(page.getByRole('button',{name:'開啟網頁包資料夾',exact:true})).toBeVisible({timeout:60000});
@@ -48,6 +49,6 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs');
   }
   assert.deepEqual(await page.evaluate(()=>window.__inkbridgeIntegrated.errors),[]);await page.screenshot({path:path.join(data,'native-share-panel.png')});
   await page.getByRole('button',{name:/close|關閉/i}).last().click();await expect(page.getByRole('dialog')).toHaveCount(0);
-  console.log(JSON.stringify({data,nativeShareEntry:true,nativeCompleteModal:true,connectionRequired:!online,offlineUnderMore:true,initialRootOnly:true,realLexicalCommit:true,formalDataUntouched:true,online,publication:receipt?{url:receipt.url,version:receipt.version}:null}));
+  console.log(JSON.stringify({data,nativeShareEntry:true,nativeCompleteModal:true,connectionRequired:!online,offlineUnderMore:true,descendantsByDefault:online,realLexicalCommit:true,formalDataUntouched:true,online,publication:receipt?{url:receipt.url,version:receipt.version}:null}));
  }finally{await app.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

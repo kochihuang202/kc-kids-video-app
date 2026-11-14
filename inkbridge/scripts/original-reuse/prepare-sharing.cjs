@@ -35,7 +35,7 @@ function prepareSharing(){
    source=replaceInitializer(source,'et',s=>s.includes('publish target failed'),`async () => {
     const selected=[t,...A];Y({total:selected.length,currentId:t,completedIds:[],failedIds:[]});
     try { const receipt=await globalThis.__inkbridgeSharePublish({boardId:t,selectedBoardIds:selected});
-     h(receipt.url); f(receipt.publicationId); g(receipt.enabled!==false); k(receipt.publishedAt); O(true);
+     h(receipt.boardUrls?.[t]||receipt.url); f(receipt.publicationId); g(receipt.enabled!==false); k(receipt.publishedAt); O(true);
      Y({total:selected.length,currentId:null,completedIds:selected,failedIds:[]});
      if(E)await E();if(P)await P();
     }catch(error){globalThis.__inkbridgeShareFailure(error);throw error;}
@@ -44,7 +44,11 @@ function prepareSharing(){
    source=once(source,'I(t.quotaBytes > 0 ? t.quotaBytes : 104857600)','I(t.quotaBytes || 0)');
    source=once(source,'isCreating: O, setIsCreating: F,','isCreating: O || globalThis.__inkbridgeShareBusy(t), setIsCreating: F,');
    source=once(source,'}; (0, r.useEffect)(() => { n && t && u && (Y(), V()); }, [n, t, u]);','}; (0, r.useEffect)(() => { const refresh = event => { if (event.detail === t) { Y(); V(); } }; window.addEventListener("inkbridge:share-refresh", refresh); return () => window.removeEventListener("inkbridge:share-refresh", refresh); }, [t]); (0, r.useEffect)(() => { n && t && u && (Y(), V()); }, [n, t, u]);');
-   source=once(source,'children: [null, es && (0, i.jsx)(j,','children: [(0, i.jsx)(globalThis.__inkbridgeShareExtras, {boardId:t, selectedBoardIds:[t,...A], isPublishing:S}), es && (0, i.jsx)(j,');
+   // Order (user decision 2026-11-14): board tree, then the publish button as the primary
+   // action, then image settings / progress / more options below it.
+   source=once(source,'d("share.settings.ignoreLargeFilesNotice") })] })] });','d("share.settings.ignoreLargeFilesNotice") })] }), (0, i.jsx)(globalThis.__inkbridgeShareExtras, {boardId:t, selectedBoardIds:[t,...A], isPublishing:S})] });');
+   source=once(source,'(0, i.jsx)(a.A, { size: "sm", variant: "flat", radius: "lg", isDisabled: !p || N && !eo, isLoading: S, className: "shrink-0 text-default-600 hover:text-primary",','(0, i.jsx)(a.A, { size: "md", color: "primary", variant: "solid", radius: "lg", isDisabled: !p || N && !eo, isLoading: S, className: "shrink-0 font-medium", "data-inkbridge-publish": "update",');
+   source=once(source,'(0, i.jsx)(a.A, { size: "md", color: "primary", isDisabled: N && !eo, isLoading: S, variant: "flat",','(0, i.jsx)(a.A, { size: "lg", color: "primary", isDisabled: N && !eo, isLoading: S, variant: "solid", className: "w-full max-w-[280px] font-medium", "data-inkbridge-publish": "first",');
    source=once(source,'children: [m, " ", d("share.settings.views"), " \\xb7 ", y ?', 'children: [y ?');
   }
   const check=ts.createSourceFile(id,source,99,true);if(check.parseDiagnostics.length)throw Error('Sharing patch syntax rejected: '+id);

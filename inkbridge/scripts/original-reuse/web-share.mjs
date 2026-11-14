@@ -22,7 +22,7 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
   if(channel==='get-share-status'){
    // Descendant membership belongs to one atomic root publication.
    const receipt=id===getBoardId()?await status(id):state(getBoardId());
-   const included=id===getBoardId()||receipt.selection?.includes(id),url=included?receipt.url:null;
+   const included=id===getBoardId()||receipt.selection?.includes(id),url=included?(receipt.boardUrls?.[id]||receipt.url):null;
    return {success:true,data:url?{shareLink:url,shareId:receipt.publicationId,isEnabled:receipt.enabled,updated_at:receipt.publishedAt,viewCount:0}:null};
   }
   if(channel==='get-cloud-usage')return {success:true,usedBytes:state(getBoardId()).bytes||0,quotaBytes:0};
@@ -33,7 +33,9 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
  };
  window.__inkbridgeShareInvoke=invoke;window.__inkbridgeShareFailure=failure;window.__inkbridgeShareBusy=id=>!!state(id).progress;
  window.__inkbridgeShareTreeRecords=async id=>{const all=await window.inkbridge.webShare({method:'tree',boardId:id}),reachable=new Set();function visit(key){if(reachable.has(key))return;reachable.add(key);for(const link of all.links)if(link.containerId===key)visit(link.whiteboardId);}visit(id);const tree={...all,boards:all.boards.filter(b=>reachable.has(b.id)),links:all.links.filter(link=>reachable.has(link.containerId)&&reachable.has(link.whiteboardId))};trees.set(id,tree);return tree.boards.map(board=>({...board,name:board.name||board.title||'未命名白板',isCurrent:board.id===id,isPublished:!!state(id).url&&state(id).selection?.includes(board.id)}));};
- window.__inkbridgeShareSelection=(id,items)=>(state(id).selection||[id]).filter(x=>x!==id&&items.some(item=>item.id===x));
+ // Never published: child and grandchild boards are selected by default (user decision
+ // 2026-11-14); a published share keeps the selection it was published with.
+ window.__inkbridgeShareSelection=(id,items)=>(state(id).publicationId?state(id).selection||[id]:items.map(item=>item.id)).filter(x=>x!==id&&items.some(item=>item.id===x));
  window.__inkbridgeUseShareAccess=()=>{useChanges();const id=getBoardId();React.useEffect(()=>{status(id).catch(()=>{});},[id]);return !!state(id).configured;};
  window.__inkbridgeSharePublish=async({boardId,selectedBoardIds})=>{
   await flush();const current=state(boardId),config=settings.get(boardId)||{};
@@ -53,13 +55,16 @@ export function installWebShare({getBoardId,isHome,flush,onError}){
    h(Button,{size:'sm',color:'primary',variant:'flat',isLoading:busy,onPress:pair},'連接裝置'),
    h(Extras,{boardId:id,selectedBoardIds:[id],isPublishing:false}));
  }
+ // Each published board has its own fixed URL (share site aliases, see share-site/_worker.js).
+ const boardUrl=(root,id)=>{const current=state(root);return current.publicationId&&current.selection?.includes(id)?current.boardUrls?.[id]||null:null;};
+ const copyUrl=async value=>{try{const safe=value.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));await window.inkbridge.writeClipboardTextAndHtml({text:value,html:'<a href="'+safe+'">'+safe+'</a>'});window.__originalRequire(55153).fz?.({title:'已複製網址',color:'success'});}catch(error){failure(error);}};
  function Tree({items,selectedNestedIds,onSelectionChange,isPublishing}){
-  const root=items.find(b=>b.isCurrent)?.id||getBoardId(),tree=trees.get(root)||{rootBoardId:root,boards:items,links:[]},selected=new Set([root,...selectedNestedIds]),byId=new Map(items.map(b=>[b.id,b])),rows=[];
+  useChanges();const root=items.find(b=>b.isCurrent)?.id||getBoardId(),tree=trees.get(root)||{rootBoardId:root,boards:items,links:[]},selected=new Set([root,...selectedNestedIds]),byId=new Map(items.map(b=>[b.id,b])),rows=[];
   const visit=(id,depth,path)=>{if(path.has(id))return;const item=byId.get(id);if(!item)return;rows.push({item,depth,key:[...path,id].join('/')});const next=new Set(path).add(id);for(const link of tree.links)if(link.containerId===id)visit(link.whiteboardId,depth+1,next);};visit(root,0,new Set());
   const apply=ids=>onSelectionChange(ids.filter(id=>id!==root));
   return h('section',{className:'rounded-lg border border-default-200 bg-default-50/50 p-3 space-y-2','data-testid':'share-board-tree'},
    h('div',{className:'flex items-center justify-between gap-2 text-xs'},h('strong',null,'選擇要分享的白板'),h('span',{className:'flex gap-2'},h('button',{type:'button',disabled:isPublishing,onClick:()=>apply(items.map(b=>b.id))},'全選子孫'),h('button',{type:'button',disabled:isPublishing,onClick:()=>apply([])},'全部取消'))),
-   h('div',{className:'max-h-52 overflow-y-auto space-y-1'},rows.map(({item,depth,key})=>h('div',{key,style:{paddingLeft:depth*16}},h(Checkbox,{value:item.id,isSelected:selected.has(item.id),isDisabled:item.id===root||isPublishing,onValueChange:checked=>apply(changeShareSelection(tree,[...selected],item.id,checked)),classNames:{label:'text-sm min-w-0'},'data-board-id':item.id},item.name,item.id===root&&h('span',{className:'ml-1 text-xs text-primary'},'（目前白板）'))))),
+   h('div',{className:'max-h-52 overflow-y-auto space-y-1'},rows.map(({item,depth,key})=>h('div',{key,style:{paddingLeft:depth*16}},h('div',{className:'flex items-center justify-between gap-2'},h(Checkbox,{value:item.id,isSelected:selected.has(item.id),isDisabled:item.id===root||isPublishing,onValueChange:checked=>apply(changeShareSelection(tree,[...selected],item.id,checked)),classNames:{label:'text-sm min-w-0'},'data-board-id':item.id},item.name,item.id===root&&h('span',{className:'ml-1 text-xs text-primary'},'（目前白板）')),boardUrl(root,item.id)&&h('button',{type:'button',className:'shrink-0 text-xs text-primary hover:underline','data-copy-board-url':item.id,title:boardUrl(root,item.id),onClick:()=>copyUrl(boardUrl(root,item.id))},'複製網址'))))),
    h('p',{className:'text-xs text-default-500'},'已選 '+selected.size+' 張白板；未勾選的子白板不公開內容。'));
  }
  async function offline(id,selectedBoardIds){update(id,{error:null,progress:{phase:'offline'}});try{await flush();const result=await window.inkbridge.webShare({method:'offline',boardId:id,selectedBoardIds,losslessImageIds:settings.get(id)?.losslessImageIds||state(id).losslessImageIds||[],imagePreset:settings.get(id)?.imagePreset||state(id).imagePreset||'clarity'});update(id,{offline:result,progress:null});}catch(error){update(id,{progress:null});failure(error);}}

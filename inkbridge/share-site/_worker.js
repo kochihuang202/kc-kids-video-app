@@ -13,7 +13,12 @@ async function read(bucket, key) { const o = await bucket.get(key); return o ? {
 async function write(bucket, key, value, etag) { return bucket.put(key, JSON.stringify(value), {onlyIf:etag ? {etagMatches:etag} : {etagDoesNotMatch:'*'}, httpMetadata:{contentType:'application/json'}}); }
 function currentKey(id) { return 'publications/'+id+'/current'; }
 async function current(env,id) { return read(env.SHARE_BUCKET,currentKey(id)); }
-function publicStatus(url, value) { return {publicationId:value.publicationId,version:value.version,enabled:value.enabled,rootBoardId:value.rootBoardId,readerBuild:value.readerBuild,selection:value.selection,imagePreset:value.imagePreset,losslessImageIds:value.losslessImageIds||[],capturedAt:value.capturedAt,publishedAt:value.publishedAt,url:url.origin+'/s/'+value.publicationId+'/?shareId='+encodeURIComponent(value.rootBoardId)}; }
+async function publicStatus(url, value) { return {publicationId:value.publicationId,version:value.version,enabled:value.enabled,rootBoardId:value.rootBoardId,readerBuild:value.readerBuild,selection:value.selection,imagePreset:value.imagePreset,losslessImageIds:value.losslessImageIds||[],capturedAt:value.capturedAt,publishedAt:value.publishedAt,url:url.origin+'/s/'+value.publicationId+'/?shareId='+encodeURIComponent(value.rootBoardId),boardUrls:await boardUrls(url,value)}; }
+// Every board has one fixed address: the identity it would get as a publication root.
+// aliases/<id> points it at the latest publication that contains the board (as root or as a
+// descendant), so the same URL always shows the most recently published copy.
+async function boardUrls(url, value) { const out={}; for(const id of value.boardIds||[]) out[id]=url.origin+'/s/'+await identity(url,value.workspaceId,id)+'/'; return out; }
+function aliasKey(id) { return 'aliases/'+id; }
 async function identity(url, workspaceId, rootBoardId) { return (await sha(JSON.stringify([url.origin,required(workspaceId,'workspaceId'),required(rootBoardId,'rootBoardId')]))).slice(0,40); }
 async function authenticate(request, env) {
  const token = request.headers.get('authorization')?.match(/^Bearer (\S+)$/)?.[1];
@@ -80,7 +85,7 @@ async function api(request, env, url) {
  }
  if (p==='/api/shares/status' && request.method==='GET') {
   const id=await identity(url,url.searchParams.get('workspaceId'),url.searchParams.get('rootBoardId')), c=await current(env,id);
-  return json(c ? publicStatus(url,c.value) : null);
+  return json(c ? await publicStatus(url,c.value) : null);
  }
  if (p==='/api/uploads' && request.method==='POST') {
   const b=await boundedJSON(request); validateManifest(b.manifest);
@@ -100,7 +105,7 @@ async function api(request, env, url) {
  let cancel=p.match(/^\/api\/uploads\/([a-f0-9]{64})\/cancel$/);
  if(cancel&&request.method==='POST') {
   const key='uploads/'+cancel[1]+'/session',record=await read(env.SHARE_BUCKET,key),s=await session(env,cancel[1],owner),c=await current(env,s.publicationId);
-  if(c?.value.requestId===s.requestId)return json({cancelled:false,committed:true,status:publicStatus(url,c.value)});
+  if(c?.value.requestId===s.requestId)return json({cancelled:false,committed:true,status:await publicStatus(url,c.value)});
   if(!s.cancelled&&!await write(env.SHARE_BUCKET,key,{...s,cancelled:true},record.etag))fail(409,'Upload state changed');
   for(const f of s.manifest.files){const state=await read(env.SHARE_BUCKET,'uploads/'+s.uploadId+'/files/'+f.sha256);if(state){try{await env.SHARE_BUCKET.resumeMultipartUpload(state.value.key,state.value.uploadId).abort();}catch{}await env.SHARE_BUCKET.delete(state.value.key);}}
   return json({cancelled:true,committed:false});
@@ -154,7 +159,7 @@ async function api(request, env, url) {
  m=p.match(/^\/api\/uploads\/([a-f0-9]{64})\/commit$/);
  if (m && request.method==='POST') {
   const s=await activeSession(env,m[1],owner), c=await current(env,s.publicationId);
-  if(c?.value.requestId===s.requestId) return json(publicStatus(url,c.value));
+  if(c?.value.requestId===s.requestId) return json(await publicStatus(url,c.value));
   if((c?.value.version??null)!==(s.expectedVersion??null)) fail(409,'Publication changed; prior version retained');
   for(const f of s.manifest.files) if(!await verified(env,f)) fail(422,'Package file not verified: '+f.path);
   const dataFile=s.manifest.files.find(f=>f.path==='share.json'),data=await (await env.SHARE_BUCKET.get('objects/'+dataFile.sha256)).json();
@@ -182,7 +187,9 @@ async function api(request, env, url) {
   await write(env.SHARE_BUCKET,'publications/'+s.publicationId+'/versions/'+value.version,value);
   await activeSession(env,m[1],owner);
   if(!await write(env.SHARE_BUCKET,currentKey(s.publicationId),value,c?.etag)) fail(409,'Concurrent publication won; prior current retained');
-  return json(publicStatus(url,value));
+  // Fixed per-board URLs: the latest publication that contains a board serves it.
+  for(const boardId of data.boardIds){const id=await identity(url,s.workspaceId,boardId);await env.SHARE_BUCKET.put(aliasKey(id),JSON.stringify({publicationId:s.publicationId,boardId,version:value.version,updatedAt:Date.now()}),{httpMetadata:{contentType:'application/json'}});}
+  return json(await publicStatus(url,value));
  }
  m=p.match(/^\/api\/shares\/([a-f0-9]{40})\/enabled$/);
  if(m&&request.method==='POST') {
@@ -191,17 +198,26 @@ async function api(request, env, url) {
   const value={...c.value,version:crypto.randomUUID(),enabled:b.enabled};
   await write(env.SHARE_BUCKET,'publications/'+m[1]+'/versions/'+value.version,value);
   if(!await write(env.SHARE_BUCKET,currentKey(m[1]),value,c.etag)) fail(409,'Publication changed');
-  return json(publicStatus(url,value));
+  return json(await publicStatus(url,value));
  }
  fail(404,'Unknown endpoint');
 }
+async function resolveShare(env,id) {
+ // The latest publication containing the board, while it still shares it and is enabled;
+ // otherwise the board's own publication (shares published before aliases existed).
+ const alias=await read(env.SHARE_BUCKET,aliasKey(id));
+ if(alias){const c=await current(env,alias.value.publicationId);if(c?.value.enabled&&c.value.boardIds.includes(alias.value.boardId))return {value:c.value,entry:alias.value.boardId};}
+ const own=await current(env,id); return own?.value.enabled?{value:own.value,entry:own.value.rootBoardId}:null;
+}
 async function publicShare(request,env,url,m) {
  if(!['GET','HEAD'].includes(request.method)) fail(405,'Read only');
- const c=await current(env,m[1]); if(!c?.value.enabled) fail(404,'Share unavailable');
- const v=c.value,board=url.searchParams.get('shareId');if(board&&!v.boardIds.includes(board)) fail(404,'Board not published');
+ const resolved=await resolveShare(env,m[1]); if(!resolved) fail(404,'Share unavailable');
+ const v=resolved.value,board=url.searchParams.get('shareId');if(board&&!v.boardIds.includes(board)) fail(404,'Board not published');
  if(url.searchParams.has('v')&&url.searchParams.get('v')!==v.version) fail(409,'Share updated; reload the page');
  let resource=decodeURIComponent(m[2]||'');
  if(!resource||resource==='index.html') {
+  // A board's fixed URL opens at that board (the reader routes by ?shareId=).
+  if(!board&&resolved.entry!==v.rootBoardId){const target=new URL(url);target.searchParams.set('shareId',resolved.entry);return new Response(null,{status:302,headers:{location:target.pathname+target.search,'cache-control':'no-store'}});}
   if(!env.ASSETS) fail(503,'Reader assets unavailable');
   const readerUrl=new URL('/reader/'+v.readerBuild+'/index.html',url);
   const result=await env.ASSETS.fetch(new Request(readerUrl,{method:request.method})),headers=new Headers(result.headers);
