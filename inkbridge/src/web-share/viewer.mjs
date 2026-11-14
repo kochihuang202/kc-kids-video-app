@@ -7,8 +7,12 @@ window.addEventListener('error',e=>fail(e.error||e.message));window.addEventList
 // Explicit base-path adaptation for shipped browser resources. No server/API
 // fallbacks and no synthetic responses; missing resources fail visibly.
 const nativeFetch=window.fetch.bind(window);
+// Per-publication font subsets (share-fonts.cjs): the canvas font manager's request for a
+// built-in font file is answered with this share's subset when it has one.
+const shareFonts=new Map();
 window.fetch=(input,options)=>{let url=typeof input==='string'?input:input instanceof URL?input.href:input.url;
- if(/^\/(fonts|canvaskit|pdfjs)\//.test(url))url=new URL(url.slice(1),base).href;
+ const font=/^\/fonts\/([^?#]+)$/.exec(url),subset=font&&shareFonts.get(decodeURIComponent(font[1]));
+ if(subset)url=subset;else if(/^\/(fonts|canvaskit|pdfjs)\//.test(url))url=new URL(url.slice(1),base).href;
  const target=new URL(url,location.href);if(!['blob:','data:'].includes(target.protocol)&&target.origin!==location.origin)return Promise.reject(Error('分享包拒絕外部請求：'+target.origin));
  return nativeFetch(typeof input==='string'||input instanceof URL?url:new Request(url,input),options).then(response=>{if(response.status===409&&target.pathname.startsWith(publicationBase.pathname))stalePublication();return response;});
 };
@@ -23,6 +27,14 @@ async function boot(){
  let id=new URL(location.href).searchParams.get('shareId')||publication.rootBoardId;if(!publication.boardIds.includes(id))throw Error('此白板不在分享包中');
  if(!new URL(location.href).searchParams.has('shareId')){const u=new URL(location.href);u.searchParams.set('shareId',id);history.replaceState({},'',u);}
  const assetURL=relative=>{const url=new URL(relative,publicationBase);if(publication.publicationVersion)url.searchParams.set('v',publication.publicationVersion);return url.href;};
+ for(const f of publication.fonts||[])shareFonts.set(f.file,assetURL(f.path));
+ if(shareFonts.size){
+  // The interface stylesheets declare the same two families; later rules win, so HTML text
+  // also uses the subsets instead of downloading the full fonts. Missing characters fall
+  // back to the next family in the stack (the system font).
+  const families={'SourceHanSansSC-Regular.otf':'Source Han Sans SC','NotoColorEmoji-Regular.ttf':'Noto Color Emoji'},style=document.createElement('style');
+  style.textContent=[...shareFonts].filter(([file])=>families[file]).map(([file,url])=>'@font-face{font-family:"'+families[file]+'";src:url("'+url+'")}').join(String.fromCharCode(10));document.head.append(style);
+ }
  const attachments=publication.attachments.map(f=>({source_file_id:f.source_file_id,cdn_url:assetURL(f.path)}));
  const previewURLs=new Map(publication.attachments.filter(f=>f.preview_path).map(f=>[assetURL(f.path),assetURL(f.preview_path)]));
  globalThis.__inkbridgeWebImageSource=(src,bucket)=>bucket<=512?(previewURLs.get(src)||src):src;

@@ -1,6 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {scopeWebShare}=require('./web-share-data.cjs'),{scanFile,copyVerified}=require('./stream-files.cjs');
-const {createShareImages}=require('./share-images.cjs');
+const {createShareImages}=require('./share-images.cjs'),{writeShareFonts}=require('./share-fonts.cjs');
 const TYPES={png:'image/png',jpg:'image/jpeg',gif:'image/gif',webp:'image/webp',bmp:'image/bmp',pdf:'application/pdf',json:'application/json',js:'text/javascript',mjs:'text/javascript',html:'text/html',css:'text/css',svg:'image/svg+xml',wasm:'application/wasm',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',otf:'font/otf'};
 const EXT={'image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/webp':'webp','image/bmp':'bmp','application/pdf':'pdf'};
 async function exportWebShare({graph,rootBoardId,selectedBoardIds,workspaceDirectory,projectDirectory,outputDirectory,imagePreset='clarity',losslessImageIds=[],shareImages,imageCacheDirectory,contentOnly=false,readerBuild,capturedAt,revision}){
@@ -41,7 +41,10 @@ async function exportWebShare({graph,rootBoardId,selectedBoardIds,workspaceDirec
    if(preview){file.preview_path=await publishFile(preview);file.preview_sha256=preview.sha256;file.preview_size=preview.size;file.preview_width=preview.width;file.preview_height=preview.height;}
    attachments.push(file);
   }
-  await fs.writeFile(path.join(stage,'share.json'),JSON.stringify({format:selected.format,version:1,rootBoardId,boardIds:selected.boardIds,graph:selected.graph,attachments,capturedAt:capturedAt||new Date().toISOString(),revision,imagePreset}));
+  // Font subsets for this publication: everything its canvas can draw is its graph text and
+  // the reader's interface strings (share-fonts.cjs).
+  const fonts=await writeShareFonts({fontsDirectory:path.join(source,'vendor/app/fonts'),stage,texts:[JSON.stringify(selected.graph),await fs.readFile(path.join(runtime,'locale.json'),'utf8')]});
+  await fs.writeFile(path.join(stage,'share.json'),JSON.stringify({format:selected.format,version:1,rootBoardId,boardIds:selected.boardIds,graph:selected.graph,attachments,fonts,capturedAt:capturedAt||new Date().toISOString(),revision,imagePreset}));
   if(!contentOnly){
    const scripts=manifest.files.filter(f=>f.endsWith('.js')).map(f=>`<script src="./${f}"></script>`).join('');const html=await fs.readFile(path.join(stage,'index.html'),'utf8');await fs.writeFile(path.join(stage,'index.html'),html.replace('<!-- NATIVE_RUNTIME -->',scripts));
    await fs.writeFile(path.join(stage,'_headers'),`/*\n  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob:; img-src 'self' data: blob:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n`);

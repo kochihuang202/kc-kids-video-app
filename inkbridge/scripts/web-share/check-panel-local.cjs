@@ -42,6 +42,9 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
   await expect(page.getByRole('dialog')).toContainText(receipt.boardUrls.root);
   const child=await local(receipt.boardUrls.child);assert.equal(child.status,302);assert.equal(child.headers.get('location'),new URL(receipt.boardUrls.child).pathname+'?shareId=child');
   assert.equal((await local(receipt.boardUrls.grand+'share.json')).status,200);
+  // The publication carries its font subsets and the site serves them (share-fonts.cjs).
+  const published=await(await local(receipt.boardUrls.root+'share.json')).json();assert.deepEqual(published.fonts.map(f=>f.file).sort(),['NotoColorEmoji-Regular.ttf','SourceHanSansSC-Regular.otf']);
+  for(const f of published.fonts){const r=await local(receipt.boardUrls.root+f.path);assert.equal(r.status,200);assert(f.size<2*1024*1024,'subset size '+f.size);}
   assert.equal(await page.locator('[data-inkbridge-publish="update"]').count(),1,'update button after publishing');
   // 4. Copy buttons per board copy that board's URL.
   await expect(tree.locator('[data-copy-board-url="grand"]')).toBeVisible();
@@ -54,7 +57,7 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
   await expect.poll(clip).toBe(receipt.boardUrls.root);
   await page.screenshot({path:path.join(data,'share-local-after.png')});
   assert.deepEqual(await page.evaluate(()=>window.__inkbridgeIntegrated.errors),[]);
-  console.log(JSON.stringify({data,descendantsByDefault:true,publishPrimaryAboveOptions:true,boardUrls:Object.keys(receipt.boardUrls).length,childRedirect:true,copyBoardUrl:true,nativeCopyButton:true,realSiteUntouched:true}));
+  console.log(JSON.stringify({data,descendantsByDefault:true,publishPrimaryAboveOptions:true,boardUrls:Object.keys(receipt.boardUrls).length,childRedirect:true,copyBoardUrl:true,nativeCopyButton:true,fontSubsets:true,realSiteUntouched:true}));
  }catch(error){await page?.screenshot({path:path.join(data,'share-local-failure.png')}).catch(()=>{});console.error({data});throw error;}
  finally{if(savedClipboard!==null)await app.evaluate(({clipboard},text)=>clipboard.writeText(text),savedClipboard).catch(()=>{});await app.close().catch(()=>{});await mf.dispose();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

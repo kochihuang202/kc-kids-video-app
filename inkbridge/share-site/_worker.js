@@ -3,6 +3,7 @@ const PART_SIZE = 8 * 1024 * 1024;
 const MAX_PDF_SIZE = 512 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 64 * 1024 * 1024;
 const MAX_GRAPH_SIZE = 16 * 1024 * 1024;
+const FONT_FILES = new Set(['SourceHanSansSC-Regular.otf','NotoColorEmoji-Regular.ttf']);
 const encoder = new TextEncoder();
 const hex = bytes => [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, '0')).join('');
 const sha = async value => hex(await crypto.subtle.digest('SHA-256', typeof value === 'string' ? encoder.encode(value) : value));
@@ -38,7 +39,8 @@ function validateManifest(m) {
   if (!f||typeof f.path!=='string'||!(f.path === 'share.json' || /^assets\/[A-Za-z0-9._/-]+$/.test(f.path)) || f.path.split('/').some(s=>s==='..'||s==='.'||!s) || paths.has(f.path)) fail(400,'Invalid or duplicate file path');
   paths.add(f.path);
   if (!/^[a-f0-9]{64}$/.test(f.sha256) || !Number.isSafeInteger(f.size) || f.size < 0 || Math.ceil(f.size/PART_SIZE)>10000) fail(400,'Invalid file integrity metadata');
-  const extension=f.path.match(/\.([a-z0-9]+)$/)?.[1],mime={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',json:'application/json'}[extension];
+  const extension=f.path.match(/\.([a-z0-9]+)$/)?.[1],mime={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',json:'application/json',otf:'font/otf',ttf:'font/ttf'}[extension];
+  if((extension==='otf'||extension==='ttf')&&!/^assets\/font-[a-f0-9]{64}\.(otf|ttf)$/.test(f.path))fail(400,'Invalid font path');
   if(!mime||f.contentType!==mime)fail(400,'Unsupported publication file type');
   if(f.size>(f.path==='share.json'?MAX_GRAPH_SIZE:extension==='pdf'?MAX_PDF_SIZE:MAX_IMAGE_SIZE))fail(400,'Publication file exceeds size limit');
  }
@@ -169,6 +171,8 @@ async function api(request, env, url) {
    graphFiles.push({path:a.path,sha256:a.sha256,size:a.size});
    if(a.preview_path!==undefined)graphFiles.push({path:a.preview_path,sha256:a.preview_sha256,size:a.preview_size});
   }
+  // Per-publication font subsets (share-fonts.cjs) replace the reader's two large fonts.
+  if(data.fonts!==undefined){if(!Array.isArray(data.fonts)||data.fonts.length>8||data.fonts.some(x=>!FONT_FILES.has(x?.file)||typeof x.path!=='string'))fail(422,'Invalid share fonts');for(const x of data.fonts)graphFiles.push({path:x.path,sha256:x.sha256,size:x.size});}
   for(const a of graphFiles)if(!s.manifest.files.some(f=>f.path===a.path&&f.sha256===a.sha256&&f.size===a.size)) fail(422,'Attachment missing from manifest');
   const allowed=new Set(data.boardIds);
   if(!Array.isArray(data.graph?.boards)||data.graph.boards.some(b=>!allowed.has(b.id))||new Set(data.graph.boards.map(b=>b.id)).size!==allowed.size||data.graph.boards.length!==allowed.size) fail(422,'Board membership mismatch');
@@ -209,6 +213,21 @@ async function resolveShare(env,id) {
  if(alias){const c=await current(env,alias.value.publicationId);if(c?.value.enabled&&c.value.boardIds.includes(alias.value.boardId))return {value:c.value,entry:alias.value.boardId};}
  const own=await current(env,id); return own?.value.enabled?{value:own.value,entry:own.value.rootBoardId}:null;
 }
+// Reader builds live at /reader/inkbridge-reader-<content hash>/ and never change, so browsers
+// may keep them; /reader/current.json names the build every share opens with (the share data
+// format is the same for all builds). Without it, the publication's pinned build is used.
+let readerCache=null;
+async function currentReader(env,fallback,url){
+ if(readerCache&&Date.now()-readerCache.at<60000)return readerCache.build||fallback;
+ let build=null;try{const r=await env.ASSETS.fetch(new Request(new URL('/reader/current.json',url)));if(r.ok){const v=await r.json();if(/^inkbridge-reader-[a-f0-9]{12}$/.test(v?.build||''))build=v.build;}}catch{}
+ readerCache={at:Date.now(),build};return build||fallback;
+}
+async function readerAsset(request,env,url){
+ const response=await env.ASSETS.fetch(request);
+ if(response.status!==200||!/^\/reader\/inkbridge-reader-[a-f0-9]{12}\//.test(url.pathname))return response;
+ const headers=new Headers(response.headers);headers.set('cache-control','public, max-age=31536000, immutable');
+ return new Response(response.body,{status:response.status,headers});
+}
 async function publicShare(request,env,url,m) {
  if(!['GET','HEAD'].includes(request.method)) fail(405,'Read only');
  const resolved=await resolveShare(env,m[1]); if(!resolved) fail(404,'Share unavailable');
@@ -219,14 +238,14 @@ async function publicShare(request,env,url,m) {
   // A board's fixed URL opens at that board (the reader routes by ?shareId=).
   if(!board&&resolved.entry!==v.rootBoardId){const target=new URL(url);target.searchParams.set('shareId',resolved.entry);return new Response(null,{status:302,headers:{location:target.pathname+target.search,'cache-control':'no-store'}});}
   if(!env.ASSETS) fail(503,'Reader assets unavailable');
-  const readerUrl=new URL('/reader/'+v.readerBuild+'/index.html',url);
+  const build=await currentReader(env,v.readerBuild,url),readerUrl=new URL('/reader/'+build+'/index.html',url);
   const result=await env.ASSETS.fetch(new Request(readerUrl,{method:request.method})),headers=new Headers(result.headers);
   headers.set('cache-control','no-store');headers.set('x-content-type-options','nosniff');
   if(request.method==='HEAD'||result.status!==200)return new Response(result.body,{status:result.status,headers});
   // Runtime resources belong to the immutable reader build, while viewer.mjs
   // derives share.json and attachment paths from the visible /s/<id>/ URL.
   headers.delete('content-length');headers.delete('etag');
-  return new HTMLRewriter().on('head',{element(element){element.prepend('<base href="/reader/'+v.readerBuild+'/">',{html:true});}}).transform(new Response(result.body,{status:result.status,headers}));
+  return new HTMLRewriter().on('head',{element(element){element.prepend('<base href="/reader/'+build+'/">',{html:true});}}).transform(new Response(result.body,{status:result.status,headers}));
  }
  const f=v.manifest.files.find(f=>f.path===resource);if(!f) fail(404,'Resource outside current membership');
  if(resource==='share.json') {
@@ -254,7 +273,7 @@ export default {async fetch(request,env) {try {
  const url=new URL(request.url);
  if(url.pathname.startsWith('/api/')) return await api(request,env,url);
  const m=url.pathname.match(/^\/s\/([a-f0-9]{40})(?:\/(.*))?$/);if(m)return await publicShare(request,env,url,m);
- if(url.pathname.startsWith('/reader/')&&env.ASSETS)return env.ASSETS.fetch(request);
+ if(url.pathname.startsWith('/reader/')&&env.ASSETS)return readerAsset(request,env,url);
  if(url.pathname==='/health')return json({ok:true,service:'inkbridge-share',protocol:1});
  fail(404,'Not found');
  }catch(error){return json({error:error.status?error.message:'Sharing service error'},error.status||500);}}};

@@ -25,7 +25,8 @@ async function buildPortable(){
     for(const dependency of Object.keys(pkg.dependencies||{}))await codecPackage(dependency);
     for(const dependency of Object.keys(pkg.optionalDependencies||{}))await codecPackage(dependency,true);
   }
-  await codecPackage('sharp');await codecPackage('bmp-js');
+  // harfbuzzjs: per-publication font subsets (src/main/share-fonts.cjs).
+  await codecPackage('sharp');await codecPackage('bmp-js');await codecPackage('harfbuzzjs');
   await copy(path.join(__dirname,'Recover-InkBridge.ps1'),path.join(output,'Recover-InkBridge.ps1'));
   for(const file of ['index.html','styles.css'])await copy(path.join(project,'src/renderer',file),path.join(app,'src/renderer',file));
   // Copy only runtime integration files; no tests, extraction tools or evidence.

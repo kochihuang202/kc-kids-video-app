@@ -30,6 +30,16 @@
 - 原版網址列的「複製」原本用瀏覽器剪貼簿（InkBridge 拒絕此權限），實際沒寫入卻顯示「已複製」；改走 InkBridge 剪貼簿（`__inkbridgeCopyShareUrl`），失敗時顯示錯誤。`check-panel-local.cjs` 驗證兩種複製，並在結束時還原使用者原本的剪貼簿文字。
 - 驗證：`tests/share-board-urls.test.cjs`（本機 workerd/R2：三層白板各一網址、子白板 302、子白板改以自己為根發布網址不變、最近發布優先、停用與移除後的回退）；`scripts/web-share/check-panel-local.cjs`（真實 Electron＋本機 HTTPS 分享站：預設子孫勾選、發布按鈕在選項之上且為大按鈕、三張白板網址、子白板轉址、複製網址）；`npm run test:share` 27 通過；`check-panel.cjs` 離線模式通過。尚未部署到 https://inkbridge-share.pages.dev，需重新部署 Pages 才生效。
 
+## 分享頁載入速度（2026-11-14，使用者決定）
+
+量測（線上 inkbridge-share.pages.dev，壓縮後）：首次開啟約 29 MiB，其中思源黑體 13.3 MiB、Noto Color Emoji 7.7 MiB；原版字型管理（65857）在畫布繪製前會載入全部內建字型。閱讀器檔案原本是 `max-age=0, must-revalidate`，每次開啟都要逐一確認。FlexNote 1.1.70 的單一 HTML 匯出把同樣的字型與檢視器全部內嵌，不會更快（見 `FLEXNOTE_1170_HTML_EXPORT.md`），已決定不採用。
+
+- **閱讀器版本化與長期快取**：`build-site.cjs` 以內容雜湊命名閱讀器 `reader/inkbridge-reader-<12 碼>/`，寫入 `reader/current.json`；同時保留舊名 `inkbridge-reader-v1` 與上一個雜湊版本（`private-share-site/reader-archive`），讓已開著的頁面不中斷。`_worker.js` 對雜湊版本回傳 `Cache-Control: public, max-age=31536000, immutable`；分享頁一律用 `current.json` 指定的版本（分享資料格式各版相同），沒有時用發布時記錄的版本。內容不變時雜湊不變，重新部署不會讓瀏覽器重新下載。
+- **每份分享的精簡字型**（自行設計，原版無此功能）：發布或匯出時 `src/main/share-fonts.cjs` 以 HarfBuzz hb-subset（`harfbuzzjs` 1.6.4，MIT，可攜版一併打包）從思源黑體與 Noto Color Emoji 切出只含「這份分享的文字＋閱讀器介面文字（locale.json）＋常用標點符號」的字型，存成 `assets/font-<sha256>.otf/.ttf`，列在 share.json 的 `fonts`。典型大小：中文約 0.7 MiB，表情符號依使用量（沒有表情符號約 1 KB）。網站只接受 `assets/font-<sha256>` 命名、列在 `fonts` 的這兩種字型。
+- `src/web-share/viewer.mjs` 讀到 `fonts` 後，畫布字型請求改用精簡字型，並補一段同名 `@font-face` 讓介面文字也用精簡字型；精簡字型沒有的字（例如在搜尋框輸入）由瀏覽器改用系統字型。舊分享沒有 `fonts`，照原本載入完整字型，按「更新發布」後才會使用精簡字型。
+- 預估：首次開啟約 10 MiB（閱讀器與繪圖引擎約 9.1 MiB＋精簡字型）；第二次以後只需分享內容與圖片。
+- 驗證：`tests/share-site-speed.test.cjs`（精簡字型大小與決定性、網站接受並提供字型、拒絕非雜湊命名或型別不符、current.json、雜湊版本長期快取而 v1 不長期快取）；`check-browser.cjs` 真實 Chrome 完整閱讀流程，未下載完整思源黑體與表情符號字型，中文與 ⚠️ 正常顯示；`check-panel-local.cjs` 桌面發布帶精簡字型；`npm run test:share` 29 通過；`check-panel`、`check-desktop` 通過。尚未部署。
+
 ## 已確認來源與接合
 
 - `prepare-sharing.cjs`：完整46979.n2 Modal、78178.M父面板，原生子元件、按鈕、
