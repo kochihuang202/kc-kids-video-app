@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   openLink:url=>invoke('inkbridge:openLink',url),
   youtubeShimOrigin:()=>invoke('inkbridge:youtubeShimOrigin'),
   youtubeMeta:videoId=>invoke('inkbridge:youtubeMeta',videoId),
+  baidu:(method,arg)=>invoke('inkbridge:baidu',{method,arg}),
   screenshotEmbeddedFrame:request=>invoke('inkbridge:screenshotEmbeddedFrame',request),
   savePastedImageBuffers:request=>invoke('inkbridge:savePastedImageBuffers',request),
   savePureBase64Image:request=>invoke('inkbridge:savePureBase64Image',request),

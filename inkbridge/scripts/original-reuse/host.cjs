@@ -4,6 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const crypto=require('node:crypto');
 const {createDatabaseClient}=require('../../src/main/database-client.cjs');
 const {YOUTUBE_HOSTS}=require('../../src/main/youtube.cjs');
+const {createBaiduDisk,BAIDU_STREAM_HOSTS,SEGMENT_HOSTS}=require('../../src/main/baidu-disk.cjs');
 const root=path.resolve(__dirname,'../../private-original-editor'),own=__dirname;
 const project=path.resolve(__dirname,'../..'),boardMode=process.env.INKBRIDGE_ORIGINAL_VIEW==='board';
 const portable=process.env.INKBRIDGE_PORTABLE==='1';
@@ -15,6 +16,11 @@ const resolvedData=path.resolve(data),tempRoot=require('node:os').tmpdir();
 const youtube=require('../../src/main/youtube.cjs').createYoutube();let youtubeShim='';
 if(!(portable&&resolvedData===portableData)&&!resolvedData.startsWith(path.join(root,'profiles')+path.sep)&&!(path.dirname(resolvedData)===tempRoot&&path.basename(resolvedData).startsWith('inkbridge-original-modules-'))){console.error('Probe profile must be inside its private profiles or a dedicated temp directory');process.exit(1);}
 app.setName('InkBridge Original Module Probe');
+// Baidu NetDisk (src/main/baidu-disk.cjs). Checks may point it at a local fake Baidu, only from a
+// dedicated temp probe profile.
+const baiduTest=path.dirname(resolvedData)===tempRoot&&/^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.INKBRIDGE_BAIDU_TEST_ORIGIN||'')?process.env.INKBRIDGE_BAIDU_TEST_ORIGIN:'';
+const baiduMedia="https://pan.baidu.com https://*.baidupcs.com https://v1-ant.baidu.com"+(baiduTest?' '+baiduTest:'');
+const baiduStream=url=>BAIDU_STREAM_HOSTS.test(url)||!!baiduTest&&url.startsWith(baiduTest+'/');
 for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
 protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
@@ -49,7 +55,7 @@ app.whenReady().then(async()=>{
     }
     if(pathname==='/'||pathname==='/board-window'){
       response.setHeader('Content-Type','text/html; charset=utf-8');
-      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote:; img-src 'self' data: blob: flexnote:; media-src 'self' blob: flexnote:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"+(youtubeShim?"; frame-src 'self' "+youtubeShim:""));
+      response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' flexnote: "+baiduMedia+"; img-src 'self' data: blob: flexnote:; media-src 'self' blob: flexnote: "+baiduMedia+"; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"+(youtubeShim?"; frame-src 'self' "+youtubeShim:""));
       const originalScripts='<script src="/runtime.js"></script><script src="/register-original.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_buildManifest.js"></script><script src="/_next/static/LOq0EGi9XWnc3BD21aEGY/_ssgManifest.js"></script>';
       if(boardMode){
         let html=fs.readFileSync(path.join(project,'src/renderer/index.html'),'utf8');
@@ -123,7 +129,11 @@ app.whenReady().then(async()=>{
   youtubeShim=await youtube.start();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(storedPort,'127.0.0.1',resolve);});const origin=`http://127.0.0.1:${server.address().port}`;
   if(!storedPort)fs.writeFileSync(endpointFile,JSON.stringify({port:server.address().port}),'utf8');
-  const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://')||!!youtubeShim&&details.url.startsWith(youtubeShim+'/')||YOUTUBE_HOSTS.test(details.url);if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
+  const blocked=[];session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{const allowed=details.url.startsWith(origin+'/')||details.url==='about:blank'||details.url.startsWith('flexnote://')||!!youtubeShim&&details.url.startsWith(youtubeShim+'/')||YOUTUBE_HOSTS.test(details.url)||baiduStream(details.url);if(!allowed)blocked.push(details.url.split('?')[0]);callback({cancel:!allowed});});
+  // Baidu stream: segment hosts want a pan.baidu.com Referer (as the original sets), and the
+  // player reads the playlist and segments from this page's origin.
+  session.defaultSession.webRequest.onBeforeSendHeaders((details,callback)=>{if(SEGMENT_HOSTS.test(details.url))details.requestHeaders.Referer='https://pan.baidu.com';callback({requestHeaders:details.requestHeaders});});
+  session.defaultSession.webRequest.onHeadersReceived((details,callback)=>{if(!baiduStream(details.url))return callback({});const headers={...details.responseHeaders};for(const k of Object.keys(headers))if(/^access-control-allow-origin$/i.test(k))delete headers[k];headers['Access-Control-Allow-Origin']=[origin];callback({responseHeaders:headers});});
   session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
   // Links in notes: like the original main process, hand them to the system (open-links.cjs).
   const links=require('../../src/main/open-links.cjs').createLinkOpener({shell,dialog,appOrigin:origin});
@@ -232,6 +242,9 @@ app.whenReady().then(async()=>{
   ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');const results=[];for(const file of files){if(typeof file.path!=='string'||!path.isAbsolute(file.path))throw Error('Invalid selected file');const info=await require('../../src/main/stream-files.cjs').scanFile(file.path,{maxBytes:512*1024*1024});results.push({path:file.path,sha256:info.sha256});}return results;});
   ipcMain.handle('inkbridge:youtubeShimOrigin',async event=>{if(!readable(event))throw Error('Unexpected sender');return youtubeShim||(youtubeShim=await youtube.start());});
   ipcMain.handle('inkbridge:screenshotEmbeddedFrame',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');return require('../../src/main/youtube.cjs').screenshotEmbeddedFrame(event.sender,payload);});
+  const baidu=createBaiduDisk({dir:path.join(data,'Profile'),safeStorage,openExternal:url=>baiduTest?undefined:shell.openExternal(url),...baiduTest?{oauth:baiduTest,pan:baiduTest}:{},showCode:baiduTest?undefined:code=>{clipboard.writeText(code.user_code);dialog.showMessageBox(window,{type:'info',title:'百度網盤登入',message:'請在剛開啟的百度頁面輸入代碼：'+code.user_code,detail:'代碼已複製到剪貼簿。輸入並同意授權後，這裡會自動完成登入（'+Math.round((Number(code.expires_in)||300)/60)+' 分鐘內有效）。'}).catch(()=>{});}});
+  const baiduMethods=new Set(['startAuth','accessToken','logout','files','search','src','m3u8','subtitle']);
+  ipcMain.handle('inkbridge:baidu',async(event,{method,arg}={})=>{if(!readable(event))throw Error('Unexpected sender');if(!baiduMethods.has(method))throw Error('Unknown Baidu method');return baidu[method](arg);});
   ipcMain.handle('inkbridge:youtubeMeta',async(event,videoId)=>{if(!readable(event))throw Error('Unexpected sender');return youtube.meta(videoId);});
   ipcMain.handle('inkbridge:openLink',async(event,url)=>{if(!readable(event))throw Error('Unexpected sender');return links.open(url,BrowserWindow.fromWebContents(event.sender));});
   ipcMain.handle('inkbridge:writeClipboardTextAndHtml',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');if(typeof payload?.text!=='string'||typeof payload?.html!=='string'||payload.text.length+payload.html.length>8*1024*1024)throw Error('Invalid clipboard payload');await clipboard.write([new ClipboardItem({'text/plain':payload.text,'text/html':payload.html})]);return {success:true};});

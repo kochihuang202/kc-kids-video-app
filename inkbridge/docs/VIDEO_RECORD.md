@@ -134,4 +134,18 @@ InkBridge 實作：
 
 驗證：`check-youtube.cjs`（需要網路；YouTube 官方 API 範例影片：取標題封面、封面為工作區檔案、經本機播放頁播放、標記時間 4.9 秒且有畫面截圖、拖到白板後 📍 開在該時間、重開保留）；`tests/youtube.test.cjs`（放行網域、播放頁、oEmbed 與縮圖、ID 驗證）；回歸 `check-video-highlight-board`、`check-video-toolbar-insert`、`check-shell` 通過。
 
-未做：百度網盤（調查中）。
+## 第三階段：百度網盤（2026-11-14）
+
+使用方式：插入影片視窗切到「百度網盤」分頁 → 「授權百度網盤」→ 瀏覽器開啟百度頁面，InkBridge 顯示登入代碼（已複製到剪貼簿）→ 在百度頁面登入、輸入代碼、同意授權 → 視窗自動列出網盤檔案 → 勾選影片 → 匯入。卡片與右側高亮面板都以百度串流播放，標記、截圖、📍 與本機影片相同。
+
+與原版的差異（使用者決定）：
+- 只保留百度；原版的夸克、阿里雲盤分頁移除（67569）。上傳與網盤同步不在範圍內。
+- 原版用 FlexNote 內建的百度開發者金鑰登入，InkBridge 不使用；改用使用者自己的百度開放平台應用（AppKey/SecretKey 以 Windows 加密存在本機設定資料夾 `Profile/baidu-app.json`，不進工作區與 Git）。
+- 原版以 `flexnote://baidudisk` 回呼登入；InkBridge 改用百度「設備碼登入」，不需要設定回呼網址。存取權杖同樣加密存在 `Profile/baidu-token.json`，到期自動續期。
+- 原版搜尋結果少了 `fs_id`，從搜尋結果匯入的卡片會存成 "undefined" 而無法播放；InkBridge 的搜尋結果保留百度原始欄位。
+- 沒有封面的影片卡片會由第一個畫面自動取封面（原版行為）；原版其中一次繪製沒有卡片資料而報錯，已略過那次（80716）。
+
+來源：原版 main 的 `get-baidudisk-*` 服務（list / search / filemetas / streaming M3U8_AUTO_720 加廣告等待 / M3U8_SUBTITLE_SRT），結果格式相同，實作在 `src/main/baidu-disk.cjs`；播放沿用原版 59771 的 video.js HLS。宿主只對百度串流網址放行（pan.baidu.com 串流、baidupcs.com、v1-ant.baidu.com），片段請求加上 pan.baidu.com Referer（原版同樣），並為這些回應加上本頁來源的 CORS 標頭。
+
+驗證：`check-baidu.cjs`（本機假百度伺服器與 ffmpeg 合成 HLS，不連百度：三個分頁、設備碼登入、列檔、搜尋、匯入、廣告等待後串流、自動封面、標記截圖、重開保持登入、加密儲存、登出）；`tests/baidu-disk.test.cjs`。真實百度帳號需使用者自行登入試用。
+

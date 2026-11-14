@@ -1,0 +1,109 @@
+// Baidu NetDisk for video cards (video record phase three; REG-160). Same services and results
+// as the original main process (get-baidudisk-files / search / src / m3u8-src / subtitle /
+// access_token / logout), with two differences agreed with the user (2026-11-14):
+// - the Baidu developer app is the user's own (AppKey/SecretKey kept encrypted on this computer,
+//   never in the workspace or Git); the original's built-in FlexNote app is never used;
+// - login uses Baidu's device-code flow (code shown to the user, Baidu page opened in the
+//   browser) instead of the original flexnote:// redirect, so no callback URL is needed.
+// Tokens are kept encrypted next to the app credentials and refreshed when they expire.
+const fs = require('node:fs/promises'), path = require('node:path'), crypto = require('node:crypto');
+const OAUTH = 'https://openapi.baidu.com', PAN = 'https://pan.baidu.com';
+// Hosts the renderer's player reaches for a Baidu stream (the original allows the same and adds
+// a pan.baidu.com Referer for the segment hosts).
+const BAIDU_STREAM_HOSTS = /^https:\/\/(pan\.baidu\.com\/rest\/2\.0\/xpan\/file\?|([a-z0-9-]+\.)*baidupcs\.com\/|v1-ant\.baidu\.com\/)/i;
+const SEGMENT_HOSTS = /^https:\/\/(([a-z0-9-]+\.)*baidupcs\.com|v1-ant\.baidu\.com)\//i;
+function createBaiduDisk({ dir, safeStorage, fetch = globalThis.fetch, openExternal, showCode, oauth = OAUTH, pan = PAN, now = () => Date.now(), wait = ms => new Promise(done => setTimeout(done, ms)) }) {
+  const appFile = path.join(dir, 'baidu-app.json'), tokenFile = path.join(dir, 'baidu-token.json');
+  const encrypt = async value => (safeStorage.encryptStringAsync ? await safeStorage.encryptStringAsync(value) : safeStorage.encryptString(value)).toString('base64');
+  const decrypt = async value => { const b = Buffer.from(value, 'base64'); return safeStorage.decryptStringAsync ? (await safeStorage.decryptStringAsync(b)).result : safeStorage.decryptString(b); };
+  async function writeSecret(file, format, value) {
+    await fs.mkdir(dir, { recursive: true }); const tmp = file + '.' + crypto.randomUUID() + '.tmp';
+    await fs.writeFile(tmp, JSON.stringify({ format, version: 1, encrypted: await encrypt(JSON.stringify(value)) }), { mode: 0o600 });
+    try { await fs.rename(tmp, file); } finally { await fs.rm(tmp, { force: true }); }
+  }
+  async function readSecret(file, format) {
+    let raw; try { raw = JSON.parse(await fs.readFile(file, 'utf8')); } catch (e) { if (e.code === 'ENOENT') return null; throw e; }
+    if (raw.format !== format || raw.version !== 1) throw Error('百度網盤設定格式無效');
+    return JSON.parse(await decrypt(raw.encrypted));
+  }
+  async function setApp({ appKey, secretKey }) {
+    if (!/^[A-Za-z0-9]{16,64}$/.test(appKey || '') || !/^[A-Za-z0-9]{16,64}$/.test(secretKey || '')) throw Error('百度 AppKey 或 SecretKey 格式不正確');
+    await writeSecret(appFile, 'inkbridge-baidu-app', { appKey, secretKey });
+  }
+  const app = async () => { const v = await readSecret(appFile, 'inkbridge-baidu-app'); if (!v) throw Error('尚未設定百度開放平台的 AppKey 與 SecretKey'); return v; };
+  const form = values => new URLSearchParams(values).toString();
+  async function json(url, init) { const r = await fetch(url, init); const text = await r.text(); try { return JSON.parse(text); } catch { throw Error('百度回應無法解析 (' + r.status + ')'); } }
+  async function saveToken(t) { const token = { access: t.access_token, refresh: t.refresh_token, expires: now() + 1000 * (Number(t.expires_in) || 0) }; await writeSecret(tokenFile, 'inkbridge-baidu-token', token); return token; }
+  let refreshing = null;
+  async function accessToken() {
+    const token = await readSecret(tokenFile, 'inkbridge-baidu-token'); if (!token?.access) return null;
+    if (token.expires - now() > 60000) return token.access;
+    if (!token.refresh) return null;
+    refreshing ||= (async () => { const { appKey, secretKey } = await app(); const t = await json(oauth + '/oauth/2.0/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: form({ grant_type: 'refresh_token', refresh_token: token.refresh, client_id: appKey, client_secret: secretKey }) }); if (t.error) { await fs.rm(tokenFile, { force: true }); return null; } return (await saveToken(t)).access; })().finally(() => { refreshing = null; });
+    return refreshing;
+  }
+  // Device-code login: show the code, open Baidu's page, and poll in the background; the
+  // original dialog polls get-baidudisk-access_token until it is set.
+  let login = null;
+  async function startAuth() {
+    const { appKey, secretKey } = await app();
+    const code = await json(oauth + '/oauth/2.0/device/code?' + form({ response_type: 'device_code', client_id: appKey, scope: 'basic,netdisk' }));
+    if (!code.device_code) throw Error('百度登入代碼取得失敗：' + (code.error_description || code.error || '未知錯誤'));
+    const id = crypto.randomUUID(); login = id;
+    await openExternal(code.verification_url); showCode?.(code);
+    (async () => {
+      const until = now() + 1000 * (Number(code.expires_in) || 300); let interval = 1000 * (Number(code.interval) || 5);
+      while (login === id && now() < until) {
+        await wait(interval); if (login !== id) return;
+        const t = await json(oauth + '/oauth/2.0/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: form({ grant_type: 'device_token', code: code.device_code, client_id: appKey, client_secret: secretKey }) }).catch(() => ({ error: 'network' }));
+        if (t.access_token) { await saveToken(t); login = null; return; }
+        if (t.error === 'slow_down') interval += 5000; else if (t.error && !['authorization_pending', 'network'].includes(t.error)) { login = null; return; }
+      }
+    })();
+    return { userCode: code.user_code, verificationUrl: code.verification_url };
+  }
+  async function logout() { login = null; await fs.rm(tokenFile, { force: true }); }
+  const fileRow = e => ({ id: e.fs_id, name: e.server_filename, path: e.path, size: e.size, modified: 1000 * e.server_mtime, isdir: e.isdir });
+  async function files(dir = '/') {
+    const token = await accessToken(); if (!token) return { success: false, error: 'No access token found' };
+    try { const a = await json(pan + '/rest/2.0/xpan/file?' + form({ method: 'list', access_token: token, dir: String(dir || '/') })); if (a.errno) return { success: false, error: 'Baidu API error: ' + (a.errmsg || a.errno) }; return { success: true, files: (a.list || []).map(e => ({ ...fileRow(e), ...e })) }; }
+    catch { return { success: false, error: 'Failed to retrieve file list' }; }
+  }
+  async function search(key) {
+    const token = await accessToken(); if (!token) throw Error('No access token found');
+    const a = await json(pan + '/rest/2.0/xpan/file?' + form({ method: 'search', access_token: token, key: String(key || ''), web: 1, recursion: 1 }), { headers: { 'User-Agent': 'pan.baidu.com' } });
+    if (a.errno) throw Error('Failed to search files');
+    // Like the list (unlike the original search), keep Baidu's own fields: the modal imports with
+    // String(fs_id), which the original search results lacked (card saved as "undefined").
+    return (a.list || []).map(e => ({ ...fileRow(e), ...e }));
+  }
+  async function src(fsid) {
+    if (!/^\d{1,20}$/.test(String(fsid))) throw Error('百度檔案代號無效');
+    const token = await accessToken(); if (!token) throw Error('No access token found');
+    return json(pan + '/rest/2.0/xpan/multimedia?' + form({ method: 'filemetas', access_token: token, fsids: '[' + fsid + ']', dlink: 1 }));
+  }
+  const streamUrl = (token, file, type, adToken) => pan + '/rest/2.0/xpan/file?' + form({ method: 'streaming', access_token: token, path: file, type, ...adToken ? { adToken } : {} });
+  // Non-member streams first return an ad token and a wait (ltime, seconds), as in the original.
+  async function m3u8(file) {
+    if (typeof file !== 'string' || !file.startsWith('/')) throw Error('百度檔案路徑無效');
+    const token = await accessToken(); if (!token) throw Error('No access token found');
+    const first = await json(streamUrl(token, file, 'M3U8_AUTO_720'));
+    if (first.adToken) { await wait(1000 * (Number(first.ltime) || 0)); return streamUrl(token, file, 'M3U8_AUTO_720', first.adToken); }
+    if (first.errno && first.errno !== 133) throw Error('百度串流取得失敗 (' + first.errno + ')');
+    return streamUrl(token, file, 'M3U8_AUTO_720');
+  }
+  const parseSrt = text => text.trim().split(/\r?\n\s*\r?\n/).filter(Boolean).map(block => { const lines = block.split(/\r?\n/), [start, end] = (lines[1] || '').split(' --> ').map(v => v.trim()); return { index: parseInt(lines[0], 10), start, end, text: lines.slice(2).join('\n').trim() }; });
+  async function subtitle(file) {
+    if (typeof file !== 'string' || !file.startsWith('/')) throw Error('百度檔案路徑無效');
+    const token = await accessToken(); if (!token) throw Error('No access token found');
+    const playlist = await (await fetch(streamUrl(token, file, 'M3U8_SUBTITLE_SRT'))).text(), tracks = []; let track = null;
+    for (const line of playlist.trim().split('\n')) {
+      if (line.includes('#EXT-X-MEDIA:TYPE=SUBTITLES')) { const t = {}; for (const part of line.slice(line.indexOf(':') + 1).split(',').map(v => v.trim())) { const [k, v] = part.split('='); t[k] = v?.replace(/^"|"$/g, ''); } track = { name: t.NAME, language: t.LANGUAGE, groupId: t['GROUP-ID'], default: t.DEFAULT === 'YES', autoselect: t.AUTOSELECT === 'YES', videoLang: t['VIDEO-LAN'], aiSub: t['AI-SUB'] === 'YES', url: null, data: null }; }
+      else if (track && line.includes('http')) { track.url = line.trim(); tracks.push(track); track = null; }
+    }
+    for (const t of tracks) { if (!/^https:\/\//.test(t.url) && !t.url.startsWith(pan)) continue; try { t.data = parseSrt(await (await fetch(t.url)).text()); } catch {} }
+    return tracks;
+  }
+  return { setApp, hasApp: async () => !!await readSecret(appFile, 'inkbridge-baidu-app').catch(() => null), startAuth, accessToken, logout, files, search, src, m3u8, subtitle };
+}
+module.exports = { createBaiduDisk, BAIDU_STREAM_HOSTS, SEGMENT_HOSTS };
