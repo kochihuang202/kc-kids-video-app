@@ -1,7 +1,7 @@
 // Owned window/RPC boundary. Native32573 opens one window per note; the note UI
 // and Lexical remain native75000/73866. No original Electron main is executed.
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
-function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preload, getMain, load,assertEpoch=()=>{},getEpoch=()=>0 }) {
+function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preload, getMain, load,assertEpoch=()=>{},getEpoch=()=>0,openLink=null }) {
     const windows = new Map(), pending = new Map();
     const child = event => { const row = [...windows.values()].find(row => row.window.webContents === event.sender); return row && event.senderFrame?.url === row.url ? row : null; };
     const main = event => event.sender === getMain()?.webContents && event.senderFrame?.url.startsWith(origin + '/');
@@ -32,7 +32,8 @@ function installStandaloneWindows({ ipcMain, BrowserWindow, origin, data, preloa
         const row = { window: win, url: origin + (workspace?'/board-window?whiteboardId=':'/standalone?cardId=') + encodeURIComponent(id), cardId: workspace?null:id, kind:workspace?'workspace':'note', ready: false, approved: false, closing: null };
         windows.set(key, row);
         win.webContents.on('did-start-navigation',(_e,_url,_inPlace,isMain)=>{if(isMain)row.ready=false;});
-        win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+        // Links hand off to the system (open-links.cjs); nothing opens inside InkBridge.
+        win.webContents.setWindowOpenHandler(({ url }) => { openLink?.(url, win).catch(() => {}); return { action: 'deny' }; });
         win.webContents.on('will-navigate', (event, url) => { if (url !== row.url)
             event.preventDefault(); });
         win.once('ready-to-show', () => { win.show(); win.focus(); });

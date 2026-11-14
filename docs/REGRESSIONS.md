@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-155 — Links in note cards did nothing
+
+- Report: a Teams/SharePoint link pasted into a card showed its short name but could not be opened (2026-11-14). Cause: the original opens a web link with a click while editing (service `openUrl`) or Ctrl+click (`window.open`); FlexNote 1.1.70's main process hands both to `shell.openExternal`. InkBridge had no `openUrl` service and its window-open handler denied everything without handing off. 複製鏈接 in the card menu copies the card's own `flexnote://` link by original design; the URL itself is in the link editor (pencil).
+- Fix: `src/main/open-links.cjs` (user decision): web, mail and app links (Teams, Office, Zoom…) go to the system; local files, Windows/UNC paths and `search-ms:`/`ms-msdt:`/`shell:`/`ms-settings:` ask first with the full path; script and in-browser schemes are refused; nothing opens inside InkBridge. Used by the main and standalone windows' window-open handlers, IPC `inkbridge:openLink`, and the shell's `openUrl` service.
+- Test: `tests/open-links.test.cjs`; `check-note-links.cjs` (real Electron, system calls recorded: click and Ctrl+click open the web link once, local file asks first, cancel opens nothing, no in-app window). Regressions: `check-shell`, `check-standalone-windows` pass; `check-content-blocks` failed in some runs while test windows lost focus and passed 8 of 8 alternating runs with and without the change.
+
 ## REG-154 — Pasting an image made the mindmap disappear
 
 - Report: pasting an image on a board with a mindmap removed the map from the canvas (2026-11-14). Data stayed in SQLite; a restart brought it back. Cause: the note/media writer was created with `hydrateScene: sections.hydrate` before `board.mjs` wrapped `sections.hydrate` to also redraw mindmaps and video highlight cards, so its refresh after a media card replaced the scene without them. A closing render after the pasted image loaded also hit the mindmap paints freed on `beforeunload`.

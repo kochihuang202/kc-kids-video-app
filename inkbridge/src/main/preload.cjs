@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   onWebShareProgress:callback=>{const listener=(_event,value)=>callback(value);ipcRenderer.on('inkbridge:web-share-progress',listener);return ()=>ipcRenderer.removeListener('inkbridge:web-share-progress',listener);},
   history:request=>invoke('inkbridge:history',request),
   writeClipboardTextAndHtml:request=>invoke('inkbridge:writeClipboardTextAndHtml',request),
+  openLink:url=>invoke('inkbridge:openLink',url),
   savePastedImageBuffers:request=>invoke('inkbridge:savePastedImageBuffers',request),
   savePureBase64Image:request=>invoke('inkbridge:savePureBase64Image',request),
   uploadFile:request=>invoke('inkbridge:uploadFile',request),
