@@ -1193,3 +1193,8 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Real ZIP/BAT test passes initial install, preserved note sentinel, existing installation without ZIP, later-update marker retention and bad-hash rejection. Actual signed0.5.14/0.5.15 deltas pass Stage to0.6.0 on isolated copies. No formal installation, database or unrelated full suite changed.
 - Actual OneDrive BAT exposed inherited PowerShell7 PSModulePath breaking WindowsPowerShell5 Get-FileHash. Clear PSModulePath only in the launcher process, preserve failure exit status, and exercise first install through the real BAT with a deliberately invalid module path. Actual OneDrive NoLaunch verified the local program installation without opening notes.
 
+## REG-159 — Video highlight panel: large-image mode
+
+- Request (2026-11-14): a third display mode in the video highlight panel where the screenshot width follows the right panel. Not in the original (61453 toggles standard ↔ compact, kept in localStorage `videoHighlightCompact`; 79719 shows a fixed 78×44 thumbnail); agreed with the user: the same button cycles standard → large → compact, the same key also stores `large`, no height limit (video frames are landscape), time/title/note stay below the image.
+- Change: `inkbridge/scripts/original-reuse/apply-highlight-image-mode-patches.cjs` (61453 state, tooltip, image icon for the large mode, `data-inkbridge-highlight-view`; 79719 passes `inkbridgeLargeImages` and draws the screenshot at the panel width with its own aspect ratio).
+- Test: `check-highlight-image-mode.cjs` (standard 78 px, large follows the panel width, compact hides it, back to standard, large remembered after restart). Regression: `check-video-highlight-board` passes.
