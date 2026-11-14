@@ -113,3 +113,25 @@ REA 過程與原始碼定位見 [VIDEO_RECORD_REA.md](VIDEO_RECORD_REA.md)。
 左側總覽頁與停用的上傳音訊、無頁面錯誤）。
 
 未做：高亮的「大截圖觀看模式」（原版沒有，需先討論版面）、YouTube（第三階段）、設定頁（第三階段）、百度網盤。
+
+## 第三階段：YouTube（2026-11-14）
+
+使用者決定：第三階段只做 YouTube 與百度網盤；設定頁照原版（只有「加高亮時自動截圖」），不另加秒數、速度、快捷鍵設定。
+
+原版做法（REA，FlexNote 1.1.70 與擷取的 1.1.69 模組）：
+- 「新增影片」視窗的「網絡鏈接」分頁貼上 YouTube 網址，取標題與封面後建立帶 `link` 的影片卡片。
+- 播放：主程序開本機播放頁（IPC `get-youtube-shim-origin`，127.0.0.1 隨機埠，`/player?v=&start=&autoplay=`），頁內用 YouTube IFrame Player API；卡片以 postMessage 協定（28931）播放、暫停、跳秒、讀時間。
+- 標記截圖：IPC `screenshot-embedded-frame`，主程序找到 YouTube 嵌入 frame，暫時隱藏播放器控制列後 `capturePage`。
+- 標題與封面：原版在畫面程序直接呼叫 YouTube Data API，**使用 FlexNote 自己的 API 金鑰**。
+
+InkBridge 實作：
+- `src/main/youtube.cjs`：自己寫的播放頁（同一個 postMessage 協定）、`screenshotEmbeddedFrame`（只找 youtube.com／youtube-nocookie.com 的 frame）、`meta`（YouTube 免金鑰的 oEmbed 取標題，下載 maxres／hq 縮圖）。啟動時先開播放頁，頁面安全政策 `frame-src` 只加這個本機位址。
+- 網路：`host.cjs` 只額外放行播放頁與 YouTube 播放需要的網域（youtube.com、youtube-nocookie.com、ytimg.com、googlevideo.com、ggpht.com、gstatic.com、jnn-pa.googleapis.com、www.google.com/js/th/），廣告網域維持封鎖。
+- `apply-youtube-patches.cjs`（84539）：標題封面改走 `__inkbridgeYoutubeMeta`；封面經原版 `saveVideoScreenshot`（45023 b0）存成工作區檔案，離線也看得到。原版金鑰只留在私有模組，不使用。
+- `apply-video-record-patches.cjs`（79719）：第二階段的「沒有 `<video>` 就不加標記」與「📍 等 `<video>` 再跳秒」改成也接受 YouTube 播放器（iframe），用原版 28931 Ym 讀時間／跳秒；並把已套用的舊版插入文字原地升級，避免重複套用。
+
+限制：影片擁有者禁止嵌入的影片（例如部分音樂 MV，YouTube 錯誤碼 150）在 InkBridge 與原版都無法播放。標記若在播放器剛啟動的瞬間按下，時間為 0 且沒有截圖。
+
+驗證：`check-youtube.cjs`（需要網路；YouTube 官方 API 範例影片：取標題封面、封面為工作區檔案、經本機播放頁播放、標記時間 4.9 秒且有畫面截圖、拖到白板後 📍 開在該時間、重開保留）；`tests/youtube.test.cjs`（放行網域、播放頁、oEmbed 與縮圖、ID 驗證）；回歸 `check-video-highlight-board`、`check-video-toolbar-insert`、`check-shell` 通過。
+
+未做：百度網盤（調查中）。

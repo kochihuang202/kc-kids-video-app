@@ -113,4 +113,5 @@ require('./apply-video-record-patches.cjs')({root,changes});
 require('./apply-mindmap-xmind-patches.cjs')({root,changes});
 require('./apply-link-path-patches.cjs')({root,changes});
 require('./apply-media-file-name-patches.cjs')({root,changes});
+require('./apply-youtube-patches.cjs')({root,changes});
 fs.writeFileSync(path.join(root,'integration-patches.json'),JSON.stringify(changes,null,2));console.log(JSON.stringify(changes));

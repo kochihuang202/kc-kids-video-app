@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-158 — YouTube video cards (video record phase three)
+
+- Request (2026-11-14): YouTube and Baidu NetDisk for the video record; settings stay as the original. The original adds a YouTube card from the link tab, plays it through a local player page (`get-youtube-shim-origin`), reads time with postMessage and captures marker frames with `screenshot-embedded-frame`; its title/cover lookup calls the YouTube Data API with FlexNote's own key.
+- Change: `src/main/youtube.cjs` (own player page with the same protocol, embedded-frame screenshot, key-free oEmbed metadata and thumbnail download); `host.cjs` starts the player page before serving, adds it to `frame-src`, and allows only the YouTube player hosts; `apply-youtube-patches.cjs` routes the 84539 lookup to InkBridge (cover saved as a workspace file through 45023 b0); `apply-video-record-patches.cjs` lets the phase-two marker and 📍 logic accept the YouTube iframe (28931 Ym) and upgrades the already applied phase-two insertions in place. While making this change, a separate once() that edited text inside an earlier insertion made that insertion apply a second time; fixed by folding the edit into the insertion with an in-place upgrade (each block now appears once and re-running changes nothing).
+- Test: `check-youtube.cjs` (network; title/cover, cover file, local player, marker at 4.9 s with frame, 📍 at that time, restart); `tests/youtube.test.cjs`. Regressions: `check-video-highlight-board`, `check-video-toolbar-insert`, `check-shell` pass.
+
 ## REG-157 — Image and video file names: separate switches, per board
 
 - Request (2026-11-14): split 顯示圖片和視頻檔名 into image and video switches, and let each whiteboard keep its own choice. The original has one global switch (`showMediaFileNameOnCanvas`, localStorage and UI slice) read by the media drawer (176) and the names pass (66597). User decisions: only the file-name switches are per board; a board without its own choice follows the current global switch.
