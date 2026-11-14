@@ -13,10 +13,11 @@ const exec=promisify(execFile),sha=bytes=>crypto.createHash('sha256').update(byt
  const app=await _electron.launch({args:[path.join(install,'app/scripts/original-reuse/host.cjs')],executablePath:path.join(install,'runtime/electron.exe'),env});let page;
  try{
   page=await app.firstWindow();page.setDefaultTimeout(15000);await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);
+  await expect(page.locator('#onedrive-save-indicator')).toHaveAttribute('data-notice','attention');await page.locator('#onedrive-save-indicator').click();
   await expect(page.getByRole('button',{name:'更新並重新啟動',exact:true})).toBeVisible();
   const box=await page.locator('#board').boundingBox();await page.mouse.dblclick(box.x+200,box.y+180);const editor=page.locator('#board [contenteditable=true]').first();await expect(editor).toBeVisible();await page.keyboard.insertText('程式更新前的中文筆記');await page.keyboard.press('Control+s');await page.evaluate(()=>window.__inkbridgeIntegrated.flush());
   await editor.click();await page.keyboard.press('End');await page.keyboard.insertText('，最後一筆也保留');
-  const closed=app.waitForEvent('close',{timeout:90000});await page.getByRole('button',{name:'更新並重新啟動',exact:true}).click().catch(()=>{});await closed;
+  const closed=app.waitForEvent('close',{timeout:90000});if(!await page.getByRole('button',{name:'更新並重新啟動',exact:true}).isVisible())await page.locator('#onedrive-save-indicator').click();await page.getByRole('button',{name:'更新並重新啟動',exact:true}).click().catch(()=>{});await closed;
   const activeFile=path.join(data,'Updater/active.json');await expect.poll(()=>fs.readFile(activeFile,'utf8').then(()=>true).catch(()=>false),{timeout:30000}).toBe(true);const active=JSON.parse(await fs.readFile(activeFile));
   await expect.poll(()=>fs.readFile(path.join(active.jobDirectory,'result.json'),'utf8').then(s=>JSON.parse(s).success).catch(()=>false),{timeout:120000}).toBe(true);
   assert.equal(JSON.parse(await fs.readFile(path.join(install,'portable-build.json'))).buildId,next.buildId);const health=JSON.parse(await fs.readFile(path.join(active.jobDirectory,'health.json')));assert.equal(health.buildId,next.buildId);

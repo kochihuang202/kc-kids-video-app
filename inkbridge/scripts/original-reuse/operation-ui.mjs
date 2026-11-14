@@ -1,15 +1,35 @@
 export const localTime=value=>value&&Number.isFinite(Date.parse(value))?new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value)):'';
+// Operation notices (user decision 2026-11-14): progress and things waiting for a decision
+// live on the bottom-left lamp (sidebar-footer.mjs); completions and failures use the
+// original toast (55153.fz, the region mounted by the shell). No own notification boxes.
 export function installOperationUI(){
   if(window.__inkbridgeOperationUI)return window.__inkbridgeOperationUI;
-  const host=document.createElement('aside');host.id='operation-notifications';host.setAttribute('aria-live','polite');host.style.cssText='position:fixed;top:50px;right:16px;z-index:100010;width:min(400px,90vw);pointer-events:none';document.body.append(host);
-  const rows=new Map(),timers=new Map();
-  function show(value){if(value.key==='startup-retry'){window.dispatchEvent(new Event('inkbridge:startup-retry'));return;}let row=rows.get(value.key);if(!row){row=document.createElement('section');row.style.cssText='padding:14px;margin-bottom:8px;background:white;color:#27272a;border:1px solid #ccd9d0;border-radius:10px;box-shadow:0 4px 20px #0002;pointer-events:auto;font-size:13px';rows.set(value.key,row);host.append(row);}clearTimeout(timers.get(value.key));row.replaceChildren();
-    const heading=document.createElement('strong');heading.textContent=value.title;row.append(heading);const detail=document.createElement('div');detail.style.marginTop='6px';detail.textContent=[value.computer,localTime(value.time),value.message].filter(Boolean).join(' · ');row.append(detail);
-    if(value.details){const button=document.createElement('button');button.textContent='查看版本';button.onclick=()=>document.querySelector('#open-storage-settings')?.click();row.append(button);if(value.state==='conflict'){const keep=document.createElement('button');keep.textContent='保留本機版本';keep.onclick=()=>window.inkbridge.sync({method:'keepLocal'}).catch(error=>show({key:'sync',state:'error',title:'尚未完成',message:error.message}));row.append(keep);}}
-    if(value.action==='update'){const button=document.createElement('button');button.textContent='更新並重新啟動';button.onclick=()=>window.inkbridge.programUpdate({method:'apply',releaseId:value.releaseId}).catch(error=>show({key:'update',state:'error',title:'更新未完成',message:error.message}));row.append(button);}
-    if(value.state==='success')timers.set(value.key,setTimeout(()=>{row.remove();rows.delete(value.key);},3000));
+  const notices=new Map();
+  const publish=()=>{window.__inkbridgeLampNotices=[...notices.values()];window.dispatchEvent(new Event('inkbridge:lamp-notices'));};
+  const detailOf=value=>[value.computer,localTime(value.time),value.message].filter(Boolean).join(' · ');
+  let replaying=false;
+  // Notices replayed for a newly opened window restore the lamp only, never old toasts.
+  function toast(value,color){if(replaying)return;const fz=window.__originalRequire?.(55153)?.fz,description=detailOf(value)||undefined;if(typeof fz==='function')fz({title:value.title,description,color});}
+  const showVersions=()=>document.querySelector('#open-storage-settings')?.click();
+  function show(value){
+    if(value.key==='startup-retry'){window.dispatchEvent(new Event('inkbridge:startup-retry'));return;}
+    if(value.state==='clear'){notices.delete(value.key);publish();return;}
+    const detail=detailOf(value);
+    if(value.action==='update'){
+      notices.set(value.key,{key:value.key,kind:'attention',title:value.title,detail,actions:[{label:'更新並重新啟動',run:()=>window.inkbridge.programUpdate({method:'apply',releaseId:value.releaseId}).catch(error=>show({key:'update',state:'error',title:'更新未完成',message:error.message}))}]});
+      publish();toast({...value,message:'點左下角燈號更新'},'primary');return;
+    }
+    if(value.state==='conflict'){
+      notices.set(value.key,{key:value.key,kind:'attention',title:value.title,detail,actions:[{label:'查看版本',run:showVersions},{label:'保留本機版本',run:()=>window.inkbridge.sync({method:'keepLocal'}).catch(error=>show({key:'sync',state:'error',title:'尚未完成',message:error.message}))}]});
+      publish();toast({...value,message:'點左下角燈號處理'},'warning');return;
+    }
+    if(value.state==='progress'||value.state==='waiting'){
+      notices.set(value.key,{key:value.key,kind:'progress',title:value.title,detail,actions:value.details?[{label:'查看版本',run:showVersions}]:[]});publish();return;
+    }
+    notices.delete(value.key);publish();
+    toast(value,value.state==='error'?'danger':value.state==='success'?'success':'default');
   }
-  window.inkbridge.onOperation(show);window.inkbridge.operations().then(values=>values.forEach(show)).catch(()=>{});
+  window.inkbridge.onOperation(show);window.inkbridge.operations().then(values=>{replaying=true;try{values.forEach(show);}finally{replaying=false;}}).catch(()=>{});
   return window.__inkbridgeOperationUI={show};
 }
 export async function enterWorkspace(mode='enter'){
