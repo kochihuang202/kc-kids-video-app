@@ -33,10 +33,10 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
     // Large: spans the panel and follows its width.
     await button().click(); assert.equal(await button().getAttribute('data-inkbridge-highlight-view'), 'large');
     await expect.poll(shot).toBeGreaterThan(200); const narrow = await shot(), width0 = await panelWidth();
+    let narrowGap = width0 - narrow, wide = 0, wider = 0; // measured before the panel starts to animate
     // Widen the panel through the original width setting its resize handle writes.
     await page.evaluate(w => window.__originalRequire(63268).Z.dispatch({ type: 'ui/setFlowDetailWidth', payload: w }), width0 + 160);
     // The panel animates to its new width; wait until both settle, then compare the growth.
-    let narrowGap = (await panelWidth()) - narrow, wide = 0, wider = 0;
     await expect.poll(async () => { wider = await panelWidth(); wide = await shot(); return wider > width0 + 100 && Math.abs((wider - wide) - narrowGap) <= 12; }, { timeout: 8000 }).toBe(true);
     // Compact: no screenshot; then back to standard.
     await button().click(); assert.equal(await button().getAttribute('data-inkbridge-highlight-view'), 'compact'); await expect.poll(shot).toBe(0);

@@ -90,3 +90,13 @@ body{margin:0;overflow:hidden}
 #original-flow-outline{background:#eeeef0!important;padding:0 6px 6px 6px;box-sizing:border-box}
 #original-card-sidebar #_flowSidebarRightRoot{border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 #original-top-views,.outline-open #original-top-views{width:auto}
+/* A grey strip between the tab bar and the regions, so each region shows all four rounded
+   corners (FlexNote screenshot 2026-11-15). */
+.layout{padding-top:6px;box-sizing:border-box;height:calc(100vh - 36px)}
+/* Tabs as rounded pills centred in the bar (no longer joined to the area below). */
+#original-history-tabs>div,#original-top-views>div,#original-top-views [role="tablist"]{align-items:center}
+#original-history-tabs [class*="h-[34px]"]{height:30px!important;border-radius:10px!important}
+#original-top-views [role="tab"]{height:30px!important;border-radius:10px!important}
+#original-history-tabs [class*="h-[34px]"]::before,#original-history-tabs [class*="h-[34px]"]::after,#original-top-views [role="tab"]::before,#original-top-views [role="tab"]::after{display:none!important}
+#original-flow-outline{top:6px}
+.canvas-wrap,.original-sidebar,#original-card-sidebar #_flowSidebarRightRoot{box-shadow:0 0 0 1px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.06)}
