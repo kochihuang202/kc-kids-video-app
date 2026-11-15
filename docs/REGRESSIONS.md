@@ -1216,3 +1216,9 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Report (2026-11-15): of four Baidu cards some stay black (also after restart), and a card that showed a picture turns black when another is played; the user expected the agreed default picture. Cause: a Baidu card had no cover until the original first-frame capture (42454) succeeded while it played, and that capture of an HLS stream often times out when the next video starts. Local videos get a cover at 10% through a hidden copy, which an HLS stream cannot give.
 - Change: `baidu-disk.cjs` `thumb` (Baidu's own thumbnail through filemetas thumb=1, as a data URL); `original-shell.mjs` saves it as the card cover right after `addMediaCard`, and once at start for Baidu cards that still have none. The board caches each layer's drawing and redraws only on position/size/lastEditedTime changes, so after setting covers the original layout epoch (22818 xB.bumpEpoch) is bumped, and again once the images are in the original image cache (33158 Yw).
 - Test: `check-baidu.cjs` (cover from the thumbnail right after import; the panel starts on the cover and the marker starts the player); a four-card run (covers at import, one filled at the next start, cards keep their covers while others play). Regression: `check-video-highlight-board`, `tests/baidu-disk.test.cjs` pass.
+
+## REG-163 — Record page for Baidu cards
+
+- Report (2026-11-15): pressing 紀錄 on a Baidu card shows "在這台電腦找不到影片檔案" with the NetDisk path. The record page's InkBridge check (local videos linked by path) also ran for Baidu cards, whose path is the NetDisk path.
+- Change: `original-shell.mjs` VideoRecordPage checks the local file only for platform local; Baidu cards go straight to the original player, which streams through `/baidu-media/`.
+- Test: `check-baidu.cjs` step 4b (紀錄 on the playing board card opens the record page, the video plays, no missing-file message). Regression: `check-video-record` passes.

@@ -83,6 +83,17 @@ const APP = { appKey: 'FakeAppKey0000000000000000000001', secretKey: 'FakeSecret
     const played = await page.evaluate(() => { const v = [...document.querySelectorAll('#original-flow-outline video')][0]; return v ? { ready: v.readyState, w: v.videoWidth } : null; });
     assert(played && played.ready >= 2 && played.w === 640, 'panel video decoded: ' + JSON.stringify(played));
     assert.equal((await load()).cardMetadata.find(m => m.platform === 'baidudisk').cover, thumbCover, 'playback keeps the default cover');
+    // 4b. 紀錄 on the playing board card opens the record page, which streams from Baidu instead of
+    // looking for a local file (REG-163).
+    await page.evaluate(() => { const u = window.__originalRequire(22676); window.__originalRequire(63268).Z.dispatch(u.yn({ view: u.XM.whiteboard })); });
+    await page.evaluate(() => window.__inkbridgeIntegrated.controls.setViewport({ zoom: .4, x: 0, y: 0 })); await page.waitForTimeout(600);
+    const boardCard = await page.evaluate(() => { const s = window.__originalRequire(23).gt.getState(), n = s.nodes.find(n => n.type === 'MediaCard' && n.data?.platform === 'baidudisk'), rect = (s.containerElement || s.canvasElement).getBoundingClientRect(); return { x: rect.x + (n.position.x + (n.width || 400) / 2) * s.view.scale + s.view.translateX, y: rect.y + (n.position.y + (n.height || 300) / 2) * s.view.scale + s.view.translateY }; });
+    const record = page.locator('[data-inkbridge-video-record]');
+    if (!await record.isVisible().catch(() => false)) await page.mouse.click(boardCard.x, boardCard.y);
+    await expect(record).toBeVisible({ timeout: 20000 }); await record.click();
+    await expect(page.locator('#inkbridge-video-record-page')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => { const v = document.querySelector('#inkbridge-video-record-page video'); return v ? v.readyState : 0; }), { timeout: 30000 }).toBeGreaterThanOrEqual(2);
+    assert.equal(await page.locator('#inkbridge-video-missing').count(), 0, 'no "file not found" for a Baidu card');
     // 5. Restart keeps the login and the card; logout clears the token.
     await page.waitForTimeout(500); await app.close(); app = await launch(); await start();
     assert.equal(await service('get-baidudisk-access_token'), 'tok-1', 'login kept (encrypted on this computer)');
@@ -91,7 +102,7 @@ const APP = { appKey: 'FakeAppKey0000000000000000000001', secretKey: 'FakeSecret
     assert(!stored.includes('tok-1') && !storedApp.includes(APP.secretKey), 'token and keys are stored encrypted');
     await service('logout-baidudisk'); assert.equal(await service('get-baidudisk-access_token'), null);
     assert.deepEqual(errors, []); assert.deepEqual(await page.evaluate(() => window.__inkbridgeIntegrated.errors), []);
-    console.log(JSON.stringify({ data, tabs: 3, deviceLogin: true, list: true, search: true, imported: true, adTokenStream: true, markerScreenshot: true, restartKeepsLogin: true, encrypted: true, logout: true }));
+    console.log(JSON.stringify({ data, tabs: 3, deviceLogin: true, list: true, search: true, imported: true, adTokenStream: true, markerScreenshot: true, recordPageStreams: true, restartKeepsLogin: true, encrypted: true, logout: true }));
   } catch (error) { await page?.screenshot({ path: path.join(data, 'baidu-failure.png') }).catch(() => {}); console.error(JSON.stringify({ data, log: log.slice(-30), console: consoleLines.slice(-15) })); console.error(error); process.exitCode = 1; }
   finally { await app.close().catch(() => {}); server.close(); await fs.rm(media, { recursive: true, force: true }); }
 })();
