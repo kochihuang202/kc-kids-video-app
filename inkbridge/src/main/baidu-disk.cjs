@@ -85,6 +85,20 @@ function createBaiduDisk({ dir, safeStorage, localOrigin = () => '', userAgent =
     const token = await accessToken(); if (!token) throw Error('No access token found');
     return json(pan + '/rest/2.0/xpan/multimedia?' + form({ method: 'filemetas', access_token: token, fsids: '[' + fsid + ']', dlink: 1 }));
   }
+  // Default cover (user agreement: every video card has one; REG-162). Local videos take a frame at
+  // 10% through a hidden copy, which an HLS stream cannot give, so a Baidu card uses the
+  // thumbnail Baidu makes for the video (filemetas thumb=1), as a data URL for the renderer.
+  async function thumb(fsid) {
+    if (!/^\d{1,20}$/.test(String(fsid))) throw Error('百度檔案代號無效');
+    const token = await accessToken(); if (!token) return '';
+    const meta = await json(pan + '/rest/2.0/xpan/multimedia?' + form({ method: 'filemetas', access_token: token, fsids: '[' + fsid + ']', thumb: 1 }));
+    const thumbs = meta.list?.[0]?.thumbs || {}, url = thumbs.url3 || thumbs.url2 || thumbs.url1 || thumbs.icon;
+    if (!url || !allowedUrl(url)) { log('no thumbnail ' + fsid + ' errno ' + (meta.errno ?? '')); return ''; }
+    const r = await fetch(url, { headers: headers(url) }), type = (r.headers.get('content-type') || '').split(';')[0].trim();
+    if (!r.ok || !/^image\/(jpeg|png|webp|gif)$/.test(type)) { log('thumbnail ' + r.status + ' ' + type + ' ' + safe(url)); return ''; }
+    const bytes = Buffer.from(await r.arrayBuffer()); if (!bytes.length || bytes.length > 8 * 1024 * 1024) return '';
+    return 'data:' + type + ';base64,' + bytes.toString('base64');
+  }
   const streamUrl = (token, file, type, adToken) => pan + '/rest/2.0/xpan/file?' + form({ method: 'streaming', access_token: token, path: file, type, ...adToken ? { adToken } : {} });
   // Non-member streams first return an ad token and a wait (ltime, seconds), as in the original;
   // otherwise (e.g. members) the first answer is already the playlist.
@@ -137,6 +151,6 @@ function createBaiduDisk({ dir, safeStorage, localOrigin = () => '', userAgent =
     for (const t of tracks) { if (!/^https:\/\//.test(t.url) && !t.url.startsWith(pan)) continue; try { t.data = parseSrt(await (await fetch(t.url)).text()); } catch {} }
     return tracks;
   }
-  return { serve, setApp, hasApp: async () => !!await readSecret(appFile, 'inkbridge-baidu-app').catch(() => null), startAuth, accessToken, logout, files, search, src, m3u8, subtitle };
+  return { serve, thumb, setApp, hasApp: async () => !!await readSecret(appFile, 'inkbridge-baidu-app').catch(() => null), startAuth, accessToken, logout, files, search, src, m3u8, subtitle };
 }
 module.exports = { createBaiduDisk, SEGMENT_HOSTS };

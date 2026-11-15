@@ -143,7 +143,7 @@ InkBridge 實作：
 - 原版用 FlexNote 內建的百度開發者金鑰登入，InkBridge 不使用；改用使用者自己的百度開放平台應用（AppKey/SecretKey 以 Windows 加密存在本機設定資料夾 `Profile/baidu-app.json`，不進工作區與 Git）。
 - 原版以 `flexnote://baidudisk` 回呼登入；InkBridge 改用百度「設備碼登入」，不需要設定回呼網址。存取權杖同樣加密存在 `Profile/baidu-token.json`，到期自動續期。
 - 原版搜尋結果少了 `fs_id`，從搜尋結果匯入的卡片會存成 "undefined" 而無法播放；InkBridge 的搜尋結果保留百度原始欄位。
-- 沒有封面的影片卡片會由第一個畫面自動取封面（原版行為）；原版其中一次繪製沒有卡片資料而報錯，已略過那次（80716）。
+- 預設封面：匯入時就用百度為影片產生的縮圖當封面（本機影片是取 10% 處的畫面，但百度串流無法這樣取），啟動時也會替還沒有封面的百度卡片補上。原版的「播放時由第一個畫面取封面」仍保留作為後備；原版其中一次繪製沒有卡片資料而報錯，已略過那次（80716）。
 
 來源：原版 main 的 `get-baidudisk-*` 服務（list / search / filemetas / streaming M3U8_AUTO_720 加廣告等待 / M3U8_SUBTITLE_SRT），結果格式相同，實作在 `src/main/baidu-disk.cjs`；播放沿用原版 59771 的 video.js HLS。播放路徑與原版不同：原版播放器直接向百度取播放清單與片段；InkBridge 的頁面只連本機，`m3u8` 回傳本機 `/baidu-media/<id>` 位址，由主程序向百度取清單、把每個片段改寫成本機位址再轉送（片段請求加上 pan.baidu.com Referer，與原版相同），存取權杖不進頁面。百度第一次回應若直接是播放清單（無廣告等待，例如會員）也能播放。播放失敗寫入 `Logs/baidu.log`（網址不含查詢字串與權杖）。（2026-11-15：使用者實測時列檔正常但無法播放，改為此方式。）
 

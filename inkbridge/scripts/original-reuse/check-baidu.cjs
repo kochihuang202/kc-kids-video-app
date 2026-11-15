@@ -2,7 +2,8 @@
 // apply-baidu-patches.cjs, original-shell.mjs services). Never contacts Baidu: a local fake
 // Baidu (device-code login, list, search, filemetas, ad-token stream, subtitles) serves a
 // synthetic HLS video made by ffmpeg; the app keys are fake. Flow: dialog has only
-// local/remote/baidu tabs → authorize (device code, one pending poll) → file list → import →
+// local/remote/baidu tabs → authorize (device code, one pending poll) → file list → import
+// (default cover from Baidu's thumbnail, REG-162) →
 // the panel player streams the HLS through the ad token → marker with a frame screenshot →
 // restart keeps login and card → logout clears the token.
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), http = require('node:http'), assert = require('node:assert/strict'), { execFileSync } = require('node:child_process');
@@ -10,6 +11,7 @@ const APP = { appKey: 'FakeAppKey0000000000000000000001', secretKey: 'FakeSecret
 (async () => {
   const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-')), media = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-baidu-fixture-'));
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc2=duration=12:size=640x360:rate=25', '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-g', '25', '-f', 'hls', '-hls_time', '4', '-hls_playlist_type', 'vod', '-hls_segment_filename', path.join(media, 'seg%d.ts'), path.join(media, 'index.m3u8')], { windowsHide: true });
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc2=duration=1:size=320x180:rate=1', '-frames:v', '1', path.join(media, 'thumb.jpg')], { windowsHide: true });
   const log = []; let polls = 0, origin = '';
   const files = [{ fs_id: 9001, server_filename: '課程', path: '/課程', size: 0, server_mtime: 1700000000, isdir: 1 }, { fs_id: 123, server_filename: 'lesson.mp4', path: '/lesson.mp4', size: 4096000, server_mtime: 1700000000, isdir: 0 }];
   const server = http.createServer(async (req, res) => {
@@ -21,10 +23,11 @@ const APP = { appKey: 'FakeAppKey0000000000000000000001', secretKey: 'FakeSecret
     if (url.pathname.startsWith('/rest/2.0/xpan/') && q.get('access_token') !== 'tok-1') return send({ errno: -6 });
     if (q.get('method') === 'list') return send({ errno: 0, list: q.get('dir') === '/' ? files : [] });
     if (q.get('method') === 'search') return send({ errno: 0, list: files.filter(row => row.server_filename.includes(q.get('key'))) });
-    if (q.get('method') === 'filemetas') return send(q.get('fsids') !== '[123]' ? { errno: 42 } : { errno: 0, list: [{ fs_id: 123, path: '/lesson.mp4', dlink: origin + '/dl/123' }] });
+    if (q.get('method') === 'filemetas') return send(q.get('fsids') !== '[123]' ? { errno: 42 } : { errno: 0, list: [{ fs_id: 123, path: '/lesson.mp4', dlink: origin + '/dl/123', ...q.get('thumb') === '1' ? { thumbs: { url1: origin + '/thumb/123-s.jpg', url3: origin + '/thumb/123.jpg' } } : {} }] });
     if (q.get('method') === 'streaming' && q.get('type') === 'M3U8_SUBTITLE_SRT') return send('#EXTM3U\n', 'application/vnd.apple.mpegurl');
     if (q.get('method') === 'streaming' && q.get('path') !== '/lesson.mp4') return send({ errno: 31066 });
     if (q.get('method') === 'streaming') { if (!q.get('adToken')) return send({ errno: 133, adTime: 1, adToken: 'ad-1', ltime: 1 }); const list = (await fs.readFile(path.join(media, 'index.m3u8'), 'utf8')).replace(/^(seg\d+\.ts)$/gm, origin + '/seg/$1'); return send(list, 'application/vnd.apple.mpegurl'); }
+    if (url.pathname === '/thumb/123.jpg') return send(await fs.readFile(path.join(media, 'thumb.jpg')), 'image/jpeg');
     if (url.pathname.startsWith('/seg/')) return send(await fs.readFile(path.join(media, path.basename(url.pathname))), 'video/mp2t');
     res.writeHead(404); res.end();
   });
@@ -57,24 +60,29 @@ const APP = { appKey: 'FakeAppKey0000000000000000000001', secretKey: 'FakeSecret
     const meta = graph.cardMetadata.find(m => m.platform === 'baidudisk'), content = graph.contents.find(c => c.id === meta.id);
     assert.equal(meta.fileId, '123'); assert.equal(content.title, 'lesson.mp4'); assert.equal(meta.path, '/lesson.mp4');
     assert.equal((await service('get-all-baidudisk-media-cards')).length, 1, 'imported card is listed as already imported');
+    // Default cover right after import, before any playback: Baidu's thumbnail (REG-162).
+    await expect.poll(async () => (await load()).cardMetadata.find(m => m.platform === 'baidudisk').cover || '', { timeout: 15000 }).not.toBe('');
+    assert(log.includes('/thumb/123.jpg'), 'cover came from the Baidu thumbnail');
+    graph = await load(); const thumbCover = graph.cardMetadata.find(m => m.platform === 'baidudisk').cover; assert((graph.files || []).some(f => f.id === thumbCover), 'cover is a workspace file');
     // 4. Right panel: the player streams through the ad token; a marker stores a frame.
     await page.keyboard.press('Escape'); await page.mouse.click(700, 850);
     await page.locator('#original-top-views button').filter({ has: page.getByText(await t('highlight'), { exact: true }) }).first().click();
     await panel().getByText('lesson.mp4', { exact: true }).first().click();
     const add = panel().getByRole('button', { name: new RegExp(await t('addMarker')) }); await expect(add).toBeVisible();
     const panelVideo = () => page.evaluate(() => { const v = document.querySelector('#original-flow-outline video'); return v ? { ready: v.readyState, w: v.videoWidth, t: v.currentTime } : null; });
-    await page.locator('#original-flow-outline .vjs-big-play-button').first().click({ timeout: 20000 }).catch(() => {});
+    // With its cover the panel starts on the cover; the marker starts the player (as for local videos).
+    assert.equal(await panelVideo(), null, 'panel starts on the cover');
+    await add.click();
+    await expect.poll(async () => ((await load()).videoHighlights || []).length, { timeout: 30000 }).toBe(1);
     await expect.poll(async () => (await panelVideo())?.ready || 0, { timeout: 30000 }).toBeGreaterThanOrEqual(2);
-    await page.waitForTimeout(1500); await add.click();
-    await expect.poll(async () => ((await load()).videoHighlights || []).length, { timeout: 20000 }).toBe(1);
     graph = await load(); const marker = graph.videoHighlights[0];
-    assert(Math.abs(marker.timeStamp - (await panelVideo()).t) < 0.5, 'marker at the player time');
+    assert(marker.timeStamp >= 0 && marker.timeStamp <= (await panelVideo()).t + 0.5, 'marker at the player time');
     assert(marker.screenshotFileId && (graph.files || []).some(f => f.id === marker.screenshotFileId), 'marker has a frame screenshot');
     assert(log.includes('/rest/2.0/xpan/file:streaming:M3U8_AUTO_720') && log.includes('/rest/2.0/xpan/file:streaming:M3U8_AUTO_720:ad'), 'stream fetched with the ad token');
     assert(log.some(l => l.startsWith('/seg/')), 'HLS segments loaded by the player');
     const played = await page.evaluate(() => { const v = [...document.querySelectorAll('#original-flow-outline video')][0]; return v ? { ready: v.readyState, w: v.videoWidth } : null; });
     assert(played && played.ready >= 2 && played.w === 640, 'panel video decoded: ' + JSON.stringify(played));
-    assert((await load()).cardMetadata.find(m => m.platform === 'baidudisk').cover, 'cover taken from the first streamed frame');
+    assert.equal((await load()).cardMetadata.find(m => m.platform === 'baidudisk').cover, thumbCover, 'playback keeps the default cover');
     // 5. Restart keeps the login and the card; logout clears the token.
     await page.waitForTimeout(500); await app.close(); app = await launch(); await start();
     assert.equal(await service('get-baidudisk-access_token'), 'tok-1', 'login kept (encrypted on this computer)');
