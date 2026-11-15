@@ -4,6 +4,8 @@
 
 **本次較晚確認的規則取代舊版「不搬原模組、全部自寫」及「查不到可自行設計補足」的方向；不得再援引舊句自行重寫。**
 
+接手前先讀 [docs/HANDOFF.md](docs/HANDOFF.md)：日常修改、測試、合併方式，最近完成的工作，以及等使用者決定的事項。
+
 執行順序與證據要求以 [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) 為準：
 
 1. 有未知、疑點或差距，先查既有 Gemini 清單／REA、原版程式及必要的針對性 REA；不要先猜、先換成自己熟悉的做法。
