@@ -3,7 +3,7 @@
 // Uses YouTube's public API sample video (embeddable) and a synthetic workspace only:
 // link tab → title and cover (oEmbed, cover saved as a workspace file) → card plays through the
 // local player page → panel marker at the exact time with a frame screenshot → 📍 opens the
-// panel player at that time → restart keeps the card.
+// panel player at that time → restart keeps the card → 紀錄 above the card opens the record page.
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict');
 const VIDEO = 'M7lc1UVf-VE', LINK = 'https://www.youtube.com/watch?v=' + VIDEO;
 (async () => {
@@ -60,8 +60,14 @@ const VIDEO = 'M7lc1UVf-VE', LINK = 'https://www.youtube.com/watch?v=' + VIDEO;
     // 5. Restart: the card, its cover and its highlights are kept.
     await app.close(); app = await launch(); await start();
     graph = await load(); assert.equal(graph.cardMetadata.find(row => row.id === content.id).link, LINK); assert.equal(graph.videoHighlights.filter(h => !h.isTrashed).length, 2);
+    // 6. The 紀錄 button in the row above the playing YouTube card takes a real click (REG-161).
+    const card = await page.evaluate(() => { const s = window.__originalRequire(23).gt.getState(), n = s.nodes.find(n => n.type === 'MediaCard' && n.data?.link), rect = (s.containerElement || s.canvasElement).getBoundingClientRect(); return { x: rect.x + (n.position.x + (n.width || 400) / 2) * s.view.scale + s.view.translateX, y: rect.y + (n.position.y + (n.height || 300) / 2) * s.view.scale + s.view.translateY }; });
+    await page.mouse.click(card.x, card.y);
+    const record = page.locator('[data-inkbridge-video-record]'); await expect(record).toBeVisible({ timeout: 20000 });
+    assert.equal(await record.evaluate(el => getComputedStyle(el).pointerEvents), 'auto');
+    await record.click(); await expect(page.locator('#inkbridge-video-record-page')).toBeVisible();
     assert.deepEqual(await page.evaluate(() => window.__inkbridgeIntegrated.errors), []);
-    console.log(JSON.stringify({ data, titleAndCover: true, coverIsWorkspaceFile: true, playsThroughLocalPlayer: true, markerAtTime: Math.round(marked.timeStamp * 10) / 10, markerScreenshot: true, pinOpensAtTime: true, restart: true }));
+    console.log(JSON.stringify({ data, titleAndCover: true, recordButton: true, coverIsWorkspaceFile: true, playsThroughLocalPlayer: true, markerAtTime: Math.round(marked.timeStamp * 10) / 10, markerScreenshot: true, pinOpensAtTime: true, restart: true }));
   } catch (error) { await page?.screenshot({ path: path.join(data, 'youtube-failure.png') }).catch(() => {}); console.error({ data }); console.error(error); process.exitCode = 1; }
   finally { await app.close().catch(() => {}); }
 })();
