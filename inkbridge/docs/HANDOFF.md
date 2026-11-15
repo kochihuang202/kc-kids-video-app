@@ -65,6 +65,7 @@
 | 百度網盤影片卡片 | 160、162、163 | `src/main/baidu-disk.cjs`、`apply-baidu-patches.cjs`、`original-shell.mjs` |
 | YouTube 卡片上方「紀錄」按鈕可點 | 161 | `board.mjs`（`videoToolbarMore`） |
 | 版面：白色外框、圓角灰色白板、右上分頁緊靠 | 164 | `compact-shell.css`、`check-shell-parity.cjs` |
+| OneDrive 交換資料夾有其他工作區時不再一直跳「等待資料到齊」；11/2 的舊測試工作區已移到 `01_Home\InkBridge-舊測試工作區-7e967fbe`（未刪除） | 165 | `src/main/live-sync.cjs`、`check-seamless-sync.cjs` |
 
 ## 5. 外部服務與憑證
 
