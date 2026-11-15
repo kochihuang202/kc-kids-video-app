@@ -8,11 +8,14 @@
 // Tokens are kept encrypted next to the app credentials and refreshed when they expire.
 const fs = require('node:fs/promises'), path = require('node:path'), crypto = require('node:crypto');
 const OAUTH = 'https://openapi.baidu.com', PAN = 'https://pan.baidu.com';
-// Hosts the renderer's player reaches for a Baidu stream (the original allows the same and adds
-// a pan.baidu.com Referer for the segment hosts).
-const BAIDU_STREAM_HOSTS = /^https:\/\/(pan\.baidu\.com\/rest\/2\.0\/xpan\/file\?|([a-z0-9-]+\.)*baidupcs\.com\/|v1-ant\.baidu\.com\/)/i;
+// Playback: the original player loads the Baidu playlist and segments directly from Baidu (with a
+// pan.baidu.com Referer added for the segment hosts). InkBridge's page only talks to its own
+// origin, so the stream goes through this module instead: the playlist URL handed to the player
+// is a local /baidu-media/<id> address, every playlist entry is rewritten to another local
+// address, and serve() fetches the real Baidu URL (token never reaches the page). Failures are
+// logged without query strings (tokens) for diagnosis.
 const SEGMENT_HOSTS = /^https:\/\/(([a-z0-9-]+\.)*baidupcs\.com|v1-ant\.baidu\.com)\//i;
-function createBaiduDisk({ dir, safeStorage, fetch = globalThis.fetch, openExternal, showCode, oauth = OAUTH, pan = PAN, now = () => Date.now(), wait = ms => new Promise(done => setTimeout(done, ms)) }) {
+function createBaiduDisk({ dir, safeStorage, localOrigin = () => '', userAgent = '', log = () => {}, fetch = globalThis.fetch, openExternal, showCode, oauth = OAUTH, pan = PAN, now = () => Date.now(), wait = ms => new Promise(done => setTimeout(done, ms)) }) {
   const appFile = path.join(dir, 'baidu-app.json'), tokenFile = path.join(dir, 'baidu-token.json');
   const encrypt = async value => (safeStorage.encryptStringAsync ? await safeStorage.encryptStringAsync(value) : safeStorage.encryptString(value)).toString('base64');
   const decrypt = async value => { const b = Buffer.from(value, 'base64'); return safeStorage.decryptStringAsync ? (await safeStorage.decryptStringAsync(b)).result : safeStorage.decryptString(b); };
@@ -83,14 +86,44 @@ function createBaiduDisk({ dir, safeStorage, fetch = globalThis.fetch, openExter
     return json(pan + '/rest/2.0/xpan/multimedia?' + form({ method: 'filemetas', access_token: token, fsids: '[' + fsid + ']', dlink: 1 }));
   }
   const streamUrl = (token, file, type, adToken) => pan + '/rest/2.0/xpan/file?' + form({ method: 'streaming', access_token: token, path: file, type, ...adToken ? { adToken } : {} });
-  // Non-member streams first return an ad token and a wait (ltime, seconds), as in the original.
+  // Non-member streams first return an ad token and a wait (ltime, seconds), as in the original;
+  // otherwise (e.g. members) the first answer is already the playlist.
   async function m3u8(file) {
     if (typeof file !== 'string' || !file.startsWith('/')) throw Error('百度檔案路徑無效');
     const token = await accessToken(); if (!token) throw Error('No access token found');
-    const first = await json(streamUrl(token, file, 'M3U8_AUTO_720'));
-    if (first.adToken) { await wait(1000 * (Number(first.ltime) || 0)); return streamUrl(token, file, 'M3U8_AUTO_720', first.adToken); }
-    if (first.errno && first.errno !== 133) throw Error('百度串流取得失敗 (' + first.errno + ')');
-    return streamUrl(token, file, 'M3U8_AUTO_720');
+    const url = streamUrl(token, file, 'M3U8_AUTO_720'), r = await fetch(url, { headers: headers(url) }), text = await r.text();
+    let target = url;
+    if (!text.trimStart().startsWith('#EXTM3U')) {
+      let first; try { first = JSON.parse(text); } catch { log('stream answer ' + r.status + ' ' + text.slice(0, 120)); throw Error('百度串流回應無法解析 (' + r.status + ')'); }
+      if (first.adToken) { await wait(1000 * (Number(first.ltime) || 0)); target = streamUrl(token, file, 'M3U8_AUTO_720', first.adToken); }
+      else if (first.errno) { log('stream errno ' + first.errno + ' ' + (first.errmsg || first.show_msg || '')); throw Error('百度串流取得失敗 (' + first.errno + ')'); }
+    }
+    return localOrigin() + '/baidu-media/' + register(target);
+  }
+  // Local addresses for Baidu URLs (only URLs this module fetched or found in a playlist).
+  const media = new Map();
+  function register(url) { const id = crypto.randomBytes(12).toString('hex'); media.set(id, url); if (media.size > 20000) media.delete(media.keys().next().value); return id; }
+  const safe = url => { try { const u = new URL(url); return u.origin + u.pathname; } catch { return '?'; } };
+  const headers = url => ({ ...userAgent ? { 'User-Agent': userAgent } : {}, ...SEGMENT_HOSTS.test(url) ? { Referer: 'https://pan.baidu.com' } : {} });
+  const allowedUrl = url => { try { const u = new URL(url); return u.protocol === 'https:' || url.startsWith(pan + '/'); } catch { return false; } };
+  function rewrite(text, base) {
+    const local = ref => { const abs = new URL(ref, base).href; return allowedUrl(abs) ? localOrigin() + '/baidu-media/' + register(abs) : ref; };
+    return text.split(/\r?\n/).map(line => { const t = line.trim(); if (!t) return line; if (t.startsWith('#')) return line.replace(/URI="([^"]+)"/g, (_, ref) => 'URI="' + local(ref) + '"'); return local(t); }).join('\n');
+  }
+  // Serves /baidu-media/<id>: playlists are rewritten, everything else streams through (with Range).
+  async function serve(id, range) {
+    const url = media.get(id); if (!url) return { status: 404, headers: { 'content-type': 'text/plain' }, body: 'Not found' };
+    let r; try { r = await fetch(url, { headers: { ...headers(url), ...range ? { Range: range } : {} }, redirect: 'follow' }); } catch (e) { log('fetch failed ' + safe(url) + ' ' + e.message); return { status: 502, headers: { 'content-type': 'text/plain' }, body: 'Baidu unreachable' }; }
+    const type = r.headers.get('content-type') || '';
+    if (!r.ok) log('status ' + r.status + ' ' + safe(url));
+    if (/mpegurl/i.test(type) || /\.m3u8$/i.test(new URL(r.url || url).pathname) || url.includes('method=streaming') && !/^video\/|octet-stream/i.test(type)) {
+      const text = await r.text();
+      if (!text.trimStart().startsWith('#EXTM3U')) { log('not a playlist ' + r.status + ' ' + safe(url) + ' ' + text.slice(0, 160)); return { status: r.ok ? 502 : r.status, headers: { 'content-type': 'text/plain' }, body: 'Not a playlist' }; }
+      return { status: 200, headers: { 'content-type': 'application/vnd.apple.mpegurl', 'cache-control': 'no-store' }, body: rewrite(text, r.url || url) };
+    }
+    const out = { 'content-type': type || 'application/octet-stream', 'cache-control': 'no-store' };
+    for (const k of ['content-length', 'content-range', 'accept-ranges']) if (r.headers.get(k)) out[k] = r.headers.get(k);
+    return { status: r.status, headers: out, stream: r.body };
   }
   const parseSrt = text => text.trim().split(/\r?\n\s*\r?\n/).filter(Boolean).map(block => { const lines = block.split(/\r?\n/), [start, end] = (lines[1] || '').split(' --> ').map(v => v.trim()); return { index: parseInt(lines[0], 10), start, end, text: lines.slice(2).join('\n').trim() }; });
   async function subtitle(file) {
@@ -104,6 +137,6 @@ function createBaiduDisk({ dir, safeStorage, fetch = globalThis.fetch, openExter
     for (const t of tracks) { if (!/^https:\/\//.test(t.url) && !t.url.startsWith(pan)) continue; try { t.data = parseSrt(await (await fetch(t.url)).text()); } catch {} }
     return tracks;
   }
-  return { setApp, hasApp: async () => !!await readSecret(appFile, 'inkbridge-baidu-app').catch(() => null), startAuth, accessToken, logout, files, search, src, m3u8, subtitle };
+  return { serve, setApp, hasApp: async () => !!await readSecret(appFile, 'inkbridge-baidu-app').catch(() => null), startAuth, accessToken, logout, files, search, src, m3u8, subtitle };
 }
-module.exports = { createBaiduDisk, BAIDU_STREAM_HOSTS, SEGMENT_HOSTS };
+module.exports = { createBaiduDisk, SEGMENT_HOSTS };

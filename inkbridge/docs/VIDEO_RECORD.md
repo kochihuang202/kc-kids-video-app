@@ -145,7 +145,7 @@ InkBridge 實作：
 - 原版搜尋結果少了 `fs_id`，從搜尋結果匯入的卡片會存成 "undefined" 而無法播放；InkBridge 的搜尋結果保留百度原始欄位。
 - 沒有封面的影片卡片會由第一個畫面自動取封面（原版行為）；原版其中一次繪製沒有卡片資料而報錯，已略過那次（80716）。
 
-來源：原版 main 的 `get-baidudisk-*` 服務（list / search / filemetas / streaming M3U8_AUTO_720 加廣告等待 / M3U8_SUBTITLE_SRT），結果格式相同，實作在 `src/main/baidu-disk.cjs`；播放沿用原版 59771 的 video.js HLS。宿主只對百度串流網址放行（pan.baidu.com 串流、baidupcs.com、v1-ant.baidu.com），片段請求加上 pan.baidu.com Referer（原版同樣），並為這些回應加上本頁來源的 CORS 標頭。
+來源：原版 main 的 `get-baidudisk-*` 服務（list / search / filemetas / streaming M3U8_AUTO_720 加廣告等待 / M3U8_SUBTITLE_SRT），結果格式相同，實作在 `src/main/baidu-disk.cjs`；播放沿用原版 59771 的 video.js HLS。播放路徑與原版不同：原版播放器直接向百度取播放清單與片段；InkBridge 的頁面只連本機，`m3u8` 回傳本機 `/baidu-media/<id>` 位址，由主程序向百度取清單、把每個片段改寫成本機位址再轉送（片段請求加上 pan.baidu.com Referer，與原版相同），存取權杖不進頁面。百度第一次回應若直接是播放清單（無廣告等待，例如會員）也能播放。播放失敗寫入 `Logs/baidu.log`（網址不含查詢字串與權杖）。（2026-11-15：使用者實測時列檔正常但無法播放，改為此方式。）
 
 驗證：`check-baidu.cjs`（本機假百度伺服器與 ffmpeg 合成 HLS，不連百度：三個分頁、設備碼登入、列檔、搜尋、匯入、廣告等待後串流、自動封面、標記截圖、重開保持登入、加密儲存、登出）；`tests/baidu-disk.test.cjs`。真實百度帳號需使用者自行登入試用。
 
