@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-165 — Repeated "正在同步，等待資料到齊" warning with nothing to sync
+
+- Report (2026-11-15): a yellow warning "正在同步，等待資料到齊／點左下角燈號處理" kept popping up at the top right and the lamp showed the same, with "查看版本／保留本機版本". Read-only check of the real exchange folder: all 53 snapshots of the paired workspace were the current one and its ancestors; the startup status was `other-workspace` because of an old test workspace (2026-11-02, revision 2) in `snapshots/`. `live-sync.cjs` mapped every result other than incomplete/unavailable to the decision state, and every title other than conflict/branches to "等待資料到齊", so each periodic check raised the warning again.
+- Change: `live-sync.cjs` treats `other-workspace` as ready (status is computed only for the paired workspace; retention already leaves other workspaces alone) and gives `unknown` and `pairing` their own titles. With the user's approval the old test workspace was moved (not deleted) out of the exchange folder to `01_Home\InkBridge-舊測試工作區-7e967fbe`; the read-only check then reports `current`.
+- Test: `check-seamless-sync.cjs` adds another workspace's snapshot to the exchange folder: the check answers ready and the lamp has no attention notice; a real two-computer conflict still shows "兩台都有新版本". Its waits for remote content now retry while the window reloads (an existing race). Passes twice; `check-sync-entry`, `tests/startup-snapshot-status.test.cjs`, `tests/sync-outbox.test.cjs` pass.
+
 ## REG-164 — Region layout and view tabs like FlexNote
 
 - Request (2026-11-15, three FlexNote screenshots): the right-top view icons are spread out, and in FlexNote the canvas is a separate rounded area with a thin white strip between it and the tabs. Causes: `compact-shell.css` fixed the view tab slot at 286 px (the original tab list stretches its tabs across it), and the canvas filled the area edge to edge, running under the right panel.

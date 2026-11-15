@@ -24,7 +24,13 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
   await page.evaluate(()=>window.inkbridge.openNoteWindow({cardId:'content-shared'}));await expect.poll(()=>app.windows().length).toBe(2);
   const child=app.windows().find(p=>p!==page);await child.waitForFunction(()=>window.__inkbridgeStandalone?.ready);
   const v3=await remote('V3 無感接力');
-  await expect.poll(()=>page.evaluate(()=>window.inkbridge.load()).then(g=>g.contents[0].body),{timeout:30000}).toBe('V3 無感接力');
+  await expect.poll(()=>page.evaluate(()=>window.inkbridge.load()).then(g=>g.contents[0].body).catch(()=>null),{timeout:30000}).toBe('V3 無感接力');
+  // REG-165: a snapshot of another workspace in the exchange folder (e.g. an old test) is no decision
+  // for the paired workspace: the check is ready and the lamp shows no notice.
+  {const other=crypto.randomUUID(),sid=crypto.randomUUID(),src=path.join(exchange,'snapshots',v1.workspaceId,v1.snapshotId),dst=path.join(exchange,'snapshots',other,sid);await fs.mkdir(dst,{recursive:true});await fs.copyFile(path.join(src,'database.sqlite3'),path.join(dst,'database.sqlite3'));const m=JSON.parse(await fs.readFile(path.join(src,'manifest.json'),'utf8'));await fs.writeFile(path.join(dst,'manifest.json'),JSON.stringify({...m,workspaceId:other,snapshotId:sid,parentSnapshotId:null,sourceComputerId:crypto.randomUUID()}));
+   // check() returns nothing while another check is still running; ask until one answers.
+   await expect.poll(()=>page.evaluate(()=>window.inkbridge.sync({method:'check'}).then(r=>r?.kind||'busy')),{timeout:20000}).toBe('ready');
+   await page.waitForTimeout(1000);assert.notEqual(await page.locator('#onedrive-save-indicator').getAttribute('data-notice'),'attention','no notice for another workspace');}
   await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);await child.waitForFunction(()=>window.__inkbridgeStandalone?.ready);
   assert.equal(await app.browserWindow(page).then(win=>win.evaluate(w=>w.getNativeWindowHandle().toString('hex'))),handle);assert.equal(app.windows().length,2);
   await expect(child.locator('[contenteditable=true]')).toContainText('V3 無感接力');await expect(page.getByText('已更新內容').first()).toBeVisible();
@@ -37,7 +43,7 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
   await expect.poll(()=>child.evaluate(()=>!!window.__waitingComposition),{timeout:15000}).toBe(true);
   assert.equal((await page.evaluate(()=>window.inkbridge.load())).contents[0].body,'V3 無感接力','remote data cannot replace a composing editor');
   await child.evaluate(()=>{const e=window.__inkbridgeStandalone.editor;e._compositionKey=null;e.getRootElement().dispatchEvent(new CompositionEvent('compositionend',{bubbles:true,data:''}));});
-  await expect.poll(()=>page.evaluate(()=>window.inkbridge.load()).then(g=>g.contents[0].body),{timeout:30000}).toBe('V4 組字結束後接力');
+  await expect.poll(()=>page.evaluate(()=>window.inkbridge.load()).then(g=>g.contents[0].body).catch(()=>null),{timeout:30000}).toBe('V4 組字結束後接力');
   await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);await child.waitForFunction(()=>window.__inkbridgeStandalone?.ready);
   // Deliberately deliver a pre-switch epoch to the actual main IPC handler.
   const rejected=await app.evaluate(async({ipcMain,BrowserWindow})=>{try{await ipcMain._invokeHandlers.get('inkbridge:commit')({sender:BrowserWindow.getAllWindows()[0].webContents},{operations:[]},0);return false;}catch(error){return error.code==='STALE_WORKSPACE_EPOCH';}});

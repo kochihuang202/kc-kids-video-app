@@ -52,11 +52,13 @@ function installLiveSync({app,powerMonitor,windows,localDirectory,database,snaps
     let value;try{value=await inspect();}catch(error){value={kind:'unavailable',error:error.message};}
     if(value.kind==='newer'&&!value.hasLocalChanges){return apply(value.candidate,true);}
     if(value.kind==='newer'&&value.hasLocalChanges)value.kind='conflict';
-    if(['current','unconfigured'].includes(value.kind))return {kind:'ready'};
+    // Status is only computed for the paired workspace; snapshots of other workspaces in the exchange
+    // folder (an old test, another install) do not affect it and are never a decision (REG-165).
+    if(['current','unconfigured','other-workspace'].includes(value.kind))return {kind:'ready'};
     return value;
   }
   async function enter(){if(!initial)return {kind:'ready'};if(!checking)checking=queue.run('startup-sync',decision).finally(()=>checking=null);const result=await checking;if(result.kind==='ready')initial=false;return result;}
-  async function check(){if(checking)return;if(initial){notify({key:'startup-retry'});return;}if(!canRun())return;checking=queue.run('check-sync',decision).then(value=>{if(value.kind==='ready'){if(!value.updated)notify({key:'sync',state:'clear'});}else notify({key:'sync',state:value.kind==='incomplete'||value.kind==='unavailable'?'waiting':'conflict',title:value.kind==='conflict'||value.kind==='branches'?'兩台都有新版本，請選擇':'正在同步，等待資料到齊',details:value});return value;}).finally(()=>checking=null);return checking;}
+  async function check(){if(checking)return;if(initial){notify({key:'startup-retry'});return;}if(!canRun())return;checking=queue.run('check-sync',decision).then(value=>{if(value.kind==='ready'){if(!value.updated)notify({key:'sync',state:'clear'});}else notify({key:'sync',state:value.kind==='incomplete'||value.kind==='unavailable'?'waiting':'conflict',title:value.kind==='conflict'||value.kind==='branches'?'兩台都有新版本，請選擇':value.kind==='unknown'?'版本鏈尚未到齊，無法判斷先後':value.kind==='pairing'?'請選擇要使用的工作區':'正在同步，等待資料到齊',details:value});return value;}).finally(()=>checking=null);return checking;}
   async function call(request){
     if(request.method==='preferences'){await initialized;return {computerName:settings.computerName||require('node:os').hostname()};}
     if(request.method==='computerName'){await initialized;if(typeof request.name!=='string'||!request.name.trim()||request.name.length>64||/[\x00-\x1f]/.test(request.name))throw Error('電腦名稱需為 1–64 個字');settings.computerName=request.name.trim();snapshots.setDeviceName(settings.computerName);await writeJSON(settingsFile,settings);return {ok:true};}
