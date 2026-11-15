@@ -1222,3 +1222,9 @@ Test-harness correction during this release: tracing the fifth-question test sho
 - Report (2026-11-15): pressing 紀錄 on a Baidu card shows "在這台電腦找不到影片檔案" with the NetDisk path. The record page's InkBridge check (local videos linked by path) also ran for Baidu cards, whose path is the NetDisk path.
 - Change: `original-shell.mjs` VideoRecordPage checks the local file only for platform local; Baidu cards go straight to the original player, which streams through `/baidu-media/`.
 - Test: `check-baidu.cjs` step 4b (紀錄 on the playing board card opens the record page, the video plays, no missing-file message). Regression: `check-video-record` passes.
+
+## REG-164 — Separated regions and compact view tabs
+
+- Request (2026-11-15, compared with FlexNote): the right-top view icons are spread out, and FlexNote shows each region as a separate area. Cause: `compact-shell.css` fixed the view tab slot at 286 px (the original tab list stretches its tabs across it) and removed the original spacing and rounding (the original right panel 41 is "mt-1 mb-1 mr-1 rounded-xl bg-content1 pagePartShadow").
+- Change: view tabs sized to their content and placed together with the card-list toggle before the window controls; grey window background with the sidebar, canvas and right panel as rounded areas 6 px apart with a light shadow.
+- Test: layout screenshots before/after; `check-native-resize-lod` (board x is the sidebar width plus the 6 px gap), `check-shell`, `check-tooltip-titlebar` pass. `check-shell-parity` already failed before this change (its outline list stays empty) and is not part of this fix.

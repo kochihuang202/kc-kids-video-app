@@ -15,7 +15,7 @@ const { _electron, expect } = require('@playwright/test'), fs = require('node:fs
         await expect(page.locator('#original-left-frame .is-resizing')).toBeVisible();
         await page.mouse.move(340, box.y + 100, { steps: 6 });
         await page.mouse.up();
-        await expect.poll(() => page.locator('#board').evaluate(el => Math.round(el.getBoundingClientRect().x))).toBe(340);
+        await expect.poll(() => page.locator('#board').evaluate(el => Math.round(el.getBoundingClientRect().x))).toBe(346); // 340 px sidebar + the 6 px gap between regions (REG-164)
         await page.evaluate(() => { window.__inkbridgeIntegrated.addCard('Resize card', 'Fixture', { x: 40, y: 40 }); return window.__inkbridgeIntegrated.flush(); });
         await page.locator('#toggle-outline').click();
         await expect(page.locator('#original-flow-outline [role=option]').first()).toBeVisible();

@@ -76,3 +76,17 @@ body{margin:0;overflow:hidden}
 #new-card-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
 #new-card-dialog .dialog-actions button{padding:8px 14px;border-radius:5px}
 #new-card-dialog .primary{background:#365f4c;color:white}
+/* Separated regions like the original (user request 2026-11-15, REG-164): the original right
+   panel (41 _flowSidebarRightRoot) is "mt-1 mb-1 mr-1 rounded-xl bg-content1 pagePartShadow" on
+   the grey window background; the sidebar and the canvas are likewise separate rounded areas.
+   The right-top view tabs sit next to each other (the original tab list stretched them across
+   the fixed-width slot). */
+#original-top-views [role="tablist"]{justify-content:flex-start;gap:4px}
+#original-top-views [role="tab"]{flex:0 0 auto!important}
+.layout{background:#eeeef0}
+.original-sidebar{margin:0 0 6px 6px;width:calc(100% - 6px)!important;height:calc(100% - 6px);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.board-area{background:#eeeef0;padding:0 0 6px 6px}
+.canvas-wrap{border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#original-flow-outline{background:#eeeef0!important;padding:0 6px 6px 6px;box-sizing:border-box}
+#original-card-sidebar #_flowSidebarRightRoot{border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#original-top-views,.outline-open #original-top-views{width:auto}
