@@ -1,5 +1,13 @@
 # Regression Memory
 
+## REG-167 — Sync checkpoint retention, restore protection and ZIP-only latest updates
+
+- Separate immutable lineage from disposable full payloads; a lagging device can traverse retained metadata and load one latest checkpoint. Preserve dirty content, pending payloads and true branches. Sparse backup retention follows verified FlexNote hourly/daily/weekly/monthly union.
+- Settings automatically scan and refresh, sort stable newest-first, and validate only selected payloads. Explicit restore preserves all editor content then creates a forward restore checkpoint. Concurrent checks await the same result instead of returning undefined.
+- Failed preservation fixture had typed into the computer-name field rather than the actual note. Use the native child card editor, assert Chinese text exists first, then prove it remains in backup SQLite after restore. Keep content assertions, wait actual restore commit, and identify main window by object instead of enumeration order.
+- ZIP-only v2 signed per-file envelope supports direct delta or full latest fallback, rejects damaged/extra/duplicate payloads and restores failed launches. Delivery verifies every ZIP payload and copied package before clearing old full program archives; never deletes notes/assets/user reports.
+- Related Node groups and Electron seamless/entry/settings flows pass; packaged checks and final delivery recorded in inkbridge/docs/RELEASE_0_7_0.md. Physical other-PC transfer remains external; broken legacy ancestry is not guessed from dates.
+
 ## REG-166 — A lagging computer mistakes retained history for sync branches
 
 - Report (2026-11-16): another computer still blocks at the version list after switching to 0.6.2. The local exchange has 42 snapshots with 12 disconnected tips after retention. Remote device state remains uncollected, so this is a reproduced cause, not proof that all remote cases are resolved.
