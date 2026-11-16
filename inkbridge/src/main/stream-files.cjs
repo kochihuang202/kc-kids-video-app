@@ -11,11 +11,18 @@ async function scanFile(source,{maxBytes=Number.MAX_SAFE_INTEGER,onChunk=()=>{}}
   for await(const chunk of handle.createReadStream({autoClose:false,highWaterMark:CHUNK_BYTES})){
    bytes+=chunk.length;if(bytes>maxBytes)throw Error('Invalid attachment byte length');hash.update(chunk);await onChunk(chunk);
   }
-  const after=await handle.stat(),current=await fsp.stat(source);if(bytes!==before.size||fingerprint(before)!==fingerprint(after)||fingerprint(current)!==fingerprint(after))throw Error('Source changed during attachment read');
+  const after=await handle.stat(),current=await fsp.stat(source);if(bytes!==before.size||fingerprint(before)!==fingerprint(after)||fingerprint(current)!==fingerprint(after))throw Object.assign(Error('Source changed during attachment read'),{code:'SOURCE_CHANGED',before:fingerprint(before),after:fingerprint(after),current:fingerprint(current)});
   return {sha256:hash.digest('hex'),bytes,fingerprint:fingerprint(after)};
  }finally{await handle.close();}
 }
-async function hashFile(source){return (await scanFile(source)).sha256;}
+async function hashFile(source){
+ // OneDrive may hydrate or replace a placeholder while the first read opens it.
+ // Reopen and hash from byte zero; never accept the digest of an unstable read.
+ for(let attempt=0;;attempt++){
+  try{return (await scanFile(source)).sha256;}
+  catch(error){if(error.code!=='SOURCE_CHANGED'||attempt>=2)throw error;}
+ }
+}
 async function copyVerified(source,target,{sha256,bytes,maxBytes=Number.MAX_SAFE_INTEGER,validate=()=>{},destination=()=>target}={}){
  await fsp.mkdir(path.dirname(target),{recursive:true});
  const temporary=target+'.pending-'+crypto.randomUUID();let out;

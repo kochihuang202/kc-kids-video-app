@@ -1,20 +1,21 @@
-// Snapshot retention (user decision 2026-11-14): keep the newest 30 snapshots of the current
-// workspace's history plus the newest one of each earlier day; delete the rest.
+// User-approved FlexNote-style sparse union (2026-11-16): latest ten,
+// hourly within 24h, daily within 30d, weekly within 90d, monthly older.
 //
 // Safety rules:
 // - Only verified ancestors of the local head are ever deleted. Newer versions, branches,
 //   other workspaces and anything whose ancestry cannot be proven are kept.
 // - If any snapshot of this workspace is incomplete (still syncing), nothing is deleted.
-// - Deleting history breaks the parent chain that tells "older here" from "another computer",
-//   so the kept older snapshots are recorded in snapshots/<workspace>/retention.json with the
-//   head they were verified against. Scans read it (retainedAncestor below).
+// - Every causal record is persisted outside the disposable DB directories.
+//   Legacy retention.json is read only as migration evidence, never overwritten.
 // - Unpublished local outbox entries are never removed; published local copies of snapshots
 //   that are no longer kept are removed.
 // - Shared assets are left alone.
 const fs = require('node:fs/promises'), path = require('node:path');
 const { json, writeJSON, UUID } = require('./sync-files.cjs');
-const KEEP_RECENT = 30, MIN_INTERVAL = 6 * 60 * 60 * 1000;
-const dayOf = iso => { const d = new Date(iso); return Number.isFinite(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : 'unknown'; };
+const KEEP_RECENT = 10, MIN_INTERVAL = 6 * 60 * 60 * 1000;
+const {ancestorsOf}=require('./snapshot-lineage.cjs');
+const taiwanDate=iso=>new Date(Date.parse(iso)+8*60*60*1000);
+const dayOf = iso => { const d=taiwanDate(iso);return Number.isFinite(d.getTime())?d.toISOString().slice(0,10):'unknown'; };
 const retentionFile = (root, workspaceId) => path.join(root, 'snapshots', workspaceId, 'retention.json');
 async function readRetention(root, workspaceId) {
   const value = await json(retentionFile(root, workspaceId), null).catch(() => null);
@@ -43,51 +44,60 @@ function applyRetentionSuccessor(rows, retention, head, ancestorsOf, graph) {
 }
 // Pure plan over verified history: `chain` is the head's chain (newest first), `prior` the
 // older snapshots an earlier run already verified (no longer linked to the chain).
-function planRetention({ chain, prior = [], keepRecent = KEEP_RECENT }) {
-  const keep = new Set(chain.slice(0, keepRecent).map(row => row.snapshotId)), byDay = new Map();
-  for (const row of [...chain.slice(keepRecent), ...prior]) { const day = dayOf(row.manifest.createdAt), best = byDay.get(day); if (!best || String(row.manifest.createdAt) > String(best.manifest.createdAt)) byDay.set(day, row); }
-  for (const row of byDay.values()) keep.add(row.snapshotId);
-  const remove = [...chain, ...prior].filter(row => !keep.has(row.snapshotId)).map(row => row.snapshotId);
-  return { keep, remove, ancestors: [...keep].filter(id => id !== chain[0]?.snapshotId) };
+function planRetention({ chain, prior = [], keepRecent = KEEP_RECENT, now = Date.now() }) {
+  const unique=new Map([...chain,...prior].map(r=>[r.snapshotId,r])),rows=[...unique.values()].sort((a,b)=>Date.parse(b.manifest.createdAt)-Date.parse(a.manifest.createdAt)||a.snapshotId.localeCompare(b.snapshotId));
+  const keep=new Set(rows.slice(0,keepRecent).map(r=>r.snapshotId)),buckets=new Map(),HOUR=3600000,DAY=24*HOUR;
+  for(const row of rows){
+    const timestamp=Date.parse(row.manifest.createdAt);if(!Number.isFinite(timestamp)){keep.add(row.snapshotId);continue;}
+    const age=now-timestamp,date=taiwanDate(row.manifest.createdAt),day=date.toISOString().slice(0,10),keys=[];
+    if(age<0){keep.add(row.snapshotId);continue;}
+    if(age<=DAY)keys.push('hour:'+date.toISOString().slice(0,13));
+    if(age<=30*DAY)keys.push('day:'+day);
+    if(age<=90*DAY){const week=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()));week.setUTCDate(week.getUTCDate()-(week.getUTCDay()+6)%7);keys.push('week:'+week.toISOString().slice(0,10));}
+    if(age>90*DAY)keys.push('month:'+day.slice(0,7));
+    for(const key of keys)if(!buckets.has(key))buckets.set(key,row.snapshotId);
+  }
+  for(const id of buckets.values())keep.add(id);
+  return {keep,remove:rows.filter(r=>!keep.has(r.snapshotId)).map(r=>r.snapshotId),ancestors:[...keep].filter(id=>id!==chain[0]?.snapshotId)};
 }
-function createSnapshotRetention({ localDirectory, getExchange, index, head, now = () => Date.now(), keepRecent = KEEP_RECENT }) {
+function createSnapshotRetention({ localDirectory, getExchange, index, head, remember, markPruned, now = () => Date.now(), keepRecent = KEEP_RECENT }) {
   const stateFile = path.join(localDirectory, 'Profile', 'snapshot-retention.json'), outbox = path.join(localDirectory, 'Outbox');
   async function prune({ workspaceId, force = false } = {}) {
     const exchange = getExchange(); if (!exchange || !UUID.test(workspaceId || '')) return { skipped: 'unconfigured' };
     const state = await json(stateFile, {});
     if (!force && Number.isFinite(state.lastRunAt) && now() - state.lastRunAt < MIN_INTERVAL) return { skipped: 'recent' };
     const root = await fs.realpath(exchange), rows = (await index()).filter(row => row.workspaceId === workspaceId);
-    if (rows.some(row => row.integrity !== 'complete')) return { skipped: 'incomplete' };
+    if (rows.some(row => row.integrity === 'incomplete'&&!row.metadataOnly)) return { skipped: 'incomplete' };
     const current = await head(workspaceId); if (!current?.snapshotId) return { skipped: 'no-head' };
-    const graph = new Map(rows.map(row => [row.snapshotId, row]));
-    // The verified chain: head back through existing parents (newest first).
-    const chain = []; for (let id = current.snapshotId, seen = new Set(); id && graph.has(id) && !seen.has(id); id = graph.get(id).manifest.parentSnapshotId) { seen.add(id); chain.push(graph.get(id)); }
-    if (!chain.length) return { skipped: 'no-head' };
-    const previous = await readRetention(root, workspaceId), inChain = new Set(chain.map(row => row.snapshotId));
-    const anchorValid = previous && (previous.anchor === current.snapshotId || inChain.has(previous.anchor));
-    const prior = anchorValid ? [...previous.ancestors].filter(id => graph.has(id) && !inChain.has(id)).map(id => graph.get(id)) : [];
-    const plan = planRetention({ chain, prior, keepRecent });
-    // A branch (or any other kept snapshot) must keep its parent, or it turns into 'unknown'.
-    const history = new Set([...chain, ...prior].map(row => row.snapshotId)), parentsInUse = new Set(rows.filter(row => !history.has(row.snapshotId)).map(row => row.manifest.parentSnapshotId).filter(Boolean));
-    const remove = plan.remove.filter(id => !parentsInUse.has(id)), ancestors = [...new Set([...plan.ancestors, ...plan.remove.filter(id => parentsInUse.has(id))])];
-    if (!remove.length) { await writeJSON(stateFile, { lastRunAt: now(), removed: 0, localRemoved: 0, kept: chain.length + prior.length }); return { removed: 0, localRemoved: 0, kept: chain.length + prior.length }; }
-    // Record the kept history first, so a scan never sees a gap without it.
-    await writeJSON(retentionFile(root, workspaceId), { format: 'inkbridge-retention', version: 1, workspaceId, anchor: current.snapshotId, ancestors, updatedAt: new Date(now()).toISOString() });
+    const graph=new Map(rows.filter(r=>r.manifest).map(r=>[r.snapshotId,r.manifest])),known=ancestorsOf(graph,current.snapshotId),byId=new Map(rows.map(r=>[r.snapshotId,r]));
+    if(!byId.get(current.snapshotId)||byId.get(current.snapshotId).metadataOnly)return {skipped:'no-head'};
+    // A legacy certificate can identify additional old payloads, but never
+    // authorises deletion of unknown or independent branches.
+    const previous=await readRetention(root,workspaceId);
+    if(previous&&(previous.anchor===current.snapshotId||known.set.has(previous.anchor)))for(const id of previous.ancestors)known.set.add(id);
+    const chain=rows.filter(r=>r.integrity==='complete'&&!r.metadataOnly&&known.set.has(r.snapshotId)).sort((a,b)=>Date.parse(b.manifest.createdAt)-Date.parse(a.manifest.createdAt));
+    const plan=planRetention({chain,keepRecent,now:now()}),remove=plan.remove.filter(id=>id!==current.snapshotId);
+    if(!remember||!markPruned)return {skipped:'lineage-unavailable'};
+    // Persist every available parent edge before any deletion. Independent
+    // immutable records cannot be lost to another computer's retention write.
+    for(const row of rows)if(row.manifest)await remember(row.manifest);
+    if (!remove.length) { await writeJSON(stateFile, { lastRunAt: now(), removed: 0, localRemoved: 0, kept: chain.length }); return { removed: 0, localRemoved: 0, kept: chain.length }; }
+    for(const id of remove)await markPruned(byId.get(id).manifest,current.snapshotId);
     const base = path.join(root, 'snapshots', workspaceId);
     for (const id of remove) { if (!UUID.test(id) || id === current.snapshotId) continue; await fs.rm(path.join(base, id), { recursive: true, force: true }); }
     // Local outbox: published copies that are no longer kept.
     let localRemoved = 0;
-    const kept = new Set([current.snapshotId, ...ancestors]);
+    const removed=new Set(remove);
     for (const id of await fs.readdir(outbox).catch(() => [])) {
-      if (!UUID.test(id) || kept.has(id)) continue;
+      if (!UUID.test(id) || !removed.has(id)) continue;
       const dir = path.join(outbox, id), receipt = await json(path.join(dir, 'published.json'), null).catch(() => null);
       if (!receipt || receipt.root !== root) continue;
       const manifest = await json(path.join(dir, 'manifest.json'), null).catch(() => null);
-      if (manifest && manifest.workspaceId !== workspaceId) continue;
+      if (!manifest || manifest.workspaceId !== workspaceId) continue;
       await fs.rm(dir, { recursive: true, force: true }); localRemoved++;
     }
-    await writeJSON(stateFile, { lastRunAt: now(), removed: remove.length, localRemoved, kept: kept.size });
-    return { removed: remove.length, localRemoved, kept: kept.size };
+    await writeJSON(stateFile, { lastRunAt: now(), removed: remove.length, localRemoved, kept: plan.keep.size });
+    return { removed: remove.length, localRemoved, kept: plan.keep.size };
   }
   return { prune };
 }

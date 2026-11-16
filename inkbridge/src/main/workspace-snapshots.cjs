@@ -4,7 +4,8 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {DatabaseSync}=require('node:sqlite');
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const {hashFile,copyVerified}=require('./stream-files.cjs');
-const {readRetention,retainedAncestor,decidable}=require('./snapshot-retention.cjs');
+const {readRetention,retainedAncestor,decidable,applyRetentionSuccessor}=require('./snapshot-retention.cjs');
+const {snapshotOrder}=require('./snapshot-order.cjs');
 async function durable(file,bytes){const handle=await fs.open(file,'wx');try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}}
 async function readJSON(file,fallback){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(e){if(e.code==='ENOENT')return fallback;throw e;}}
 function inspectDatabase(file){const db=new DatabaseSync(file,{readOnly:true});try{
@@ -27,7 +28,13 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
     const m=await readJSON(path.join(directory,'manifest.json'),null);
     if(!m||m.format!=='inkbridge-snapshot'||m.version!==1||!UUID.test(m.snapshotId)||!UUID.test(m.workspaceId)||!UUID.test(m.sourceComputerId)||m.parentSnapshotId!==null&&!UUID.test(m.parentSnapshotId)||m.parentSnapshotId===m.snapshotId||!Array.isArray(m.assets)||!Number.isFinite(Date.parse(m.createdAt)))throw Error('快照 Manifest 無效或尚未到齊');
     if(path.basename(directory)!==m.snapshotId||m.database.path!=='database.sqlite3')throw Error('快照路徑無效');
-    async function verify(file,entry){if(!/^[a-f0-9]{64}$/.test(entry.sha256)||!Number.isSafeInteger(entry.bytes)||entry.bytes<0||(await fs.stat(file)).size!==entry.bytes||await hashFile(file)!==entry.sha256)throw Error('檔案未完整下載或完整性驗證失敗');}
+    async function verify(file,entry){
+      try{
+        if(!entry||!/^[a-f0-9]{64}$/.test(entry.sha256)||!Number.isSafeInteger(entry.bytes)||entry.bytes<0)throw Object.assign(Error('快照檔案資訊無效'),{code:'INVALID_SNAPSHOT_FILE'});
+        if((await fs.stat(file)).size!==entry.bytes)throw Object.assign(Error('檔案尚未完整下載'),{code:'INCOMPLETE_SNAPSHOT_FILE'});
+        if(await hashFile(file)!==entry.sha256)throw Object.assign(Error('檔案內容驗證失敗'),{code:'SNAPSHOT_HASH_MISMATCH'});
+      }catch(error){error.snapshotFile=path.relative(root,file).replaceAll('\\','/');error.message+=' · '+error.snapshotFile;throw error;}
+    }
     await verify(path.join(directory,'database.sqlite3'),m.database);
     const db=inspectDatabase(path.join(directory,'database.sqlite3'));
     if(db.workspaceId!==m.workspaceId||db.revision!==m.revision||m.assets.length!==db.files.length)throw Error('資料庫與附件清單不一致');
@@ -79,7 +86,11 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
     for(const workspaceId of workspaces.filter(id=>UUID.test(id))){
       for(const snapshotId of (await fs.readdir(path.join(base,workspaceId))).filter(id=>UUID.test(id))){
         const row={workspaceId,snapshotId,integrity:'incomplete',relation:'unknown'};
-        try{row.manifest=await validate(root,path.join(base,workspaceId,snapshotId));if(row.manifest.workspaceId!==workspaceId)throw Error('工作區路徑不一致');row.integrity='complete';}catch(e){row.error=e.message;}
+        try{
+          const directory=path.join(base,workspaceId,snapshotId),metadata=await readJSON(path.join(directory,'manifest.json'),null);
+          if(metadata?.workspaceId===workspaceId&&metadata.snapshotId===snapshotId)row.manifest=metadata;
+          row.manifest=await validate(root,directory);if(row.manifest.workspaceId!==workspaceId)throw Error('工作區路徑不一致');row.integrity='complete';
+        }catch(e){row.error=e.message;row.errorCode=e.code;row.readFingerprint=e.code==='SOURCE_CHANGED'?{before:e.before,after:e.after,current:e.current}:undefined;}
         rows.push(row);
       }
     }
@@ -91,7 +102,8 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
       const a=ancestors(row.snapshotId),b=ancestors(head);
       row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===head?'current':head&&a.set.has(head)?'newer':head&&b.set.has(row.snapshotId)?'ancestor':head&&retainedAncestor(kept.get(row.workspaceId),row.snapshotId,head,ancestors,graph)?'ancestor':head?(decidable(a,kept.get(row.workspaceId))&&decidable(b,kept.get(row.workspaceId))?'branch':'unknown'):'unbased';
     }
-    return rows;
+    applyRetentionSuccessor(rows.filter(r=>r.workspaceId===current.workspaceId&&r.integrity==='complete'),kept.get(current.workspaceId),state.heads[current.workspaceId]?.snapshotId||state.heads[root+'|'+current.workspaceId]?.snapshotId,ancestors,graph);
+    return rows.sort(snapshotOrder);
   }
   async function adopt(manifest){const root=await fs.realpath(getExchange()),state=await identity();state.heads[root+'|'+manifest.workspaceId]={snapshotId:manifest.snapshotId,revision:manifest.revision};await writeState(state);}
   async function startup(){

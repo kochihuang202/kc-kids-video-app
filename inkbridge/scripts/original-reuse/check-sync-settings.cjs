@@ -1,0 +1,35 @@
+// Targeted real Electron flow: automatic metadata scan, stable dates and one-click
+// historical restore with the latest unflushed text protected in a forward DAG.
+const {_electron,expect}=require('@playwright/test'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {WorkspaceDatabase}=require('../../src/main/database.cjs'),{createDatabaseClient}=require('../../src/main/database-client.cjs'),{createSyncSnapshots}=require('../../src/main/sync-snapshots.cjs'),{createStorageSettings}=require('../../src/main/storage-settings.cjs');
+(async()=>{
+ const local=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-original-modules-sync-settings-')),exchange=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-settings-exchange-'));await fs.mkdir(path.join(local,'Profile'),{recursive:true});
+ const filename=path.join(local,'Workspace/inkbridge.sqlite3'),seed=new WorkspaceDatabase(filename);seed.commit({requestId:crypto.randomUUID(),baseRevision:0,operations:[{type:'putBoard',data:{id:'b',title:'還原驗收',view:{x:0,y:0,zoom:1}}},{type:'putContent',data:{id:'old',title:'舊版',body:'選定的舊版本內容',kind:'text',tone:'sage'}}]});seed.close();
+ const db=createDatabaseClient({filename}),snapshots=createSyncSnapshots({localDirectory:local,database:db,getExchange:()=>exchange,resolveAttachment:()=>{},deviceName:'驗收電腦'}),first=await snapshots.create();
+ await db.commit({requestId:crypto.randomUUID(),baseRevision:1,operations:[{type:'putContent',data:{id:'old',title:'新版',body:'還原前的較新內容',kind:'text',tone:'sage'}}]});const second=await snapshots.create();await db.close();
+ createStorageSettings({filename:path.join(local,'Profile/storage-settings.json'),localDirectory:local,applicationDirectory:path.resolve(__dirname,'../..')}).save(exchange);
+ const env={...process.env,INKBRIDGE_ORIGINAL_VIEW:'board',INKBRIDGE_ORIGINAL_PROBE_DATA:local};delete env.ELECTRON_RUN_AS_NODE;delete env.INKBRIDGE_PORTABLE;
+ const build=process.env.INKBRIDGE_TEST_BUILD,app=await _electron.launch({args:[build?path.join(build,'app/scripts/original-reuse/host.cjs'):path.join(__dirname,'host.cjs')],executablePath:build?path.join(build,'runtime/electron.exe'):require('electron'),env});
+ try{
+  const page=await app.firstWindow();page.setDefaultTimeout(20000);await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);const webContentsId=await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.id);
+  await app.evaluate(({dialog})=>{dialog.showMessageBox=async()=>{throw Error('restore must not ask for a second confirmation');};});
+  await page.getByRole('button',{name:'設定',exact:true}).click();
+  const rows=page.locator('#workspace-snapshot-list [data-snapshot-row]');await expect(rows).toHaveCount(2);assert.equal(await rows.first().getAttribute('data-snapshot-row'),second.snapshotId,'opening settings must scan newest first without clicking rescan');
+  const missing=crypto.randomUUID(),base=path.join(exchange,'snapshots',first.workspaceId),m=JSON.parse(await fs.readFile(path.join(base,second.snapshotId,'manifest.json')));await fs.mkdir(path.join(base,missing));await fs.writeFile(path.join(base,missing,'manifest.json'),JSON.stringify({...m,snapshotId:missing,parentSnapshotId:second.snapshotId,parentSnapshotIds:[second.snapshotId],createdAt:'2099-01-01T00:00:00.000Z'}));
+  await expect(rows).toHaveCount(3);assert.equal(await rows.first().getAttribute('data-snapshot-row'),missing);await expect(rows.first()).toContainText('尚未到齊');await expect(rows.first().getByRole('button',{name:'還原此版本'})).toHaveCount(0);
+  await fs.rm(path.join(base,missing),{recursive:true});for(const root of [path.join(exchange,'lineage',first.workspaceId),path.join(local,'Lineage',first.workspaceId)])await fs.rm(path.join(root,missing+'.json'),{force:true});await expect(rows).toHaveCount(2);
+  await page.locator('#cancel-storage-settings').click();
+  const box=await page.locator('#board').boundingBox();await page.mouse.dblclick(box.x+250,box.y+200);const editor=page.getByRole('textbox').last();await expect(editor).toBeVisible();await page.keyboard.insertText('還原前尚未手動保存的中文');
+  await page.getByRole('button',{name:'設定',exact:true}).click();await expect(rows).toHaveCount(2);await page.locator(`[data-snapshot-id="${first.snapshotId}"]`).click();
+  await expect.poll(async()=>{try{return (await page.evaluate(()=>window.inkbridge.load())).contents.find(n=>n.id==='old')?.body;}catch{return null;}},{timeout:30000}).toBe('選定的舊版本內容');
+  await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);assert.equal(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.id),webContentsId);
+  await expect.poll(async()=>{const s=JSON.parse(await fs.readFile(path.join(local,'Profile/snapshot-state.json')));const h=s.heads[first.workspaceId];try{const m=JSON.parse(await fs.readFile(path.join(base,h.snapshotId,'manifest.json')));return m.restoredFromSnapshotId;}catch{return null;}},{timeout:30000}).toBe(first.snapshotId);
+  const state=JSON.parse(await fs.readFile(path.join(local,'Profile/snapshot-state.json'))),head=state.heads[first.workspaceId];assert(head.snapshotId!==first.snapshotId&&head.snapshotId!==second.snapshotId);
+  const restored=JSON.parse(await fs.readFile(path.join(base,head.snapshotId,'manifest.json')));assert.equal(restored.restoredFromSnapshotId,first.snapshotId);
+  const files=await fs.readdir(base),manifests=[];for(const id of files){try{manifests.push(JSON.parse(await fs.readFile(path.join(base,id,'manifest.json'))));}catch{}}
+  const {DatabaseSync}=require('node:sqlite');let preserved=false;for(const m of manifests){const backup=new DatabaseSync(path.join(base,m.snapshotId,'database.sqlite3'),{readOnly:true});try{if(backup.prepare('SELECT body FROM contents').all().some(r=>r.body.includes('還原前尚未手動保存的中文')))preserved=true;}finally{backup.close();}}assert(preserved,'manual restore must preserve current editor text first');
+  const check=await page.evaluate(()=>window.inkbridge.sync({method:'check'}));assert.equal(check.kind,'ready');assert.equal((await page.evaluate(()=>window.inkbridge.load())).contents.find(r=>r.id==='old').body,'選定的舊版本內容');
+  await page.getByRole('button',{name:'設定',exact:true}).click();await expect(rows).toHaveCount(manifests.length);assert.equal(await rows.first().getAttribute('data-snapshot-row'),head.snapshotId);
+  await page.screenshot({path:path.join(local,'sync-settings-restored.png')});console.log(JSON.stringify({autoScanOnOpen:true,autoRefreshOnArrival:true,newestFirst:true,incompleteNotRestorable:true,oneClickRestore:true,sameNativeWindow:true,latestUnflushedTextPreserved:true,restoreCreatesForwardHead:true,automaticCheckDoesNotUndoRestore:true,local,exchange}));
+ }finally{await app.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

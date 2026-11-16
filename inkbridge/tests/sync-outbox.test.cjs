@@ -8,6 +8,9 @@ test('durable offline outbox retries the same UUID and keeps ancestry across fol
  assert.equal((await snap.status()).published,false,'a local outbox head is not a OneDrive publication');
  await fs.mkdir(exchange);assert.equal((await snap.flushOutbox()).pending,0);const m=await snap.manifest(first.workspaceId,first.snapshotId);assert.equal(m.revision,1);
  assert.equal((await snap.status()).published,true);
+ // A receipt is not permission to forget a disappeared exchange copy.
+ await fs.rm(path.join(exchange,'snapshots',first.workspaceId,first.snapshotId),{recursive:true});
+ assert.equal((await snap.flushOutbox()).pending,0);assert.equal((await snap.manifest(first.workspaceId,first.snapshotId)).snapshotId,first.snapshotId);
  const moved=path.join(local,'MovedExchange');await fs.rename(exchange,moved);exchange=moved;assert.equal((await snap.status()).baseSnapshotId,first.snapshotId);
  await db.commit({requestId:crypto.randomUUID(),baseRevision:1,operations:[{type:'putContent',data:{id:'a',title:'A',body:'恢復後',kind:'text',tone:'sage'}}]});const second=await snap.create();assert.equal((await snap.manifest(second.workspaceId,second.snapshotId)).parentSnapshotId,first.snapshotId);
  }finally{await db.close();}

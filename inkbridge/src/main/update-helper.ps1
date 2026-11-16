@@ -26,9 +26,9 @@ $parameters.Modulus=[Convert]::FromBase64String($key.modulus);$parameters.Expone
 $payload=[Convert]::FromBase64String($envelope.payload)
 if(-not $rsa.VerifyData($payload,[Security.Cryptography.SHA256]::Create(),[Convert]::FromBase64String($envelope.signature))){throw 'Invalid update signature'}
 $m=[Text.Encoding]::UTF8.GetString($payload) | ConvertFrom-Json
-if($m.format -ne 'inkbridge-update' -or $m.version -ne 1 -or $m.schemaVersion -ne 1 -or $m.baseBuildId -ne $plan.baseBuildId -or $m.targetBuildId -ne $plan.targetBuildId){throw 'Incompatible update'}
+if($m.format -ne 'inkbridge-update' -or $m.version -notin @(1,2) -or $m.schemaVersion -ne 1 -or ($m.mode -ne 'full' -and $m.baseBuildId -ne $plan.baseBuildId) -or $m.targetBuildId -ne $plan.targetBuildId){throw 'Incompatible update'}
 function Target([string]$relative){
- if($relative -notmatch '^(app/|runtime/|portable-build\.json$|\u4f7f\u7528\u8aaa\u660e\.txt$)' -or $relative -match '[:\\]' -or $relative -match '(^|/)(\.|\.\.|profiles|Profile|Workspace|files|Session|Recovery|Outbox|\.git)(/|$)' -or $relative -match '(^|/)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|/|$)' -or $relative -match '[. ](/|$)'){throw 'Unsafe update path'}
+ if($relative -notmatch '^(app/|runtime/|portable-build\.json$|Start-InkBridge\.bat$|Recover-InkBridge\.ps1$|\u4f7f\u7528\u8aaa\u660e\.txt$)' -or $relative -match '[:\\]' -or $relative -match '(^|/)(\.|\.\.|profiles|Profile|Workspace|files|Session|Recovery|Outbox|\.git)(/|$)' -or $relative -match '(^|/)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|/|$)' -or $relative -match '[. ](/|$)'){throw 'Unsafe update path'}
  $target=[IO.Path]::GetFullPath((Join-Path $root $relative));if(-not $target.StartsWith($root+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Update escaped root'}
  $part=$target;while($part -and $part -ne $root){if(Test-Path -LiteralPath $part){if((Get-Item -LiteralPath $part -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Reparse target refused'}};$part=Split-Path -Parent $part}
  return $target
@@ -37,6 +37,17 @@ function Hash([string]$file){if(-not (Test-Path -LiteralPath $file -PathType Lea
 function WriteJson([string]$file,$value){$temp=$file+'.tmp';$bytes=[Text.Encoding]::UTF8.GetBytes(($value|ConvertTo-Json -Depth 30));$stream=New-Object IO.FileStream($temp,[IO.FileMode]::Create,[IO.FileAccess]::Write,[IO.FileShare]::None);try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()};if(Test-Path -LiteralPath $file){[IO.File]::Replace($temp,$file,[NullString]::Value)}else{[IO.File]::Move($temp,$file)}}
 $stage=Join-Path $job 'staged';$backup=Join-Path $job 'backup';$journal=Join-Path $job 'journal.json'
 $files=@{};foreach($f in $m.files){$null=Target $f.path;if($files.ContainsKey($f.path)){throw 'Duplicate update path'};$files[$f.path]=$f}
+$operations=@($m.files)
+if($m.mode -eq 'full'){
+ $baseManifest=Join-Path $job 'base-manifest.json'
+ if((Hash $baseManifest) -ne $plan.baseManifestSha){throw 'Full update base manifest changed'}
+ $installed=Get-Content -LiteralPath $baseManifest -Raw -Encoding UTF8|ConvertFrom-Json
+ if($installed.buildId -ne $plan.baseBuildId -or $m.sequence -le $installed.releaseSequence){throw 'Full update baseline changed'}
+ $previous=@{};foreach($f in $installed.files){$null=Target $f.path;if($previous.ContainsKey($f.path)){throw 'Duplicate installed manifest path'};$previous[$f.path]=$f.sha256}
+ $previous['portable-build.json']=$plan.baseManifestSha
+ $operations=@();foreach($f in $m.files){$operations+=@{path=$f.path;sha256=$f.sha256;oldSha256=$previous[$f.path]}}
+ foreach($name in $previous.Keys){if(-not $files.ContainsKey($name)){$operations+=@{path=$name;sha256=$null;oldSha256=$previous[$name]}}}
+}
 function Rollback {
  if(-not(Test-Path -LiteralPath $journal)){return};$state=Get-Content -LiteralPath $journal -Raw -Encoding UTF8|ConvertFrom-Json
  if($state.phase -eq 'healthy'){return}
@@ -53,17 +64,27 @@ function Launch {
 }
 if($Mode -eq 'Recover'){Rollback;exit 0}
 if($Mode -eq 'Stage'){
- if((Hash $plan.zip) -ne $m.zip.sha256){throw 'ZIP hash mismatch'}
+ if($m.version -eq 1 -and (Hash $plan.zip) -ne $m.zip.sha256){throw 'ZIP hash mismatch'}
  [IO.Directory]::CreateDirectory($stage)|Out-Null
  $archive=[IO.Compression.ZipFile]::OpenRead($plan.zip);$seen=@{}
- try{foreach($entry in $archive.Entries){$name=$entry.FullName;$null=Target $name;if($seen.ContainsKey($name) -or -not $files.ContainsKey($name) -or -not $files[$name].sha256 -or (($entry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000){throw 'Unexpected ZIP entry'};$seen[$name]=$true
+ try{foreach($entry in $archive.Entries){$name=$entry.FullName
+   if($m.version -eq 2 -and $name -eq 'release.json'){
+     if($seen.ContainsKey($name) -or $entry.Length -gt 4194304 -or (($entry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000){throw 'Invalid release envelope entry'};$seen[$name]=$true
+     $reader=New-Object IO.StreamReader($entry.Open(),[Text.Encoding]::UTF8);try{$embedded=$reader.ReadToEnd()|ConvertFrom-Json}finally{$reader.Dispose()}
+     if($embedded.payload -ne $envelope.payload -or $embedded.signature -ne $envelope.signature){throw 'Release envelope changed'};continue
+   }
+   $null=Target $name;if($seen.ContainsKey($name) -or -not $files.ContainsKey($name) -or -not $files[$name].sha256 -or (($entry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000){throw 'Unexpected ZIP entry'};$seen[$name]=$true
    $dest=Join-Path $stage $name;[IO.Directory]::CreateDirectory((Split-Path -Parent $dest))|Out-Null
    $input=$entry.Open();$output=New-Object IO.FileStream($dest,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
    try{$input.CopyTo($output);$output.Flush($true)}finally{$input.Dispose();$output.Dispose()}
-   if((Hash $dest) -ne $files[$name].sha256){throw 'Extracted file hash mismatch'}
- };foreach($f in $m.files){if($f.sha256 -and -not $seen.ContainsKey($f.path)){throw 'Missing ZIP entry'}}}finally{$archive.Dispose()}
+   if((Hash $dest) -ne $files[$name].sha256 -or ($m.version -eq 2 -and (Get-Item -LiteralPath $dest).Length -ne $files[$name].bytes)){throw 'Extracted file hash mismatch'}
+ };foreach($f in $m.files){if($f.sha256 -and -not $seen.ContainsKey($f.path)){throw 'Missing ZIP entry'}};if($m.version -eq 2 -and -not $seen.ContainsKey('release.json')){throw 'Missing release envelope'}}finally{$archive.Dispose()}
  $targetManifest=Get-Content -LiteralPath (Join-Path $stage 'portable-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
  if($targetManifest.buildId -ne $m.targetBuildId){throw 'Target build manifest mismatch'}
+ if($m.mode -eq 'full'){
+  if($targetManifest.releaseSequence -ne $m.sequence -or $targetManifest.version -ne $m.targetVersion -or $files.Count -ne @($targetManifest.files).Count+1){throw 'Full target manifest mismatch'}
+  foreach($f in $targetManifest.files){if(-not $files.ContainsKey($f.path) -or $files[$f.path].sha256 -ne $f.sha256){throw 'Full target file list mismatch'}}
+ }
  WriteJson (Join-Path $job 'stage-ready.json') @{ready=$true};exit 0
 }
 if(-not(Test-Path -LiteralPath (Join-Path $job 'stage-ready.json'))){throw 'Package has not been staged'}
@@ -71,8 +92,8 @@ WriteJson (Join-Path $job 'helper-started.json') @{pid=$PID;waitingFor=$plan.par
 if($plan.parentPid -gt 0){$parentProcess=Get-Process -Id $plan.parentPid -ErrorAction SilentlyContinue;if($parentProcess){if(-not $parentProcess.WaitForExit(60000)){throw 'InkBridge did not exit'}}}
 $applied=New-Object Collections.ArrayList
 try{
- foreach($f in $m.files){$target=Target $f.path;if((Hash $target) -ne $f.oldSha256){throw 'Installed file changed before update'};if($f.sha256 -and (Hash (Join-Path $stage $f.path)) -ne $f.sha256){throw 'Staged package changed'}}
- foreach($f in $m.files){$target=Target $f.path;$old=Join-Path $backup $f.path;$existed=Test-Path -LiteralPath $target
+ foreach($f in $operations){$target=Target $f.path;if((Hash $target) -ne $f.oldSha256){throw 'Installed file changed before update'};if($f.sha256 -and (Hash (Join-Path $stage $f.path)) -ne $f.sha256){throw 'Staged package changed'}}
+ foreach($f in $operations){$target=Target $f.path;$old=Join-Path $backup $f.path;$existed=Test-Path -LiteralPath $target
    [void]$applied.Add(@{path=$f.path;existed=$existed});WriteJson $journal @{phase='applying';applied=@($applied)}
    if($existed){[IO.Directory]::CreateDirectory((Split-Path -Parent $old))|Out-Null;[IO.File]::Move($target,$old)}
    if($f.sha256){[IO.Directory]::CreateDirectory((Split-Path -Parent $target))|Out-Null;[IO.File]::Move((Join-Path $stage $f.path),$target)}
@@ -81,4 +102,11 @@ try{
  while([DateTime]::UtcNow -lt $deadline){if(Test-Path -LiteralPath $plan.healthFile){try{$health=Get-Content -LiteralPath $plan.healthFile -Raw -Encoding UTF8|ConvertFrom-Json;if($health.ready -and $health.buildId -eq $plan.targetBuildId){$healthy=$true;break}}catch{}};Start-Sleep -Milliseconds 250}
  if(-not $healthy){if(-not $started.HasExited){& "$env:SystemRoot\System32\taskkill.exe" /PID $started.Id /T /F | Out-Null};throw 'Updated InkBridge did not become healthy'}
  WriteJson $journal @{phase='healthy';applied=@($applied)};WriteJson (Join-Path $job 'result.json') @{success=$true;targetBuildId=$plan.targetBuildId;completedAt=[DateTime]::UtcNow.ToString('o')}
+ # Once the new process acknowledges DB/UI readiness, old program bytes are no
+ # longer needed. Only the owned backup directory inside this verified job is removed.
+ if(Test-Path -LiteralPath $backup){try{
+   $cleanup=[IO.Path]::GetFullPath($backup)
+   if($cleanup -ne (Join-Path $job 'backup') -or -not $cleanup.StartsWith($job+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Unsafe backup cleanup'}
+   Remove-Item -LiteralPath $cleanup -Recurse -Force
+ }catch{WriteJson (Join-Path $job 'cleanup-warning.json') @{message=$_.Exception.Message}}}
 }catch{$failure=$_.Exception.Message;Rollback;WriteJson (Join-Path $job 'result.json') @{success=$false;message=$failure;completedAt=[DateTime]::UtcNow.ToString('o')};$env:INKBRIDGE_UPDATE_HEALTH_FILE='';Launch | Out-Null;exit 1}

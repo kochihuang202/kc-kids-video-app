@@ -156,7 +156,7 @@ app.whenReady().then(async()=>{
     swap:async(m,initial,session)=>{
       const staged=await restore.stageRestore({local:data,exchange:storageSettings.read().exchangeDirectory,workspaceId:m.workspaceId,snapshotId:m.snapshotId,snapshots,sharedAssets:true});
       await database.close();
-      try{await restore.switchRestore({local:data,staged,snapshots});databaseClient=createDatabaseClient({filename});await database.load();
+      try{await restore.switchRestore({local:data,staged,snapshots});databaseClient=createDatabaseClient({filename});await database.load();await session.afterSwitch?.();
         if(!initial){session.advance();session.resetReady();rendererReady=false;await session.wait();}
       }catch(error){await database.close().catch(()=>{});await restore.rollbackRestore(data,staged);databaseClient=createDatabaseClient({filename});await database.load();if(!initial){session.advance();session.resetReady();await session.wait();}throw error;}
     }});
@@ -173,16 +173,14 @@ app.whenReady().then(async()=>{
     if(method==='read')return storageSettings.read();
     if(method==='startup')return snapshots.startup();
     if(method==='snapshotStatus')return snapshots.status();
-    if(method==='scan')return snapshots.scan();
+    if(method==='scan')return snapshots.scan({verify:false});
     if(method==='restore'){
       if(applyingSettings||closing||snapshotTask)throw Error('正在保存或關閉，請稍後再試');
       const exchange=storageSettings.read().exchangeDirectory;
       if(!exchange)throw Error('尚未設定交換資料夾');
-      const rows=await snapshots.scan(),selected=rows.find(row=>row.workspaceId===request.workspaceId&&row.snapshotId===request.snapshotId&&row.integrity==='complete');
-      if(!selected)throw Error('選定快照尚未完整到達或驗證失敗，請重新掃描');
-      const answer=await dialog.showMessageBox(BrowserWindow.fromWebContents(event.sender),{type:'question',buttons:['取消','保存目前資料並載入'],defaultId:0,cancelId:0,title:'載入工作區快照',message:'將保存目前資料並重新啟動 InkBridge',detail:`工作區：${selected.workspaceId}\n版本：v${selected.manifest.revision}\n快照：${selected.snapshotId}\n建立時間：${selected.manifest.createdAt}\n原本工作資料將保留在本機 Restore 備份目錄，其他快照不會刪除。`});
-      if(answer.response!==1)return {cancelled:true};
-      return liveSync.call({method:'select',workspaceId:selected.workspaceId,snapshotId:selected.snapshotId});
+      // Clicking an available version is the explicit restore request. Validate
+      // only that checkpoint, preserve current work, and restore in this window.
+      return liveSync.call({method:'restore',workspaceId:request.workspaceId,snapshotId:request.snapshotId});
     }
     if(method==='choose'){
       const result=await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender),{title:'選擇 OneDrive 交換資料夾',properties:['openDirectory','createDirectory']});

@@ -13,6 +13,7 @@ export function installOperationUI(){
   const showVersions=()=>document.querySelector('#open-storage-settings')?.click();
   function show(value){
     if(value.key==='startup-retry'){window.dispatchEvent(new Event('inkbridge:startup-retry'));return;}
+    if(value.key==='snapshot-list-changed'){window.dispatchEvent(new Event('inkbridge:snapshot-list-changed'));return;}
     if(value.state==='clear'){notices.delete(value.key);publish();return;}
     const detail=detailOf(value);
     if(value.action==='update'){
@@ -20,7 +21,7 @@ export function installOperationUI(){
       publish();toast({...value,message:'點左下角燈號更新'},'primary');return;
     }
     if(value.state==='conflict'){
-      notices.set(value.key,{key:value.key,kind:'attention',title:value.title,detail,actions:[{label:'查看版本',run:showVersions},{label:'保留本機版本',run:()=>window.inkbridge.sync({method:'keepLocal'}).catch(error=>show({key:'sync',state:'error',title:'尚未完成',message:error.message}))}]});
+      notices.set(value.key,{key:value.key,kind:'attention',title:value.title,detail,actions:[{label:'查看版本',run:showVersions},{label:'暫時使用本機',run:()=>window.inkbridge.sync({method:'offline'}).catch(error=>show({key:'sync',state:'error',title:'尚未完成',message:error.message}))}]});
       publish();toast({...value,message:'點左下角燈號處理'},'warning');return;
     }
     if(value.state==='progress'||value.state==='waiting'){
@@ -39,12 +40,12 @@ export async function enterWorkspace(mode='enter'){
   let resolveReady,busy=false;const done=new Promise(resolve=>resolveReady=resolve);
   async function check(request={method:mode}){if(busy)return;busy=true;panel.replaceChildren();const title=document.createElement('h2');title.textContent='正在確認工作區版本…';panel.append(title);
     try{const result=await window.inkbridge.sync(request);if(result.kind==='ready'){screen.remove();window.removeEventListener('inkbridge:startup-retry',retryEvent);resolveReady();return;}
-      title.textContent=result.kind==='pairing'?'第一次設定：共用哪個工作區？':result.kind==='branches'||result.kind==='conflict'?'兩台都有修改，請選擇版本':'正在等待同步資料';
-      const text=document.createElement('p');text.textContent=result.kind==='pairing'?'只需設定一次。原有資料會先安全保存，不會合併或刪除。':result.error||'新版檔案尚未到齊，或需要確認分支。';panel.append(text);
+      title.textContent=result.kind==='pairing'?'第一次設定：共用哪個工作區？':result.kind==='branches'||result.kind==='conflict'?'兩台都有修改，請選擇版本':result.kind==='unknown'?'舊同步基準的關係尚未確認':'正在等待同步資料';
+      const text=document.createElement('p');text.textContent=result.kind==='pairing'?'只需設定一次。原有資料會先安全保存，不會合併或刪除。':result.error||(result.kind==='unknown'?'保留雙方內容。點選版本會先備份本機，再直接載入選定內容，建立新的接續版本。':'新版檔案尚未到齊，或需要確認分支。');panel.append(text);
       if(result.workspaces)for(const w of result.workspaces)for(const v of w.versions){const button=document.createElement('button');button.style.cssText='display:block;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:8px;text-align:left';button.textContent=`${v.name||'筆記工作區'} · ${localTime(v.createdAt)} · ${v.sourceComputerName}${v.boards!==undefined?` · ${v.boards} 白板 / ${v.cards} 卡片`:''}${w.local?'（本機）':''}`;button.onclick=()=>check({method:'select',pair:true,workspaceId:w.workspaceId,snapshotId:v.snapshotId});panel.append(button);}
-      if(result.versions){for(const v of result.versions){const button=document.createElement('button');button.style.cssText='display:block;margin:8px;padding:8px';button.textContent=`${localTime(v.createdAt)} · ${v.sourceComputerName}`;button.onclick=()=>check({method:'select',workspaceId:v.workspaceId,snapshotId:v.snapshotId});panel.append(button);}const keep=document.createElement('button');keep.textContent='保留本機版本並繼續';keep.onclick=()=>check({method:'keepLocal'});panel.append(keep);}
+      if(result.versions){for(const v of result.versions){const button=document.createElement('button');button.style.cssText='display:block;margin:8px;padding:8px';button.textContent=`${localTime(v.createdAt)} · ${v.sourceComputerName} · 保留本機備份並載入此版本`;button.onclick=()=>check({method:'select',workspaceId:v.workspaceId,snapshotId:v.snapshotId});panel.append(button);}const keep=document.createElement('button');keep.textContent='明確選用本機分支';keep.onclick=()=>check({method:'keepLocal'});panel.append(keep);}
       const retry=document.createElement('button');retry.textContent='重新檢查';retry.onclick=()=>check({method:mode});panel.append(retry);
-      const offline=document.createElement('button');offline.textContent='使用本機版';offline.style.marginLeft='12px';offline.onclick=()=>check({method:'offline'});panel.append(offline);
+      const offline=document.createElement('button');offline.textContent='暫時使用本機';offline.style.marginLeft='12px';offline.onclick=()=>check({method:'offline'});panel.append(offline);
     }catch(error){title.textContent='同步未完成';const text=document.createElement('p');text.textContent=error.message;panel.append(text);const offline=document.createElement('button');offline.textContent='使用本機版';offline.onclick=()=>check({method:'offline'});panel.append(offline);}
     finally{busy=false;}
   }

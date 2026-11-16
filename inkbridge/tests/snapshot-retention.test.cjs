@@ -26,31 +26,36 @@ async function fixture() {
 }
 const exists = file => fs.stat(file).then(() => true, () => false);
 
-test('the plan keeps the newest 30 and the newest snapshot of each earlier day', () => {
+// User changed the policy to FlexNote's sparse union on 2026-11-16.
+test('the FlexNote plan keeps newest ten plus hourly/daily/weekly/monthly representatives', () => {
   const rows = Array.from({ length: 50 }, (_, n) => ({ snapshotId: 'id' + n, manifest: { createdAt: at(9 - Math.floor(n / 5), 4 - (n % 5)) } }));
-  const { keep, remove } = planRetention({ chain: rows });
-  assert.equal(keep.size, 34); assert.equal(remove.length, 16);
-  for (const n of [0, 29, 30, 35, 40, 45]) assert(keep.has('id' + n), 'kept id' + n);
-  for (const n of [31, 34, 49]) assert(!keep.has('id' + n), 'removed id' + n);
+  const { keep, remove } = planRetention({ chain: rows,now:Date.parse(at(10,0)) });
+  assert.equal(keep.size, 18); assert.equal(remove.length, 32);
+  for (const n of [0, 9, 10, 15, 20, 45]) assert(keep.has('id' + n), 'kept id' + n);
+  for (const n of [11, 14, 49]) assert(!keep.has('id' + n), 'removed id' + n);
 });
 
 test('retention deletes only verified history, keeps branches, other workspaces and unpublished local copies, and scans stay decidable', async () => {
   const f = await fixture(), base = path.join(f.exchange, 'snapshots', WS);
   // Local outbox: a published copy of a snapshot that will go, an unpublished one, one published elsewhere.
   const outbox = path.join(f.local, 'Outbox'), gone = f.chain[10], unpublished = crypto.randomUUID(), elsewhere = f.chain[11];
-  for (const id of [gone, unpublished, elsewhere]) { await fs.mkdir(path.join(outbox, id), { recursive: true }); await fs.writeFile(path.join(outbox, id, 'manifest.json'), JSON.stringify({ workspaceId: WS, snapshotId: id })); }
+  for (const id of [gone, unpublished, elsewhere,f.branch]) { await fs.mkdir(path.join(outbox, id), { recursive: true }); await fs.writeFile(path.join(outbox, id, 'manifest.json'), JSON.stringify({ workspaceId: WS, snapshotId: id })); }
   await fs.writeFile(path.join(outbox, gone, 'published.json'), JSON.stringify({ root: f.real }));
   await fs.writeFile(path.join(outbox, elsewhere, 'published.json'), JSON.stringify({ root: path.join(f.root, 'old-exchange') }));
+  await fs.writeFile(path.join(outbox,f.branch,'published.json'),JSON.stringify({root:f.real}));
   const before = await f.snapshots.index(); assert.equal(before.find(r => r.snapshotId === f.branch).relation, 'branch');
 
   const result = await f.snapshots.prune({ workspaceId: WS, force: true });
-  // 50 history: keep 30 + 4 earlier days; chain[3] stays as the branch's parent.
-  assert.deepEqual({ removed: result.removed, localRemoved: result.localRemoved }, { removed: 15, localRemoved: 1 });
+  // 50 history: latest ten + eight earlier daily representatives. The parent
+  // of a branch may lose its payload, but its immutable causal record remains.
+  assert.deepEqual({ removed: result.removed, localRemoved: result.localRemoved }, { removed: 32, localRemoved: 1 });
   const left = (await fs.readdir(base)).filter(name => name !== 'retention.json');
-  assert.equal(left.length, 51 - 15);
-  assert(left.includes(f.branch) && left.includes(f.chain[3]) && left.includes(f.head));
+  assert.equal(left.length, 51 - 32);
+  assert(left.includes(f.branch) && left.includes(f.head));
+  assert(await exists(path.join(f.exchange,'lineage',WS,f.chain[3]+'.json')));
   assert(await exists(path.join(f.exchange, 'snapshots', OTHER, f.other)), 'other workspace untouched');
   assert(!await exists(path.join(outbox, gone)) && await exists(path.join(outbox, unpublished)) && await exists(path.join(outbox, elsewhere)));
+  assert(await exists(path.join(outbox,f.branch)),'published side-branch local copy is not ordinary disposable history');
 
   const after = await f.snapshots.index(), own = after.filter(r => r.workspaceId === WS);
   assert.deepEqual(own.filter(r => r.snapshotId !== f.branch && !['current', 'ancestor'].includes(r.relation)).map(r => r.relation), [], 'every kept history snapshot is recognised');
@@ -91,6 +96,8 @@ test('a second computer at retained history finds the single successor after pru
   assert.equal(dirty.hasLocalChanges,true);
   const all=await f.snapshots.index();
   assert.equal(startupSnapshotStatus({rows:all,workspaceId:WS,localRevision:1,head:{snapshotId:f.chain[4],revision:1}}).kind,'branches');
-  await f.writeHead(f.chain[10]); // Deleted base is not in the legacy retention proof.
-  assert.equal(startupSnapshotStatus({rows:(await f.snapshots.index()).filter(r=>r.workspaceId===WS&&r.snapshotId!==f.branch),workspaceId:WS,localRevision:1,head:{snapshotId:f.chain[10],revision:1}}).candidate,null);
+  await f.writeHead(f.chain[10]); // Deleted payload still has immutable causal metadata.
+  assert.equal(startupSnapshotStatus({rows:(await f.snapshots.index()).filter(r=>r.workspaceId===WS&&r.snapshotId!==f.branch),workspaceId:WS,localRevision:1,head:{snapshotId:f.chain[10],revision:1}}).candidate.snapshotId,f.head);
+  const missing=crypto.randomUUID();await f.writeHead(missing);
+  assert.equal(startupSnapshotStatus({rows:(await f.snapshots.index()).filter(r=>r.workspaceId===WS&&r.snapshotId!==f.branch),workspaceId:WS,localRevision:1,head:{snapshotId:missing,revision:1}}).candidate,null);
 });

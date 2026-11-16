@@ -18,3 +18,15 @@ test('no newer version stays quiet and local edits remain explicit',()=>{
   assert.equal(run([row('V1',null,'current'),row('V0',null,'ancestor')]).kind,'current');
   const result=status({rows:[row('V2','V1')],workspaceId:'W',localRevision:6,head:{snapshotId:'V1',revision:5}});assert.equal(result.hasLocalChanges,true);assert.equal(result.kind,'newer');
 });
+
+test('checkpoint tips traverse retained metadata without offering deleted payloads',()=>{
+  const middle={...row('V3','V2','ancestor'),integrity:'history',metadataOnly:true};
+  const result=run([row('V2','V1'),middle,row('V4','V3'),row('V1',null,'current')]);
+  assert.equal(result.kind,'newer');assert.equal(result.candidate.snapshotId,'V4');
+});
+
+test('explicit restored checkpoint can include resolved branch parents',()=>{
+  const restored=row('R','V3');restored.manifest.parentSnapshotIds=['V3','SIDE'];
+  const result=run([restored,row('V3','V1'),row('SIDE','V1')]);
+  assert.equal(result.kind,'newer');assert.equal(result.candidate.snapshotId,'R');
+});

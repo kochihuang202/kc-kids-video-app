@@ -13,16 +13,17 @@ export function installStorageSettings() {
   const attachments=document.createElement('section');attachments.id='settings-panel-attachments';attachments.className='settings-fields';attachments.innerHTML='<h2>附件管理</h2><p class="intro">目前工作區使用的圖片、PDF 與其他原始檔案。</p><div class="settings-card"><h3>本機附件</h3><div id="settings-attachment-summary" class="settings-metrics"></div><p>附件以獨立檔案保留，備份版本共用相同內容。</p></div>';dialog.append(attachments);
   document.body.append(dialog);const cardHeightSettings=installCardHeightSettings(dialog);
   const $ = selector => document.querySelector(selector), call = request => window.inkbridge.storageSettings(request);
-  let busy = false;
+  let busy = false,scanTask=null,scanTimer,scanPoll,autoScanPending=false;
   const frame=window.__inkbridgeSettingsFrame={open:false,busy:false,close:()=>{if(!busy)dialog.close();}};
   const changed=()=>window.dispatchEvent(new Event('inkbridge:settings-frame'));
-  dialog.showModal=()=>{frame.open=true;changed();};dialog.close=()=>{frame.open=false;changed();};
+  dialog.showModal=()=>{frame.open=true;clearInterval(scanPoll);scanPoll=setInterval(scheduleScan,2000);changed();};dialog.close=()=>{frame.open=false;clearInterval(scanPoll);clearTimeout(scanTimer);autoScanPending=false;changed();};
+  function scheduleScan(){if(!frame.open)return;clearTimeout(scanTimer);scanTimer=setTimeout(()=>{if(!frame.open)return;if(busy){autoScanPending=true;return;}void run(scanSnapshots);},250);}
   const fieldsButtons=()=>document.querySelectorAll('.settings-fields button,.settings-bottom button');
   const run = async action => {
     if (busy) return;const previousFocus=document.activeElement;busy = true;frame.busy=true;changed();
     fieldsButtons().forEach(el => el.disabled = true);
     try { await action(); } catch (error) { $('#storage-settings-status').textContent = error.message; }
-    finally { busy = false;frame.busy=false;changed(); fieldsButtons().forEach(el => el.disabled = false);const modal=document.querySelector('#storage-settings');if(frame.open&&modal&&!modal.contains(document.activeElement)){const target=previousFocus?.isConnected&&modal.contains(previousFocus)?previousFocus:modal.querySelector('[role=tab][aria-selected=true]');target?.focus({preventScroll:true});} }
+    finally { busy = false;frame.busy=false;changed(); fieldsButtons().forEach(el => el.disabled = false);const modal=document.querySelector('#storage-settings');if(frame.open&&modal&&!modal.contains(document.activeElement)){const target=previousFocus?.isConnected&&modal.contains(previousFocus)?previousFocus:modal.querySelector('[role=tab][aria-selected=true]');target?.focus({preventScroll:true});}if(autoScanPending){autoScanPending=false;scheduleScan();} }
   };
   button.onclick = () => { dialog.showModal(); return run(async () => {
     await cardHeightSettings.read();
@@ -34,6 +35,7 @@ export function installStorageSettings() {
     const version=await call({method:'snapshotStatus'});$('#storage-version-summary').textContent=`本機 v${version.localRevision}｜最近快照 ${version.baseRevision===null?'尚無':`v${version.baseRevision}`}（本機提交紀錄，不代表 OneDrive 已上傳）`;
     $('#sync-computer-name').value=(await window.inkbridge.sync({method:'preferences'})).computerName;
     const graph=await window.inkbridge.load(),info=await window.inkbridge.info();$('#settings-app-version').textContent='InkBridge '+info.version;$('#settings-workspace-summary').textContent=`${graph.boards.filter(row=>!row.attributes?.isTrashed).length} 張白板 · ${graph.contents.length} 張卡片`;$('#settings-workspace-id').textContent=graph.workspaceId;const total=(graph.files||[]).reduce((sum,f)=>sum+(f.size||0),0);$('#settings-attachment-summary').textContent=`${(graph.files||[]).length} 個附件 · ${(total/1024/1024).toFixed(2)} MB`;
+    await scanSnapshots();
   }); };
   $('#browse-exchange').onclick = () => run(async () => {
     const result = await call({method:'choose'}); if (result.cancelled) return;
@@ -58,21 +60,34 @@ export function installStorageSettings() {
     $('#storage-settings-status').textContent=!result.configured?'已保存本機；可設定交換資料夾。':result.pending?'已保存本機，等待交換資料夾恢復。':result.created?`已保存 · ${localTime(result.createdAt)}`:'沒有新變更，已保留原保存版本。';
     if(result.configured){$('#storage-version-summary').textContent=`快照 v${result.revision}`;$('#storage-version-summary').title=result.snapshotId;}
   });
-  $('#scan-workspace-snapshots').onclick=()=>run(async()=>{
-    $('#storage-settings-status').textContent='正在讀取並驗證本機已到達的快照與附件…';
-    const rows=await call({method:'scan'}),list=$('#workspace-snapshot-list');list.replaceChildren();
-    const labels={current:'目前版本',newer:'同一版本鏈的較新版本',ancestor:'同一版本鏈的舊版',branch:'另一個獨立分支',unbased:'尚未載入的版本',unknown:'版本鏈尚未到齊，關係未確認','other-workspace':'其他工作區（可載入）'};
+  async function scanSnapshots(){
+    if(scanTask)return scanTask;
+    scanTask=(async()=>{
+    $('#storage-settings-status').textContent='正在搜尋本機已到達的版本…';
+    const list=$('#workspace-snapshot-list');list.setAttribute('aria-busy','true');
+    const rows=await call({method:'scan'});rows.sort((a,b)=>{const x=Date.parse(a.manifest?.createdAt),y=Date.parse(b.manifest?.createdAt),one=Number.isFinite(x)?x:-Infinity,two=Number.isFinite(y)?y:-Infinity;return one===two?String(a.snapshotId).localeCompare(String(b.snapshotId)):one>two?-1:1;});
+    if(!frame.open)return;list.replaceChildren();
+    const labels={current:'目前版本',newer:'同一版本鏈的較新版本',ancestor:'同一版本鏈的舊版',superseded:'已由後續版本取代的歷史',branch:'另一個獨立分支',unbased:'尚未載入的版本',unknown:'版本鏈尚未到齊，關係未確認','other-workspace':'其他工作區（可載入）'};
     for(const row of rows){
       const item=document.createElement('div');item.style.cssText='border-bottom:1px solid #ddd;padding:10px 0;overflow-wrap:anywhere';
-      const text=document.createElement('div');text.textContent=`${row.manifest?`${localTime(row.manifest.createdAt)} · ${row.manifest.sourceComputerName||'其他電腦'}\n`:''}${row.integrity==='complete'?labels[row.relation]:'尚未完整下載／驗證失敗'}${row.manifest?` · v${row.manifest.revision}`:''}${row.error?'\n'+row.error:''}`;text.style.whiteSpace='pre-wrap';item.append(text);const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='詳細資訊';details.append(summary,document.createTextNode(`工作區 ${row.workspaceId}\n快照 ${row.snapshotId}`));item.append(details);
-      if(row.integrity==='complete'){
-        const load=document.createElement('button');load.textContent='載入此快照';load.dataset.snapshotId=row.snapshotId;
-        load.onclick=()=>run(async()=>{const result=await call({method:'restore',workspaceId:row.workspaceId,snapshotId:row.snapshotId});$('#storage-settings-status').textContent=result.cancelled?'已取消載入。':'正在重新啟動…';});item.append(load);
+      item.dataset.snapshotRow=row.snapshotId;
+      const state=row.metadataOnly||row.integrity==='history'?'僅有版本關係，完整備份已清理':row.integrity==='complete'?`${labels[row.relation]||'可用版本'}${row.verification==='pending'?' · 還原前將驗證完整內容':''}`:'檔案尚未到齊或驗證失敗';
+      const text=document.createElement('div');text.textContent=`${row.manifest?`${localTime(row.manifest.createdAt)} · ${row.manifest.sourceComputerName||'其他電腦'}\n`:''}${state}${row.manifest?` · v${row.manifest.revision}`:''}${row.error?'\n'+row.error:''}`;text.style.whiteSpace='pre-wrap';item.append(text);const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='詳細資訊';details.append(summary,document.createTextNode(`工作區 ${row.workspaceId}\n快照 ${row.snapshotId}`));item.append(details);
+      if(row.integrity==='complete'&&!row.metadataOnly){
+        const load=document.createElement('button');load.textContent='還原此版本';load.dataset.snapshotId=row.snapshotId;
+        load.onclick=()=>run(async()=>{await call({method:'restore',workspaceId:row.workspaceId,snapshotId:row.snapshotId});dialog.close();});item.append(load);
       }
       list.append(item);
     }
-    $('#storage-settings-status').textContent=rows.length?`找到 ${rows.length} 份快照；僅驗證完整者可載入。`:'目前沒有已到達的快照。';
-  });
+    $('#storage-settings-status').textContent=rows.length?`找到 ${rows.length} 筆版本紀錄，依時間新到舊。選定版本會先保留本機備份，再驗證並還原。`:'目前沒有已到達的快照。';
+    })().finally(()=>{scanTask=null;$('#workspace-snapshot-list').setAttribute('aria-busy','false');});return scanTask;
+  }
+  $('#scan-workspace-snapshots').onclick=()=>run(scanSnapshots);
+  window.addEventListener('inkbridge:snapshot-list-changed',scheduleScan);
+  window.inkbridge.onSnapshotSaved?.(scheduleScan);
+  window.addEventListener('focus',scheduleScan);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleScan();});
+  setInterval(()=>{if(frame.open)scheduleScan();},30000);
   $('#open-local-data').onclick = () => run(() => call({method:'openLocal'}));
   $('#check-program-update').onclick=()=>run(async()=>{const result=await window.inkbridge.programUpdate({method:'check'});$('#storage-settings-status').textContent=result?.supported===false?'開發版本不會被自動覆寫；可攜版才啟用程式更新。':result?.releaseId?'找到新版，請按右上角「更新並重新啟動」。':result?.incomplete?'更新檔案尚未到齊，稍後會再檢查。':'目前沒有可套用的新版本。';});
   $('#save-computer-name').onclick=()=>run(async()=>{await window.inkbridge.sync({method:'computerName',name:$('#sync-computer-name').value});$('#storage-settings-status').textContent='電腦名稱已保存，後續快照會使用這個名稱。';});
