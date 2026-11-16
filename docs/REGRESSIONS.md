@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-168 — Background snapshot scans flicker and prevent restore selection
+
+- Report: settings repeatedly flashes searching and disables every control, preventing selection of a specific backup. Background scans used run(scanSnapshots), toggling native modal busy state, disabling all buttons, and replacing every row on each poll.
+- Fix: background scans are nonblocking; unchanged keyed rows retain identity. Preserve details/focus/scroll, ignore stale closed-view results, defer paints during real operations. Separate metadata-only history from restorable/pending payloads and show counts independently.
+- Test: actual Electron check-sync-settings gates scan IPC; old code fails enabled assertion. New code passes pending-scan controls, unchanged DOM/detail/scroll, arrival refresh, targeted restore and latest Chinese text protection. No data/schema/retention behavior changes.
+
 ## REG-167 — Sync checkpoint retention, restore protection and ZIP-only latest updates
 
 - Separate immutable lineage from disposable full payloads; a lagging device can traverse retained metadata and load one latest checkpoint. Preserve dirty content, pending payloads and true branches. Sparse backup retention follows verified FlexNote hourly/daily/weekly/monthly union.

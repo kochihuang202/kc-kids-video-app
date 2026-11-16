@@ -15,6 +15,15 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs'),{createDatabase
   await app.evaluate(({dialog})=>{dialog.showMessageBox=async()=>{throw Error('restore must not ask for a second confirmation');};});
   await page.getByRole('button',{name:'設定',exact:true}).click();
   const rows=page.locator('#workspace-snapshot-list [data-snapshot-row]');await expect(rows).toHaveCount(2);assert.equal(await rows.first().getAttribute('data-snapshot-row'),second.snapshotId,'opening settings must scan newest first without clicking rescan');
+  // Background refresh must not lock controls or replace unchanged rows.
+  await page.evaluate(()=>{const row=document.querySelector('[data-snapshot-row]');window.__stableSnapshotRow=row;row.querySelector('details').open=true;row.querySelector('button').focus();const panel=row.closest('[role=tabpanel]');panel.scrollTop=100;window.__snapshotScroll=panel.scrollTop;});
+  await app.evaluate(({ipcMain})=>{const original=ipcMain._invokeHandlers.get('inkbridge:storage-settings');globalThis.__scanHold=true;globalThis.__scanStarted=false;globalThis.__scanGate=new Promise(resolve=>globalThis.__releaseScan=resolve);ipcMain._invokeHandlers.set('inkbridge:storage-settings',async(event,request,...rest)=>{if(request?.method==='scan'&&globalThis.__scanHold){globalThis.__scanStarted=true;await globalThis.__scanGate;}return original(event,request,...rest);});});
+  await page.evaluate(()=>window.dispatchEvent(new Event('inkbridge:snapshot-list-changed')));
+  await expect.poll(()=>app.evaluate(()=>globalThis.__scanStarted)).toBe(true);
+  await expect(rows.first().getByRole('button',{name:'還原此版本'})).toBeEnabled();await expect(page.locator('#cancel-storage-settings')).toBeEnabled();
+  await app.evaluate(()=>{globalThis.__scanHold=false;globalThis.__releaseScan();});
+  await expect.poll(()=>page.locator('#workspace-snapshot-list').getAttribute('aria-busy')).toBe('false');
+  assert(await page.evaluate(()=>window.__stableSnapshotRow===document.querySelector('[data-snapshot-row]')&&window.__stableSnapshotRow.querySelector('details').open&&window.__stableSnapshotRow.closest('[role=tabpanel]').scrollTop===window.__snapshotScroll),'unchanged rows and details must survive refresh');
   const missing=crypto.randomUUID(),base=path.join(exchange,'snapshots',first.workspaceId),m=JSON.parse(await fs.readFile(path.join(base,second.snapshotId,'manifest.json')));await fs.mkdir(path.join(base,missing));await fs.writeFile(path.join(base,missing,'manifest.json'),JSON.stringify({...m,snapshotId:missing,parentSnapshotId:second.snapshotId,parentSnapshotIds:[second.snapshotId],createdAt:'2099-01-01T00:00:00.000Z'}));
   await expect(rows).toHaveCount(3);assert.equal(await rows.first().getAttribute('data-snapshot-row'),missing);await expect(rows.first()).toContainText('尚未到齊');await expect(rows.first().getByRole('button',{name:'還原此版本'})).toHaveCount(0);
   await fs.rm(path.join(base,missing),{recursive:true});for(const root of [path.join(exchange,'lineage',first.workspaceId),path.join(local,'Lineage',first.workspaceId)])await fs.rm(path.join(root,missing+'.json'),{force:true});await expect(rows).toHaveCount(2);
