@@ -69,7 +69,7 @@ export function installStorageSettings() {
     const list=$('#workspace-snapshot-list');list.setAttribute('aria-busy','true');
     const rows=await call({method:'scan'});rows.sort((a,b)=>{const x=Date.parse(a.manifest?.createdAt),y=Date.parse(b.manifest?.createdAt),one=Number.isFinite(x)?x:-Infinity,two=Number.isFinite(y)?y:-Infinity;return one===two?String(a.snapshotId).localeCompare(String(b.snapshotId)):one>two?-1:1;});
     if(!frame.open||serial!==viewSerial)return;if(background&&busy){autoScanPending=true;return;}const scroll=list.closest('[role=tabpanel]'),scrollTop=scroll?.scrollTop;
-    const labels={current:'目前版本',newer:'同一版本鏈的較新版本',ancestor:'同一版本鏈的舊版',superseded:'已由後續版本取代的歷史',branch:'另一個獨立分支',unbased:'尚未載入的版本',unknown:'版本鏈尚未到齊，關係未確認','other-workspace':'其他工作區（可載入）'};
+    const labels={equivalent:'與共同版本內容相同的接續紀錄',current:'目前版本',newer:'同一版本鏈的較新版本',ancestor:'同一版本鏈的舊版',superseded:'已由後續版本取代的歷史',branch:'另一個獨立分支',unbased:'尚未載入的版本',unknown:'版本鏈尚未到齊，關係未確認','other-workspace':'其他工作區（可載入）'};
     const isHistory=row=>row.integrity==='history'||row.metadataOnly&&['ancestor','superseded','current'].includes(row.relation);
     function renderGroup(group,target){const existing=new Map([...target.children].map(e=>[e.dataset.snapshotRow,e]));let position=target.firstElementChild;
     for(const row of group){

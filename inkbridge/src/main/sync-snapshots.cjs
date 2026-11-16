@@ -6,11 +6,13 @@ const {startupSnapshotStatus}=require('./startup-snapshot-status.cjs');
 const {copyVerified}=require('./stream-files.cjs');
 const {snapshotOrder}=require('./snapshot-order.cjs');
 const {createLineage,ancestorsOf}=require('./snapshot-lineage.cjs');
+const {snapshotContent,readProof,saveProof}=require('./snapshot-content.cjs');
 const {createSnapshotRetention,readRetention,retainedAncestor,decidable,applyRetentionSuccessor}=require('./snapshot-retention.cjs');
 function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachment,deviceName=os.hostname()}){
   const validator=createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAttachment});
   const stateFile=path.join(localDirectory,'Profile/snapshot-state.json'),outbox=path.join(localDirectory,'Outbox');
   const lineage=createLineage({localDirectory,getExchange});
+  const comparedContent=new Map();
   const retention=createSnapshotRetention({localDirectory,getExchange,index:()=>index(),head:async id=>head(await state(),id),remember:lineage.remember,markPruned:lineage.markPruned});
   async function state(){const value=await json(stateFile,{deviceId:crypto.randomUUID(),heads:{}});if(!UUID.test(value.deviceId)||!value.heads)throw Error('本機快照狀態無效');return value;}
   const head=(s,id)=>s.heads[id]||s.heads[getExchange()+'|'+id];
@@ -88,8 +90,17 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
     const records=await lineage.records();for(const row of rows)if(row.manifest){await lineage.remember(row.manifest);records.set(row.snapshotId,row.manifest);}
     for(const [id,m]of records){if(byId.has(id))continue;const discarded=await lineage.pruned(m.workspaceId,id);const row={workspaceId:m.workspaceId,snapshotId:id,manifest:m,metadataOnly:true,integrity:discarded?'history':'incomplete',verification:'metadata',relation:'unknown',...(!discarded?{error:'完整資料尚未到齊；版本關係已保留'}:{})};rows.push(row);byId.set(id,row);}
     const graph=new Map([...records]),kept=new Map();for(const id of new Set(rows.map(r=>r.workspaceId)))kept.set(id,await readRetention(getExchange(),id));
-    const ancestors=id=>ancestorsOf(graph,id);
-    for(const row of rows){if(!row.manifest)continue;const h=head(s,row.workspaceId),a=ancestors(row.snapshotId),b=ancestors(h?.snapshotId);row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===h?.snapshotId?'current':h&&a.set.has(h.snapshotId)?'newer':h&&b.set.has(row.snapshotId)?'ancestor':h&&retainedAncestor(kept.get(row.workspaceId),row.snapshotId,h.snapshotId,ancestors,graph)?'ancestor':h?(decidable(a,kept.get(row.workspaceId))&&decidable(b,kept.get(row.workspaceId))?'branch':'unknown'):'unbased';}
+    const ancestors=id=>ancestorsOf(graph,id),aliases=new Map();
+    async function digest(m){const key=m.database?.sha256;if(!key)throw Error('No comparison hash');if(!comparedContent.has(key))comparedContent.set(key,await snapshotContent(path.join(getExchange(),'snapshots',m.workspaceId,m.snapshotId,'database.sqlite3'),m.database));return comparedContent.get(key);}
+    // Only a restore of the same or a *successor* version is a mistaken join.
+    // A deliberate rollback to an ancestor remains a real forward edit.
+    const canonical=id=>{const seen=new Set();while(aliases.has(id)&&!seen.has(id)){seen.add(id);id=aliases.get(id);}return id;};
+    for(let pass=0;pass<rows.length;pass++){let added=false;
+      for(const row of rows){const m=row.manifest,source=m&&graph.get(m.restoredFromSnapshotId);if(!source||source.snapshotId===m.snapshotId||aliases.has(m.snapshotId)||source.workspaceId!==m.workspaceId||!m.parentSnapshotId||!ancestors(canonical(source.snapshotId)).set.has(canonical(m.parentSnapshotId)))continue;
+        try{const root=getExchange();let proven=await readProof(root,m,source);if(!proven){const content=await digest(m);proven=content===await digest(source);if(proven)await saveProof(root,m,source,content);}if(proven){aliases.set(m.snapshotId,source.snapshotId);row.equivalentTo=source.snapshotId;added=true;}}catch{/* Missing or corrupt proof never authorises replacing content. */}
+      }if(!added)break;
+    }
+    for(const row of rows){if(!row.manifest)continue;const h=head(s,row.workspaceId),base=canonical(h?.snapshotId),a=ancestors(row.snapshotId),b=ancestors(base);row.relation=row.workspaceId!==current.workspaceId?'other-workspace':aliases.has(row.snapshotId)?'equivalent':row.snapshotId===base?'current':h&&a.set.has(base)?'newer':h&&b.set.has(row.snapshotId)?'ancestor':h&&retainedAncestor(kept.get(row.workspaceId),row.snapshotId,base,ancestors,graph)?'ancestor':h?(decidable(a,kept.get(row.workspaceId))&&decidable(b,kept.get(row.workspaceId))?'branch':'unknown'):'unbased';}
     applyRetentionSuccessor(rows.filter(r=>r.workspaceId===current.workspaceId),kept.get(current.workspaceId),head(s,current.workspaceId)?.snapshotId,ancestors,graph);
     return rows.sort(snapshotOrder);
   }

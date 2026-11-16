@@ -13,10 +13,12 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
  const v2=await remote('V2 公司內容');
  createStorageSettings({filename:path.join(a,'Profile/storage-settings.json'),localDirectory:a,applicationDirectory:path.resolve(__dirname,'../..')}).save(exchange);
  const env={...process.env,INKBRIDGE_ORIGINAL_VIEW:'board',INKBRIDGE_ORIGINAL_PROBE_DATA:a};delete env.ELECTRON_RUN_AS_NODE;delete env.INKBRIDGE_PORTABLE;
- const app=await _electron.launch({args:[path.join(__dirname,'host.cjs')],executablePath:require('electron'),env});let page;
+ const app=await _electron.launch({args:[process.env.INKBRIDGE_TEST_BUILD?path.join(process.env.INKBRIDGE_TEST_BUILD,'app/scripts/original-reuse/host.cjs'):path.join(__dirname,'host.cjs')],executablePath:process.env.INKBRIDGE_TEST_BUILD?path.join(process.env.INKBRIDGE_TEST_BUILD,'runtime/electron.exe'):require('electron'),env});let page;
  try{
   await app.evaluate(({dialog})=>dialog.showErrorBox=(title,message)=>console.error(title,message));page=await app.firstWindow();page.setDefaultTimeout(15000);await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);
   assert.equal((await page.evaluate(()=>window.inkbridge.load())).contents[0].body,'V2 公司內容');
+  await page.evaluate(request=>window.inkbridge.sync(request),{method:'select',workspaceId:v1.workspaceId,snapshotId:v2.snapshotId}).catch(e=>{if(!/context was destroyed|navigation/i.test(e.message))throw e;});
+  await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);const joined=JSON.parse(await fs.readFile(path.join(a,'Profile/snapshot-state.json')));assert.equal(joined.heads[v1.workspaceId].snapshotId,v2.snapshotId,'joining latest must adopt exactly the same version ID');assert.equal((await fs.readdir(path.join(exchange,'snapshots',v1.workspaceId),{withFileTypes:true})).filter(e=>e.isDirectory()).length,2,'reading latest creates no checkpoint');
   const handle=await app.browserWindow(page).then(win=>win.evaluate(w=>w.getNativeWindowHandle().toString('hex'))),before=(await page.evaluate(()=>window.inkbridge.load())).revision;
   await page.evaluate(()=>window.__inkbridgeIntegrated.controls.setViewport({x:170,y:130,zoom:.8}));
   await expect.poll(()=>page.evaluate(()=>window.inkbridge.sync({method:'deviceRead'}).then(d=>d.boardViews?.['board-main']?.zoom))).toBe(.8);
@@ -53,6 +55,6 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
   await expect.poll(()=>page.evaluate(()=>window.inkbridge.load()).then(g=>g.contents[0].body)).toContain('本機變更');await remote('V5 遠端分支');
   await expect(page.locator('#onedrive-save-indicator')).toHaveAttribute('aria-label',/兩台都有新版本/,{timeout:30000});assert.ok((await page.evaluate(()=>window.inkbridge.load())).contents[0].body.includes('本機變更'));
   await page.screenshot({path:path.join(a,'seamless-sync.png')});
-  console.log(JSON.stringify({automaticStartup:true,automaticLiveUpdate:true,sameNativeWindow:true,multiwindowPreserved:true,viewIsLocal:true,viewPreserved:true,syntheticCompositionBarrier:true,lateEpochRejected:true,conflictDoesNotOverwrite:true,a,b,exchange,v2:v2.snapshotId,v3:v3.snapshotId}));
+  console.log(JSON.stringify({joiningLatestKeepsVersion:true,otherComputerContinuesWithoutFalseConflict:true,automaticStartup:true,automaticLiveUpdate:true,sameNativeWindow:true,multiwindowPreserved:true,viewIsLocal:true,viewPreserved:true,syntheticCompositionBarrier:true,lateEpochRejected:true,conflictDoesNotOverwrite:true,a,b,exchange,v2:v2.snapshotId,v3:v3.snapshotId}));
  }catch(error){console.error(error);console.error(await Promise.all(app.windows().map(p=>p.evaluate(()=>({url:location.href,standalone:window.__inkbridgeStandalone,main:window.__inkbridgeIntegrated?.errors})).catch(()=>({closed:true})))));app.process().kill();throw error;}finally{await dbB.close();await app.close().catch(()=>{});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

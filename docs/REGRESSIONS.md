@@ -1,5 +1,11 @@
 # Regression Memory
 
+## REG-169 — Joining a common latest checkpoint must not create a restore branch
+
+- Evidence: two actual checkpoints had equal boards, contents, instances and meta rows, yet the recipient read created a new restore UUID. The sender's later background edit then appeared as a sibling; passive recipient was reported as modified.
+- Fix: after editor flush, clean joins of current/successor/equivalent versions adopt the received ID. Only ancestor rollback or explicit local-content resolution creates a forward restore. Recognise legacy fake restores only with causal-direction proof plus SHA-verified exact shared-state comparison; persist hash-bound equivalence records independently of large payloads. Genuine edits/rollbacks remain distinct.
+- Tests: new filesystem/SQLite regression fails branches before fix and passes newer afterwards, including dirty recipient, proof across restart/pruning, real rollback. Actual Electron seamless test joins same checkpoint with no added UUID then observes independent peer editing update in original window; conflict and IME/late IPC/view protections retained. Settings restore/Chinese protection regression passes. No unrelated suite.
+
 ## REG-168 — Background snapshot scans flicker and prevent restore selection
 
 - Report: settings repeatedly flashes searching and disables every control, preventing selection of a specific backup. Background scans used run(scanSnapshots), toggling native modal busy state, disabling all buttons, and replacing every row on each poll.

@@ -48,8 +48,10 @@ function installLiveSync({app,powerMonitor,windows,localDirectory,database,snaps
     if(candidate.pair&&m.workspaceId===before.workspaceId){await bind(m.workspaceId);return {kind:'ready'};}
     let saved,currentParent,restoreParents=[];
     try{
-      if(!initial){await windows.pause();const after=await snapshots.status();if(automatic&&after.localRevision!==after.baseRevision){await windows.resume();return {kind:'conflict',hasLocalChanges:true};}saved=await save(restoreSelected?'before-restore':'before-load',true);}
-      else if(!automatic)saved=await save('before-join',true);
+      if(!initial){await windows.pause();const after=await snapshots.status();if(automatic&&after.localRevision!==after.baseRevision){await windows.resume();return {kind:'conflict',hasLocalChanges:true};}
+        if(restoreSelected&&after.workspaceId===m.workspaceId&&after.localRevision===after.baseRevision){const selected=(await snapshots.index()).find(r=>r.snapshotId===m.snapshotId);if(selected&&['current','newer','equivalent'].includes(selected.relation))restoreSelected=false;}
+        saved=await save(restoreSelected?'before-restore':'before-load',true);
+      }else if(!automatic){if(restoreSelected&&before.workspaceId===m.workspaceId&&before.localRevision===before.baseRevision){const selected=(await snapshots.index()).find(r=>r.snapshotId===m.snapshotId);if(selected&&['current','newer','equivalent'].includes(selected.relation))restoreSelected=false;}saved=await save('before-join',true);}
       if(restoreSelected){const status=await snapshots.status();currentParent=status.workspaceId===m.workspaceId?status.baseSnapshotId:m.snapshotId;restoreParents=payloadTips((await snapshots.index()).filter(r=>r.workspaceId===m.workspaceId)).map(r=>r.snapshotId).filter(id=>id!==currentParent);}
     }catch(error){if(!initial)await windows.resume();throw error;}
     notify({key:'sync',state:'progress',title:'正在同步工作區…'});

@@ -75,6 +75,9 @@ function createSnapshotRetention({ localDirectory, getExchange, index, head, rem
     // authorises deletion of unknown or independent branches.
     const previous=await readRetention(root,workspaceId);
     if(previous&&(previous.anchor===current.snapshotId||known.set.has(previous.anchor)))for(const id of previous.ancestors)known.set.add(id);
+    // A verified read-only join is history of its equivalent base, not an
+    // unresolved edit that must keep its full payload forever.
+    for(let pass=0;pass<rows.length;pass++){let added=false;for(const row of rows)if(row.equivalentTo&&known.set.has(row.equivalentTo)&&!known.set.has(row.snapshotId)){known.set.add(row.snapshotId);added=true;}if(!added)break;}
     const chain=rows.filter(r=>r.integrity==='complete'&&!r.metadataOnly&&known.set.has(r.snapshotId)).sort((a,b)=>Date.parse(b.manifest.createdAt)-Date.parse(a.manifest.createdAt));
     const plan=planRetention({chain,keepRecent,now:now()}),remove=plan.remove.filter(id=>id!==current.snapshotId);
     if(!remember||!markPruned)return {skipped:'lineage-unavailable'};
