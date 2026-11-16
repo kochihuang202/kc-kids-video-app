@@ -80,3 +80,17 @@ test('nothing is deleted while a snapshot of the workspace is incomplete', async
   assert.deepEqual(await f.snapshots.prune({ workspaceId: WS, force: true }), { skipped: 'incomplete' });
   assert.equal((await fs.readdir(path.join(f.exchange, 'snapshots', WS))).length, 52);
 });
+
+test('a second computer at retained history finds the single successor after pruning; local edits and side branches remain explicit', async () => {
+  const f=await fixture();await f.snapshots.prune({workspaceId:WS,force:true});
+  await f.writeHead(f.chain[4]); // Kept daily snapshot, disconnected from the newest thirty.
+  const rows=(await f.snapshots.index()).filter(r=>r.workspaceId===WS&&r.snapshotId!==f.branch);
+  const clean=startupSnapshotStatus({rows,workspaceId:WS,localRevision:1,head:{snapshotId:f.chain[4],revision:1}});
+  assert.equal(clean.kind,'newer');assert.equal(clean.candidate.snapshotId,f.head);assert.equal(clean.hasLocalChanges,false);
+  const dirty=startupSnapshotStatus({rows,workspaceId:WS,localRevision:2,head:{snapshotId:f.chain[4],revision:1}});
+  assert.equal(dirty.hasLocalChanges,true);
+  const all=await f.snapshots.index();
+  assert.equal(startupSnapshotStatus({rows:all,workspaceId:WS,localRevision:1,head:{snapshotId:f.chain[4],revision:1}}).kind,'branches');
+  await f.writeHead(f.chain[10]); // Deleted base is not in the legacy retention proof.
+  assert.equal(startupSnapshotStatus({rows:(await f.snapshots.index()).filter(r=>r.workspaceId===WS&&r.snapshotId!==f.branch),workspaceId:WS,localRevision:1,head:{snapshotId:f.chain[10],revision:1}}).candidate,null);
+});

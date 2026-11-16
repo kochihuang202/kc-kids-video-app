@@ -6,7 +6,14 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs'),{createDatabase
  const db=createDatabaseClient({filename:path.join(source,'Workspace/inkbridge.sqlite3')}),snap=createSyncSnapshots({localDirectory:source,database:db,getExchange:()=>exchange,resolveAttachment:()=>{},deviceName:'公司電腦'});const first=await snap.create();
  const local=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-original-modules-wait-'));await fs.mkdir(path.join(local,'Profile'));await fs.mkdir(path.join(local,'Workspace'));await fs.copyFile(path.join(exchange,'snapshots',first.workspaceId,first.snapshotId,'database.sqlite3'),path.join(local,'Workspace/inkbridge.sqlite3'));await fs.copyFile(path.join(source,'Profile/snapshot-state.json'),path.join(local,'Profile/snapshot-state.json'));
  await db.commit({requestId:crypto.randomUUID(),baseRevision:1,operations:[{type:'putContent',data:{id:'n',title:'共用',body:'V2 到齊自動更新',kind:'text',tone:'sage'}}]});const second=await snap.create();await db.close();
- const file=path.join(exchange,'snapshots',first.workspaceId,second.snapshotId,'database.sqlite3');await fs.rename(file,file+'.offline');
+ // Reproduce a legitimate retention gap: B was between A and C, then pruned.
+ // C's validated database is B's captured content, while its parent points to B.
+ const wsdir=path.join(exchange,'snapshots',first.workspaceId),old=JSON.parse(await fs.readFile(path.join(wsdir,second.snapshotId,'manifest.json'))),third=crypto.randomUUID();
+ await fs.cp(path.join(wsdir,second.snapshotId),path.join(wsdir,third),{recursive:true});
+ await fs.writeFile(path.join(wsdir,third,'manifest.json'),JSON.stringify({...old,snapshotId:third,parentSnapshotId:second.snapshotId}));
+ await fs.writeFile(path.join(wsdir,'retention.json'),JSON.stringify({format:'inkbridge-retention',version:1,workspaceId:first.workspaceId,anchor:third,ancestors:[first.snapshotId]}));
+ await fs.rm(path.join(wsdir,second.snapshotId),{recursive:true});
+ const file=path.join(wsdir,third,'database.sqlite3');await fs.rename(file,file+'.offline');
  const configure=data=>createStorageSettings({filename:path.join(data,'Profile/storage-settings.json'),localDirectory:data,applicationDirectory:path.resolve(__dirname,'../..')}).save(exchange);configure(local);
  async function launch(data){const env={...process.env,INKBRIDGE_ORIGINAL_VIEW:'board',INKBRIDGE_ORIGINAL_PROBE_DATA:data};delete env.ELECTRON_RUN_AS_NODE;delete env.INKBRIDGE_PORTABLE;const app=await _electron.launch({args:[path.join(__dirname,'host.cjs')],executablePath:require('electron'),env});await app.evaluate(({dialog})=>dialog.showErrorBox=(t,m)=>console.error(t,m));return {app,page:await app.firstWindow()};}
  let {app,page}=await launch(local);try{

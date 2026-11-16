@@ -4,7 +4,7 @@ const {createWorkspaceSnapshots,inspectDatabase,hashFile}=require('./workspace-s
 const {json,exists,atomic,writeJSON,UUID}=require('./sync-files.cjs');
 const {startupSnapshotStatus}=require('./startup-snapshot-status.cjs');
 const {copyVerified}=require('./stream-files.cjs');
-const {createSnapshotRetention,readRetention,retainedAncestor,decidable}=require('./snapshot-retention.cjs');
+const {createSnapshotRetention,readRetention,retainedAncestor,decidable,applyRetentionSuccessor}=require('./snapshot-retention.cjs');
 function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachment,deviceName=os.hostname()}){
   const validator=createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAttachment});
   const stateFile=path.join(localDirectory,'Profile/snapshot-state.json'),outbox=path.join(localDirectory,'Outbox');
@@ -60,6 +60,7 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
     for(const id of new Set(rows.map(r=>r.workspaceId)))kept.set(id,await readRetention(root,id));
     function ancestors(id){const set=new Set();let complete=true;while(id){if(set.has(id)||!graph.has(id)){complete=false;break;}set.add(id);id=graph.get(id).parentSnapshotId;}return {set,complete};}
     for(const row of rows){if(!row.manifest)continue;const h=head(s,row.workspaceId),a=ancestors(row.snapshotId),b=ancestors(h?.snapshotId);row.relation=row.workspaceId!==current.workspaceId?'other-workspace':row.snapshotId===h?.snapshotId?'current':h&&a.set.has(h.snapshotId)?'newer':h&&b.set.has(row.snapshotId)?'ancestor':h&&retainedAncestor(kept.get(row.workspaceId),row.snapshotId,h.snapshotId,ancestors,graph)?'ancestor':h?(decidable(a,kept.get(row.workspaceId))&&decidable(b,kept.get(row.workspaceId))?'branch':'unknown'):'unbased';}
+    applyRetentionSuccessor(rows.filter(r=>r.workspaceId===current.workspaceId),kept.get(current.workspaceId),head(s,current.workspaceId)?.snapshotId,ancestors,graph);
     return rows;
   }
   async function startup(){if(!getExchange())return {configured:false,kind:'unconfigured'};const rows=await index(),graph=await database.summary(),s=await state();return {configured:true,...startupSnapshotStatus({rows:rows.filter(r=>r.workspaceId===graph.workspaceId),workspaceId:graph.workspaceId,localRevision:graph.revision,head:head(s,graph.workspaceId)})};}

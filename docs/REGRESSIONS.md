@@ -1,5 +1,12 @@
 # Regression Memory
 
+## REG-166 — A lagging computer mistakes retained history for sync branches
+
+- Report (2026-11-16): another computer still blocks at the version list after switching to 0.6.2. The local exchange has 42 snapshots with 12 disconnected tips after retention. Remote device state remains uncollected, so this is a reproduced cause, not proof that all remote cases are resolved.
+- Reproduction: prune A→B→C history while a second device is based at a retained daily snapshot. The filesystem regression expects newer but got branches. Existing retention recognised old snapshots only from the newest device, not the reverse direction.
+- Fix: when the local base is explicitly certified as an ancestor of an available retention anchor, recognise the anchor and descendants as successors; mark other certified history superseded without pretending to order it against the local base. Unlisted branches, local content changes and uncertified deleted bases still block automatic loading. First-time pairing excludes certified superseded tips.
+- Tests: related Node tests 10/10, actual Electron check-sync-entry with a retention gap and missing DB arrival, check-seamless-sync (live same-window load, multiwindow, composition, late IPC, true conflict preservation) pass. Read-only diagnostic excludes note bodies, database content and credentials. No unrelated full suite or formal data changes.
+
 ## REG-165 — Repeated "正在同步，等待資料到齊" warning with nothing to sync
 
 - Report (2026-11-15): a yellow warning "正在同步，等待資料到齊／點左下角燈號處理" kept popping up at the top right and the lamp showed the same, with "查看版本／保留本機版本". Read-only check of the real exchange folder: all 53 snapshots of the paired workspace were the current one and its ancestors; the startup status was `other-workspace` because of an old test workspace (2026-11-02, revision 2) in `snapshots/`. `live-sync.cjs` mapped every result other than incomplete/unavailable to the decision state, and every title other than conflict/branches to "等待資料到齊", so each periodic check raised the warning again.

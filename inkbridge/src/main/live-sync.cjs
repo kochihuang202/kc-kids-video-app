@@ -1,5 +1,6 @@
 const fs=require('node:fs'),fsp=require('node:fs/promises'),path=require('node:path');
 const {json,writeJSON}=require('./sync-files.cjs');
+const {readRetention}=require('./snapshot-retention.cjs');
 function installLiveSync({app,powerMonitor,windows,localDirectory,database,snapshots,getExchange,queue,notify,swap,startupStatus,save,canRun}){
   const settingsFile=path.join(localDirectory,'Profile','sync-settings.json'),deviceFile=path.join(localDirectory,'Profile','device-state.json');
   let settings={},device={},watcher,timer,debounce,initial=true,epoch=0,checking=null,offline=false,deviceTail=Promise.resolve();
@@ -16,14 +17,14 @@ function installLiveSync({app,powerMonitor,windows,localDirectory,database,snaps
     const rows=await snapshots.index(),current=await database.summary(),ids=[...new Set(rows.filter(r=>r.manifest).map(r=>r.workspaceId))];
     if(!settings.workspaceId){
       if(ids.length===0||ids.length===1&&ids[0]===current.workspaceId){await bind(current.workspaceId);}
-      else{const workspaces=[];for(const id of ids){const group=rows.filter(r=>r.workspaceId===id&&r.manifest),parents=new Set(group.map(r=>r.manifest.parentSnapshotId)),versions=[];for(const row of group.filter(r=>!parents.has(r.snapshotId))){try{const m=await snapshots.manifest(id,row.snapshotId);versions.push({snapshotId:m.snapshotId,...m.summary,createdAt:m.createdAt,sourceComputerName:m.sourceComputerName||'另一台電腦',revision:m.revision});}catch{}}workspaces.push({workspaceId:id,local:id===current.workspaceId,versions});}return {kind:'pairing',workspaces};}
+      else{const workspaces=[];for(const id of ids){const group=rows.filter(r=>r.workspaceId===id&&r.manifest),parents=new Set(group.map(r=>r.manifest.parentSnapshotId)),versions=[],retention=await readRetention(getExchange(),id),anchorPresent=retention&&group.some(r=>r.snapshotId===retention.anchor);for(const row of group.filter(r=>!parents.has(r.snapshotId)&&!(anchorPresent&&retention.ancestors.has(r.snapshotId)))){try{const m=await snapshots.manifest(id,row.snapshotId);versions.push({snapshotId:m.snapshotId,...m.summary,createdAt:m.createdAt,sourceComputerName:m.sourceComputerName||'另一台電腦',revision:m.revision});}catch{}}workspaces.push({workspaceId:id,local:id===current.workspaceId,versions});}return {kind:'pairing',workspaces};}
     }
     if(settings.workspaceId!==current.workspaceId)return {kind:'pairing',workspaces:[]};
     const ignored=new Set(settings.resolvedHeads||[]);
     // Ignore only acknowledged side branches, including their ancestors.
     const byId=new Map(rows.filter(r=>r.manifest).map(r=>[r.snapshotId,r]));
     for(const id of [...ignored]){let p=byId.get(id)?.manifest.parentSnapshotId;while(p&&byId.get(p)&&!ignored.has(p)){if(byId.get(p).relation==='current'||byId.get(p).relation==='ancestor')break;ignored.add(p);p=byId.get(p).manifest.parentSnapshotId;}}
-    const activeRows=rows.filter(r=>r.workspaceId===current.workspaceId&&r.manifest&&!ignored.has(r.snapshotId));
+    const activeRows=rows.filter(r=>r.workspaceId===current.workspaceId&&r.manifest&&r.relation!=='superseded'&&!ignored.has(r.snapshotId));
     const status=await startupStatus(activeRows,current);
     if(status.kind==='newer'){
       const m=await snapshots.manifest(status.candidate.workspaceId,status.candidate.snapshotId).catch(error=>{return {error:error.message};});

@@ -29,6 +29,18 @@ function retainedAncestor(retention, snapshotId, head, ancestorsOf, graph) {
 }
 // A walk that ends at the retention gap still reached verified history, so it is decidable.
 function decidable(walk, retention) { return walk.complete || !!retention && [...walk.set].some(id => id === retention.anchor || retention.ancestors.has(id)); }
+// The certificate proves these snapshots all precede its anchor, but does not
+// order them against each other. Do not mislabel them as ancestors of the local
+// head: they are superseded by a proven successor instead. Unlisted branches
+// and missing/deleted local bases remain undecidable.
+function applyRetentionSuccessor(rows, retention, head, ancestorsOf, graph) {
+  if (!retention || !head || !retention.ancestors.has(head) || !graph.has(retention.anchor)) return;
+  for (const row of rows) {
+    if (!row.manifest || row.snapshotId === head) continue;
+    if (row.snapshotId === retention.anchor || ancestorsOf(row.snapshotId).set.has(retention.anchor)) row.relation = 'newer';
+    else if (retention.ancestors.has(row.snapshotId)) row.relation = 'superseded';
+  }
+}
 // Pure plan over verified history: `chain` is the head's chain (newest first), `prior` the
 // older snapshots an earlier run already verified (no longer linked to the chain).
 function planRetention({ chain, prior = [], keepRecent = KEEP_RECENT }) {
@@ -79,4 +91,4 @@ function createSnapshotRetention({ localDirectory, getExchange, index, head, now
   }
   return { prune };
 }
-module.exports = { createSnapshotRetention, planRetention, readRetention, retainedAncestor, decidable, dayOf, KEEP_RECENT };
+module.exports = { createSnapshotRetention, planRetention, readRetention, retainedAncestor, decidable, applyRetentionSuccessor, dayOf, KEEP_RECENT };

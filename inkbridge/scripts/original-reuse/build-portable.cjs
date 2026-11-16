@@ -28,6 +28,7 @@ async function buildPortable(){
   // harfbuzzjs: per-publication font subsets (src/main/share-fonts.cjs).
   await codecPackage('sharp');await codecPackage('bmp-js');await codecPackage('harfbuzzjs');
   await copy(path.join(__dirname,'Recover-InkBridge.ps1'),path.join(output,'Recover-InkBridge.ps1'));
+  for(const file of ['Diagnose-Sync.ps1','Diagnose-Sync.bat'])await copy(path.join(__dirname,file),path.join(app,'scripts/original-reuse',file));
   for(const file of ['index.html','styles.css'])await copy(path.join(project,'src/renderer',file),path.join(app,'src/renderer',file));
   // Copy only runtime integration files; no tests, extraction tools or evidence.
   for(const file of await fs.readdir(__dirname))if(file.endsWith('.mjs')||['host.cjs','compact-shell.css','standalone-card.html','probe.js'].includes(file))await copy(path.join(__dirname,file),path.join(app,'scripts/original-reuse',file));
