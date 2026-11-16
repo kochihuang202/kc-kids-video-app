@@ -18,3 +18,9 @@
 - `check-seamless-sync.cjs`：啟動／原視窗自動接力、多視窗／視角保留、組字等待、遲到 IPC 拒絕、真正雙邊修改不覆蓋。
 
 完整 ZIP 與發布 SHA-256 見忽略的本機 `release/last-portable-build.json`；序號 19。僅將 ZIP 交付 OneDrive，BAT 在 ZIP 內，不要求 OneDrive 直接同步 BAT。
+
+完整包：`InkBridge-0.6.3-eec4dc1f77cf-f5eafd.zip`。SHA-256：
+`e73a06a72daa442de8d30b7addf625794faf729c511fd7e93885ed266a548a25`。
+ZIP 內 2,297 個 manifest 檔案逐一串流驗證通過。
+封裝版直接執行相同同步入口回歸通過，包含清理斷鏈、缺檔到齊、配對與重開。
+0.6.2→0.6.3 簽章增量：`d4badb28-9baf-4a32-b4a8-b112813dba36`，132,338 bytes，8 個異動路徑。
