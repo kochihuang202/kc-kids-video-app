@@ -19,10 +19,10 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs'),{createDatabase
   await expect(rows).toHaveCount(3);assert.equal(await rows.first().getAttribute('data-snapshot-row'),missing);await expect(rows.first()).toContainText('尚未到齊');await expect(rows.first().getByRole('button',{name:'還原此版本'})).toHaveCount(0);
   await fs.rm(path.join(base,missing),{recursive:true});for(const root of [path.join(exchange,'lineage',first.workspaceId),path.join(local,'Lineage',first.workspaceId)])await fs.rm(path.join(root,missing+'.json'),{force:true});await expect(rows).toHaveCount(2);
   await page.locator('#cancel-storage-settings').click();
-  const box=await page.locator('#board').boundingBox();await page.mouse.dblclick(box.x+250,box.y+200);const editor=page.getByRole('textbox').last();await expect(editor).toBeVisible();await page.keyboard.insertText('還原前尚未手動保存的中文');
+  await page.evaluate(()=>window.__inkbridgeServices.call('openNoteCardWindow',{cardId:'old'}));await expect.poll(()=>app.windows().length).toBe(2);const child=app.windows().find(w=>w!==page);await child.waitForFunction(()=>window.__inkbridgeStandalone?.ready);const editor=child.locator('[contenteditable=true]');await editor.click();await child.keyboard.press('End');await child.keyboard.insertText('還原前尚未手動保存的中文');await expect(editor).toContainText('還原前尚未手動保存的中文');
   await page.getByRole('button',{name:'設定',exact:true}).click();await expect(rows).toHaveCount(2);await page.locator(`[data-snapshot-id="${first.snapshotId}"]`).click();
   await expect.poll(async()=>{try{return (await page.evaluate(()=>window.inkbridge.load())).contents.find(n=>n.id==='old')?.body;}catch{return null;}},{timeout:30000}).toBe('選定的舊版本內容');
-  await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);assert.equal(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.id),webContentsId);
+  await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);assert.equal(await (await app.browserWindow(page)).evaluate(w=>w.webContents.id),webContentsId);
   await expect.poll(async()=>{const s=JSON.parse(await fs.readFile(path.join(local,'Profile/snapshot-state.json')));const h=s.heads[first.workspaceId];try{const m=JSON.parse(await fs.readFile(path.join(base,h.snapshotId,'manifest.json')));return m.restoredFromSnapshotId;}catch{return null;}},{timeout:30000}).toBe(first.snapshotId);
   const state=JSON.parse(await fs.readFile(path.join(local,'Profile/snapshot-state.json'))),head=state.heads[first.workspaceId];assert(head.snapshotId!==first.snapshotId&&head.snapshotId!==second.snapshotId);
   const restored=JSON.parse(await fs.readFile(path.join(base,head.snapshotId,'manifest.json')));assert.equal(restored.restoredFromSnapshotId,first.snapshotId);
@@ -31,5 +31,5 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs'),{createDatabase
   const check=await page.evaluate(()=>window.inkbridge.sync({method:'check'}));assert.equal(check.kind,'ready');assert.equal((await page.evaluate(()=>window.inkbridge.load())).contents.find(r=>r.id==='old').body,'選定的舊版本內容');
   await page.getByRole('button',{name:'設定',exact:true}).click();await expect(rows).toHaveCount(manifests.length);assert.equal(await rows.first().getAttribute('data-snapshot-row'),head.snapshotId);
   await page.screenshot({path:path.join(local,'sync-settings-restored.png')});console.log(JSON.stringify({autoScanOnOpen:true,autoRefreshOnArrival:true,newestFirst:true,incompleteNotRestorable:true,oneClickRestore:true,sameNativeWindow:true,latestUnflushedTextPreserved:true,restoreCreatesForwardHead:true,automaticCheckDoesNotUndoRestore:true,local,exchange}));
- }finally{await app.close();}
+ }finally{await app.evaluate(({app})=>app.exit(0)).catch(()=>{});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

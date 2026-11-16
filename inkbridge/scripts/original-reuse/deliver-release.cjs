@@ -1,12 +1,12 @@
 // Publish a verified complete release before removing superseded full packages.
 // This never traverses or deletes workspace snapshots/assets or user reports.
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
-const {readZipEnvelope}=require('../../src/main/release-zip.cjs');
+const {readZipEnvelope,verifyReleaseZip}=require('../../src/main/release-zip.cjs');
 const {verifyEnvelope}=require('../../src/main/program-updates.cjs');
 const {hashFile,copyVerified}=require('../../src/main/stream-files.cjs');
 async function deliverRelease({release,exchange,key}){
  release=await fs.realpath(release);exchange=await fs.realpath(exchange);
- const manifest=verifyEnvelope(await readZipEnvelope(release),key);
+ const manifest=(await verifyReleaseZip(release,key)).descriptor;
  if(manifest.version!==2||manifest.mode!=='full')throw Error('Delivery requires a signed complete release');
  const name=path.basename(release);if(!/^InkBridge-release-[a-zA-Z0-9.-]+\.zip$/.test(name))throw Error('Invalid release filename');
  const sha256=await hashFile(release),target=path.join(exchange,name);

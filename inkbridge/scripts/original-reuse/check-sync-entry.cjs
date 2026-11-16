@@ -10,7 +10,7 @@ const {WorkspaceDatabase}=require('../../src/main/database.cjs'),{createDatabase
  // C's validated database is B's captured content, while its parent points to B.
  const wsdir=path.join(exchange,'snapshots',first.workspaceId),old=JSON.parse(await fs.readFile(path.join(wsdir,second.snapshotId,'manifest.json'))),third=crypto.randomUUID();
  await fs.cp(path.join(wsdir,second.snapshotId),path.join(wsdir,third),{recursive:true});
- await fs.writeFile(path.join(wsdir,third,'manifest.json'),JSON.stringify({...old,snapshotId:third,parentSnapshotId:second.snapshotId}));
+ await fs.writeFile(path.join(wsdir,third,'manifest.json'),JSON.stringify({...old,snapshotId:third,parentSnapshotId:second.snapshotId,parentSnapshotIds:[second.snapshotId]}));
  await fs.writeFile(path.join(wsdir,'retention.json'),JSON.stringify({format:'inkbridge-retention',version:1,workspaceId:first.workspaceId,anchor:third,ancestors:[first.snapshotId]}));
  await fs.rm(path.join(wsdir,second.snapshotId),{recursive:true});
  const file=path.join(wsdir,third,'database.sqlite3');await fs.rename(file,file+'.offline');
