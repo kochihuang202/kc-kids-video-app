@@ -19,4 +19,10 @@
 
 ## 交付
 
-封裝與OneDrive交付收據完成後記錄於此。
+最終封裝版再次通過 check-edit-layout，隔離資料 edit-layout-OS4iJo；實際畫面存於私有 edit-layout-evidence。發布序號26，build ID cc4f447dfa4938b25aa548e9512bbce562cf4ecdc06f9fe4bb53806e0da03b2f。
+
+- 完整ZIP InkBridge-release-0.7.5-25162303-e658-4067-bdd2-29c10743731d.zip，232964238 bytes／2305檔；SHA-256 000f494893527abb83eee8085fb0ca42b7eab23ef1e77bd95a299bbccab818ac。
+- 0.7.4增量ZIP InkBridge-update-85901f68-33e9-4d69-94db-cbd0aa453995.zip，7159615 bytes／6檔；SHA-256 6f2b9e512b515440cd59d90e8ffe9c3ad1b7057befb8168442b32a11d1aa4bec。
+- 兩包每檔簽章與雜湊通過，隔離PowerShell Stage通過且原安裝未改；source backup留於私有開發區，不進可攜資產。
+- 已寫入指定OneDrive交換根目錄並核對雜湊，舊0.7.4完整包已清除，資料快照、附件、診斷與舊增量包均保留。雲端及另一台到達時間由OneDrive決定，未操作另一台實機。收據 release/delivery-0.7.5.json。
+- 使用0.7.4可從程式內更新；或解壓完整ZIP到本機程式目錄，執行內含 Start-InkBridge.bat。交換目錄只放ZIP。
