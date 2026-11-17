@@ -6,6 +6,7 @@ const hash=async file=>{const h=crypto.createHash('sha256');for await(const byte
 async function buildPortable(){
   require('./prepare-sharing.cjs').prepareSharing();
   require('./apply-edit-layout-patches.cjs')({root:path.join(project,'private-original-editor')});
+  require('./apply-html-page-patches.cjs')({root:path.join(project,'private-original-editor')});
   execFileSync(process.execPath,[path.join(__dirname,'collect.cjs')],{cwd:project,windowsHide:true,stdio:'pipe'});
   const commit=execFileSync('git',['rev-parse','--short=12','HEAD'],{cwd:project,encoding:'utf8',windowsHide:true}).trim();
   const version=require('../../package.json').version;
@@ -27,7 +28,7 @@ async function buildPortable(){
     for(const dependency of Object.keys(pkg.optionalDependencies||{}))await codecPackage(dependency,true);
   }
   // harfbuzzjs: per-publication font subsets (src/main/share-fonts.cjs).
-  await codecPackage('sharp');await codecPackage('bmp-js');await codecPackage('harfbuzzjs');
+  await codecPackage('sharp');await codecPackage('bmp-js');await codecPackage('harfbuzzjs');await codecPackage('cheerio');
   await copy(path.join(__dirname,'Recover-InkBridge.ps1'),path.join(output,'Recover-InkBridge.ps1'));
   for(const file of ['Diagnose-Sync.ps1','Diagnose-Sync.bat','sync-read-diagnostic.cjs'])await copy(path.join(__dirname,file),path.join(app,'scripts/original-reuse',file));
   for(const file of ['index.html','styles.css'])await copy(path.join(project,'src/renderer',file),path.join(app,'src/renderer',file));
@@ -36,7 +37,7 @@ async function buildPortable(){
   const privateRoot=path.join(project,'private-original-editor');
   require('../web-share/prepare.cjs').prepare();
   await copy(path.join(privateRoot,'web-runtime'),path.join(app,'private-original-editor/web-runtime'));
-  for(const file of ['runtime.js','register-original.js'])await copy(path.join(privateRoot,file),path.join(app,'private-original-editor',file));
+  for(const file of ['runtime.js','register-original.js','html-page-runtime.cjs'])await copy(path.join(privateRoot,file),path.join(app,'private-original-editor',file));
   for(const dir of ['_next','canvaskit','fonts','pdfjs'])await copy(path.join(privateRoot,'vendor/app',dir),path.join(app,'private-original-editor/vendor/app',dir));
   await fs.writeFile(path.join(app,'package.json'),JSON.stringify({name:'inkbridge-portable',version,private:true,main:'scripts/original-reuse/host.cjs'},null,2));
   const launcher=['@echo off','setlocal','cd /d "%~dp0"','set ELECTRON_RUN_AS_NODE=','set INKBRIDGE_ORIGINAL_PROBE_DATA=','set INKBRIDGE_PORTABLE=1','set INKBRIDGE_ORIGINAL_VIEW=board','if not exist "runtime\\electron.exe" goto missing','if not exist "app\\private-original-editor\\register-original.js" goto missing','"%~dp0runtime\\electron.exe" %* "%~dp0app\\scripts\\original-reuse\\host.cjs"','if errorlevel 1 (','  echo InkBridge could not finish. Your data remains in %LOCALAPPDATA%\\InkBridge.','  pause',')','exit /b',':missing','echo Extract the entire ZIP before running Start-InkBridge.bat.','pause','exit /b 1',''];

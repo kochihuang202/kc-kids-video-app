@@ -36,11 +36,11 @@ function validateManifest(m) {
  if (!/^[A-Za-z0-9._-]+$/.test(required(m.readerBuild,'readerBuild'))) fail(400,'Invalid readerBuild');
  const paths = new Set();
  for (const f of m.files) {
-  if (!f||typeof f.path!=='string'||!(f.path === 'share.json' || /^assets\/[A-Za-z0-9._/-]+$/.test(f.path)) || f.path.split('/').some(s=>s==='..'||s==='.'||!s) || paths.has(f.path)) fail(400,'Invalid or duplicate file path');
+  if (!f||typeof f.path!=='string'||!(f.path === 'share.json' || /^assets\/[^\\\x00-\x1f<>"?#%]+$/.test(f.path)) || f.path.split('/').some(s=>s==='..'||s==='.'||!s) || paths.has(f.path)) fail(400,'Invalid or duplicate file path');
   paths.add(f.path);
   if (!/^[a-f0-9]{64}$/.test(f.sha256) || !Number.isSafeInteger(f.size) || f.size < 0 || Math.ceil(f.size/PART_SIZE)>10000) fail(400,'Invalid file integrity metadata');
-  const extension=f.path.match(/\.([a-z0-9]+)$/)?.[1],mime={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',json:'application/json',otf:'font/otf',ttf:'font/ttf'}[extension];
-  if((extension==='otf'||extension==='ttf')&&!/^assets\/font-[a-f0-9]{64}\.(otf|ttf)$/.test(f.path))fail(400,'Invalid font path');
+  const extension=f.path.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase(),mime={bin:'application/octet-stream',wasm:'application/wasm',pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',cjs:'text/javascript',svg:'image/svg+xml',woff:'font/woff',woff2:'font/woff2',ico:'image/x-icon',avif:'image/avif',txt:'text/plain',mp3:'audio/mpeg',mp4:'video/mp4',json:'application/json',otf:'font/otf',ttf:'font/ttf'}[extension]||(/^assets\/html-[a-f0-9]{64}\//.test(f.path)?'application/octet-stream':null);
+  if((extension==='otf'||extension==='ttf')&&!/^assets\/(?:font-[a-f0-9]{64}\.(otf|ttf)|html-[a-f0-9]{64}\/.+|[a-f0-9]{64}\.(otf|ttf))$/.test(f.path))fail(400,'Invalid font path');
   if(!mime||f.contentType!==mime)fail(400,'Unsupported publication file type');
   if(f.size>(f.path==='share.json'?MAX_GRAPH_SIZE:extension==='pdf'?MAX_PDF_SIZE:MAX_IMAGE_SIZE))fail(400,'Publication file exceeds size limit');
  }
@@ -171,6 +171,8 @@ async function api(request, env, url) {
    graphFiles.push({path:a.path,sha256:a.sha256,size:a.size});
    if(a.preview_path!==undefined)graphFiles.push({path:a.preview_path,sha256:a.preview_sha256,size:a.preview_size});
   }
+  const htmlRoots=new Set((data.attachments||[]).filter(a=>a.reason==='html-page-bundle').map(a=>'assets/html-'+a.source_file_id+'/'));
+  if(data.htmlResources!==undefined){if(!Array.isArray(data.htmlResources)||data.htmlResources.length>10000)fail(422,'Invalid HTML resources');for(const a of data.htmlResources){if(![...htmlRoots].some(root=>a.path?.startsWith(root)))fail(422,'HTML resource outside membership');graphFiles.push(a);}}
   // Per-publication font subsets (share-fonts.cjs) replace the reader's two large fonts.
   if(data.fonts!==undefined){if(!Array.isArray(data.fonts)||data.fonts.length>8||data.fonts.some(x=>!FONT_FILES.has(x?.file)||typeof x.path!=='string'))fail(422,'Invalid share fonts');for(const x of data.fonts)graphFiles.push({path:x.path,sha256:x.sha256,size:x.size});}
   for(const a of graphFiles)if(!s.manifest.files.some(f=>f.path===a.path&&f.sha256===a.sha256&&f.size===a.size)) fail(422,'Attachment missing from manifest');

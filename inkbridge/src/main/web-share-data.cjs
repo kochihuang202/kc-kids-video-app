@@ -2,7 +2,7 @@
 // are copied into the public document. Original payload mapping is in the viewer.
 const clone=value=>JSON.parse(JSON.stringify(value));
 const pick=(record,keys)=>Object.fromEntries(keys.filter(k=>record?.[k]!==undefined).map(k=>[k,record[k]]));
-const visibleKeys=['title','name','fileId','mediaType','caption','width','height','currentPage','totalPages','pageCount','scale','isAutoHeight','color','fontSize','padding','topPadding','style','backgroundColor','lastEditedTime','createdTime','fixedConnection','canvasBackground','backgroundType','backgroundImage','inkbridgePreviewFileId','cornerRadius','textAlign','verticalAlign','highlightHeader','isPinned','pinStyle','pinColor','pinPosition','isFolded','rotationAngle','displayType','parentId','isAutoWidth'];
+const visibleKeys=['url','favicon','description','title','name','fileId','mediaType','caption','width','height','currentPage','totalPages','pageCount','scale','isAutoHeight','color','fontSize','padding','topPadding','style','backgroundColor','lastEditedTime','createdTime','fixedConnection','canvasBackground','backgroundType','backgroundImage','inkbridgePreviewFileId','cornerRadius','textAlign','verticalAlign','highlightHeader','isPinned','pinStyle','pinColor','pinPosition','isFolded','rotationAngle','displayType','parentId','isAutoWidth'];
 const {normalizeSelection}=require('./share-selection.cjs');
 function scopeWebShare(graph,rootBoardId,{selectedBoardIds}={}){
  const boards=new Map((graph.boards||[]).filter(b=>!b.attributes?.isTrashed).map(b=>[b.id,b]));
@@ -30,10 +30,10 @@ function scopeWebShare(graph,rootBoardId,{selectedBoardIds}={}){
    else if((key==='content'||key==='caption')&&/^[\[{]/.test(value)){try{walk(JSON.parse(value));}catch(error){if(error.message.startsWith('分享'))throw error;}}
   }else if(Array.isArray(value))value.forEach(v=>walk(v,key));else if(value&&typeof value==='object')for(const [k,v]of Object.entries(value))walk(v,k);
  }
- walk(scoped);const files=[...required].map(id=>{const file=known.get(id);if(!file)throw Error('分享附件缺失：'+id);return file;});
+ walk(scoped);for(const id of required){const file=known.get(id);if(file?.type==='htmlbundle'){const m=typeof file.metadata==='string'?JSON.parse(file.metadata):file.metadata;for(const resourceId of m?.fileIds||[]){if(!/^[a-f0-9]{64}$/.test(resourceId)||!known.has(resourceId))throw Error('分享HTML資源缺失');required.add(resourceId);}}}const files=[...required].map(id=>{const file=known.get(id);if(!file)throw Error('分享附件缺失：'+id);return file;});
  // Metadata uses an allowlist: never serialize absolute paths or arbitrary
  // account/plugin metadata alongside the selected visible card properties.
- scoped.files=files.map(({id,name,type,size,sha256,metadata})=>{let dimensions={};try{dimensions=typeof metadata==='string'?JSON.parse(metadata):metadata;}catch{}return {id,name,type,size,sha256,metadata:JSON.stringify(pick(dimensions,['width','height','duration','totalPages','numPages']))};});
+ scoped.files=files.map(({id,name,type,size,sha256,metadata})=>{let dimensions={};try{dimensions=typeof metadata==='string'?JSON.parse(metadata):metadata;}catch{}return {id,name,type,size,sha256,metadata:JSON.stringify(pick(dimensions,['width','height','duration','totalPages','numPages','htmlBundle','entry','fileIds']))};});
  return {format:'inkbridge-web-share',version:1,rootBoardId,boardIds:[...ids],graph:clone(scoped),files:clone(files)};
 }
 module.exports={scopeWebShare};

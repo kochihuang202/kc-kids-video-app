@@ -43,7 +43,7 @@ async function boot(){
  state.publicationVersion=publication.publicationVersion||null;
  const localReads=new Set(['getShareFlow','getPdfCardById','getMediaCardById','getNoteCardById','getFileById','getNoteHighlightsBySourceId']);
  globalThis.__inkbridgeServices={has:name=>localReads.has(name),async call(name,value){state.requests.push(name);
-  if(name==='getShareFlow'){const key=typeof value==='string'?value:value.shareId;return {...makePayload(publication,key),attachments};}
+  if(name==='getShareFlow'){const key=typeof value==='string'?value:value.shareId;return {...makePayload({...publication,assetBase:publicationBase.href},key),attachments};}
   if(name==='getLocalSystemFonts')return [];
   if(name==='getNoteHighlightsBySourceId')return {success:true,list:(publication.graph.noteHighlights||[]).filter(row=>row.sourceId===value.sourceId)};
   if(name==='getPdfCardById'||name==='getMediaCardById'||name==='getNoteCardById'){const key=typeof value==='string'?value:value.id;const c=publication.graph.contents.find(c=>c.id===key),card=c?{...publication.graph.cardMetadata.find(m=>m.id===key),id:c.id,title:c.title,content:c.document}:null;if(name==='getPdfCardById')return {success:!!card,pdfCard:card,file:publication.graph.files.find(f=>f.id===card?.fileId)||null};if(name==='getMediaCardById')return {success:!!card,mediaCard:card};return card;}

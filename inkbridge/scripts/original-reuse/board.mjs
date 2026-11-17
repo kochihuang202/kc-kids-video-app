@@ -134,6 +134,7 @@ async function boot(){
   function toNode(item){return projectGroupedNode(toLocalNode(item),sections.sections);}
   function toLocalNode(item){
     const content=contents.get(item.contentId);
+    if(content?.kind==='html'){const card={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content};return r(19281).YH.websiteCardInstanceToWebsiteCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},card);}
     if(content?.kind==='pdf'){const card={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content};return r(19281).YH.pdfCardInstanceToPdfCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},card,files.get(card.fileId));}
     if(content?.kind==='video'){const mediaCard={...(graph.cardMetadata||[]).find(row=>row.id===item.contentId),...content,type:'video'};return r(19281).YH.mediaCardInstanceToMediaCardNode({...item.attributes,...item,objectId:item.contentId,whiteboardId:item.boardId},mediaCard);}
     if(content?.kind==='image'||item.attributes?.type==='MediaCard'||item.attributes?.type==='image'){

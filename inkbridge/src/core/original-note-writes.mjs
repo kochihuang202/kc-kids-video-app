@@ -2,7 +2,7 @@
 // add-to-whiteboard placement algorithm remain original modules 31167/94700.
 import {documentIdentity} from './note-version.mjs';
 // A MediaCard instance may hold an image or a (path-linked) video content row.
-const kindMatches=(type,kind)=>({NoteCard:['text'],DailyNote:['text'],PDFCard:['pdf'],MediaCard:['image','video'],image:['image'],video:['video']}[type]||[]).includes(kind);
+const kindMatches=(type,kind)=>({NoteCard:['text'],DailyNote:['text'],PDFCard:['pdf'],MediaCard:['image','video'],image:['image'],video:['video'],WebsiteCard:['html']}[type]||[]).includes(kind);
 export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene }) {
     // The original 31167 video flow sends addMediaCardInstance before addMediaCard. An
     // instance row cannot precede its content, so hold it until that card arrives.
@@ -16,6 +16,17 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
     const showInstances = () => hydrateScene ? hydrateScene() : store.getState().setNodes([...instances.values()].filter(row => row.boardId === getBoardId()).map(toNode));
     return (method, payload) => navigate(async () => {
         await coordinator.flush();
+        if(method==='addWebsiteCard'){
+            const card=payload.websiteCard||payload,graph=await load();
+            if(contents.has(card.id)||!graph.files?.some(f=>f.id===card.fileId&&f.type==='htmlbundle'))throw Error('HTML attachment is not registered');
+            putContent({id:card.id,title:card.title,body:'',document:null,kind:'html',tone:'sage'});
+            contents.set(card.id,{...contents.get(card.id),...card,kind:'html',document:null});
+            coordinator.stage(catalogOperation('card',{...card,content:undefined,type:'WebsiteCard'}));await coordinator.flush();return {success:true,websiteCard:card};
+        }
+        if(method==='batchCreateWebsiteCardInstances'){method='batchInsertCardInstances';payload={instances:(Array.isArray(payload)?payload:[payload]).map(row=>({...row,__type:'WebsiteCard'}))};}
+        if(method==='updateWebsiteCardInstance')method='updateNoteCardInstance';
+        if(method==='deleteWebsiteCardInstance')method='deleteNoteCardInstance';
+        if(method==='updateWebsiteCard')method='updateNoteCard';
         const versions=(await load()).contentVersions||[],stagedVersions=new Set();
         const stageVersion=(noteCardId,snapshot)=>{const identity=documentIdentity(JSON.parse(snapshot.content)),key=noteCardId+':'+identity;if(stagedVersions.has(key)||versions.some(v=>v.noteCardId===noteCardId&&documentIdentity(JSON.parse(v.content))===identity))return;stagedVersions.add(key);coordinator.stage(catalogOperation('content-version',{id:crypto.randomUUID(),noteCardId,title:snapshot.title||'',content:snapshot.content,createdTime:new Date().toISOString()}));};
         if(method==='restoreNoteCardContentVersion'){
@@ -58,7 +69,7 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         }
         if (method === 'batchDeleteCardsByType' || method === 'restoreNoteCard' || method === 'restoreAttachmentCard') {
             const targets = method !== 'batchDeleteCardsByType' ? [{ objectId: payload.id, objectType: method==='restoreNoteCard'?'NoteCard':payload.type }] : payload;
-            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','DailyNote','MediaCard','image','video','PDFCard'].includes(row.objectType)||!kindMatches(row.objectType,contents.get(row.objectId)?.kind)))
+            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','DailyNote','MediaCard','image','video','PDFCard','WebsiteCard'].includes(row.objectType)||!kindMatches(row.objectType,contents.get(row.objectId)?.kind)))
                 throw Error('這批卡片含有尚未接入的類型，未變更資料');
             const graph = await load(), ids = new Set(targets.map(row => row.objectId));
             if(targets.some(row=>row.objectType==='DailyNote'&&!graph.quickNotes?.some(note=>note.id===row.objectId)))throw Error('日記不存在');

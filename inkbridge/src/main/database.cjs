@@ -218,7 +218,7 @@ class WorkspaceDatabase {
           const body = text(data.body ?? '', 'body', 500000);
           const document = validateDocument(data.document);
           const kind = data.kind ?? 'text', tone = data.tone ?? 'sage';
-          check(['text', 'image', 'pdf', 'video'].includes(kind), 'Invalid card kind');
+          check(['text', 'image', 'pdf', 'video', 'html'].includes(kind), 'Invalid card kind');
           check(['sage', 'sand', 'rose', 'blue'].includes(tone), 'Invalid card tone');
           const old = this.statement('SELECT * FROM contents WHERE id=?').get(id);
           const different = !old || old.title !== title || old.body !== body || old.document_json !== document || old.kind !== kind || old.tone !== tone;

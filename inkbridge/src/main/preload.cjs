@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   savePastedImageBuffers:request=>invoke('inkbridge:savePastedImageBuffers',request),
   savePureBase64Image:request=>invoke('inkbridge:savePureBase64Image',request),
   uploadFile:request=>invoke('inkbridge:uploadFile',request),
+  uploadHtmlPage:request=>invoke('inkbridge:uploadHtmlPage',request),
   inspectFiles:request=>invoke('inkbridge:inspectFiles',request),
   pickVideoFile:()=>invoke('inkbridge:pickVideoFile'),inspectVideoFile:path=>invoke('inkbridge:inspectVideoFile',path),copyImageToClipboard:request=>invoke('inkbridge:copyImageToClipboard',request),
   ready:()=>ipcRenderer.send('inkbridge:renderer-ready',workspaceEpoch),

@@ -1,3 +1,10 @@
+## REG-173 — HTML drops must retain the complete page and resource closure
+
+- Older drop97101 converted HTML into a note, discarding full-page layout, CSS and scripts. Port complete FlexNote1.1.70 drop28416/61186, helper78784, WebsiteCard constructor and backend71891 collector; retain existing native10764 canvas/iframe renderer and shared Redux singleton.
+- Persist a hash-bound HTML bundle and every local dependency in CAS; publish via the existing coordinator, snapshots and restore validation. Share only the selected bundle closure, retain relative resource paths, MIME and current-publication membership. No source paths or publisher keys enter the public graph.
+- Native iframe rules are retained, including browser storage needed by interactive pages. Desktop page.<hash> has a separate origin and cannot access the desktop preload; sharing remains a public read-only origin. No new wildcard CORS policy was added.
+- check-html-pages uses trusted OS file drops, CSS imports, Chinese/space filenames, image/font/module imports, actual clicks, source-independent restart and no view revisions. html-pages.test covers complete peer restore, empty/uppercase CSS, private scope, actual local workerd/R2 publication, revocation and missing-resource refusal. check-html-share and check-html-cloud cover real browser offline/live rendering and fixed URL replacement. Related PDF drop and attachment/protocol/snapshot/catalog/share regressions pass; see inkbridge/docs/RELEASE_0_7_6.md.
+
 ## REG-172 — Checklist indentation must match between editing and canvas paint
 
 - Reproduced the same synthetic heading/checklist card before and during editing. Generic bullet CSS overrode the checklist padding, adding 20 world pixels of indentation and changing wrapping. FlexNote 1.1.70 excludes checklists from that selector.

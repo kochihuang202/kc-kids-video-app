@@ -3,6 +3,7 @@
 // coordinator, never by an independent file IPC writer.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {scanFile,copyVerified,fingerprint}=require('./stream-files.cjs');
+const {MIME,EXTENSIONS}=require('./html-pages.cjs');
 const IMAGE_MAX_BYTES=64*1024*1024,PDF_MAX_BYTES=512*1024*1024;
 function createAttachmentStore(directory,decodeImage){
  fs.mkdirSync(directory,{recursive:true});
@@ -36,19 +37,24 @@ function createAttachmentStore(directory,decodeImage){
   verified.set(published.filePath,fingerprint(await fs.promises.stat(published.filePath)));
   return result(published.sha256,'pdf',published.bytes,name);
  }
+ async function prepareResource(source,ext,name=path.basename(source)){
+  if(!MIME[ext])throw Error('Unsupported HTML resource');
+  const published=await copyVerified(source,path.join(directory,'.import'),{maxBytes:25*1024*1024,allowEmpty:true,destination:info=>{const existing=fs.readdirSync(directory).find(n=>new RegExp('^'+info.sha256+'\\.('+EXTENSIONS+')$').test(n));return path.join(directory,existing||info.sha256+'.'+ext);}});
+  const storedExt=path.extname(published.filePath).slice(1);verified.set(published.filePath,fingerprint(await fs.promises.stat(published.filePath)));return result(published.sha256,storedExt,published.bytes,name);
+ }
  function locate(value){
   const url=new URL(value);if(url.protocol!=='flexnote:'||url.hostname!=='file'||url.username||url.password||url.port||url.search||url.hash)throw Error('Invalid attachment URL');
-  const match=/^([a-f0-9]{64})(?:\.(png|jpg|gif|webp|bmp|pdf))?$/.exec(decodeURIComponent(url.pathname.slice(1)));if(!match)throw Error('Invalid attachment ID');
-  const id=match[1],candidates=fs.readdirSync(directory).filter(name=>new RegExp(`^${id}\\.(png|jpg|gif|webp|bmp|pdf)$`).test(name));if(candidates.length!==1||match[2]&&candidates[0]!==`${id}.${match[2]}`)throw Error('Missing attachment');
+  const match=new RegExp('^([a-f0-9]{64})(?:\\.('+EXTENSIONS+'))?$').exec(decodeURIComponent(url.pathname.slice(1)));if(!match)throw Error('Invalid attachment ID');
+  const id=match[1],candidates=fs.readdirSync(directory).filter(name=>new RegExp(`^${id}\\.(${EXTENSIONS})$`).test(name)&&(!match[2]||name===`${id}.${match[2]}`));if(candidates.length!==1)throw Error('Missing attachment');
   const file=path.join(directory,candidates[0]),stat=fs.lstatSync(file),real=fs.realpathSync(file);if(!stat.isFile()||path.dirname(real)!==fs.realpathSync(directory))throw Error('Attachment path escapes workspace');
-  const ext=path.extname(real),limit=ext==='.pdf'?PDF_MAX_BYTES:IMAGE_MAX_BYTES;if(!stat.size||stat.size>limit)throw Error('Invalid attachment byte length');
+  const ext=path.extname(real),limit=ext==='.pdf'?PDF_MAX_BYTES:IMAGE_MAX_BYTES;if(!stat.size&&/\.(png|jpg|gif|webp|bmp|pdf)$/.test(ext)||stat.size>limit)throw Error('Invalid attachment byte length');
   return {filePath:real,size:stat.size,ext,sha256:id,fingerprint:fingerprint(stat)};
  }
  function readUrl(value){const info=locate(value);if(info.size>IMAGE_MAX_BYTES)throw Error('Large attachment requires streaming');const bytes=fs.readFileSync(info.filePath);if(digest(bytes)!==info.sha256)throw Error('Attachment integrity failure');return {bytes,ext:info.ext};}
- async function resolveUrl(value){const info=locate(value);if(verified.get(info.filePath)!==info.fingerprint){const checked=await scanFile(info.filePath);if(checked.sha256!==info.sha256||checked.fingerprint!==info.fingerprint)throw Error('Attachment integrity failure');verified.set(info.filePath,info.fingerprint);}return info;}
+ async function resolveUrl(value){const info=locate(value);if(verified.get(info.filePath)!==info.fingerprint){const checked=await scanFile(info.filePath,{allowEmpty:true});if(checked.sha256!==info.sha256||checked.fingerprint!==info.fingerprint)throw Error('Attachment integrity failure');verified.set(info.filePath,info.fingerprint);}return info;}
  // Synchronous legacy callers need a safe path, not a 512MiB blocking hash.
  // Snapshot/export boundaries must independently verify actual hashes.
  function resolvePath(id){if(typeof id!=='string'||!/^[a-f0-9]{64}$/.test(id))throw Error('Invalid attachment ID');const info=locate('flexnote://file/'+id);if(info.size<=IMAGE_MAX_BYTES)readUrl('flexnote://file/'+id);return info.filePath;}
- return {prepare,prepareFile,readUrl,resolveUrl,resolvePath};
+ return {prepare,prepareFile,prepareResource,readUrl,resolveUrl,resolvePath};
 }
 module.exports={createAttachmentStore,IMAGE_MAX_BYTES,PDF_MAX_BYTES};

@@ -1,7 +1,7 @@
 {
   "name": "inkbridge",
   "productName": "InkBridge",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "InkBridge 墨橋 — independent CanvasKit whiteboard",
   "private": true,
   "main": "src/main/main.cjs",
@@ -32,6 +32,7 @@
     "@lexical/table": "0.53.0",
     "bmp-js": "0.1.0",
     "canvaskit-wasm": "0.42.0",
+    "cheerio": "1.1.2",
     "harfbuzzjs": "1.6.4",
     "lexical": "0.53.0",
     "sharp": "0.35.5"

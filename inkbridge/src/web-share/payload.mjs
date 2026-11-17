@@ -2,13 +2,14 @@
 export function makePayload(publication,boardId){
  const g=publication.graph,board=g.boards.find(b=>b.id===boardId);if(!board)throw Error('此白板不在分享包中');
  const metadata=new Map(g.cardMetadata.map(c=>[c.id,c])),contents=new Map(g.contents.map(c=>[c.id,c]));
- const noteCards=[],mediaCards=[],pdfCards=[],noteCardInstances=[],mediaCardInstances=[],pdfCardInstances=[];
+ const noteCards=[],mediaCards=[],pdfCards=[],websiteCards=[],websiteInstances=[],noteCardInstances=[],mediaCardInstances=[],pdfCardInstances=[];
  for(const row of g.instances.filter(i=>i.boardId===boardId)){
   const c=contents.get(row.contentId),meta=metadata.get(c.id)||{},item={...meta,id:c.id,title:c.title,content:c.document,propertiesConfig:[],insights:[],isTrashed:false};
   const instance={...row.attributes,id:row.id,objectId:c.id,whiteboardId:boardId,x:row.x,y:row.y,width:row.width,height:row.height,parentId:row.parentId||'',isAutoHeight:false};
   if(c.kind==='text'){item.type='NoteCard';noteCards.push(item);noteCardInstances.push(instance);}
   else if(c.kind==='image'){item.type='image';mediaCards.push(item);mediaCardInstances.push(instance);}
   else if(c.kind==='pdf'){item.type='PDFCard';pdfCards.push(item);pdfCardInstances.push(instance);}
+  else if(c.kind==='html'){const asset=publication.attachments.find(f=>f.source_file_id===item.fileId);if(!asset)throw Error('HTML分享資源缺失');item.url=publication.assetBase?new URL(asset.path,publication.assetBase).href:asset.path;item.displayType='raw';websiteCards.push(item);websiteInstances.push(instance);}
   else throw Error('尚未支援分享的卡片種類：'+c.kind);
  }
  const boardRecord=b=>({...b.attributes,id:b.id,name:b.title,title:b.title,shareId:b.isUnshared?null:b.id,isUnshared:!!b.isUnshared,...(b.attributes?.inkbridgePreviewFileId?{backgroundImage:'flexnote://file/'+b.attributes.inkbridgePreviewFileId}:{})});
@@ -24,6 +25,6 @@ export function makePayload(publication,boardId){
   pdfCards,pdfCardInstances,pdfFiles:g.files,mediaCards,mediaCardInstances,
   highlightResp:{...empty(),relatedCards:[],pdfCardsFromHighlight:[]},videoHighlightResp:{...empty(),videoCardsFromHighlight:[]},audioHighlightResp:{...empty(),audioCardsFromHighlight:[]},noteHighlightResp:{...empty(),noteCardsFromHighlight:[]},
   whiteboardResp:{whiteboards:[...g.boards,...unsharedBoards].map(boardRecord),whiteboardInstances:g.whiteboardInstances.filter(r=>r.containerId===boardId)},
-  fileInstances:{data:[]},websiteCardResp:{websiteCards:[],websiteInstances:[]},dailyNoteInstances:[]
+  fileInstances:{data:[]},websiteCardResp:{websiteCards,websiteInstances},dailyNoteInstances:[]
  }};
 }

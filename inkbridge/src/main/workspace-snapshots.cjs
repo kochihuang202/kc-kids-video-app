@@ -6,6 +6,7 @@ const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const {hashFile,copyVerified}=require('./stream-files.cjs');
 const {readRetention,retainedAncestor,decidable,applyRetentionSuccessor}=require('./snapshot-retention.cjs');
 const {snapshotOrder}=require('./snapshot-order.cjs');
+const {EXTENSIONS:HTML_EXTENSIONS}=require('./html-pages.cjs');
 async function durable(file,bytes){const handle=await fs.open(file,'wx');try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}}
 async function readJSON(file,fallback){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(e){if(e.code==='ENOENT')return fallback;throw e;}}
 function inspectDatabase(file){const db=new DatabaseSync(file,{readOnly:true});try{
@@ -40,7 +41,7 @@ function createWorkspaceSnapshots({localDirectory,database,getExchange,resolveAt
     if(db.workspaceId!==m.workspaceId||db.revision!==m.revision||m.assets.length!==db.files.length)throw Error('資料庫與附件清單不一致');
     for(let i=0;i<db.files.length;i++){
       const f=db.files[i],a=m.assets[i];
-      if(!/^[a-f0-9]{64}$/.test(f.id)||a.fileId!==f.id||a.sha256!==f.id||a.logicalPath!==f.filePath||a.bytes!==f.size||!new RegExp(`^assets/${f.id.slice(0,2)}/${f.id}\\.(png|jpg|gif|webp|bmp|pdf)$`).test(a.objectPath)||a.logicalPath!==`files/${path.basename(a.objectPath)}`)throw Error('附件引用無效');
+      if(!/^[a-f0-9]{64}$/.test(f.id)||a.fileId!==f.id||a.sha256!==f.id||a.logicalPath!==f.filePath||a.bytes!==f.size||!new RegExp(`^assets/${f.id.slice(0,2)}/${f.id}\\.(${HTML_EXTENSIONS})$`).test(a.objectPath)||a.logicalPath!==`files/${path.basename(a.objectPath)}`)throw Error('附件引用無效');
       await verify(path.join(root,a.objectPath),a);
     }
     return m;
