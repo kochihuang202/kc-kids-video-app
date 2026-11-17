@@ -50,7 +50,7 @@ async function buildPortable(){
     if(entry.isSymbolicLink())throw Error('Portable build refuses symlinks: '+relative);
     if(entry.isDirectory()){if(/^(profiles|Profile|Session|Workspace|files|Recovery|exports|SnapshotStaging|Restore-)/i.test(entry.name))throw Error('Private data directory in package: '+relative);await walk(file);}
     // htmlparser2's public Tokenizer is code, not a credential file.
-    else{const publicHtmlTokenizer=/^app\/node_modules\/htmlparser2\/dist\/(?:commonjs|esm)\/Tokenizer\.(?:js|d\.ts)(?:\.map)?$/.test(relative);if(!publicHtmlTokenizer&&/\.(sqlite3|db)(-|$)|token|storage-settings|snapshot-state|local-endpoint/i.test(entry.name)&&!relative.endsWith('storage-settings.cjs')&&!relative.endsWith('storage-settings.mjs'))throw Error('Private state in package: '+relative);files.push({path:relative,bytes:(await fs.stat(file)).size,sha256:await hash(file)});}
+    else{const publicHtmlParserFile=/^app\/node_modules\/(?:htmlparser2\/(?:dist\/(?:commonjs|esm)\/Tokenizer\.(?:js|d\.ts)(?:\.map)?|src\/Tokenizer\.ts)|parse5\/dist\/(?:cjs\/)?common\/token\.(?:js|d\.ts))$/.test(relative);if(!publicHtmlParserFile&&/\.(sqlite3|db)(-|$)|token|storage-settings|snapshot-state|local-endpoint/i.test(entry.name)&&!relative.endsWith('storage-settings.cjs')&&!relative.endsWith('storage-settings.mjs'))throw Error('Private state in package: '+relative);files.push({path:relative,bytes:(await fs.stat(file)).size,sha256:await hash(file)});}
   }}
   await walk(output);files.sort((a,b)=>a.path.localeCompare(b.path));
   for(const required of ['Start-InkBridge.bat','Recover-InkBridge.ps1','runtime/electron.exe'])if(!files.some(f=>f.path===required))throw Error('Missing portable entry: '+required);
