@@ -5,7 +5,7 @@ test('HTML resources survive source removal, complete snapshot transfer and scop
  await fs.mkdir(path.join(local,'Profile'),{recursive:true});await fs.mkdir(path.join(peer,'Profile'),{recursive:true});await fs.mkdir(exchange);
  const store=createAttachmentStore(path.join(local,'files'),()=>({})),html=createHtmlPages({attachments:store,nativeFactory}),source=path.join(root,'source'),entry=await require('./helpers/html-page-fixture.cjs')(source);await fs.writeFile(path.join(source,'assets/data.dat'),'synthetic binary resource');await fs.appendFile(entry,'<a href="assets/data.dat">data</a>');const prepared=await html.prepare(entry);
  const bundle=await html.manifest(prepared.file.id);assert.equal(bundle.files.length,9);assert(bundle.files.some(f=>f.path==='assets/nested.css'));assert(bundle.files.some(f=>f.path==='assets/helper.mjs'));
- await fs.rm(source,{recursive:true});const info=await html.resolveUrl(prepared.file.pageUrl);assert.equal(info.contentType,'text/html');assert((await fs.readFile(info.filePath,'utf8')).includes('HTML 完整呈現'));
+ await fs.rm(source,{recursive:true});const info=await html.resolveUrl(prepared.file.pageUrl);assert.equal(info.contentType,'text/html');const response=await require('../src/main/attachment-response.cjs').attachmentResponse(new Request(prepared.file.pageUrl),html);assert.equal(response.headers.get('content-type'),'text/html; charset=utf-8');assert((await fs.readFile(info.filePath,'utf8')).includes('HTML 完整呈現'));
  await assert.rejects(html.resolveUrl('flexnote://page.'+prepared.file.id+'/%2e%2e%2fsecret'));
  const db=require('../src/main/database-client.cjs').createDatabaseClient({filename:path.join(local,'Workspace/inkbridge.sqlite3')});
  try{

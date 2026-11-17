@@ -267,6 +267,7 @@ async function publicShare(request,env,url,m) {
  }
  const object=await env.SHARE_BUCKET.get('objects/'+f.sha256,range?{range}:{});if(!object) fail(404,'Resource missing');
  const headers=new Headers({'content-type':f.contentType||(resource==='share.json'?'application/json':'application/octet-stream'),'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','accept-ranges':'bytes','etag':object.httpEtag});
+ if(/^(text\/|application\/(?:javascript|json|xml)|image\/svg\+xml)/.test(headers.get('content-type'))&&!/charset=/i.test(headers.get('content-type')))headers.set('content-type',headers.get('content-type')+'; charset=utf-8');
  let status=200;
  if(request.headers.has('range')&&object.range){const start=object.range.offset??Math.max(0,object.size-object.range.suffix),length=object.range.length??object.range.suffix;headers.set('content-range',`bytes ${start}-${start+length-1}/${object.size}`);headers.set('content-length',String(length));status=206;}else headers.set('content-length',String(object.size));
  return new Response(request.method==='HEAD'?null:object.body,{status,headers});

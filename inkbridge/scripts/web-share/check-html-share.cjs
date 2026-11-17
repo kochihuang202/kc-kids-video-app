@@ -2,7 +2,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),assert=require('n
 (async()=>{
  const project=path.resolve(__dirname,'../..'),receipt=JSON.parse(await fs.readFile(path.join(project,'private-original-editor/html-electron-result.json'))),live=process.env.INKBRIDGE_HTML_SHARE_URL;
  let server,dir,url=live;
- if(!live){const pkg=await require('../../src/main/web-share-export.cjs').exportWebShare({graph:receipt.graph,rootBoardId:'board-main',workspaceDirectory:receipt.data,projectDirectory:project,outputDirectory:path.join(project,'release/html-share-tests')});dir=pkg.directory;
+ if(!live){const pkg=process.env.INKBRIDGE_HTML_WEB_PACKAGE?{directory:process.env.INKBRIDGE_HTML_WEB_PACKAGE}:await require('../../src/main/web-share-export.cjs').exportWebShare({graph:receipt.graph,rootBoardId:'board-main',workspaceDirectory:receipt.data,projectDirectory:project,outputDirectory:path.join(project,'release/html-share-tests')});dir=pkg.directory;
   server=spawn(process.execPath,[path.join(dir,'serve.cjs')],{env:{...process.env,INKBRIDGE_NO_BROWSER:'1'},windowsHide:true,stdio:['ignore','pipe','pipe']});
   url=await new Promise((resolve,reject)=>{let buffer='';server.stdout.on('data',b=>{buffer+=b;const m=buffer.match(/http:\/\/127\.0\.0\.1:\d+/);if(m)resolve(m[0]);});server.once('error',reject);server.once('exit',code=>reject(Error('Share server exited '+code)));});
  }

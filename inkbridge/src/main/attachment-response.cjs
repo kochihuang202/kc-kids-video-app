@@ -4,6 +4,7 @@ async function attachmentResponse(request,attachments){
  try{
   const file=await attachments.resolveUrl(request.url),headers={'Content-Type':file.contentType||(file.ext==='.pdf'?'application/pdf':'image/'+file.ext.slice(1)),'Accept-Ranges':'bytes','Access-Control-Allow-Origin':'*','ETag':'"'+file.sha256+'"','X-Content-Type-Options':'nosniff'};
   if(file.ext==='.jpg')headers['Content-Type']='image/jpeg';
+  if(file.htmlPage&&/^(text\/|application\/(?:javascript|json|xml)|image\/svg\+xml)/.test(headers['Content-Type'])&&!/charset=/i.test(headers['Content-Type']))headers['Content-Type']+='; charset=utf-8';
   if(file.cacheControl)headers['Cache-Control']=file.cacheControl;
   if(file.size===0)return new Response(null,{status:request.headers.has('range')?416:200,headers:{...headers,'Content-Length':'0'}});
   let start=0,end=file.size-1,status=200;const range=request.headers.get('range'),ifRange=request.headers.get('if-range');
