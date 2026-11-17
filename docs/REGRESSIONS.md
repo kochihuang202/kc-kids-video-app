@@ -1,3 +1,9 @@
+## REG-171 — Native focus settings must drive actual Canvas paint
+
+- User requested FlexNote focus mode: complete original section, opacity and independent connected-node/edge options. Previously the host disabled the section and omitted focus props at the Canvas boundary.
+- Reuse native79790 selected-ID calculation and native10764/66597/60647 rendering. View settings remain device-local; no shared revision or content changes.
+- check-focus-mode fails before fix and passes after, including real raster comparisons, selection/clear, 0/100 opacity, separate connected options, board switch and restart. Related check-media-file-names passes before/after. Its old two-controls expectation is explicitly replaced by the user-authorized focus switch; per-board file-name expectations remain unchanged. See inkbridge/docs/RELEASE_0_7_4.md.
+
 # REG-170: Diary and Todo navigation must persist through the shared workspace
 
 - Latest FlexNote 1.1.70 complete diary 55411 and todo 23997 parents are connected with reviewed dependencies. Specialized diary service wrappers must use the same isolated SQLite bridge; editor registration participates in the existing flush and composition barrier.

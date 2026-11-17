@@ -392,7 +392,12 @@ async function boot(){
   const ShareControls=installWebShare({getBoardId:()=>boardId,isHome:()=>!!state.home,flush:()=>state.flush(),onError:report});
   function App(){
     const onlyTitle=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.onlyDisplayCardTitle),smallTextSize=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.textSizeAtSmallZoom);
+    // Native48626 selection -> 79790.VP -> Canvas10764. Keep native rendering,
+    // connection options and device-local settings; no shared content writes.
+    const focusModeEnabled=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.focusModeEnabled),focusModeDimOpacity=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.focusModeDimOpacity),focusModeOptions=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().ui.focusModeOptions);
+    const focusSelection=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().selectedNodeIds);
     const nodes=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().nodes),sceneConnections=React.useSyncExternalStore(originalStore.subscribe,()=>originalStore.getState().connections),mode=React.useSyncExternalStore(redux.subscribe,()=>redux.getState().flow.controlMode);state.setMode=value=>redux.dispatch(r(23407).Uw(value));state.controls=r(23).wf();
+    const focusedNodeIds=React.useMemo(()=>focusModeEnabled&&focusSelection.size?r(79790).VP(Array.from(focusSelection),sceneConnections,focusModeOptions):undefined,[focusModeEnabled,focusSelection,sceneConnections,focusModeOptions]);
     const [activeBoardId,setActiveBoardId]=React.useState(boardId);state.renderActive=setActiveBoardId;
     const [home,setHome]=React.useState(!!state.home);state.renderHome=setHome;
     const [page,setPage]=React.useState(state.home?'home':'flow');state.renderPage=setPage;
@@ -450,6 +455,7 @@ async function boot(){
           pushUndoSnapshot:nativeHistory.pushUndoSnapshot,
           nodeToolbar:r(19395).z,
           connections:sceneConnections,
+          focusModeEnabled,focusModeDimOpacity,focusModeOptions,focusedNodeIds,
           // Native48626 passes this contract to Canvas10764. Keep new links curved
           // even when the toolbar changes the shape of an individual saved link.
           connectionDefaults:{pathType:'bezier',strokeWidth:r(19281).YH.userTempBehavior.lineThickness,color:r(19281).YH.userTempBehavior.lineColor,endArrow:true,endArrowType:'arrow',labelFollowPath:r(19281).YH.userTempBehavior.labelFollowPath},

@@ -21,11 +21,11 @@ const { WorkspaceDatabase } = require('../../src/main/database.cjs');
   const isOn = title => row(title).locator('input').first().isChecked();
   try {
     await start('root');
-    // 1. Two rows replace the original combined row; only they are enabled.
+    // 1. Two file-name switches and the newly completed focus switch are enabled.
     await openSettings();
     await expect(page.locator('[data-slot=content]').getByText(await t('showMediaFileNameOnCanvas'), { exact: true })).toHaveCount(0);
     await expect(row('顯示影片檔名')).toBeVisible();
-    await expect.poll(() => page.evaluate(() => { const pop = [...document.querySelectorAll('[data-slot=content]')].find(p => p.textContent.includes('顯示圖片檔名')); return [...pop.querySelectorAll('button,input,select,textarea,[role=slider]')].filter(c => !c.disabled).length; })).toBe(2);
+    await expect.poll(() => page.evaluate(() => { const pop = [...document.querySelectorAll('[data-slot=content]')].find(p => p.textContent.includes('顯示圖片檔名')); return [...pop.querySelectorAll('input')].filter(c => !c.disabled).length; })).toBe(3);
     assert.deepEqual([await isOn('顯示圖片檔名'), await isOn('顯示影片檔名')], [false, false], 'a board without a choice follows the global default (off)');
     // 2. Image names on for the root board only.
     await row('顯示圖片檔名').locator('label').first().click();
@@ -47,7 +47,7 @@ const { WorkspaceDatabase } = require('../../src/main/database.cjs');
     await page.evaluate(() => window.__inkbridgeIntegrated.switchBoard('child')); await page.waitForTimeout(500);
     assert.deepEqual([await shown('image'), await shown('video')], [false, true]);
     assert.deepEqual(await page.evaluate(() => window.__inkbridgeIntegrated.errors), []);
-    console.log(JSON.stringify({ data, twoSwitches: true, onlyFileNameSwitchesEnabled: true, perBoard: true, defaultFollowsGlobal: true, restart: true }));
+    console.log(JSON.stringify({ data, twoSwitches: true, defaultConnectedSwitchesEnabled: true, perBoard: true, defaultFollowsGlobal: true, restart: true }));
   } catch (error) { await page?.screenshot({ path: path.join(data, 'media-names-failure.png') }).catch(() => {}); console.error({ data }); console.error(error); process.exitCode = 1; }
   finally { await app.close().catch(() => {}); }
 })();
