@@ -7,7 +7,8 @@ module.exports=function({root,changes=[]}){
     const before=fs.readFileSync(file,'utf8');if(before.includes(replacement))return;
     if(before.split(anchor).length!==2)throw Error('Edit layout source anchor changed: '+id);
     const after=before.replace(anchor,replacement);
-    if(!fs.existsSync(file+'.before-edit-layout'))fs.writeFileSync(file+'.before-edit-layout',before);
+    const backups=path.join(root,'edit-layout-backups');fs.mkdirSync(backups,{recursive:true});
+    const backup=path.join(backups,path.basename(file));if(!fs.existsSync(backup))fs.writeFileSync(backup,before);
     fs.writeFileSync(file,after);changes.push({id,description:'Native 1.1.70 editing layout',beforeSha256:sha(before),afterSha256:sha(after)});
   }
   patch(path.join(root,'vendor/app/_next/static/css/0a3dd850c67b254e.css'),
