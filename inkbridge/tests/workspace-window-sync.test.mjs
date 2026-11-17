@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { windowExpectations, assertWindowExpectations, projectWindowOperations, advanceWindowBaseline } from '../src/core/workspace-window-sync.mjs';
+
+test('diary and standalone task catalogs retain shared-window conflict preconditions',()=>{
+ const graph={boards:[],contents:[],instances:[],quickNotes:[{id:'day',date:'2026-11-17'}],todos:[{id:'task',title:'before',completed:false}]};
+ const operations=[{type:'putCatalog',kind:'quick-note',data:{...graph.quickNotes[0],lastEditedTime:'new'}},{type:'putCatalog',kind:'todo',data:{...graph.todos[0],completed:true}}];
+ const expected=windowExpectations(graph,operations),next=projectWindowOperations(graph,operations);
+ assert.equal(next.todos[0].completed,true);assert.equal(next.quickNotes[0].lastEditedTime,'new');assert.equal(graph.todos[0].completed,false);
+ assertWindowExpectations(graph,operations,expected);
+ assert.throws(()=>assertWindowExpectations({...graph,todos:[{...graph.todos[0],title:'other window'}]},operations,expected));
+});
 const fixture = () => ({ revision: 1, boards: [{ id: 'b', title: 'Board', view: { x: 0, y: 0, zoom: 1 } }], contents: [{ id: 'a', document: { root: { children: [] } }, revision: 1 }, { id: 'other', document: { root: { children: [] } }, revision: 1 }], instances: [{ id: 'i', contentId: 'a', boardId: 'b', x: 40, y: 50, width: 300, height: 200, z: 0, attributes: { color: '#fff' } }], cardMetadata: [{ id: 'a', lastEditedTime: 'old' }] });
 test('unrelated changes do not block a stale workspace revision, but same-record edits do', () => {
     const base = fixture(), op = { type: 'putContent', data: { ...base.contents[0], document: { root: { children: [{ text: 'draft' }] } } } }, expected = windowExpectations(base, [op]), current = fixture();

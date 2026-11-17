@@ -110,6 +110,8 @@ app.whenReady().then(async()=>{
     else if(pathname==='/inkbridge-core/original-bookmarks.mjs')file=path.resolve(own,'../../src/core/original-bookmarks.mjs');
     else if(pathname==='/inkbridge-core/original-pdf.mjs')file=path.resolve(own,'../../src/core/original-pdf.mjs');
     else if(pathname==='/inkbridge-core/original-video.mjs')file=path.resolve(own,'../../src/core/original-video.mjs');
+    else if(pathname==='/inkbridge-core/original-diary.mjs')file=path.resolve(own,'../../src/core/original-diary.mjs');
+    else if(pathname==='/inkbridge-core/original-todos.mjs')file=path.resolve(own,'../../src/core/original-todos.mjs');
     else if(pathname==='/inkbridge-core/mindmap-xmind-keys.mjs')file=path.resolve(own,'../../src/core/mindmap-xmind-keys.mjs');
     else if(pathname==='/inkbridge-core/original-connections.mjs')file=path.resolve(own,'../../src/core/original-connections.mjs');
     else if(pathname==='/inkbridge-core/original-search.mjs')file=path.resolve(own,'../../src/core/original-search.mjs');

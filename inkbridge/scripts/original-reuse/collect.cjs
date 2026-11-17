@@ -44,6 +44,19 @@ if(fs.existsSync(extraFile))for(const [id,entry]of Object.entries(JSON.parse(fs.
   if(ast.parseDiagnostics.length||!factory||!ts.isFunctionExpression(factory))throw Error('Invalid extra factory: '+id);
   modules.set(id,{id,file:entry.file,start:factory.getStart(ast),end:factory.end,sha256:entry.referenceFactorySha256,bytes:Buffer.byteLength(source),requires:[],factory:factory.getText(ast)});
 }
+// Latest diary/todo parents are a separately reviewed overlay. Never replace the
+// shared React/editor/runtime graph merely because a newer artifact is present.
+const diaryReceipt=path.join(root,'diary-todo-source/receipt.json');
+if(fs.existsSync(diaryReceipt)){
+  const receipt=JSON.parse(fs.readFileSync(diaryReceipt,'utf8'));
+  if(receipt.version!=='1.1.70'||receipt.artifactSha256!=='55f2510a542593342409e591b3d0040b51702f64306fb629d9820c37fe474f4b')throw Error('Unreviewed diary/todo source identity');
+  for(const [id,entry]of Object.entries(receipt.modules)){
+    if(!/^\d+$/.test(id)||entry.filename!==`module-${id}.cjs`||!Array.isArray(entry.requires)||entry.requires.some(value=>!/^\d+$/.test(value)))throw Error('Invalid diary/todo overlay');
+    const relative=`diary-todo-source/${entry.filename}`,source=fs.readFileSync(path.join(root,relative),'utf8'),ast=ts.createSourceFile(relative,source,99,true),factory=ast.statements[0]?.expression?.right;
+    if(ast.parseDiagnostics.length||!factory||!ts.isFunctionExpression(factory))throw Error('Invalid diary/todo factory '+id);
+    modules.set(id,{id,file:entry.member,start:factory.getStart(ast),end:factory.end,sha256:entry.factorySha256,bytes:Buffer.byteLength(source),requires:entry.requires,factory:factory.getText(ast),editableSourceOverride:relative,preparedSha256:entry.formattedSha256});
+  }
+}
 const runtimeFile=files.find(file=>path.basename(file).startsWith('webpack-'));if(!runtimeFile)throw Error('No original webpack runtime');
 const runtime=fs.readFileSync(runtimeFile,'utf8'),match=/([\w$]+)\.m=([\w$]+),/.exec(runtime);if(!match)throw Error('Runtime exposure anchor not found');
 const exposed=runtime.replace(match[0],`globalThis.__originalRequire=${match[1]},${match[0]}`);
@@ -55,7 +68,7 @@ const sources=path.join(root,'source-modules');fs.mkdirSync(sources,{recursive:t
 const printer=ts.createPrinter({newLine:ts.NewLineKind.LineFeed,removeComments:false}),baselineFile=path.join(root,'source-baseline.json');
 const baseline=fs.existsSync(baselineFile)?JSON.parse(fs.readFileSync(baselineFile,'utf8')):{};
 for(const [id,record]of modules){
-  const file=path.join(sources,`module-${id}.cjs`);
+  const file=record.editableSourceOverride?path.join(root,record.editableSourceOverride):path.join(sources,`module-${id}.cjs`);
   if(!fs.existsSync(file)){
     const wrapper=ts.createSourceFile(id+'.js','module.exports = '+record.factory+';',ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
     const factory=wrapper.statements[0].expression.right;
@@ -66,7 +79,7 @@ for(const [id,record]of modules){
   const statement=ast.statements[0],expression=statement?.expression;
   if(ast.parseDiagnostics.length||!expression||!ts.isBinaryExpression(expression)||expression.left.getText(ast)!=='module.exports'||!ts.isFunctionExpression(expression.right)&&!ts.isArrowFunction(expression.right))throw Error('Invalid editable original factory: '+file);
   record.factory=source.slice(expression.right.getStart(ast),expression.right.end);
-  originalMap[id].editableSource=path.relative(root,file).replaceAll('\\','/');originalMap[id].editableSha256=sha(source);originalMap[id].locallyModified=baseline[id]!==sha(source);
+  originalMap[id].editableSource=path.relative(root,file).replaceAll('\\','/');originalMap[id].editableSha256=sha(source);originalMap[id].locallyModified=(record.preparedSha256||baseline[id])!==sha(source);
 }
 fs.writeFileSync(baselineFile,JSON.stringify(baseline,null,2));
 const registrations=[`self.webpackChunk_N_E.push([${JSON.stringify([...new Set(chunks.flatMap(chunk=>chunk.chunkIds))])},{${[...modules].map(([id,record])=>`${id}:${record.factory}`).join(',')}}]);`];

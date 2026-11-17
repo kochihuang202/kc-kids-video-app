@@ -1,3 +1,9 @@
+# REG-170: Diary and Todo navigation must persist through the shared workspace
+
+- Latest FlexNote 1.1.70 complete diary 55411 and todo 23997 parents are connected with reviewed dependencies. Specialized diary service wrappers must use the same isolated SQLite bridge; editor registration participates in the existing flush and composition barrier.
+- Empty/read/reopen must not create content versions. Checklist changes preserve source AST; diary and todo catalogs retain shared-window preconditions and travel in validated workspace snapshots.
+- Related checks: original-diary, original-todos, diary-snapshot, workspace-window-sync, catalog, original-catalog, native-attachments-connections; real Electron check-diary-todos and affected shell navigation. See inkbridge/docs/RELEASE_0_7_3.md.
+
 # Regression Memory
 
 ## REG-169 — Joining a common latest checkpoint must not create a restore branch

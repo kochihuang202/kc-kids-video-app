@@ -2,7 +2,7 @@
 // add-to-whiteboard placement algorithm remain original modules 31167/94700.
 import {documentIdentity} from './note-version.mjs';
 // A MediaCard instance may hold an image or a (path-linked) video content row.
-const kindMatches=(type,kind)=>({NoteCard:['text'],PDFCard:['pdf'],MediaCard:['image','video'],image:['image'],video:['video']}[type]||[]).includes(kind);
+const kindMatches=(type,kind)=>({NoteCard:['text'],DailyNote:['text'],PDFCard:['pdf'],MediaCard:['image','video'],image:['image'],video:['video']}[type]||[]).includes(kind);
 export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene }) {
     // The original 31167 video flow sends addMediaCardInstance before addMediaCard. An
     // instance row cannot precede its content, so hold it until that card arrives.
@@ -58,11 +58,15 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
         }
         if (method === 'batchDeleteCardsByType' || method === 'restoreNoteCard' || method === 'restoreAttachmentCard') {
             const targets = method !== 'batchDeleteCardsByType' ? [{ objectId: payload.id, objectType: method==='restoreNoteCard'?'NoteCard':payload.type }] : payload;
-            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','MediaCard','image','video','PDFCard'].includes(row.objectType)||!kindMatches(row.objectType,contents.get(row.objectId)?.kind)))
+            if (!Array.isArray(targets) || targets.some(row => !contents.has(row.objectId)||!['NoteCard','DailyNote','MediaCard','image','video','PDFCard'].includes(row.objectType)||!kindMatches(row.objectType,contents.get(row.objectId)?.kind)))
                 throw Error('這批卡片含有尚未接入的類型，未變更資料');
             const graph = await load(), ids = new Set(targets.map(row => row.objectId));
-            for (const id of ids)
-                coordinator.stage(catalogOperation('card', { ...(graph.cardMetadata || []).find(row => row.id === id), id, isTrashed: method === 'batchDeleteCardsByType', lastEditedTime: new Date().toISOString() }));
+            if(targets.some(row=>row.objectType==='DailyNote'&&!graph.quickNotes?.some(note=>note.id===row.objectId)))throw Error('日記不存在');
+            for (const id of ids){
+                const diary=graph.quickNotes?.find(row=>row.id===id);
+                if(diary)coordinator.stage(catalogOperation('quick-note',{...diary,isTrashed:method==='batchDeleteCardsByType',lastEditedTime:new Date().toISOString()}));
+                else coordinator.stage(catalogOperation('card', { ...(graph.cardMetadata || []).find(row => row.id === id), id, isTrashed: method === 'batchDeleteCardsByType', lastEditedTime: new Date().toISOString() }));
+            }
             const removed = method === 'batchDeleteCardsByType' ? [...instances.values()].filter(row => ids.has(row.contentId)) : [];
             for (const row of removed)
                 coordinator.stage({ type: 'deleteInstance', id: row.id });

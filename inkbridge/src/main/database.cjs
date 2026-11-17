@@ -175,7 +175,7 @@ class WorkspaceDatabase {
           id: row.id, contentId: row.content_id, boardId: row.board_id, x: row.x, y: row.y, width: row.width, height: row.height, z: row.z,...(row.attributes?{attributes:JSON.parse(row.attributes)}:{})
         }))
       };
-      for(const [field,prefix] of [['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:'],['sections','section:'],['textElements','text-element:'],['drawingStrokes','drawing-stroke:'],['mindmaps','mindmap:'],['mindmapNodes','mindmap-node:'],['mindmapInstances','mindmap-instance:'],['videoHighlights','video-highlight:'],['videoHighlightInstances','video-highlight-instance:']]){
+      for(const [field,prefix] of [['todos','todo:'],['quickNotes','quick-note:'],['folders','folder:'],['whiteboardInstances','whiteboard-instance:'],['cardMetadata','card:'],['tags','tag:'],['cardTags','card-tag:'],['cardRemarks','remark:'],['files','file:'],['contentVersions','content-version:'],['tagGroups','tag-group:'],['collections','collection:'],['collectionViews','collection-view:'],['savedTabs','saved-tab:'],['tabGroups','tab-group:'],['connections','connection:'],['sections','section:'],['textElements','text-element:'],['drawingStrokes','drawing-stroke:'],['mindmaps','mindmap:'],['mindmapNodes','mindmap-node:'],['mindmapInstances','mindmap-instance:'],['videoHighlights','video-highlight:'],['videoHighlightInstances','video-highlight-instance:']]){
         const records=this.statement('SELECT value FROM meta WHERE key LIKE ? ORDER BY key').all(prefix+'%').map(row=>JSON.parse(row.value));if(records.length)graph[field]=records;
       }
       this.db.exec('COMMIT');
@@ -265,13 +265,13 @@ class WorkspaceDatabase {
             if(previous?.value!==attributes){this.statement('INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,attributes);changed=true;}
           }
         } else if(operation.type==='deleteCatalog'){
-          check(['text-element','folder','whiteboard-instance','card-tag','saved-tab','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance','video-highlight','video-highlight-instance'].includes(operation.kind),'Unsupported catalog deletion');
+          check(['todo','quick-note','text-element','folder','whiteboard-instance','card-tag','saved-tab','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance','video-highlight','video-highlight-instance'].includes(operation.kind),'Unsupported catalog deletion');
           if(operation.kind==='connection')changed=this.deleteConnectionReferences(operation.id)||changed;
           if(operation.kind==='section'){const members=this.statement("SELECT value FROM meta WHERE key LIKE 'section:%' OR key LIKE 'instance:%'").all();check(!members.some(row=>JSON.parse(row.value).parentId===operation.id),'Group still has members');}
           const result=this.statement('DELETE FROM meta WHERE key=?').run(operation.kind+':'+identifier(operation.id,'catalog ID'));
           changed ||= Number(result.changes)>0;
         } else if(operation.type==='putCatalog'){
-          check(['text-element','folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance','video-highlight','video-highlight-instance','video-highlight-instance'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
+          check(['todo','quick-note','text-element','folder','whiteboard-instance','instance','card','tag','card-tag','remark','file','content-version','tag-group','collection','collection-view','saved-tab','tab-group','connection','section','drawing-stroke','mindmap','mindmap-node','mindmap-instance','video-highlight','video-highlight-instance','video-highlight-instance'].includes(operation.kind),'Invalid catalog kind');const data=operation.data,id=identifier(data?.id,'catalog ID');
           if(operation.kind==='text-element'){const board=identifier(data.whiteboardId,'text board');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(board),'Text board is missing');validateDocument(data.content);for(const key of ['x','y'])number(data[key],'text '+key,-1e9,1e9);for(const key of ['width','height'])if(data[key]!=null)number(data[key],'text '+key,1,1e9);}
           if(operation.kind==='drawing-stroke'){
             identifier(data.whiteboardId,'stroke board');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(data.whiteboardId),'Stroke board is missing');
@@ -288,6 +288,12 @@ class WorkspaceDatabase {
           else if(operation.kind==='whiteboard-instance'){const boardId=identifier(data.whiteboardId,'whiteboard ID');check(!!this.statement('SELECT id FROM boards WHERE id=?').get(boardId),'Catalog whiteboard is missing');}
           else if(['card','remark'].includes(operation.kind))check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Catalog content is missing');
           else if(operation.kind==='instance'){const instance=this.statement('SELECT board_id FROM instances WHERE id=?').get(id);check(!!instance,'Catalog instance is missing');if(data.parentId){const parent=this.statement('SELECT value FROM meta WHERE key=?').get('section:'+identifier(data.parentId,'group parent ID'));check(!!parent&&JSON.parse(parent.value).whiteboardId===instance.board_id,'Instance group parent is missing or belongs to another board');}}
+          else if(operation.kind==='quick-note'){
+            text(data.date,'diary date',10);check(/^\d{4}-\d{2}-\d{2}$/.test(data.date)&&!Number.isNaN(Date.parse(data.date+'T00:00:00Z'))&&new Date(data.date+'T00:00:00Z').toISOString().slice(0,10)===data.date,'Invalid diary date');
+            check(!!this.statement('SELECT id FROM contents WHERE id=?').get(id),'Diary content is missing');
+            check(!this.statement("SELECT value FROM meta WHERE key LIKE 'quick-note:%'").all().some(row=>{const other=JSON.parse(row.value);return other.id!==id&&other.date===data.date&&!other.isTrashed&&!data.isTrashed;}),'Diary date already exists');
+          }
+          else if(operation.kind==='todo'){text(data.title||'','todo title',65536);check(typeof data.completed==='boolean','Invalid todo status');if(data.parentId)identifier(data.parentId,'todo parent');}
           else if(operation.kind==='tag')text(data.name,'tag name',255);
           else if(operation.kind==='tag-group'){text(data.name,'tag group name',255);check(Array.isArray(data.tags),'Invalid tag group');data.tags.forEach(id=>identifier(id,'group tag ID'));}
           else if(operation.kind==='tab-group'){check(Array.isArray(data.tabIds)&&Array.isArray(data.pinnedTabIds),'Invalid bookmark group');}
