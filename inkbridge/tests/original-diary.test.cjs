@@ -17,6 +17,7 @@ test('diary month/date/search and external edits survive SQLite reopen without r
   assert.equal((await service.call('searchQuickNotes',{keyword:'中文'}))[0].id,'today');
   const beforeReads=db.revision();await service.call('getDailyNoteById',{id:'today'});await service.call('getQuickNotesStats');assert.equal(db.revision(),beforeReads);
   await service.call('updateQuickNote',{id:'today',updates:{content:document('外部勾選')}});assert.deepEqual(replaced,['today']);
+  await service.call('upsertQuickNote',{id:'today',quickNote:{id:'today',content:document('待辦頁回寫日記')}});assert.equal(diaryRecords(db.load()).find(row=>row.id==='today').content.root.children[0].children[0].text,'待辦頁回寫日記');
   await service.call('upsertQuickNote',{date:'2026-11-16',quickNote:{id:'different-id',content:JSON.stringify(document('同日期接續'))}});assert.equal(diaryRecords(db.load()).filter(row=>row.date==='2026-11-16').length,1);
   coordinator.dispose();db.close();db=new WorkspaceDatabase(file);assert.equal(diaryRecords(db.load()).find(row=>row.id==='today').content.root.children[0].children[0].text,'同日期接續');
   await assert.rejects(service.call('getQuickNotesList',{date:'2026-02-30'}),/日期無效/);

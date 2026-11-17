@@ -45,7 +45,7 @@ export function createOriginalDiary({navigate,coordinator,load,contents,putConte
   if(name==='getQuickNotesStats')return diaryStats(graph,localDay(new Date(now())));
   if(name==='getDailyNoteById'||name==='getQuickNoteById'){const id=typeof payload==='string'?payload:payload?.id,row=rows.find(row=>row.id===id);return name==='getDailyNoteById'?{success:!!row,data:row||null}:{success:!!row,quickNote:row||null,...(!row?{error:'QuickNote not found'}:{})};}
   if(name==='deleteQuickNote'){const row=(graph.quickNotes||[]).find(row=>row.date===dateKey(payload?.date));if(row&&!row.isTrashed){coordinator.stage(catalogOperation('quick-note',{...row,isTrashed:true,lastEditedTime:now()}));await coordinator.flush();}return true;}
-  if(name==='upsertQuickNote')await upsert(graph,payload?.date,payload?.quickNote||{});
+  if(name==='upsertQuickNote')await upsert(graph,payload?.date??payload?.quickNote?.date??graph.quickNotes?.find(row=>row.id===payload?.id)?.date,payload?.quickNote||{});
   if(name==='updateQuickNote'){const row=(graph.quickNotes||[]).find(row=>row.id===payload?.id);if(!row)throw Error('日記不存在');await upsert(graph,row.date,{...row,...payload.updates},true);}
   if(name==='batchUpsertQuickNotes'){if(!Array.isArray(payload))throw Error('日記匯入格式無效');for(const row of payload)await upsert(graph,row.date,row,true);}
   await coordinator.flush();return name==='batchUpsertQuickNotes'?{success:true}:true;
