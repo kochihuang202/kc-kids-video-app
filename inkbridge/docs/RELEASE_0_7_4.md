@@ -21,3 +21,12 @@
 新增真實Electron `check-focus-mode.cjs` 先重現開關被停用及Canvas缺少聚焦參數，修正後通過：原生介面、實際Skia像素淡化、相連節點與線條的獨立控制、透明度0／100%、多選、取消選取、白板切換、重開保留、共享資料完整不變。
 
 同面板既有 `check-media-file-names.cjs` 修改前後均通過；使用者此次明確增加聚焦模式後，原來「僅兩個檔名開關啟用」改為「兩個檔名開關加聚焦開關啟用」，檔名各白板保存的所有期望維持。沒有重跑無關全集。
+
+## 交付驗證（2026-11-17）
+
+- 封裝版通過相同聚焦測試，含實際卡片與連線像素變化。最後隔離資料 `Temp/inkbridge-original-modules-focus-yHUMuE`；收據 `private-original-editor/focus-result.json`。
+- 發布序號25，build ID `e6b0956e73f3d0071346f307e1dc3a9923e7de0481460e1fc6b2d7bd595b5001`。
+- 完整ZIP `InkBridge-release-0.7.4-fb88157c-9016-4cd4-97c6-b1144c65d3db.zip`，232964126 bytes，2305檔簽章／雜湊驗證通過；SHA-256 `21ba5500a3428333e71ef81484492af68d8c9fc5eac0cf2cdc0a388100d00448`。
+- 0.7.3增量ZIP `InkBridge-update-4b9353fa-c359-458b-a014-ecb7708a1da6.zip`，155916 bytes、5檔，簽章及隔離PowerShell Stage通過，來源程式未改；SHA-256 `3ab5f7b543749299346f99c8ec2f542e87a7971afbf0e6e05531b32d7685fa67`。
+- 兩包已放進指定OneDrive交換根目錄並核對雜湊，舊0.7.3完整ZIP已清除，正式筆記、附件、快照與診斷保留。收據 `release/delivery-0.7.4.json`（本機忽略檔）。OneDrive雲端到達時間仍由OneDrive決定。
+- 使用：白板右下角齒輪→聚焦模式。0.7.3可按程式內更新；完整ZIP解壓到本機程式資料夾，執行裡面的 `Start-InkBridge.bat`。交換目錄只交付ZIP。
