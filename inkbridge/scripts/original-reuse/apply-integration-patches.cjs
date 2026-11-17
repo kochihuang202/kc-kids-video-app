@@ -111,6 +111,7 @@ require('./apply-text-shape-patches.cjs')({root,changes});
 require('./apply-clipboard-history-patches.cjs')({root,changes});
 require('./apply-editor-169-patches.cjs')({root,changes});
 require('./apply-content-block-patches.cjs')({root,changes});
+require('./apply-edit-layout-patches.cjs')({root,changes});
 require('./apply-video-record-patches.cjs')({root,changes});
 require('./apply-mindmap-xmind-patches.cjs')({root,changes});
 require('./apply-link-path-patches.cjs')({root,changes});

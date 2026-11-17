@@ -1,3 +1,10 @@
+## REG-172 — Checklist indentation must match between editing and canvas paint
+
+- Reproduced the same synthetic heading/checklist card before and during editing. Generic bullet CSS overrode the checklist padding, adding 20 world pixels of indentation and changing wrapping. FlexNote 1.1.70 excludes checklists from that selector.
+- Port the verified selector exclusion and editing-only NoteCard stroke (black in light theme, white in dark; native 2.5 screen pixels), retaining existing renderer lifecycle and selection colours.
+- Real Electron check-edit-layout fails on 24px padding before the fix; passes 4px padding, native/DOM text advances and insets, actual black frame pixels, Chinese Ctrl+S/restart and no content version from viewing. Related check-editor-169 and check-content-blocks pass. The former now uses F2 as required by REG-150: Enter creates a sibling; all original persistence assertions remain.
+- See inkbridge/docs/RELEASE_0_7_5.md. Formal notes and FlexNote profile are unchanged.
+
 ## REG-171 — Native focus settings must drive actual Canvas paint
 
 - User requested FlexNote focus mode: complete original section, opacity and independent connected-node/edge options. Previously the host disabled the section and omitted focus props at the Canvas boundary.

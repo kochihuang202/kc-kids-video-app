@@ -20,7 +20,8 @@ const doc=text=>({root:{type:'root',version:1,children:[{type:'paragraph',versio
     await page.reload();await ready();await page.waitForFunction(()=>!!window.__editor169Root);
     stage='real mindmap edit';
     const bounds=await page.evaluate(()=>{const s=window.__inkbridgeIntegrated.inspect(),n=s.nodes.find(n=>n.id==='child'),b=document.querySelector('#board').getBoundingClientRect();return {x:b.x+s.view.translateX+(n.position.x+n.width/2)*s.view.scale,y:b.y+s.view.translateY+(n.position.y+n.height/2)*s.view.scale};});
-    await page.mouse.click(bounds.x,bounds.y);await page.keyboard.press('Enter');const editor=page.locator('#board [contenteditable=true]').first();await expect(editor).toBeVisible();await editor.press('Control+a');
+    // REG-150: Enter creates a sibling; F2 edits the existing selected topic.
+    await page.mouse.click(bounds.x,bounds.y);await page.keyboard.press('F2');const editor=page.locator('#board [contenteditable=true]').first();await expect(editor).toBeVisible();await editor.press('Control+a');
     await page.keyboard.insertText('中文心智圖');await page.keyboard.insertText('連續編輯 ABC');
     await expect.poll(()=>page.evaluate(()=>{const n=window.__inkbridgeIntegrated.inspect().nodes.find(n=>n.id==='child');return window.__originalRequire(94700).Vj(n.data.content);})).toBe('中文心智圖連續編輯 ABC');
     await page.screenshot({path:path.join(data,'editing.png')});

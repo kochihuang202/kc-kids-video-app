@@ -5,6 +5,7 @@ const project=path.resolve(__dirname,'../..');
 const hash=async file=>{const h=crypto.createHash('sha256');for await(const bytes of fss.createReadStream(file))h.update(bytes);return h.digest('hex');};
 async function buildPortable(){
   require('./prepare-sharing.cjs').prepareSharing();
+  require('./apply-edit-layout-patches.cjs')({root:path.join(project,'private-original-editor')});
   execFileSync(process.execPath,[path.join(__dirname,'collect.cjs')],{cwd:project,windowsHide:true,stdio:'pipe'});
   const commit=execFileSync('git',['rev-parse','--short=12','HEAD'],{cwd:project,encoding:'utf8',windowsHide:true}).trim();
   const version=require('../../package.json').version;
