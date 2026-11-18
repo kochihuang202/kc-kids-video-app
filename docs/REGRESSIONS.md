@@ -1,3 +1,10 @@
+## REG-174 — HTML snapshots falsely reported incomplete by automatic sync
+
+- Report (2026-11-18): this computer marked v2149 as files missing although its SQLite and all 126 CAS assets existed and passed read-only full SHA-256 validation. HTML was added to the full validator, but the actual lightweight live-sync index still only accepted image/PDF extensions. The prior HTML transfer test exercised the older snapshot publisher instead of createSyncSnapshots.
+- Share the strict CAS asset-path validator between full validation, automatic index and read-only diagnostics, retaining directory/hash binding and traversal rejection. Pass manifest byte lengths into durable-outbox publication so legitimate empty CSS/JS resources are copied and verified. No snapshot data/schema or branch policy changes; missing or corrupt files still fail closed.
+- Added html-sync-index.test.cjs: real HTML collector and durable outbox, empty CSS both absent/present, latest candidate, unsynced Chinese retained, missing-file rejection, direct isolated restore and every supported extension. Extended maintained check-seamless-sync.cjs with INKBRIDGE_HTML_SYNC=1: actual Electron startup/live auto-load with HTML/empty CSS, native window and multiwindow retention, composition barrier, stale IPC rejection and genuine conflict preservation.
+- Related HTML/sync/snapshot/retention/order suite: 15 passed. ZIP/full/delta/update rollback suite: 5 passed. Formal profiles/exchange inspected read-only; no restore or republish of user notes. Physical second computer not operated; its separate program-update error still needs its exact message.
+
 ## REG-173 — HTML drops must retain the complete page and resource closure
 
 - Older drop97101 converted HTML into a note, discarding full-page layout, CSS and scripts. Port complete FlexNote1.1.70 drop28416/61186, helper78784, WebsiteCard constructor and backend71891 collector; retain existing native10764 canvas/iframe renderer and shared Redux singleton.

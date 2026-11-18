@@ -8,8 +8,13 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
  const dbA=createDatabaseClient({filename:path.join(a,'Workspace/inkbridge.sqlite3')}),snapA=createSyncSnapshots({localDirectory:a,database:dbA,getExchange:()=>exchange,resolveAttachment:()=>{throw Error('No fixture attachment');}});
  const v1=await snapA.create();await dbA.close();await fs.copyFile(path.join(exchange,'snapshots',v1.workspaceId,v1.snapshotId,'database.sqlite3'),path.join(b,'Workspace/inkbridge.sqlite3'));
  const copied=JSON.parse(await fs.readFile(path.join(a,'Profile/snapshot-state.json')));copied.deviceId=crypto.randomUUID();await fs.writeFile(path.join(b,'Profile/snapshot-state.json'),JSON.stringify(copied));
- const dbB=createDatabaseClient({filename:path.join(b,'Workspace/inkbridge.sqlite3')}),snapB=createSyncSnapshots({localDirectory:b,database:dbB,getExchange:()=>exchange,resolveAttachment:()=>{throw Error('No attachment');},deviceName:'公司電腦'});
+ const store=require('../../src/main/attachment-store.cjs').createAttachmentStore(path.join(b,'files'),()=>({}));
+ const dbB=createDatabaseClient({filename:path.join(b,'Workspace/inkbridge.sqlite3')}),snapB=createSyncSnapshots({localDirectory:b,database:dbB,getExchange:()=>exchange,resolveAttachment:store.resolvePath,deviceName:'公司電腦'});
  const remote=async body=>{const graph=await dbB.load();await dbB.commit({requestId:crypto.randomUUID(),baseRevision:graph.revision,operations:[{type:'putContent',data:{id:'content-shared',title:'接力',body,kind:'text',tone:'sage'}}]});return snapB.create();};
+ if(process.env.INKBRIDGE_HTML_SYNC==='1'){
+  const entry=await require('../../tests/helpers/html-page-fixture.cjs')(path.join(b,'source')),html=require('../../src/main/html-pages.cjs').createHtmlPages({attachments:store,nativeFactory:path.resolve(__dirname,'../../private-original-editor/html-page-runtime.cjs')}),prepared=await html.prepare(entry),graph=await dbB.load();
+  await dbB.commit({requestId:crypto.randomUUID(),baseRevision:graph.revision,operations:[...prepared.fileRecords.map(data=>({type:'putCatalog',kind:'file',data})),{type:'putContent',data:{id:'z-html',title:'HTML 同步',kind:'html',tone:'sage',body:'',document:null}},{type:'putCatalog',kind:'card',data:{id:'z-html',fileId:prepared.file.id,url:prepared.file.pageUrl,displayType:'raw'}},{type:'putInstance',data:{id:'z-html-instance',contentId:'z-html',boardId:'board-main',x:700,y:20,width:600,height:400,z:1}}]});
+ }
  const v2=await remote('V2 公司內容');
  createStorageSettings({filename:path.join(a,'Profile/storage-settings.json'),localDirectory:a,applicationDirectory:path.resolve(__dirname,'../..')}).save(exchange);
  const env={...process.env,INKBRIDGE_ORIGINAL_VIEW:'board',INKBRIDGE_ORIGINAL_PROBE_DATA:a};delete env.ELECTRON_RUN_AS_NODE;delete env.INKBRIDGE_PORTABLE;
@@ -17,6 +22,7 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
  try{
   await app.evaluate(({dialog})=>dialog.showErrorBox=(title,message)=>console.error(title,message));page=await app.firstWindow();page.setDefaultTimeout(15000);await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);
   assert.equal((await page.evaluate(()=>window.inkbridge.load())).contents[0].body,'V2 公司內容');
+  if(process.env.INKBRIDGE_HTML_SYNC==='1'){const graph=await page.evaluate(()=>window.inkbridge.load());assert(graph.contents.some(c=>c.id==='z-html'));const record=graph.cardMetadata.find(c=>c.id==='z-html'),response=await app.evaluate(async({net},url)=>{const r=await net.fetch(url);return {status:r.status,text:await r.text()};},record.url);assert.equal(response.status,200);assert(response.text.includes('HTML 完整呈現'));}
   await page.evaluate(request=>window.inkbridge.sync(request),{method:'select',workspaceId:v1.workspaceId,snapshotId:v2.snapshotId}).catch(e=>{if(!/context was destroyed|navigation/i.test(e.message))throw e;});
   await page.waitForFunction(()=>window.__inkbridgeIntegrated?.ready);const joined=JSON.parse(await fs.readFile(path.join(a,'Profile/snapshot-state.json')));assert.equal(joined.heads[v1.workspaceId].snapshotId,v2.snapshotId,'joining latest must adopt exactly the same version ID');assert.equal((await fs.readdir(path.join(exchange,'snapshots',v1.workspaceId),{withFileTypes:true})).filter(e=>e.isDirectory()).length,2,'reading latest creates no checkpoint');
   const handle=await app.browserWindow(page).then(win=>win.evaluate(w=>w.getNativeWindowHandle().toString('hex'))),before=(await page.evaluate(()=>window.inkbridge.load())).revision;

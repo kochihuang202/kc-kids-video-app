@@ -1,6 +1,6 @@
 // Local durable outbox over the already tested snapshot format/validator.
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto'),os=require('node:os');
-const {createWorkspaceSnapshots,inspectDatabase,hashFile}=require('./workspace-snapshots.cjs');
+const {createWorkspaceSnapshots,inspectDatabase,hashFile,isSnapshotAssetPath}=require('./workspace-snapshots.cjs');
 const {json,exists,atomic,writeJSON,UUID}=require('./sync-files.cjs');
 const {startupSnapshotStatus}=require('./startup-snapshot-status.cjs');
 const {copyVerified}=require('./stream-files.cjs');
@@ -22,11 +22,11 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
     const root=await fs.realpath(getExchange());
     await lineage.remember(m);
     async function target(relative){const file=path.join(root,relative);await fs.mkdir(path.dirname(file),{recursive:true});const real=await fs.realpath(path.dirname(file)),r=path.relative(root,real);if(r.startsWith('..')||path.isAbsolute(r))throw Error('交換區路徑越界');return file;}
-    async function copy(source,relative,sha){const file=await target(relative);await copyVerified(source,file,{sha256:sha});}
+    async function copy(source,relative,sha,bytes){const file=await target(relative);await copyVerified(source,file,{sha256:sha,bytes});}
     await fs.mkdir(path.join(root,'assets'),{recursive:true});
-    for(const asset of m.assets)await copy(resolveAttachment(asset.fileId),asset.objectPath,asset.sha256);
+    for(const asset of m.assets)await copy(resolveAttachment(asset.fileId),asset.objectPath,asset.sha256,asset.bytes);
     const relative=`snapshots/${m.workspaceId}/${m.snapshotId}`;
-    await copy(path.join(dir,'database.sqlite3'),relative+'/database.sqlite3',m.database.sha256);
+    await copy(path.join(dir,'database.sqlite3'),relative+'/database.sqlite3',m.database.sha256,m.database.bytes);
     const manifestFile=await target(relative+'/manifest.json');
     if(!await exists(manifestFile))await atomic(manifestFile,JSON.stringify(m,null,2));
     await validator.validate(root,path.join(root,relative));
@@ -82,7 +82,7 @@ function createSyncSnapshots({localDirectory,database,getExchange,resolveAttachm
     const root=getExchange();if(!root)return false;
     const size=async(file,expected)=>{try{const stat=await fs.stat(file);return stat.isFile()&&(expected===undefined||stat.size===expected);}catch{return false;}};
     if(!await size(path.join(root,'snapshots',m.workspaceId,m.snapshotId,'database.sqlite3'),m.database?.bytes))return false;
-    for(const a of m.assets||[]){if(!/^assets\/[a-f0-9]{2}\/[a-f0-9]{64}\.(png|jpg|gif|webp|bmp|pdf)$/.test(a.objectPath)||!await size(path.join(root,a.objectPath),a.bytes))return false;}
+    for(const a of m.assets||[]){if(!isSnapshotAssetPath(a.objectPath)||!await size(path.join(root,a.objectPath),a.bytes))return false;}
     return true;
   }
   async function decorate(input,current,s){
