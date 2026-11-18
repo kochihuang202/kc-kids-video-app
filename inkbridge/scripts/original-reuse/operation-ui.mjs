@@ -1,3 +1,5 @@
+import {openMergeReview} from './merge-review.mjs';
+import {publishThisComputer} from './authoritative-local.mjs';
 export const localTime=value=>value&&Number.isFinite(Date.parse(value))?new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value)):'';
 // Operation notices (user decision 2026-11-14): progress and things waiting for a decision
 // live on the bottom-left lamp (sidebar-footer.mjs); completions and failures use the
@@ -21,6 +23,12 @@ export function installOperationUI(){
       publish();toast({...value,message:'點左下角燈號更新'},'primary');return;
     }
     if(value.state==='conflict'){
+      if(value.details?.kind==='authority-conflict'){
+        notices.set(value.key,{key:value.key,kind:'attention',title:'兩台都指定了自己為準',detail:value.details.error,actions:[{label:'以這台為準',run:()=>publishThisComputer().catch(error=>toast({title:'尚未指定完成',message:error.message},'danger'))}]});publish();return;
+      }
+      if(value.details?.kind==='merge-conflicts'){
+        notices.set(value.key,{key:value.key,kind:'attention',title:value.title,detail:'其他不重疊的修改會一起保留',actions:[{label:'處理衝突',run:()=>openMergeReview().catch(error=>toast({title:'尚未完成合併',message:error.message},'danger'))}]});publish();return;
+      }
       notices.set(value.key,{key:value.key,kind:'attention',title:value.title,detail,actions:[{label:'查看版本',run:showVersions},{label:'暫時使用本機',run:()=>window.inkbridge.sync({method:'offline'}).catch(error=>show({key:'sync',state:'error',title:'尚未完成',message:error.message}))}]});
       publish();toast({...value,message:'點左下角燈號處理'},'warning');return;
     }
@@ -41,7 +49,11 @@ export async function enterWorkspace(mode='enter'){
   async function check(request={method:mode}){if(busy)return;busy=true;panel.replaceChildren();const title=document.createElement('h2');title.textContent='正在確認工作區版本…';panel.append(title);
     try{const result=await window.inkbridge.sync(request);if(result.kind==='ready'){screen.remove();window.removeEventListener('inkbridge:startup-retry',retryEvent);resolveReady();return;}
       title.textContent=result.kind==='pairing'?'第一次設定：共用哪個工作區？':result.kind==='branches'||result.kind==='conflict'?'兩台都有修改，請選擇版本':result.kind==='unknown'?'舊同步基準的關係尚未確認':'正在等待同步資料';
-      const text=document.createElement('p');text.textContent=result.kind==='pairing'?'只需設定一次。原有資料會先安全保存，不會合併或刪除。':result.error||(result.kind==='unknown'?'保留雙方內容。點選版本會先備份本機，再直接載入選定內容，建立新的接續版本。':'新版檔案尚未到齊，或需要確認分支。');panel.append(text);
+      if(result.kind==='merge-conflicts')title.textContent='有幾項修改需要你確認';
+      if(result.kind==='authority-conflict')title.textContent='兩台都指定了自己為準';
+      const text=document.createElement('p');text.textContent=result.kind==='merge-conflicts'?`有 ${result.conflicts.length} 項衝突。兩台的原始內容都已安全保留。`:result.kind==='pairing'?'只需設定一次。原有資料會先安全保存，不會合併或刪除。':result.error||(result.kind==='unknown'?'保留雙方內容。點選版本會先備份本機，再直接載入選定內容，建立新的接續版本。':'新版檔案尚未到齊，或需要確認分支。');panel.append(text);
+      if(result.kind==='merge-conflicts'){const button=document.createElement('button');button.textContent='逐項處理衝突';button.onclick=()=>openMergeReview().catch(error=>{text.textContent=error.message;});panel.append(button);}
+      if(['merge-conflicts','branches','conflict','unknown','authority-conflict','incomplete','unavailable'].includes(result.kind)){const button=document.createElement('button');button.textContent='以這台為準，讓其他電腦對齊';button.style.cssText='display:block;margin:12px 0;padding:10px';button.onclick=()=>publishThisComputer().catch(error=>{text.textContent=error.message;});panel.append(button);}
       if(result.workspaces)for(const w of result.workspaces)for(const v of w.versions){const button=document.createElement('button');button.style.cssText='display:block;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:8px;text-align:left';button.textContent=`${v.name||'筆記工作區'} · ${localTime(v.createdAt)} · ${v.sourceComputerName}${v.boards!==undefined?` · ${v.boards} 白板 / ${v.cards} 卡片`:''}${w.local?'（本機）':''}`;button.onclick=()=>check({method:'select',pair:true,workspaceId:w.workspaceId,snapshotId:v.snapshotId});panel.append(button);}
       if(result.versions){for(const v of result.versions){const button=document.createElement('button');button.style.cssText='display:block;margin:8px;padding:8px';button.textContent=`${localTime(v.createdAt)} · ${v.sourceComputerName} · 保留本機備份並載入此版本`;button.onclick=()=>check({method:'select',workspaceId:v.workspaceId,snapshotId:v.snapshotId});panel.append(button);}const keep=document.createElement('button');keep.textContent='明確選用本機分支';keep.onclick=()=>check({method:'keepLocal'});panel.append(keep);}
       const retry=document.createElement('button');retry.textContent='重新檢查';retry.onclick=()=>check({method:mode});panel.append(retry);
@@ -49,5 +61,5 @@ export async function enterWorkspace(mode='enter'){
     }catch(error){title.textContent='同步未完成';const text=document.createElement('p');text.textContent=error.message;panel.append(text);const offline=document.createElement('button');offline.textContent='使用本機版';offline.onclick=()=>check({method:'offline'});panel.append(offline);}
     finally{busy=false;}
   }
-  const retryEvent=()=>check();window.addEventListener('inkbridge:startup-retry',retryEvent);await check();return done;
+  const retryEvent=()=>check();window.addEventListener('inkbridge:startup-retry',retryEvent);window.addEventListener('inkbridge:merge-completed',retryEvent);done.then(()=>window.removeEventListener('inkbridge:merge-completed',retryEvent));await check();return done;
 }

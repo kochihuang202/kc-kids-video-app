@@ -59,7 +59,7 @@ const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
   // Latest local editor data must stop automatic replacement.
   await child.locator('[contenteditable=true]').click();await child.keyboard.press('End');await child.keyboard.insertText(' 本機變更');await child.keyboard.press('Control+s');
   await expect.poll(()=>page.evaluate(()=>window.inkbridge.load()).then(g=>g.contents[0].body)).toContain('本機變更');await remote('V5 遠端分支');
-  await expect(page.locator('#onedrive-save-indicator')).toHaveAttribute('aria-label',/兩台都有新版本/,{timeout:30000});assert.ok((await page.evaluate(()=>window.inkbridge.load())).contents[0].body.includes('本機變更'));
+  await expect(page.locator('#onedrive-save-indicator')).toHaveAttribute('aria-label',/項修改需要確認/,{timeout:30000});assert.ok((await page.evaluate(()=>window.inkbridge.load())).contents[0].body.includes('本機變更'));
   await page.screenshot({path:path.join(a,'seamless-sync.png')});
   console.log(JSON.stringify({joiningLatestKeepsVersion:true,otherComputerContinuesWithoutFalseConflict:true,automaticStartup:true,automaticLiveUpdate:true,sameNativeWindow:true,multiwindowPreserved:true,viewIsLocal:true,viewPreserved:true,syntheticCompositionBarrier:true,lateEpochRejected:true,conflictDoesNotOverwrite:true,a,b,exchange,v2:v2.snapshotId,v3:v3.snapshotId}));
  }catch(error){console.error(error);console.error(await Promise.all(app.windows().map(p=>p.evaluate(()=>({url:location.href,standalone:window.__inkbridgeStandalone,main:window.__inkbridgeIntegrated?.errors})).catch(()=>({closed:true})))));app.process().kill();throw error;}finally{await dbB.close();await app.close().catch(()=>{});}

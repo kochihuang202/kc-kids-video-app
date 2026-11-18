@@ -1,0 +1,34 @@
+const test = require('node:test'), assert = require('node:assert/strict');
+const { createSyncWriteBarrier, isWorkspaceWrite } = require('../src/main/sync-write-barrier.cjs');
+test('freeze waits for in-flight commits and a late write aborts replacement until editors resume', async () => {
+    const b = createSyncWriteBarrier();
+    let release, committed = false;
+    const first = b.run(async () => { await new Promise(r => release = r); committed = true; });
+    await Promise.resolve();
+    const freeze = b.freeze();
+    assert.equal(committed, false);
+    release();
+    await first;
+    await freeze;
+    assert(committed);
+    b.assertClean();
+    await assert.rejects(b.run(() => { throw Error('must not execute'); }), { code: 'SYNC_WRITE_PAUSED' });
+    assert.throws(() => b.assertClean(), { code: 'SYNC_LATE_WRITE' });
+    b.resume();
+    assert.equal(await b.run(() => 42), 42);
+});
+test('failed in-flight saves prevent replacement; read-only note loads remain allowed', async () => {
+    const b = createSyncWriteBarrier();
+    let release;
+    const first = b.run(async () => { await new Promise(r => release = r); return { ok: false }; });
+    await Promise.resolve();
+    const freeze = b.freeze();
+    release();
+    await first;
+    await assert.rejects(freeze, { code: 'SYNC_LATE_WRITE' });
+    assert(isWorkspaceWrite('inkbridge:commit'));
+    assert(isWorkspaceWrite('inkbridge:note-call', { method: 'workspaceCommit' }));
+    assert(isWorkspaceWrite('inkbridge:note-call', { method: 'service', payload: { name: 'updateNoteCard' } }));
+    assert.equal(isWorkspaceWrite('inkbridge:note-call', { method: 'loadNote' }), false);
+    assert.equal(isWorkspaceWrite('inkbridge:note-call', { method: 'service', payload: { name: 'getWhiteboard' } }), false);
+});

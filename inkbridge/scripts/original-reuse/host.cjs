@@ -33,7 +33,8 @@ app.on('web-contents-created',(_event,contents)=>{contents.on('did-start-navigat
 function saveStateChanged(){if(closing)return;for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed()&&!w.webContents.isDestroyed())w.webContents.send('inkbridge:save-state-changed');}
 function notify(value){if(value.key==='save'&&value.state!=='error')return;if(value.key!=='startup-retry')operations.set(value.key,value);for(const w of BrowserWindow.getAllWindows())if(!w.isDestroyed())w.webContents.send('inkbridge:operation',value);}
 const handle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(channel,listener)=>handle(channel,(event,payload,epoch)=>{if(liveSync&&channel.startsWith('inkbridge:'))liveSync.assertEpoch(epoch);return listener(event,payload,epoch);});
+const {createSyncWriteBarrier,isWorkspaceWrite}=require('../../src/main/sync-write-barrier.cjs'),writeBarrier=createSyncWriteBarrier();
+ipcMain.handle=(channel,listener)=>handle(channel,(event,payload,epoch)=>{if(liveSync&&channel.startsWith('inkbridge:'))liveSync.assertEpoch(epoch);return isWorkspaceWrite(channel,payload)?writeBarrier.run(()=>listener(event,payload,epoch)):listener(event,payload,epoch);});
 app.whenReady().then(async()=>{
   if(!acquired)return;
   const restore=require('../../src/main/workspace-restore.cjs');
@@ -153,15 +154,16 @@ app.whenReady().then(async()=>{
   };
   ipcMain.handle('inkbridge:create-snapshot',(event,_request,epoch)=>{if(!readable(event)||closing||applyingSettings)throw Error('目前無法建立快照');liveSync.assertEpoch(epoch);return queue.run('save',()=>{liveSync.assertEpoch(epoch);return createSnapshot('manual');}).catch(error=>{notify({key:'save',state:'error',title:'保存未完成',message:error.message});throw error;});});
   let applyingSettings=false;
-  liveSync=require('../../src/main/live-sync.cjs').installLiveSync({app,powerMonitor,localDirectory:data,database,snapshots,getExchange:()=>storageSettings.read().exchangeDirectory,queue,notify,save:createSnapshot,canRun:()=>rendererReady&&!closing&&!applyingSettings&&standalone.allReady(),
+  liveSync=require('../../src/main/live-sync.cjs').installLiveSync({app,powerMonitor,localDirectory:data,database,snapshots,getExchange:()=>storageSettings.read().exchangeDirectory,queue,notify,save:createSnapshot,writeBarrier,canRun:()=>rendererReady&&!closing&&!applyingSettings&&standalone.allReady(),
     windows:{list:()=>standalone.list(),pause:()=>standalone.prepareAll(),resume:()=>standalone.resumeAll()},
     startupStatus:async(rows,current)=>{const h=await snapshots.status();return require('../../src/main/startup-snapshot-status.cjs').startupSnapshotStatus({rows,workspaceId:current.workspaceId,localRevision:current.revision,head:h.baseSnapshotId?{snapshotId:h.baseSnapshotId,revision:h.baseRevision}:null});},
     swap:async(m,initial,session)=>{
       const staged=await restore.stageRestore({local:data,exchange:storageSettings.read().exchangeDirectory,workspaceId:m.workspaceId,snapshotId:m.snapshotId,snapshots,sharedAssets:true});
+      writeBarrier.assertClean();let advanced=false;
       await database.close();
-      try{await restore.switchRestore({local:data,staged,snapshots});databaseClient=createDatabaseClient({filename});await database.load();await session.afterSwitch?.();
-        if(!initial){session.advance();session.resetReady();rendererReady=false;await session.wait();}
-      }catch(error){await database.close().catch(()=>{});await restore.rollbackRestore(data,staged);databaseClient=createDatabaseClient({filename});await database.load();if(!initial){session.advance();session.resetReady();await session.wait();}throw error;}
+      try{writeBarrier.assertClean();await restore.switchRestore({local:data,staged,snapshots});databaseClient=createDatabaseClient({filename});await database.load();await session.afterSwitch?.();writeBarrier.assertClean();
+        if(!initial){session.advance();advanced=true;writeBarrier.resume();session.resetReady();rendererReady=false;await session.wait();}
+      }catch(error){await database.close().catch(()=>{});await restore.rollbackRestore(data,staged);databaseClient=createDatabaseClient({filename});await database.load();if(!initial&&advanced){session.advance();session.resetReady();await session.wait();}throw error;}
     }});
   ipcMain.on('inkbridge:epoch',event=>event.returnValue=liveSync.epoch);
   ipcMain.handle('inkbridge:sync',(event,request,epoch)=>{if(!readable(event))throw Error('Unexpected sender');liveSync.assertEpoch(epoch);return liveSync.call(request);});

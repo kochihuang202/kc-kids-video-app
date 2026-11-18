@@ -19,9 +19,11 @@ async function recoverRestore(local){
         await fs.rename(previous,current);
       }
     }
-    const old=path.join(staging,'previous','snapshot-state.json'),settings=path.join(local,'Profile','snapshot-state.json');
-    if(await exists(old))await writeAtomic(settings,await fs.readFile(old));
-    else if(await exists(settings))await fs.rename(settings,path.join(staging,'interrupted-state-'+crypto.randomUUID()+'.json'));
+    for(const name of ['snapshot-state.json','merge-bases.json']){
+      const old=path.join(staging,'previous',name),settings=path.join(local,'Profile',name);
+      if(await exists(old))await writeAtomic(settings,await fs.readFile(old));
+      else if(await exists(settings))await fs.rename(settings,path.join(staging,'interrupted-'+name+'-'+crypto.randomUUID()+'.json'));
+    }
   }
   await fs.rename(journal,path.join(staging,'restore-journal-'+crypto.randomUUID()+'.json'));
 }
@@ -34,7 +36,7 @@ async function stageRestore({local,exchange,workspaceId,snapshotId,snapshots,sha
   const databaseFile=path.join(staging,'Workspace','inkbridge.sqlite3');await copyDurable(path.join(source,'database.sqlite3'),databaseFile);
   if(await hashFile(databaseFile)!==manifest.database.sha256)throw Error('還原資料庫複製驗證失敗');inspectDatabase(databaseFile);
   for(const asset of manifest.assets){const target=path.join(sharedAssets?local:staging,asset.logicalPath);await copyVerified(path.join(exchange,asset.objectPath),target,{sha256:asset.sha256,bytes:asset.bytes});if(await hashFile(target)!==asset.sha256)throw Error('還原附件複製驗證失敗');}
-  const state=path.join(local,'Profile','snapshot-state.json');if(await exists(state))await copyDurable(state,path.join(staging,'previous','snapshot-state.json'));
+  for(const name of ['snapshot-state.json','merge-bases.json']){const state=path.join(local,'Profile',name);if(await exists(state))await copyDurable(state,path.join(staging,'previous',name));}
   return {id,manifest,sharedAssets};
 }
 async function switchRestore({local,staged,snapshots,fault=()=>{}}){

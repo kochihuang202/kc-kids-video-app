@@ -79,7 +79,14 @@ function createSnapshotRetention({ localDirectory, getExchange, index, head, rem
     // unresolved edit that must keep its full payload forever.
     for(let pass=0;pass<rows.length;pass++){let added=false;for(const row of rows)if(row.equivalentTo&&known.set.has(row.equivalentTo)&&!known.set.has(row.snapshotId)){known.set.add(row.snapshotId);added=true;}if(!added)break;}
     const chain=rows.filter(r=>r.integrity==='complete'&&!r.metadataOnly&&known.set.has(r.snapshotId)).sort((a,b)=>Date.parse(b.manifest.createdAt)-Date.parse(a.manifest.createdAt));
-    const plan=planRetention({chain,keepRecent,now:now()}),remove=plan.remove.filter(id=>id!==current.snapshotId);
+    const protectedBases=new Set();
+    try{for(const name of await fs.readdir(path.join(root,'sync-devices',workspaceId)).catch(e=>{if(e.code==='ENOENT')return [];throw e;})){
+      if(!name.endsWith('.json')||!UUID.test(name.slice(0,-5)))continue;
+      const device=await json(path.join(root,'sync-devices',workspaceId,name),null);
+      if(!device||device.workspaceId!==workspaceId||device.deviceId!==name.slice(0,-5)||!UUID.test(device.baseSnapshotId||''))return {skipped:'device-base-unavailable'};
+      protectedBases.add(device.baseSnapshotId);
+    }}catch{return {skipped:'device-base-unavailable'};}
+    const plan=planRetention({chain,keepRecent,now:now()}),remove=plan.remove.filter(id=>id!==current.snapshotId&&!protectedBases.has(id));
     if(!remember||!markPruned)return {skipped:'lineage-unavailable'};
     // Persist every available parent edge before any deletion. Independent
     // immutable records cannot be lost to another computer's retention write.

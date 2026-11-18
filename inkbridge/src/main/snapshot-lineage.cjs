@@ -4,9 +4,11 @@ const fs=require('node:fs/promises'),path=require('node:path');
 const {UUID,json,exists}=require('./sync-files.cjs');
 function recordOf(m){
  if(!m||!UUID.test(m.workspaceId||'')||!UUID.test(m.snapshotId||'')||!UUID.test(m.sourceComputerId||'')||!Number.isFinite(Date.parse(m.createdAt)))throw Error('版本關係紀錄無效');
+ if(m.authorityId!=null&&!UUID.test(m.authorityId)||m.isAuthoritative&&m.authorityId!==m.snapshotId)throw Error('指定版本身分無效');
+ if(m.isAuthoritative!==undefined&&typeof m.isAuthoritative!=='boolean'||m.mergeDigest!==undefined&&!/^[a-f0-9]{64}$/.test(m.mergeDigest))throw Error('版本指令或合併內容識別無效');
  const parents=[...new Set(m.parentSnapshotIds||[m.parentSnapshotId].filter(Boolean))];
  if(parents.some(id=>!UUID.test(id)||id===m.snapshotId)||m.parentSnapshotId&&parents[0]!==m.parentSnapshotId)throw Error('版本關係父節點無效');
- return {format:'inkbridge-lineage',version:1,workspaceId:m.workspaceId,snapshotId:m.snapshotId,parentSnapshotId:parents[0]||null,parentSnapshotIds:parents,sourceComputerId:m.sourceComputerId,sourceComputerName:m.sourceComputerName||'',createdAt:m.createdAt,revision:m.revision,database:m.database?{sha256:m.database.sha256,bytes:m.database.bytes,path:'database.sqlite3'}:undefined,summary:m.summary,restoredFromSnapshotId:m.restoredFromSnapshotId||undefined};
+ return {format:'inkbridge-lineage',version:1,workspaceId:m.workspaceId,snapshotId:m.snapshotId,parentSnapshotId:parents[0]||null,parentSnapshotIds:parents,sourceComputerId:m.sourceComputerId,sourceComputerName:m.sourceComputerName||'',createdAt:m.createdAt,revision:m.revision,database:m.database?{sha256:m.database.sha256,bytes:m.database.bytes,path:'database.sqlite3'}:undefined,summary:m.summary,...(m.authorityId?{authorityId:m.authorityId,...(m.isAuthoritative?{isAuthoritative:true}:{})}:{}),...(m.mergeDigest?{mergeDigest:m.mergeDigest}:{}),restoredFromSnapshotId:m.restoredFromSnapshotId||undefined};
 }
 async function immutable(file,value){
  await fs.mkdir(path.dirname(file),{recursive:true});

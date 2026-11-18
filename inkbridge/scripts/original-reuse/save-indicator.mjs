@@ -9,6 +9,7 @@ export function installSaveIndicator(){
   function edited(){inputPending=true;paint(false,'尚未保存');report(true);}
   for(const name of ['input','compositionstart','paste','drop'])document.addEventListener(name,event=>{if(event.target.closest?.('#board,[contenteditable=true]')&&!event.target.closest?.('#sync-entry'))edited();},true);
   window.inkbridge.onSaveStateChanged(refresh);window.inkbridge.onSnapshotSaved(refresh);
+  window.addEventListener('inkbridge:snapshot-list-changed',refresh);
   window.addEventListener('focus',refresh);if(lamp)setInterval(refresh,30000);
   return {refresh,persistence(value){if(value.saving&&!wasSaving)commitSerial=serial;if(value.dirty||value.saving||value.error){if(!reported)report(true);}else if(!inputPending||value.revision>lastRevision&&commitSerial===serial){inputPending=false;if(reported)report(false);}lastRevision=value.revision;wasSaving=value.saving;refresh();}};
 }
