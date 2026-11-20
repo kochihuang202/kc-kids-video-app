@@ -1,0 +1,358 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "ep01_01_birth.jpg",
+  "style": "Chinese watercolor storybook, 16:9, soft paper texture, child-friendly drama, no lettering.",
+  "continuity": "悟空在第31～35集仍留在花果山。第36集前三節只畫白龍馬與八戒。第35集至第38集解法前，唐僧化成老虎，依事件時間決定形態。黃袍怪以白袍人形進王城。白龍馬在銀安殿暫化宮娥。",
+  "scenes": [
+    {
+      "episode": 31,
+      "section": 1,
+      "title": "一、黑松林中路淒涼，八戒化齋去未回"
+    },
+    {
+      "episode": 31,
+      "section": 2,
+      "title": "二、八戒草叢鼾聲起，唐僧心焦步入林"
+    },
+    {
+      "episode": 31,
+      "section": 3,
+      "title": "三、金頂黃袍深穴現，誤入波月妖怪巢"
+    },
+    {
+      "episode": 31,
+      "section": 4,
+      "title": "四、黃袍老妖擒唐僧，吊在樑上欲烹煮"
+    },
+    {
+      "episode": 31,
+      "section": 5,
+      "title": "五、八戒沙僧迷途轉，尋覓無蹤急得慌"
+    },
+    {
+      "episode": 31,
+      "section": 6,
+      "title": "六、洞中巧遇百花羞，王女暗生搭救心"
+    },
+    {
+      "episode": 31,
+      "section": 7,
+      "title": "七、深更半夜傳書信，相求送信寶象國"
+    },
+    {
+      "episode": 32,
+      "section": 1,
+      "title": "一、百花羞巧言相勸，黃袍老妖放唐僧"
+    },
+    {
+      "episode": 32,
+      "section": 2,
+      "title": "二、唐僧脫困離妖窟，攜帶血書赴王宮"
+    },
+    {
+      "episode": 32,
+      "section": 3,
+      "title": "三、黃袍洞前尋不見，夫妻恩情成泡影"
+    },
+    {
+      "episode": 32,
+      "section": 4,
+      "title": "四、八戒沙僧喜相逢，迎得師父出險境"
+    },
+    {
+      "episode": 32,
+      "section": 5,
+      "title": "五、師徒連夜奔王道，快馬加鞭赴寶象"
+    },
+    {
+      "episode": 32,
+      "section": 6,
+      "title": "六、遙望王城宮殿偉，形似長安氣象雄"
+    },
+    {
+      "episode": 32,
+      "section": 7,
+      "title": "七、驛館安歇整衣冠，唐僧懷揣求救書"
+    },
+    {
+      "episode": 33,
+      "section": 1,
+      "title": "一、唐僧面聖遞通關，寶象國王喜相迎"
+    },
+    {
+      "episode": 33,
+      "section": 2,
+      "title": "二、呈上公主泣血書，國王讀信淚滿襟"
+    },
+    {
+      "episode": 33,
+      "section": 3,
+      "title": "三、十三年載骨肉分，滿朝文武無良策"
+    },
+    {
+      "episode": 33,
+      "section": 4,
+      "title": "四、八戒逞能誇海口，願往降妖救百花"
+    },
+    {
+      "episode": 33,
+      "section": 5,
+      "title": "五、沙僧相隨展神勇，騰雲駕霧赴松林"
+    },
+    {
+      "episode": 33,
+      "section": 6,
+      "title": "六、洞前叫陣戰黃袍，釘耙寶杖齊揮舞"
+    },
+    {
+      "episode": 33,
+      "section": 7,
+      "title": "七、妖魔神勇難抵擋，二僧敗退落風塵"
+    },
+    {
+      "episode": 34,
+      "section": 1,
+      "title": "一、黃袍怪怒追出洞，寶刀霍霍斬狂風"
+    },
+    {
+      "episode": 34,
+      "section": 2,
+      "title": "二、八戒見勢鑽草叢，丟下沙僧遭妖擒"
+    },
+    {
+      "episode": 34,
+      "section": 3,
+      "title": "三、黃袍妖拷問沙僧，得知百花私通書"
+    },
+    {
+      "episode": 34,
+      "section": 4,
+      "title": "四、老妖持刀逼百花，沙僧仗義保公主"
+    },
+    {
+      "episode": 34,
+      "section": 5,
+      "title": "五、黃袍老怪化人形，白袍美髯入王京"
+    },
+    {
+      "episode": 34,
+      "section": 6,
+      "title": "六、金鑾殿上認國丈，自稱搭救十三年"
+    },
+    {
+      "episode": 34,
+      "section": 7,
+      "title": "七、巧舌如簧惑國王，滿朝文武信如真"
+    },
+    {
+      "episode": 35,
+      "section": 1,
+      "title": "一、黃袍老怪施妖法，一口淨水噴唐僧"
+    },
+    {
+      "episode": 35,
+      "section": 2,
+      "title": "二、大唐高僧成猛虎，咆哮金籠受冤屈"
+    },
+    {
+      "episode": 35,
+      "section": 3,
+      "title": "三、滿朝驚恐鎖虎檻，國王痛哭謝恩婿"
+    },
+    {
+      "episode": 35,
+      "section": 4,
+      "title": "四、妖魔夜宿銀安殿，飲酒狂歡啖生肉"
+    },
+    {
+      "episode": 35,
+      "section": 5,
+      "title": "五、白龍馬聞師遭難，掙脫韁繩化宮娥"
+    },
+    {
+      "episode": 35,
+      "section": 6,
+      "title": "六、銀安殿上舞利刃，行刺妖魔露破綻"
+    },
+    {
+      "episode": 35,
+      "section": 7,
+      "title": "七、龍女負傷逃回槽，八戒歸來尋無計"
+    },
+    {
+      "episode": 36,
+      "section": 1,
+      "title": "一、白龍開口吐人言，痛斥八戒貪生逃"
+    },
+    {
+      "episode": 36,
+      "section": 2,
+      "title": "二、告以師父化猛虎，除妖唯有請大師"
+    },
+    {
+      "episode": 36,
+      "section": 3,
+      "title": "三、八戒羞愧低頭泣，發誓花果請大兄"
+    },
+    {
+      "episode": 36,
+      "section": 4,
+      "title": "四、騰雲直奔花果山，路轉水簾求見猴"
+    },
+    {
+      "episode": 36,
+      "section": 5,
+      "title": "五、小猴攔路通報訊，大聖高坐享清福"
+    },
+    {
+      "episode": 36,
+      "section": 6,
+      "title": "六、八戒跪地訴苦難，大聖假意不相認"
+    },
+    {
+      "episode": 36,
+      "section": 7,
+      "title": "七、巧舌如簧智激猴，大聖心軟問師安"
+    },
+    {
+      "episode": 37,
+      "section": 1,
+      "title": "一、八戒編造黃袍言，妄稱老妖辱大聖"
+    },
+    {
+      "episode": 37,
+      "section": 2,
+      "title": "二、大聖一聽雷霆怒，誓將黃袍碎萬段"
+    },
+    {
+      "episode": 37,
+      "section": 3,
+      "title": "三、跳下石椅換戰袍，整裝再出花果山"
+    },
+    {
+      "episode": 37,
+      "section": 4,
+      "title": "四、東海沐浴淨妖氣，重回佛門救恩師"
+    },
+    {
+      "episode": 37,
+      "section": 5,
+      "title": "五、駕雲來到波月洞，大聖變作百花羞"
+    },
+    {
+      "episode": 37,
+      "section": 6,
+      "title": "六、騙得黃袍吐金丹，一口吞下內丹靈"
+    },
+    {
+      "episode": 37,
+      "section": 7,
+      "title": "七、現出真身戰黃袍，金箍棒起定乾坤"
+    },
+    {
+      "episode": 38,
+      "section": 1,
+      "title": "一、棒打黃袍無處逃，老妖化風遁天宮"
+    },
+    {
+      "episode": 38,
+      "section": 2,
+      "title": "二、查驗天宮點宿將，原來奎木狼下界"
+    },
+    {
+      "episode": 38,
+      "section": 3,
+      "title": "三、玉帝收回奎木宿，貶去兜率宮燒火"
+    },
+    {
+      "episode": 38,
+      "section": 4,
+      "title": "四、救出沙僧與百花，王宮大殿解虎形"
+    },
+    {
+      "episode": 38,
+      "section": 5,
+      "title": "五、一口仙氣噴猛虎，唐僧重現聖僧身"
+    },
+    {
+      "episode": 38,
+      "section": 6,
+      "title": "六、師徒相擁熱淚流，唐僧深悔趕悟空"
+    },
+    {
+      "episode": 38,
+      "section": 7,
+      "title": "七、百花相認闔家歡，重振旗鼓上征途"
+    },
+    {
+      "episode": 39,
+      "section": 1,
+      "title": "一、崇山峻嶺平頂山，行者巡山察妖蹤"
+    },
+    {
+      "episode": 39,
+      "section": 2,
+      "title": "二、日值功曹傳密信，蓮花洞中藏二魔"
+    },
+    {
+      "episode": 39,
+      "section": 3,
+      "title": "三、金角銀角神通廣，圖畫四人欲生擒"
+    },
+    {
+      "episode": 39,
+      "section": 4,
+      "title": "四、八戒逞能去巡山，草叢偷睡編謊言"
+    },
+    {
+      "episode": 39,
+      "section": 5,
+      "title": "五、悟空變蟲揭破綻，八戒撞上巡山妖"
+    },
+    {
+      "episode": 39,
+      "section": 6,
+      "title": "六、銀角大王展法力，一柄寶刀擒八戒"
+    },
+    {
+      "episode": 39,
+      "section": 7,
+      "title": "七、拖入蓮花洞中鎖，金角誇讚好肉肥"
+    },
+    {
+      "episode": 40,
+      "section": 1,
+      "title": "一、銀角再化老道士，跌坐路旁呼救命"
+    },
+    {
+      "episode": 40,
+      "section": 2,
+      "title": "二、唐僧慈悲命猴背，老道伏在悟空肩"
+    },
+    {
+      "episode": 40,
+      "section": 3,
+      "title": "三、悟空知妖欲砸石，銀角施展移山術"
+    },
+    {
+      "episode": 40,
+      "section": 4,
+      "title": "四、須彌峨眉泰山至，三座大山壓神猴"
+    },
+    {
+      "episode": 40,
+      "section": 5,
+      "title": "五、神猴被壓難脫身，悲號師父淚潸潸"
+    },
+    {
+      "episode": 40,
+      "section": 6,
+      "title": "六、妖風吹過掠唐僧，沙僧落網白馬驚"
+    },
+    {
+      "episode": 40,
+      "section": 7,
+      "title": "七、山神土地驚失色，大聖召神問罪責"
+    }
+  ]
+}
