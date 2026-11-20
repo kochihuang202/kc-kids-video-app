@@ -17,7 +17,23 @@ async function immutable(file,value){
  try{h=await fs.open(temporary,'wx');await h.writeFile(bytes);await h.sync();await h.close();h=null;try{await fs.link(temporary,file);}catch(e){if(e.code!=='EEXIST')throw e;const raced=await json(file,null);if(!sameRecord(raced,value))throw Error('版本關係紀錄同時發布衝突');}}
  finally{if(h)await h.close();await fs.rm(temporary,{force:true});}
 }
-function sameRecord(a,b){const critical=m=>{const value=recordOf(m);delete value.summary;return value;};return JSON.stringify(critical(a))===JSON.stringify(critical(b));}
+// Pre-0.8 readers projected away these extensions when caching a newer
+// manifest. Only reconcile missing extensions when the immutable DB identity
+// and every original causal field match. Conflicting defined values still fail.
+function reconcileRecords(a,b){
+ const left=recordOf(a),right=recordOf(b),extensions=['authorityId','isAuthoritative','mergeDigest'];
+ const core=value=>{const copy={...value};delete copy.summary;for(const key of extensions)delete copy[key];return copy;};
+ if(JSON.stringify(core(left))!==JSON.stringify(core(right)))return null;
+ const merged={...left,...right};
+ for(const key of extensions){
+  const x=left[key],y=right[key];
+  if(x!==undefined&&y!==undefined&&x!==y)return null;
+  if(x!==y&&(!/^[a-f0-9]{64}$/.test(left.database?.sha256||'')||!Number.isSafeInteger(left.database?.bytes)||left.database.bytes<0))return null;
+  if(x!==undefined||y!==undefined)merged[key]=x??y;
+ }
+ return recordOf(merged);
+}
+function sameRecord(a,b){return !!reconcileRecords(a,b);}
 function createLineage({localDirectory,getExchange}){
  const local=path.join(localDirectory,'Lineage');
  const shared=async()=>{const root=getExchange();return root&&await fs.realpath(root).catch(()=>null);};
@@ -27,7 +43,7 @@ function createLineage({localDirectory,getExchange}){
   const result=new Map(),root=await shared();
   for(const base of [local,root&&path.join(root,'lineage')].filter(Boolean))for(const w of await fs.readdir(base,{withFileTypes:true}).catch(e=>{if(e.code==='ENOENT')return [];throw e;})){
    if(!w.isDirectory()||!UUID.test(w.name))continue;
-   for(const f of await fs.readdir(path.join(base,w.name))){if(!f.endsWith('.json')||!UUID.test(f.slice(0,-5)))continue;const raw=await json(path.join(base,w.name,f),null),r=recordOf(raw);if(r.workspaceId!==w.name||r.snapshotId!==f.slice(0,-5))throw Error('版本關係路徑不一致');const old=result.get(r.snapshotId);if(old&&!sameRecord(old,r))throw Error('版本關係紀錄衝突');result.set(r.snapshotId,r);}
+   for(const f of await fs.readdir(path.join(base,w.name))){if(!f.endsWith('.json')||!UUID.test(f.slice(0,-5)))continue;const raw=await json(path.join(base,w.name,f),null),r=recordOf(raw);if(r.workspaceId!==w.name||r.snapshotId!==f.slice(0,-5))throw Error('版本關係路徑不一致');const old=result.get(r.snapshotId),merged=old?reconcileRecords(old,r):r;if(!merged)throw Error('版本關係紀錄衝突');result.set(r.snapshotId,merged);}
   }
   return result;
  }

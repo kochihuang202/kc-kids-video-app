@@ -69,6 +69,11 @@ test('real checkpoint merge preserves both edits, has both parents and the other
         assert.deepEqual(new Set(m.parentSnapshotIds), new Set([sa.snapshotId, sb.snapshotId]));
         await f.a.apply(m);
         await f.a.merge.completed();
+        // A 0.7.8 peer cached this 0.8 merge through its old projection,
+        // keeping the same DB hash/parents but dropping the new merge field.
+        const cached=path.join(f.a.local,'Lineage',m.workspaceId,m.snapshotId+'.json');
+        const legacy=JSON.parse(await fs.readFile(cached,'utf8'));delete legacy.mergeDigest;
+        await fs.writeFile(cached,JSON.stringify(legacy));
         let graph = await f.a.load();
         assert.equal(graph.contents.find(c => c.id === 'one').body, '公司未同步的中文');
         assert.equal(graph.contents.find(c => c.id === 'two').body, '家裡新增內容');
@@ -79,6 +84,9 @@ test('real checkpoint merge preserves both edits, has both parents and the other
         assert.equal((await f.a.snapshots.startup()).candidate.snapshotId, next.snapshotId);
         assert.equal((await f.a.snapshots.startup()).hasLocalChanges, false);
         assert.equal((await f.a.snapshots.manifest(sa.workspaceId, sa.snapshotId)).snapshotId, sa.snapshotId);
+        await f.a.edit([note('one','不能遺失的本機未同步修改')]);
+        assert.equal((await f.a.snapshots.startup()).hasLocalChanges,true);
+        assert.equal((await f.a.load()).contents.find(c=>c.id==='one').body,'不能遺失的本機未同步修改');
     }
     finally {
         await f.close();

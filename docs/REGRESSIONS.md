@@ -1,3 +1,10 @@
+## REG-176 — Old client lineage caches omit new merge metadata and block startup
+
+- Actual report (2026-11-20): after reopening 0.8.0, startup reports version relationship record conflict. Read-only comparison reproduced it: one local cached record omitted mergeDigest while shared lineage and the manifest retained it; database SHA-256, byte count and both parents were identical. A pre-0.8 reader had projected away the extension.
+- Reconcile missing merge/authority extensions only when all original causal fields and the immutable database identity match. Preserve richer metadata in the in-memory graph without rewriting immutable records. Defined extension mismatches, changed parents and changed database hashes still fail closed; no note or snapshot is overwritten.
+- Regression: snapshot-lineage.test.cjs covers mixed-version records and true conflicts; sync-merge.test.cjs exercises the real index/startup path, later peer edits and unsynced local Chinese. Maintained check-auto-merge.cjs now restarts Electron with a stripped legacy cache before continuing automatic updates and conflict protection.
+- Real profile was replayed read-only: the formerly failing records scan now succeeds and retains mergeDigest. No formal restore or authority command was issued.
+
 ## REG-175 — Merge independent edits and review real conflicts without losing unsynced changes
 
 - User-approved behavior (2026-11-18): merge different boards/cards and independent fields of a card; review real conflicts individually. Later explicit addition: publish this computer's whole current workspace as authoritative, align peers once, first back up their unsynced edits, then resume normal synchronization.

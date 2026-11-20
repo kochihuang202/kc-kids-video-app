@@ -46,6 +46,13 @@ const note = (id, body) => ({ type: 'putContent', data: { id, title: id === 'one
         let g = await load();
         assert.equal(g.contents.find(c => c.id === 'one').body, '公司開機前修改');
         assert.equal(g.contents.find(c => c.id === 'two').body, '家裡開機前修改');
+        // Replay an old client caching the new merge without its extension.
+        // Reopen must pass startup, then keep accepting subsequent peer edits.
+        const state=JSON.parse(await fs.readFile(path.join(a,'Profile/snapshot-state.json'),'utf8'));
+        const id=state.heads[g.workspaceId].snapshotId,cached=path.join(a,'Lineage',g.workspaceId,id+'.json');
+        const legacy=JSON.parse(await fs.readFile(cached,'utf8'));assert(legacy.mergeDigest);delete legacy.mergeDigest;
+        await fs.writeFile(cached,JSON.stringify(legacy));
+        await app.close();app=await launch();page=await app.firstWindow();await ready();
         const native = await app.browserWindow(page).then(w => w.evaluate(b => b.getNativeWindowHandle().toString('hex')));
         await follow();
         let child = await openEditor();
