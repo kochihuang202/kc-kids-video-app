@@ -1,0 +1,358 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "ep01_01_birth.jpg",
+  "style": "16:9 watercolor picture book. Wukong has a slim gold circlet, Tang monk saffron-red, Pigsy blue, Sha Wujing dark beard and muted green. No lettering or graphic violence.",
+  "continuity": "Sha Wujing joins the pilgrims in episode 22 section 4. Wukong returns to Flower Fruit Mountain alone in episode 30. Ginseng fruit is a pale fruit with a subtle baby-like shape.",
+  "scenes": [
+    {
+      "episode": 21,
+      "section": 1,
+      "title": "一、滾滾流沙波浪翻，鵝毛浮不起深淵"
+    },
+    {
+      "episode": 21,
+      "section": 2,
+      "title": "二、水怪翻波跳上岸，手持寶杖搶唐僧"
+    },
+    {
+      "episode": 21,
+      "section": 3,
+      "title": "三、八戒掄耙迎頭戰，水面翻騰浪千重"
+    },
+    {
+      "episode": 21,
+      "section": 4,
+      "title": "四、妖怪鑽回水底下，悟空嘆息水性差"
+    },
+    {
+      "episode": 21,
+      "section": 5,
+      "title": "五、引蛇出洞計不成，八戒二次下河底"
+    },
+    {
+      "episode": 21,
+      "section": 6,
+      "title": "六、水怪堅守不出洞，師徒無奈困河邊"
+    },
+    {
+      "episode": 21,
+      "section": 7,
+      "title": "七、大聖駕雲求菩薩，木叉隨行助降魔"
+    },
+    {
+      "episode": 22,
+      "section": 1,
+      "title": "一、木叉手捧紅葫蘆，河邊高呼捲簾名"
+    },
+    {
+      "episode": 22,
+      "section": 2,
+      "title": "二、水底怪物躍出浪，見得木叉納頭拜"
+    },
+    {
+      "episode": 22,
+      "section": 3,
+      "title": "三、自陳失手碎玉玻璃，貶下凡塵受劍穿"
+    },
+    {
+      "episode": 22,
+      "section": 4,
+      "title": "四、拜見唐僧認恩師，摩頂受戒名沙僧"
+    },
+    {
+      "episode": 22,
+      "section": 5,
+      "title": "五、九個骷髏結法船，紅葫蘆中顯神通"
+    },
+    {
+      "episode": 22,
+      "section": 6,
+      "title": "六、安然橫渡流沙河，水面平息現康莊"
+    },
+    {
+      "episode": 22,
+      "section": 7,
+      "title": "七、師徒四人齊聚首，挑擔牽馬奔靈山"
+    },
+    {
+      "episode": 23,
+      "section": 1,
+      "title": "一、萬壽山前五莊觀，乾坤古觀仙氣飄"
+    },
+    {
+      "episode": 23,
+      "section": 2,
+      "title": "二、鎮元大仙受天召，臨行囑託採仙果"
+    },
+    {
+      "episode": 23,
+      "section": 3,
+      "title": "三、清風明月敬香茗，奉上金丹人參果"
+    },
+    {
+      "episode": 23,
+      "section": 4,
+      "title": "四、唐僧見果如嬰孩，驚恐拒食念彌陀"
+    },
+    {
+      "episode": 23,
+      "section": 5,
+      "title": "五、八戒隔窗聞果香，央求大兄摘靈果"
+    },
+    {
+      "episode": 23,
+      "section": 6,
+      "title": "六、金擊子打萬年樹，樹下滾落三枚果"
+    },
+    {
+      "episode": 23,
+      "section": 7,
+      "title": "七、兄弟三人分仙果，八戒囫圇吞下肚"
+    },
+    {
+      "episode": 24,
+      "section": 1,
+      "title": "一、道童查果少四枚，怒氣衝衝斥唐僧"
+    },
+    {
+      "episode": 24,
+      "section": 2,
+      "title": "二、清風明月惡語傷，大聖心頭火自生"
+    },
+    {
+      "episode": 24,
+      "section": 3,
+      "title": "三、元神出竅遁後園，金箍棒打人參樹"
+    },
+    {
+      "episode": 24,
+      "section": 4,
+      "title": "四、仙樹傾倒枝葉折，大聖揚長回正堂"
+    },
+    {
+      "episode": 24,
+      "section": 5,
+      "title": "五、二道童慌鎖山門，困鎖師徒設牢籠"
+    },
+    {
+      "episode": 24,
+      "section": 6,
+      "title": "六、悟空使出瞌睡蟲，點倒童子破鎖逃"
+    },
+    {
+      "episode": 24,
+      "section": 7,
+      "title": "七、連夜牽馬踏月去，大仙駕雲自天歸"
+    },
+    {
+      "episode": 25,
+      "section": 1,
+      "title": "一、大仙回觀見樹倒，施展神威追逃僧"
+    },
+    {
+      "episode": 25,
+      "section": 2,
+      "title": "二、乾坤袖裡納乾坤，師徒四人盡遭擒"
+    },
+    {
+      "episode": 25,
+      "section": 3,
+      "title": "三、捆綁殿前問罪責，大聖仗義全承擔"
+    },
+    {
+      "episode": 25,
+      "section": 4,
+      "title": "四、龍皮鞭下受嚴刑，大聖化作石獅身"
+    },
+    {
+      "episode": 25,
+      "section": 5,
+      "title": "五、油鍋翻滾烈火燒，大聖使法換石獅"
+    },
+    {
+      "episode": 25,
+      "section": 6,
+      "title": "六、大仙讚佩神猴膽，立約若活樹拜把"
+    },
+    {
+      "episode": 25,
+      "section": 7,
+      "title": "七、海外仙島尋良方，大聖騰雲別五莊"
+    },
+    {
+      "episode": 26,
+      "section": 1,
+      "title": "一、蓬萊仙島訪三老，壽星搖頭嘆無方"
+    },
+    {
+      "episode": 26,
+      "section": 2,
+      "title": "二、方丈瀛洲訪眾仙，尋遍仙山未得方"
+    },
+    {
+      "episode": 26,
+      "section": 3,
+      "title": "三、南海紫竹林前拜，菩薩微笑早料知"
+    },
+    {
+      "episode": 26,
+      "section": 4,
+      "title": "四、觀音親駕祥雲降，淨瓶甘露灑仙根"
+    },
+    {
+      "episode": 26,
+      "section": 5,
+      "title": "五、枯樹逢春生嫩芽，人參果掛枝頭圓"
+    },
+    {
+      "episode": 26,
+      "section": 6,
+      "title": "六、眾仙齊聚摘仙果，共享延年慶盛宴"
+    },
+    {
+      "episode": 26,
+      "section": 7,
+      "title": "七、鎮元大仙結金蘭，師徒拜別奔前程"
+    },
+    {
+      "episode": 27,
+      "section": 1,
+      "title": "一、白虎嶺上妖氣聚，白骨夫人欲吞僧"
+    },
+    {
+      "episode": 27,
+      "section": 2,
+      "title": "二、悟空遠赴摘仙桃，妖精化身送齋女"
+    },
+    {
+      "episode": 27,
+      "section": 3,
+      "title": "三、八戒嘴饞迎上前，唐僧慈悲辨無偽"
+    },
+    {
+      "episode": 27,
+      "section": 4,
+      "title": "四、大聖採桃飛身回，火眼金睛識妖魂"
+    },
+    {
+      "episode": 27,
+      "section": 5,
+      "title": "五、當頭一棒劈妖女，白骨夫人化青煙"
+    },
+    {
+      "episode": 27,
+      "section": 6,
+      "title": "六、地上倒伏村姑屍，唐僧驚怒念佛號"
+    },
+    {
+      "episode": 27,
+      "section": 7,
+      "title": "七、八戒挑撥讒言起，金箍咒動猴王痛"
+    },
+    {
+      "episode": 28,
+      "section": 1,
+      "title": "一、深山哭泣老婦尋，白骨再化尋女娘"
+    },
+    {
+      "episode": 28,
+      "section": 2,
+      "title": "二、唐僧心痛迎上前，大聖回頭火眼明"
+    },
+    {
+      "episode": 28,
+      "section": 3,
+      "title": "三、不容分說當頭棒，假婦倒地魂魄遁"
+    },
+    {
+      "episode": 28,
+      "section": 4,
+      "title": "四、八戒煽風又點火，唐僧合掌念真言"
+    },
+    {
+      "episode": 28,
+      "section": 5,
+      "title": "五、猴王翻滾告饒命，發誓絕不再傷生"
+    },
+    {
+      "episode": 28,
+      "section": 6,
+      "title": "六、深山孤寂險象生，白骨夫人誓擒僧"
+    },
+    {
+      "episode": 28,
+      "section": 7,
+      "title": "七、陰風慘慘聚山谷，大難臨頭未可知"
+    },
+    {
+      "episode": 29,
+      "section": 1,
+      "title": "一、白髮老翁手捻珠，口念佛經步履艱"
+    },
+    {
+      "episode": 29,
+      "section": 2,
+      "title": "二、唐僧下馬親相迎，大聖識破老妖魔"
+    },
+    {
+      "episode": 29,
+      "section": 3,
+      "title": "三、喚來土地山神證，絕情一棒碎妖顱"
+    },
+    {
+      "episode": 29,
+      "section": 4,
+      "title": "四、現出原形白骨堆，上刻白骨夫人名"
+    },
+    {
+      "episode": 29,
+      "section": 5,
+      "title": "五、八戒妄言使障眼，唐僧心灰下逐客"
+    },
+    {
+      "episode": 29,
+      "section": 6,
+      "title": "六、揮毫寫下貶書紙，恩斷義絕不相見"
+    },
+    {
+      "episode": 29,
+      "section": 7,
+      "title": "七、含淚拜別師父恩，大聖翻身返花果"
+    },
+    {
+      "episode": 30,
+      "section": 1,
+      "title": "一、含悲忍淚別師尊，滿腹委屈訴蒼天"
+    },
+    {
+      "episode": 30,
+      "section": 2,
+      "title": "二、重返花果水簾洞，昔日仙境成焦土"
+    },
+    {
+      "episode": 30,
+      "section": 3,
+      "title": "三、聞聽獵戶捕猴孫，大聖心頭怒火燒"
+    },
+    {
+      "episode": 30,
+      "section": 4,
+      "title": "四、施展神風飛沙走，痛懲獵人救猴群"
+    },
+    {
+      "episode": 30,
+      "section": 5,
+      "title": "五、整飭山河引清泉，花果群猴重聚歡"
+    },
+    {
+      "episode": 30,
+      "section": 6,
+      "title": "六、重整旗鼓為妖王，滿山歡唱美猴王"
+    },
+    {
+      "episode": 30,
+      "section": 7,
+      "title": "七、思念師父心難平，望斷雲天掛西行"
+    }
+  ]
+}
