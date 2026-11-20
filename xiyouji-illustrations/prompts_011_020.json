@@ -1,0 +1,357 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "ep01_01_birth.jpg",
+  "style": "16:9 watercolor picture-book art, consistent golden round-faced Wukong, traditional Chinese fantasy, no typography, graphic violence, or panels. Tang monk in saffron-red. Wukong has entirely bare golden fur on his head through episode 12 section 2, tries a cloth flower hat in section 3, and wears a plain slim gold circlet starting in section 4. Pigsy is absent before his episode 17 introduction and appears only where the scene calls for him.",
+  "scenes": [
+    {
+      "episode": 11,
+      "section": 1,
+      "title": "一、五行山下揭神符，香風拂動現真容"
+    },
+    {
+      "episode": 11,
+      "section": 2,
+      "title": "二、天崩地裂巨石飛，神猴脫困拜恩師"
+    },
+    {
+      "episode": 11,
+      "section": 3,
+      "title": "三、猛虎咆哮竄林間，神力一擊斃惡獸"
+    },
+    {
+      "episode": 11,
+      "section": 4,
+      "title": "四、慈師密縫虎皮裙，神猴雀躍表孝心"
+    },
+    {
+      "episode": 11,
+      "section": 5,
+      "title": "五、攔路強盜搶盤纏，神針出耳棒下亡"
+    },
+    {
+      "episode": 11,
+      "section": 6,
+      "title": "六、師徒理念起爭端，大聖負氣駕雲去"
+    },
+    {
+      "episode": 11,
+      "section": 7,
+      "title": "七、神仙化身指迷津，菩薩密授緊箍咒"
+    },
+    {
+      "episode": 12,
+      "section": 1,
+      "title": "一、金光一閃化祥雲，菩薩妙計授唐僧"
+    },
+    {
+      "episode": 12,
+      "section": 2,
+      "title": "二、東海龍宮訪龍王，張良進履釋心結"
+    },
+    {
+      "episode": 12,
+      "section": 3,
+      "title": "三、回歸師門見棉衣，歡天喜地試花帽"
+    },
+    {
+      "episode": 12,
+      "section": 4,
+      "title": "四、緊箍真言頭痛裂，跪地求饒服心猿"
+    },
+    {
+      "episode": 12,
+      "section": 5,
+      "title": "五、懸崖峭壁山路難，鷹愁澗底傳水響"
+    },
+    {
+      "episode": 12,
+      "section": 6,
+      "title": "六、惡龍翻騰吞白馬，師徒驚魂尋無蹤"
+    },
+    {
+      "episode": 12,
+      "section": 7,
+      "title": "七、金睛望穿深澗水，大聖怒持金箍棒"
+    },
+    {
+      "episode": 13,
+      "section": 1,
+      "title": "一、金箍棒攪動深潭，惡龍破水戰神猴"
+    },
+    {
+      "episode": 13,
+      "section": 2,
+      "title": "二、槍來棒往難分勝，孽龍力竭化泥鰍"
+    },
+    {
+      "episode": 13,
+      "section": 3,
+      "title": "三、喚出土地探根由，深潭原住受罪龍"
+    },
+    {
+      "episode": 13,
+      "section": 4,
+      "title": "四、筋斗雲疾請觀音，南海菩薩降臨凡"
+    },
+    {
+      "episode": 13,
+      "section": 5,
+      "title": "五、褪去龍鱗卸龍角，摘下明珠化白馬"
+    },
+    {
+      "episode": 13,
+      "section": 6,
+      "title": "六、賜贈金鞍配錦韁，龍馬昂首載聖僧"
+    },
+    {
+      "episode": 13,
+      "section": 7,
+      "title": "七、贈拔三根救命毛，師徒同心別鷹愁"
+    },
+    {
+      "episode": 14,
+      "section": 1,
+      "title": "一、日暮投宿觀音院，長老相迎設茶筵"
+    },
+    {
+      "episode": 14,
+      "section": 2,
+      "title": "二、金池炫耀滿堂珍，兩百七十歲高僧"
+    },
+    {
+      "episode": 14,
+      "section": 3,
+      "title": "三、悟空逞能爭勝負，展開錦襴寶袈裟"
+    },
+    {
+      "episode": 14,
+      "section": 4,
+      "title": "四、紅光滿室佛香飄，貪心長老痛哭啼"
+    },
+    {
+      "episode": 14,
+      "section": 5,
+      "title": "五、心懷鬼胎借夜觀，暗中密謀害唐僧"
+    },
+    {
+      "episode": 14,
+      "section": 6,
+      "title": "六、推柴放火起凶念，大聖借來辟火罩"
+    },
+    {
+      "episode": 14,
+      "section": 7,
+      "title": "七、狂風呼嘯大火起，自作自受焚禪房"
+    },
+    {
+      "episode": 15,
+      "section": 1,
+      "title": "一、烈火熄滅灰燼冷，錦襴袈裟不翼飛"
+    },
+    {
+      "episode": 15,
+      "section": 2,
+      "title": "二、盤問僧眾尋下落，黑風山中探妖蹤"
+    },
+    {
+      "episode": 15,
+      "section": 3,
+      "title": "三、林間巧遇三妖道，偷聽密謀辦佛衣"
+    },
+    {
+      "episode": 15,
+      "section": 4,
+      "title": "四、大聖現身棍棒起，黑熊逃入黑風洞"
+    },
+    {
+      "episode": 15,
+      "section": 5,
+      "title": "五、叫罵山門索袈裟，黑風大王披掛出"
+    },
+    {
+      "episode": 15,
+      "section": 6,
+      "title": "六、黑纓槍鬥金箍棒，難分高下戰黃昏"
+    },
+    {
+      "episode": 15,
+      "section": 7,
+      "title": "七、黑熊肚餓回洞府，大聖苦思降妖策"
+    },
+    {
+      "episode": 16,
+      "section": 1,
+      "title": "一、半路攔截白花蛇，奪下請柬得妙計"
+    },
+    {
+      "episode": 16,
+      "section": 2,
+      "title": "二、變作金池老方丈，直入妖洞赴壽宴"
+    },
+    {
+      "episode": 16,
+      "section": 3,
+      "title": "三、真假佛衣露破綻，黑熊警覺戰火起"
+    },
+    {
+      "episode": 16,
+      "section": 4,
+      "title": "四、直上南海求救兵，觀音菩薩顯慈容"
+    },
+    {
+      "episode": 16,
+      "section": 5,
+      "title": "五、菩薩化作道凌虛，仙丹暗藏猴王身"
+    },
+    {
+      "episode": 16,
+      "section": 6,
+      "title": "六、黑熊吞丹腹中滾，戴上金箍皈佛門"
+    },
+    {
+      "episode": 16,
+      "section": 7,
+      "title": "七、尋回袈裟喜重聚，師徒重上西行路"
+    },
+    {
+      "episode": 17,
+      "section": 1,
+      "title": "一、夕陽西下入莊園，行至烏斯高老莊"
+    },
+    {
+      "episode": 17,
+      "section": 2,
+      "title": "二、高員外愁眉不展，痛說招贅上門婿"
+    },
+    {
+      "episode": 17,
+      "section": 3,
+      "title": "三、大肚食量能耕田，忽變黑臉長嘴怪"
+    },
+    {
+      "episode": 17,
+      "section": 4,
+      "title": "四、鎖閉後房鎖千金，求請法師捉妖怪"
+    },
+    {
+      "episode": 17,
+      "section": 5,
+      "title": "五、大聖變作高翠蘭，房中坐等女婿來"
+    },
+    {
+      "episode": 17,
+      "section": 6,
+      "title": "六、醉漢搖晃推門入，甜言蜜語哄嬌妻"
+    },
+    {
+      "episode": 17,
+      "section": 7,
+      "title": "七、假翠蘭機智盤問，自誇曾任天蓬帥"
+    },
+    {
+      "episode": 18,
+      "section": 1,
+      "title": "一、現出真身揮巨棒，豬妖嚇得奪門逃"
+    },
+    {
+      "episode": 18,
+      "section": 2,
+      "title": "二、追至福陵雲棧洞，九齒釘耙戰金箍"
+    },
+    {
+      "episode": 18,
+      "section": 3,
+      "title": "三、聽聞大唐取經僧，丟下釘耙跪倒拜"
+    },
+    {
+      "episode": 18,
+      "section": 4,
+      "title": "四、自訴前世天蓬帥，蒙受菩薩指迷途"
+    },
+    {
+      "episode": 18,
+      "section": 5,
+      "title": "五、牽馬歸莊見唐僧，摩頂受戒名八戒"
+    },
+    {
+      "episode": 18,
+      "section": 6,
+      "title": "六、辭別老丈高家莊，挑起擔子踏征塵"
+    },
+    {
+      "episode": 18,
+      "section": 7,
+      "title": "七、逢山開路顯神通，師徒三人奔西行"
+    },
+    {
+      "episode": 19,
+      "section": 1,
+      "title": "一、高山險峻路難行，八戒挑擔訴辛苦"
+    },
+    {
+      "episode": 19,
+      "section": 2,
+      "title": "二、黑風忽起驚人馬，虎先鋒使金蟬計"
+    },
+    {
+      "episode": 19,
+      "section": 3,
+      "title": "三、搶走唐僧入洞府，妖兵擺宴獻大王"
+    },
+    {
+      "episode": 19,
+      "section": 4,
+      "title": "四、悟空八戒尋蹤跡，怒砸山門討師尊"
+    },
+    {
+      "episode": 19,
+      "section": 5,
+      "title": "五、八戒奮力掄釘耙，一耙打死虎先鋒"
+    },
+    {
+      "episode": 19,
+      "section": 6,
+      "title": "六、拖虎屍叫陣洞口，黃風大聖披掛迎"
+    },
+    {
+      "episode": 19,
+      "section": 7,
+      "title": "七、兩股鋼叉展神威，妖洞門前起惡鬥"
+    },
+    {
+      "episode": 20,
+      "section": 1,
+      "title": "一、黃風大聖吹神風，飛沙走石蔽青天"
+    },
+    {
+      "episode": 20,
+      "section": 2,
+      "title": "二、三昧神風迷雙目，大聖敗退揉痛眼"
+    },
+    {
+      "episode": 20,
+      "section": 3,
+      "title": "三、夜投荒野草庵中，得逢伽藍贈靈藥"
+    },
+    {
+      "episode": 20,
+      "section": 4,
+      "title": "四、悟空夜探黃風洞，化作蚊蟲探消息"
+    },
+    {
+      "episode": 20,
+      "section": 5,
+      "title": "五、偷聽定風丹妙處，直奔小須彌山前"
+    },
+    {
+      "episode": 20,
+      "section": 6,
+      "title": "六、靈吉菩薩顯法力，飛龍寶杖定黃風"
+    },
+    {
+      "episode": 20,
+      "section": 7,
+      "title": "七、現出原形黃毛貂，救得唐僧出險關"
+    }
+  ]
+}

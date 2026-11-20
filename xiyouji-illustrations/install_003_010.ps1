@@ -1,10 +1,24 @@
-param([Parameter(Mandatory)][string]$Stage)
+param([Parameter(Mandatory)][string]$Stage, [int]$First = 3, [int]$Last = 10)
 $ErrorActionPreference = 'Stop'
 $site = 'C:\Users\ji3cp\Documents\xiyouji-reader'
 $engine = 'C:\Users\ji3cp\Documents\FXN-Antigravity'
-$pages = @(3..10 | ForEach-Object { '{0:000}.html' -f $_ })
+$pages = @($First..$Last | ForEach-Object { '{0:000}.html' -f $_ })
 $files = @(Get-ChildItem -LiteralPath (Join-Path $Stage images) -Filter '*.jpg')
-if ($files.Count -ne 56) { throw 'Expected 56 illustrations' }
+if ($files.Count -ne 7 * $pages.Count) { throw 'Expected seven illustrations per episode' }
+$compiler = Join-Path $engine 'compile_all_remaining_episodes.py'
+$compilerText = [IO.File]::ReadAllText($compiler)
+$renderLine = '    full_html = render_unified_page(ep_num, ep_title, heading_ruby, body_inner_html, compiled_glossary)'
+$hook = '    full_html = apply_section_illustrations(ep_num, full_html)'
+if ($Last -ge 11 -and !$compilerText.Contains($hook)) {
+    $importLine = 'from episodes_headings_data import EPISODE_7_SECTIONS'
+    foreach ($anchor in @($renderLine, $importLine)) {
+        if ([regex]::Matches($compilerText, [regex]::Escape($anchor)).Count -ne 1) {
+            throw "Unexpected compiler source at $anchor"
+        }
+    }
+    $compilerText = $compilerText.Replace($importLine, "$importLine`nfrom section_illustrations import apply_section_illustrations")
+    $compilerText = $compilerText.Replace($renderLine, "$renderLine`n$hook")
+}
 foreach ($file in $files) {
     $target = Join-Path $site "images\$($file.Name)"
     if ((Test-Path -LiteralPath $target) -and
@@ -33,3 +47,6 @@ foreach ($page in $pages) {
 $manifest = Join-Path $Stage illustrations.json
 Copy-Item -LiteralPath $manifest -Destination $engine
 Copy-Item -LiteralPath $manifest -Destination $PSScriptRoot
+if ($Last -ge 11 -and $compilerText -cne [IO.File]::ReadAllText($compiler)) {
+    [IO.File]::WriteAllText($compiler, $compilerText)
+}

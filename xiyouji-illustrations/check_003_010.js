@@ -1,7 +1,9 @@
 async page => {
   const origin = 'https://xiyouji-kids.pages.dev';
   const results = [];
-  for (let episode = 3; episode <= 10; episode++) {
+  const first = Number(new URL(page.url()).searchParams.get('first') || 3);
+  const last = Number(new URL(page.url()).searchParams.get('last') || 10);
+  for (let episode = first; episode <= last; episode++) {
     const id = String(episode).padStart(3, '0');
     const response = await page.goto(origin + '/episodes/' + id);
     if (!response?.ok()) throw new Error('Could not open episode ' + id);

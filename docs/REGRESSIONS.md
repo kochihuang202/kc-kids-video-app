@@ -1,3 +1,9 @@
+## REG-WJ-002 — 西遊記插圖須遵守道具與人物的登場順序
+
+- 第 11 集與第 12 集前兩節，悟空頭上只有金毛。第 12 集第 3 節試戴花帽，第 4 節才畫出緊箍。
+- 八戒在第 17 集高老莊篇登場。前面的插圖不能出現八戒，高老莊篇要依每節情節區分回憶、喬裝與實際在場人物。
+- 逐節審圖，並在正式站確認第 11～20 集各有七節、每節一張可載入的插圖。編譯設定保留小節標題與插圖的對應。
+
 ## REG-WJ-001 — 西遊記第 001、002 集每個故事小節都必須有插圖
 
 - User-approved scope (2026-11-20): finish episodes 001 and 002 only, preserving their existing seven story sections each. Keep the original six episode-001 illustrations; add its missing departure scene and all seven episode-002 illustrations in the same watercolor picture-book style.
