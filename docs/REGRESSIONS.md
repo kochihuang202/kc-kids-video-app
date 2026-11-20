@@ -1,3 +1,10 @@
+## REG-WJ-001 — 西遊記第 001、002 集每個故事小節都必須有插圖
+
+- User-approved scope (2026-11-20): finish episodes 001 and 002 only, preserving their existing seven story sections each. Keep the original six episode-001 illustrations; add its missing departure scene and all seven episode-002 illustrations in the same watercolor picture-book style.
+- Baseline browser check reproduced episode 001 section 7 with zero images; episode 002 had zero images in all seven sections. The source only had six artwork files. This is missing artwork and build integration, not broken URLs.
+- Manifest-based rendering must preserve story text, Zhuyin, vocabulary and interactions, retain existing artwork, remain idempotent, reject section-heading drift, and leave episodes 003–070 unchanged.
+- Checks: `xiyouji-illustrations/test_manifest.py` and `xiyouji-illustrations/reader-flow.js`. The browser flow follows the existing reader control regression and additionally decodes each illustration and checks desktop/mobile bounds. Scope vocabulary close to `#vocabModal`, because the reader now also has a separate notebook close button.
+
 ## REG-176 — Old client lineage caches omit new merge metadata and block startup
 
 - Actual report (2026-11-20): after reopening 0.8.0, startup reports version relationship record conflict. Read-only comparison reproduced it: one local cached record omitted mergeDigest while shared lineage and the manifest retained it; database SHA-256, byte count and both parents were identical. A pre-0.8 reader had projected away the extension.

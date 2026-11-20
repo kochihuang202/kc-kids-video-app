@@ -1,0 +1,48 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "reference": "C:\\Users\\ji3cp\\Documents\\xiyouji-reader\\images\\ep01_01_birth.jpg",
+  "style": "Use case: illustration-story. One new full-bleed landscape 16:9 children's picture-book illustration for Journey to the West, ages 7-9. The input image is a STYLE AND CHARACTER REFERENCE ONLY, not an edit target. Match its detailed hand-painted watercolor and gouache, delicate paper texture, luminous natural colors, soft rounded forms, and rich Chinese fantasy landscapes. Keep Sun Wukong consistent: small golden-furred monkey, large amber eyes, pink ears and muzzle, short golden hair, red headband with small golden spiral decoration, simple brown waist wrap, expressive friendly face. Bodhi Patriarch, when present, must consistently be a kindly elderly Chinese Taoist master with long white hair and beard, ivory robe with muted blue trim, wooden hairpin, and horsetail whisk. No armor, no golden staff, no Buddhist pilgrims in episode 2; he has not acquired them yet. No text, no calligraphy, no letters, no labels, no watermark, no borders, no panels or collage. Scene must follow the provided section, with one clear focal action and no invented future events. ",
+  "images": [
+    {
+      "episode": "001", "section": 7, "filename": "ep001_07_seek_teacher.jpg",
+      "alt": "石猴乘著木筏告別花果山，漂洋過海尋找師父",
+      "scene": "The monkey king departs Flower Fruit Mountain alone on a handmade wooden raft, paddling across the gentle sea toward a sunlit horizon. On the receding green shoreline monkey friends wave goodbye. He wants to learn skills to protect them. Hopeful morning adventure, misty Chinese mountain silhouettes. No magical cloud at this stage.",
+      "generated_source": "C:\\Users\\ji3cp\\Documents\\ChatGPT\\try\\xiyouji-illustrations\\images\\ep001_07_seek_teacher.png"
+    },
+    {
+      "episode": "002", "section": 1, "filename": "ep002_01_bodhi_teacher.jpg",
+      "alt": "石猴在三星洞拜見菩提祖師，恭敬地請求拜師學藝",
+      "scene": "Episode 2 section 1, arriving to seek a teacher: inside a peaceful mountain cave-temple hall at Lingtai Fangcun Mountain, the golden monkey kneels respectfully before Bodhi Patriarch, who sits on a low wooden dais, smiles and strokes his long white beard, holding a horsetail whisk in his other hand. The monkey looks up with eager sparkling eyes and clasped hands. Behind them, a wide open doorway reveals a winding path through old pines and misty mountains. Warm welcoming daylight, a few simple Taoist furnishings. No writing on stone tablets. No cloud-riding or transformations yet."
+    },
+    {
+      "episode": "002", "section": 2, "filename": "ep002_02_secret_signal.jpg",
+      "alt": "菩提祖師輕敲悟空頭頂傳遞暗號，悟空露出領悟的微笑",
+      "scene": "Episode 2 section 2, the secret signal: in a sunlit Taoist teaching hall, Bodhi Patriarch stands beside seated little Sun Wukong and gently touches the monkey's crown with a SMALL wooden teaching ruler to communicate a secret signal, not violence. Show only ONE gentle contact, no motion duplicates, no numbers, no pain. The monkey has a small knowing smile and alert bright eyes, understanding the clue. A few young human fellow disciples in simple muted blue-gray robes watch in surprise from floor cushions. A wooden door to the master's rear room is visible in the background. Restrained playful mystery, soft golden light, no injury or tears."
+    },
+    {
+      "episode": "002", "section": 3, "filename": "ep002_03_midnight_lesson.jpg",
+      "alt": "三更夜裡，菩提祖師在燈下向悟空傳授祕訣",
+      "scene": "Episode 2 section 3, midnight teaching: in a quiet modest Taoist master's room, Bodhi Patriarch sits upright on the edge of a simple wooden bed and leans toward respectfully kneeling Sun Wukong to whisper magical teachings into his ear. The monkey listens with rapt attention and folded hands. An oil lamp casts warm amber light on their faces; a partially open rear wooden door reveals deep blue moonlight, pines and a crescent moon. Whimsical stars outside evoke future magical learning but no written symbols, no floating icons or collage. Intimate reassuring midnight atmosphere; do not show Wukong already carrying a golden staff."
+    },
+    {
+      "episode": "002", "section": 4, "filename": "ep002_04_leaving_master.jpg",
+      "alt": "悟空含淚拜別菩提祖師，師兄們站在松樹旁望著他",
+      "scene": "Episode 2 section 4, farewell after showing off: in a mountain monastery courtyard beside a large leafy pine tree, Sun Wukong kneels and bows goodbye to Bodhi Patriarch, small tears in his eyes, visibly remorseful. The master stands in an ivory and blue-trim robe with his horsetail whisk, composed and solemn, turned slightly away with a sad, firm expression. A few fellow human disciples in simple blue-gray robes stand quietly in the background near the pine. Afternoon light, green mountains, emotional but gentle and safe for children. This is the farewell after the pine-tree transformation incident: show the monkey in his normal form only, no second duplicate monkey, no giant monsters, no punishment."
+    },
+    {
+      "episode": "002", "section": 5, "filename": "ep002_05_homecoming.jpg",
+      "alt": "學成本領的悟空駕雲回到水簾洞，猴子們歡呼迎接大王",
+      "scene": "Episode 2 section 5, homecoming: Sun Wukong joyfully steps down from a small soft white magical cloud in front of the Water Curtain Cave waterfall at Flower Fruit Mountain. A gathering of small cheerful monkeys rushes to welcome him with raised arms, and a kindly gray elderly monkey stands nearby. A few wooden practice sticks lean safely against a rock, indicating their simple equipment. Lush colorful flowers, mossy rocks, old pines, sparkling water, joyful reunion. Keep the returning Wukong's red headband and simple brown waist wrap from reference; NO armor, NO golden staff, NO other pilgrims."
+    },
+    {
+      "episode": "002", "section": 6, "filename": "ep002_06_hair_monkeys.jpg",
+      "alt": "悟空把毫毛變成小猴，大家在傲來國兵器庫合力搬運兵器",
+      "scene": "Episode 2 section 6, magical hair helpers in the armory: inside an ancient Chinese wooden-beamed armory, little golden Sun Wukong blows a few glowing golden hairs from his palm, and many friendly small magical monkey helpers busily carry bundled sheathed swords, blunt polearms and bows toward the open doorway. Show a readable handful of helpers with many smaller silhouettes further back to imply a large group, all cooperating in a playful orderly way. Wooden weapon racks line the walls, warm light streams in from high windows. Weapons are stored or carried safely, never aimed at anyone; no combat, no injuries, no modern firearms. Main Wukong has red headband, simple brown wrap and no golden staff or armor. Make the magical transformation visually clear with a gentle trail of golden sparkles, not a diagram."
+    },
+    {
+      "episode": "002", "section": 7, "filename": "ep002_07_dragon_palace_plan.jpg",
+      "alt": "水簾洞前，老猴指著通往東海的溪流，告訴悟空到龍宮尋找兵器",
+      "scene": "Episode 2 section 7, the old monkey's advice: outside Water Curtain Cave, Sun Wukong stands holding one ordinary large steel broadsword low and safely away from others, examining it with a puzzled expression because it is too light for him. Beside him, a kindly gray elderly monkey gestures toward the rushing stream under a natural rock bridge, explaining that this water leads to the Dragon King's palace beneath the Eastern Sea. A neat small pile of ordinary arms lies nearby, monkey friends practice far in the soft background. Focus on the two monkeys' expressive conversation, luminous waterfall and clear blue stream winding toward the distant sea. Do NOT show the Dragon King, underwater palace, golden staff or armor yet; this section introduces the plan, not the next episode's events."
+    }
+  ]
+}
