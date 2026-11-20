@@ -1,0 +1,287 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "ep01_01_birth.jpg",
+  "style": "16:9 children's watercolor picture book, golden round-faced monkey with red headband, soft paper texture, Chinese mythological scenery, ages 7–9, no gore or lettering. One illustration per narrative beat.",
+  "scenes": [
+    {
+      "episode": 3,
+      "section": 1,
+      "title": "一、水簾洞跳鐵板橋，拜訪龍宮老鄰居"
+    },
+    {
+      "episode": 3,
+      "section": 2,
+      "title": "二、試兵九股鋼叉，三千六百斤嫌太輕"
+    },
+    {
+      "episode": 3,
+      "section": 3,
+      "title": "三、方天畫戟七千二百斤，單手飛舞轉風車"
+    },
+    {
+      "episode": 3,
+      "section": 4,
+      "title": "四、海藏深處放霞光，巧遇定海神珍鐵"
+    },
+    {
+      "episode": 3,
+      "section": 5,
+      "title": "五、聽話神鐵通靈性，如意金箍棒變變變！"
+    },
+    {
+      "episode": 3,
+      "section": 6,
+      "title": "六、再討披風盔甲，四海龍王後殿密謀"
+    },
+    {
+      "episode": 3,
+      "section": 7,
+      "title": "七、金猴神威震水晶宮，滿載披掛回花果"
+    },
+    {
+      "episode": 4,
+      "section": 1,
+      "title": "一、凱旋花果山，七大妖王結金蘭"
+    },
+    {
+      "episode": 4,
+      "section": 2,
+      "title": "二、醉臥松蔭下，黑白無常索魂魄"
+    },
+    {
+      "episode": 4,
+      "section": 3,
+      "title": "三、陰風吹醒酒意，厲聲質問兩鬼差"
+    },
+    {
+      "episode": 4,
+      "section": 4,
+      "title": "四、大怒揮動神棒，打碎鐵鍊闖地府"
+    },
+    {
+      "episode": 4,
+      "section": 5,
+      "title": "五、殺入森羅寶殿，十殿閻君心驚慌"
+    },
+    {
+      "episode": 4,
+      "section": 6,
+      "title": "六、御筆勾銷生死，猴屬壽數一筆銷"
+    },
+    {
+      "episode": 4,
+      "section": 7,
+      "title": "七、南柯夢驚醒，龍宮地府齊告狀"
+    },
+    {
+      "episode": 5,
+      "section": 1,
+      "title": "一、玉帝聞奏大驚，太白金星巧獻計"
+    },
+    {
+      "episode": 5,
+      "section": 2,
+      "title": "二、初登南天門，凌霄寶殿面聖君"
+    },
+    {
+      "episode": 5,
+      "section": 3,
+      "title": "三、官封弼馬溫，歡天喜地去上任"
+    },
+    {
+      "episode": 5,
+      "section": 4,
+      "title": "四、掌管御馬監，天馬奔騰膘肥體壯"
+    },
+    {
+      "episode": 5,
+      "section": 5,
+      "title": "五、慶功宴上問官職，得知末等大怒反"
+    },
+    {
+      "episode": 5,
+      "section": 6,
+      "title": "六、怒砸御馬監，打出南天門回花果"
+    },
+    {
+      "episode": 5,
+      "section": 7,
+      "title": "七、自封齊天大聖，豎起黃金大旗"
+    },
+    {
+      "episode": 6,
+      "section": 1,
+      "title": "一、李天王哪吒戰敗，金星二度宣恩詔"
+    },
+    {
+      "episode": 6,
+      "section": 2,
+      "title": "二、二登天界大聖府，遊手好閒惹仙憂"
+    },
+    {
+      "episode": 6,
+      "section": 3,
+      "title": "三、許真人進言天帝，大聖受命掌桃園"
+    },
+    {
+      "episode": 6,
+      "section": 4,
+      "title": "四、三千六百株仙樹，天地同壽神桃現"
+    },
+    {
+      "episode": 6,
+      "section": 5,
+      "title": "五、熟透蟠桃香氣撲，大聖垂涎三尺難自制"
+    },
+    {
+      "episode": 6,
+      "section": 6,
+      "title": "六、脫袍爬上神樹頂，飽餐九千年大仙桃"
+    },
+    {
+      "episode": 6,
+      "section": 7,
+      "title": "七、挺著圓肚樹杈眠，蟠桃勝會風雲起"
+    },
+    {
+      "episode": 7,
+      "section": 1,
+      "title": "一、七仙女提籃採桃，後園驚見光禿禿"
+    },
+    {
+      "episode": 7,
+      "section": 2,
+      "title": "二、仙女名單無大聖，怒動真言定群芳"
+    },
+    {
+      "episode": 7,
+      "section": 3,
+      "title": "三、半路巧遇赤腳仙，悟空撒謊誘大仙"
+    },
+    {
+      "episode": 7,
+      "section": 4,
+      "title": "四、瞌睡蟲弄倒造酒官，瑤池痛飲瓊漿液"
+    },
+    {
+      "episode": 7,
+      "section": 5,
+      "title": "五、酩酊大醉摸錯路，誤闖道祖兜率宮"
+    },
+    {
+      "episode": 7,
+      "section": 6,
+      "title": "六、拔開紅葫蘆聞藥香，如嚼炒豆吞金丹"
+    },
+    {
+      "episode": 7,
+      "section": 7,
+      "title": "七、金丹發作驚大禍，施隱身法遁花果"
+    },
+    {
+      "episode": 8,
+      "section": 1,
+      "title": "一、十萬天兵布天羅，觀音舉薦二郎神"
+    },
+    {
+      "episode": 8,
+      "section": 2,
+      "title": "二、灌江口神君奉詔，率梅山六弟領神鷹"
+    },
+    {
+      "episode": 8,
+      "section": 3,
+      "title": "三、美猴王對陣二郎神，神兵大戰三百合"
+    },
+    {
+      "episode": 8,
+      "section": 4,
+      "title": "四、神鷹猛犬衝陣腳，麻雀鷂鷹初鬥法"
+    },
+    {
+      "episode": 8,
+      "section": 5,
+      "title": "五、潛入深澗變大魚，跳上草叢化水蛇"
+    },
+    {
+      "episode": 8,
+      "section": 6,
+      "title": "六、搖身一變土地廟，尾巴變旗桿露破綻"
+    },
+    {
+      "episode": 8,
+      "section": 7,
+      "title": "七、化陣青煙騰空起，大鬧二郎真君廟"
+    },
+    {
+      "episode": 9,
+      "section": 1,
+      "title": "一、太上老君拋金剛琢，神猴被擒斬妖台"
+    },
+    {
+      "episode": 9,
+      "section": 2,
+      "title": "二、天雷地火難傷身，老君請旨入卦爐"
+    },
+    {
+      "episode": 9,
+      "section": 3,
+      "title": "三、八卦爐內藏玄機，巽宮位避開烈焰"
+    },
+    {
+      "episode": 9,
+      "section": 4,
+      "title": "四、漫長四十九日煙燻，煉就火眼金睛"
+    },
+    {
+      "episode": 9,
+      "section": 5,
+      "title": "五、爐蓋揭開金光暴射，狠狠一蹬神爐倒"
+    },
+    {
+      "episode": 9,
+      "section": 6,
+      "title": "六、漫天神火落人間，直打到凌霄寶殿"
+    },
+    {
+      "episode": 9,
+      "section": 7,
+      "title": "七、雷將王靈官苦抵擋，急召如來佛降妖"
+    },
+    {
+      "episode": 10,
+      "section": 1,
+      "title": "一、打至通明殿外，如來佛祖奉宣降魔"
+    },
+    {
+      "episode": 10,
+      "section": 2,
+      "title": "二、天生神猴誇神通，佛祖微笑設掌心賭約"
+    },
+    {
+      "episode": 10,
+      "section": 3,
+      "title": "三、縱身躍上佛祖掌心，一個筋斗翻出十萬里"
+    },
+    {
+      "episode": 10,
+      "section": 4,
+      "title": "四、天盡頭五根巨柱，大聖題名撒猴尿"
+    },
+    {
+      "episode": 10,
+      "section": 5,
+      "title": "五、得意洋洋回佛前，驚見指上題字與臊氣"
+    },
+    {
+      "episode": 10,
+      "section": 6,
+      "title": "六、翻掌化作五行山，神猴苦壓五峰下"
+    },
+    {
+      "episode": 10,
+      "section": 7,
+      "title": "七、六字真言定山巔，飢餐鐵丸渴飲銅汁待唐僧"
+    }
+  ]
+}
