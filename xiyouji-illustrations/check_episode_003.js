@@ -5,10 +5,11 @@ async page => {
     await page.locator('[data-word="' + word + '"]').first().click();
     const modal = page.locator('#vocabModal');
     if (!await modal.isVisible()) throw new Error('Missing card: ' + word);
-    const quiz = modal.locator('.ep003-word-quiz');
-    if (await quiz.getAttribute('open') !== null) throw new Error('Answer already shown');
-    await quiz.locator('summary').click();
-    if (!await quiz.locator('p').isVisible()) throw new Error('Answer did not reveal');
+    const definition = modal.locator('#modalWordDef');
+    if (!await definition.textContent()) throw new Error('Missing definition: ' + word);
+    if (await definition.locator('details, .ep003-word-example').count()) {
+      throw new Error('Glossary should use the original plain format');
+    }
     await modal.locator('.modal-close').click();
   }
   const headings = await page.locator('h2.section-heading').count();

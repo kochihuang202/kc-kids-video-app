@@ -17,5 +17,4 @@ def apply_episode_003_edition(episode_number, markup):
         markup, count = re.subn(pattern, lambda _: block.group(), markup, count=1, flags=re.S)
         if count != 1:
             raise ValueError("Episode 003 build template changed")
-    style = re.search(r'<style id="ep003-word-style">.*?</style>', edition, re.S)
-    return markup.replace("</head>", style.group() + "\n</head>", 1)
+    return markup

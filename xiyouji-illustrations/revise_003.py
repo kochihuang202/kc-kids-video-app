@@ -30,30 +30,20 @@ for phrase, target, sound in [
 def ruby(text):
     return ze.ruby_plain_text(text, overrides)
 
-cards = {
-    "斤": ("⚖️", "古人用斤來說東西有多重。", "鋼叉和畫戟，哪一把比較重？", "畫戟！七千二百斤比三千六百斤重。"),
-    "龍婆": ("🐉", "龍婆是龍王的妻子。", "誰提醒龍王去海底寶庫找神鐵？", "是龍婆，她知道神鐵最近一直發光。"),
-    "灌醉": ("🍶", "一直勸別人喝酒，讓對方喝醉。", "龍王請悟空喝酒，心裡在打什麼主意？", "他們想等悟空喝醉，再把他抓起來。"),
-    "擺布": ("🎭", "控制別人，要對方照自己的意思做。", "如果你沒辦法自己選，只能聽別人的，這叫什麼？", "這就叫被別人擺布。"),
-    "定海神珍鐵": ("🌊", "故事裡，大禹用這根神鐵量水有多深。", "這根神鐵後來變成什麼寶物？", "如意金箍棒！它能變得又長又粗，也能縮得像針一樣小。"),
-    "九股鋼叉": ("🍴", "股在這裡就是叉子的尖頭。九股鋼叉有九個尖頭。", "如果少一個尖頭，還剩幾個？", "八個尖頭。你答對了嗎？"),
-    "方天畫戟": ("🌙", "它像一桿長槍，尖頭旁邊有月牙形的刀刃。", "哪一部分像月亮？", "槍頭旁彎彎的刀刃。"),
-    "巡海夜叉": ("🐚", "故事裡替龍王看守宮門的守衛。", "悟空來到龍宮，誰先攔下他？", "巡海夜叉。他得先問清楚來客是誰。"),
-    "趁手": ("✏️", "拿起來剛剛好，用起來很順。", "太粗的筆不好握，那支筆趁手嗎？", "不趁手。能輕鬆握住的筆才趁手。"),
-    "一丈": ("📏", "丈是古人量長短的單位。", "故事用丈來說鋼叉有多長，還是有多重？", "有多長。說重量時，故事用的是斤。"),
+new_definitions = {
+    "斤": "古人用來說東西有多重的單位。",
+    "龍婆": "這個故事裡，龍婆是龍王的妻子。",
+    "灌醉": "一直勸別人喝酒，讓對方喝醉。",
+    "擺布": "控制別人，要對方照自己的意思做。",
+    "月牙形": "像剛露出一小彎的月亮。",
+    "掄圓": "把手裡的東西揮成一個大圈。",
+    "莽撞": "還沒想清楚就急著去做。",
+    "忒": "就是「太」或「非常」的意思。",
+    "哆嗦": "身體抖個不停。這裡是說龍王嚇得一直發抖。",
+    "耗時間": "把時間花在一件事情上，拖了很久。",
 }
-for word, (icon, meaning, question, answer) in cards.items():
-    diagram = {
-        "斤": f'<p>🍴 {ruby("三千六百斤")}<br>🌙 {ruby("七千二百斤")}</p>',
-        "定海神珍鐵": f'<p>🪨 {ruby("大鐵柱")} → 🪄 {ruby("金箍棒")} → 🪡 {ruby("小針")}</p>',
-        "九股鋼叉": f'<p aria-hidden="true">🔺🔺🔺　🔺🔺🔺　🔺🔺🔺</p>',
-    }.get(word, "")
-    glossary[word] = {"title_ruby": ruby(word), "meaning_ruby":
-        f'<p><span aria-hidden="true">{icon}</span> {ruby(meaning)}</p>'
-        f'{diagram}'
-        f'<details class="ep003-word-quiz"><summary>💡 {ruby(question)}</summary><p>✨ {ruby(answer)}</p></details>'}
-for word in ("定海神針", "強制拆遷"):
-    glossary.pop(word, None)
+for word, meaning in new_definitions.items():
+    glossary.setdefault(word, {"title_ruby": ruby(word), "meaning_ruby": ruby(meaning)})
 
 figures = re.findall(r'<figure class="story-picture".*?</figure>', page, re.S)
 paragraphs = [(m[1], plain_text(m[2])) for m in re.finditer(r'<p class="(source-block[^"]*)">(.*?)</p>', page, re.S)]
@@ -115,13 +105,6 @@ assert section == 7
 start = page.index("<h2")
 end = page.index("<!-- 章節底部翻頁列 -->", start)
 result = page[:start] + "\n".join(blocks) + "\n" + page[end:]
-result = result.replace("</head>", """<style id="ep003-word-style">
-.ep003-word-quiz { background: #eff7ed; color: #203f32; padding: .55rem .85rem; border-radius: .85rem; margin-top: .65rem; }
-.ep003-word-quiz summary, .interaction-discovery summary { cursor: pointer; padding-block: .35rem; }
-.ep003-word-quiz summary:focus-visible, .interaction-discovery summary:focus-visible { outline: 3px solid #226951; outline-offset: 3px; }
-.ep003-word-quiz p { margin-block: .5rem .15rem; }
-</style>
-</head>""", 1)
 result = re.sub(r"(window\.GLOSSARY_DATA\s*=\s*)\{[^\n]*\}(;)",
                 lambda m: m[1] + json.dumps(glossary, ensure_ascii=False) + m[2], result, count=1)
 output.write_text(result, encoding="utf-8")
