@@ -1,0 +1,687 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "ep01_01_birth.jpg",
+  "style": "16:9 Chinese watercolor picture book, only characters involved, child-friendly symbolic framing for intense scenes.",
+  "scenes": [
+    {
+      "episode": 51,
+      "section": 1,
+      "title": "一、冷水淋頭火攻心，大聖昏厥休克息"
+    },
+    {
+      "episode": 51,
+      "section": 2,
+      "title": "二、八戒推宮活血脈，大聖醒轉訴火威"
+    },
+    {
+      "episode": 51,
+      "section": 3,
+      "title": "三、請得四海龍王至，普降甘霖滅妖火"
+    },
+    {
+      "episode": 51,
+      "section": 4,
+      "title": "四、龍王私雨難熄火，三昧真火更熾烈"
+    },
+    {
+      "episode": 51,
+      "section": 5,
+      "title": "五、大聖煙熏眼落淚，火眼金睛受重傷"
+    },
+    {
+      "episode": 51,
+      "section": 6,
+      "title": "六、命豬八戒赴南海，求請觀音菩薩臨"
+    },
+    {
+      "episode": 51,
+      "section": 7,
+      "title": "七、紅孩兒半路設伏，變作觀音擒八戒"
+    },
+    {
+      "episode": 52,
+      "section": 1,
+      "title": "一、八戒落入火雲洞，吊在樑上受嘲弄"
+    },
+    {
+      "episode": 52,
+      "section": 2,
+      "title": "二、孩兒派小妖送帖，請父同享唐僧肉"
+    },
+    {
+      "episode": 52,
+      "section": 3,
+      "title": "三、大聖半路截妖使，奪下請帖巧施計"
+    },
+    {
+      "episode": 52,
+      "section": 4,
+      "title": "四、變作大力牛魔王，大搖大擺入洞中"
+    },
+    {
+      "episode": 52,
+      "section": 5,
+      "title": "五、假父親受子跪拜，推託吃齋避葷腥"
+    },
+    {
+      "episode": 52,
+      "section": 6,
+      "title": "六、孩兒考問生日辰，大聖難答露破綻"
+    },
+    {
+      "episode": 52,
+      "section": 7,
+      "title": "七、紅孩兒拔槍刺父，大聖翻身逃出洞"
+    },
+    {
+      "episode": 53,
+      "section": 1,
+      "title": "一、大聖親赴落伽山，泣拜觀音訴苦辛"
+    },
+    {
+      "episode": 53,
+      "section": 2,
+      "title": "二、菩薩拋下定海珠，玉淨甘露降火雲"
+    },
+    {
+      "episode": 53,
+      "section": 3,
+      "title": "三、天罡三十六寶刀，化作千葉蓮花臺"
+    },
+    {
+      "episode": 53,
+      "section": 4,
+      "title": "四、紅孩兒坐蓮花臺，利刃穿身骨肉痛"
+    },
+    {
+      "episode": 53,
+      "section": 5,
+      "title": "五、剃度落髮受五戒，五個金箍定心身"
+    },
+    {
+      "episode": 53,
+      "section": 6,
+      "title": "六、金箍收緊痛服心，收作身邊善財童"
+    },
+    {
+      "episode": 53,
+      "section": 7,
+      "title": "七、救出唐僧與八戒，師徒四人重上路"
+    },
+    {
+      "episode": 54,
+      "section": 1,
+      "title": "一、第二季圓滿功成，妖魔除盡志更堅"
+    },
+    {
+      "episode": 54,
+      "section": 2,
+      "title": "二、黑水滔滔起怒瀾，車遲鬥法辨玄虛"
+    },
+    {
+      "episode": 54,
+      "section": 3,
+      "title": "三、九曲磨難煉金丹，第三季壯闊啟程"
+    },
+    {
+      "episode": 55,
+      "section": 1,
+      "title": "一、八百黑水濁浪翻，師徒受阻渡河難"
+    },
+    {
+      "episode": 55,
+      "section": 2,
+      "title": "二、河中泛來黑木船，老翁招手喚渡河"
+    },
+    {
+      "episode": 55,
+      "section": 3,
+      "title": "三、唐僧八戒登舟渡，船沉巨浪吞聖僧"
+    },
+    {
+      "episode": 55,
+      "section": 4,
+      "title": "四、黑水河神現水面，痛訴衡陽被霸佔"
+    },
+    {
+      "episode": 55,
+      "section": 5,
+      "title": "五、原是涇河孽龍子，強佔府邸名鼉龍"
+    },
+    {
+      "episode": 55,
+      "section": 6,
+      "title": "六、沙僧下水引妖精，竹節鋼鞭破水出"
+    },
+    {
+      "episode": 55,
+      "section": 7,
+      "title": "七、黑水河畔激戰起，大聖岸上觀妖形"
+    },
+    {
+      "episode": 56,
+      "section": 1,
+      "title": "一、鼉龍閉府不出戰，差妖送帖請舅爺"
+    },
+    {
+      "episode": 56,
+      "section": 2,
+      "title": "二、請帖送往西海龍，大聖截帖辨分明"
+    },
+    {
+      "episode": 56,
+      "section": 3,
+      "title": "三、直上西海問敖閏，龍王驚恐請太子"
+    },
+    {
+      "episode": 56,
+      "section": 4,
+      "title": "四、摩昂太子領神兵，下臨黑水戰表弟"
+    },
+    {
+      "episode": 56,
+      "section": 5,
+      "title": "五、金鐧大戰三稜刃，擒拿鼉龍伏法門"
+    },
+    {
+      "episode": 56,
+      "section": 6,
+      "title": "六、放還黑水老河神，波平浪靜舟自渡"
+    },
+    {
+      "episode": 56,
+      "section": 7,
+      "title": "七、師徒安然渡黑水，昂首重登西行程"
+    },
+    {
+      "episode": 57,
+      "section": 1,
+      "title": "一、車遲國外五鳳樓，千里傳來修道聲"
+    },
+    {
+      "episode": 57,
+      "section": 2,
+      "title": "二、百名僧人拉重車，受盡道徒皮鞭抽"
+    },
+    {
+      "episode": 57,
+      "section": 3,
+      "title": "三、大聖化作道流問，方知國王信三仙"
+    },
+    {
+      "episode": 57,
+      "section": 4,
+      "title": "四、二十年來道風盛，和尚淪為苦役奴"
+    },
+    {
+      "episode": 57,
+      "section": 5,
+      "title": "五、打碎重車放眾僧，許諾大聖來搭救"
+    },
+    {
+      "episode": 57,
+      "section": 6,
+      "title": "六、三清大殿設齋醮，夜幕降臨妖道聚"
+    },
+    {
+      "episode": 57,
+      "section": 7,
+      "title": "七、三清觀前探虛實，大聖呼喚師兄弟"
+    },
+    {
+      "episode": 58,
+      "section": 1,
+      "title": "一、虎力鹿力羊力仙，三清聖水享尊崇"
+    },
+    {
+      "episode": 58,
+      "section": 2,
+      "title": "二、師兄弟三人騰雲，假扮道友混入場"
+    },
+    {
+      "episode": 58,
+      "section": 3,
+      "title": "三、大聖施法起狂風，吹熄宮燈驚散道"
+    },
+    {
+      "episode": 58,
+      "section": 4,
+      "title": "四、元始天尊靈寶君，太上老君泥塑座"
+    },
+    {
+      "episode": 58,
+      "section": 5,
+      "title": "五、推倒泥像扔五坑，三人高坐享供果"
+    },
+    {
+      "episode": 58,
+      "section": 6,
+      "title": "六、大嚼蒸餅啃仙果，八戒狼吞如風卷"
+    },
+    {
+      "episode": 58,
+      "section": 7,
+      "title": "七、小道童半路返殿，撞見三清嚼供果"
+    },
+    {
+      "episode": 59,
+      "section": 1,
+      "title": "一、小道急報三國師，神仙顯靈下凡塵"
+    },
+    {
+      "episode": 59,
+      "section": 2,
+      "title": "二、虎力大仙率眾拜，虔誠祈求賜聖水"
+    },
+    {
+      "episode": 59,
+      "section": 3,
+      "title": "三、大聖佯裝天尊音，命取金缽盛仙甘"
+    },
+    {
+      "episode": 59,
+      "section": 4,
+      "title": "四、八戒沙僧齊放尿，滿缽騷尿充聖水"
+    },
+    {
+      "episode": 59,
+      "section": 5,
+      "title": "五、道士歡喜共暢飲，大呼甘露味酸鹹"
+    },
+    {
+      "episode": 59,
+      "section": 6,
+      "title": "六、大聖笑現真面目，戲耍國師碎神壇"
+    },
+    {
+      "episode": 59,
+      "section": 7,
+      "title": "七、群道震怒喊捉拿，師徒騰空大笑歸"
+    },
+    {
+      "episode": 60,
+      "section": 1,
+      "title": "一、五鳳樓前倒換關，三位國師攔聖駕"
+    },
+    {
+      "episode": 60,
+      "section": 2,
+      "title": "二、指斥唐僧縱徒鬧，殿前打賭比祈雨"
+    },
+    {
+      "episode": 60,
+      "section": 3,
+      "title": "三、虎力大仙登高臺，令牌一揮風雲動"
+    },
+    {
+      "episode": 60,
+      "section": 4,
+      "title": "四、悟空飛上九重天，喝退風伯雷公部"
+    },
+    {
+      "episode": 60,
+      "section": 5,
+      "title": "五、道士揮劍雨不下，大聖登臺令神兵"
+    },
+    {
+      "episode": 60,
+      "section": 6,
+      "title": "六、金箍棒指甘霖降，傾盆大雨潤乾坤"
+    },
+    {
+      "episode": 60,
+      "section": 7,
+      "title": "七、車遲國王敬高僧，國師懷恨提坐禪"
+    },
+    {
+      "episode": 61,
+      "section": 1,
+      "title": "一、高築百尺木禪臺，唐僧自告比坐禪"
+    },
+    {
+      "episode": 61,
+      "section": 2,
+      "title": "二、大仙唐僧平臺坐，鹿力暗施害僧計"
+    },
+    {
+      "episode": 61,
+      "section": 3,
+      "title": "三、臭蟲咬僧頭欲墜，悟空變雀啄道童"
+    },
+    {
+      "episode": 61,
+      "section": 4,
+      "title": "四、變作大蜈蚣叮仙，虎力跌下百尺臺"
+    },
+    {
+      "episode": 61,
+      "section": 5,
+      "title": "五、國王命猜隔板物，紅漆大櫃藏山河"
+    },
+    {
+      "episode": 61,
+      "section": 6,
+      "title": "六、大聖變蟲入櫃咬，地理裙化破僧衣"
+    },
+    {
+      "episode": 61,
+      "section": 7,
+      "title": "七、道童換作小和尚，連勝三場定輸贏"
+    },
+    {
+      "episode": 62,
+      "section": 1,
+      "title": "一、國師含羞動殺機，提出斷頭斬首比"
+    },
+    {
+      "episode": 62,
+      "section": 2,
+      "title": "二、大聖歡喜上前應，劊子手手起刀落"
+    },
+    {
+      "episode": 62,
+      "section": 3,
+      "title": "三、腔子噴血頭滾地，大聖高呼長長長"
+    },
+    {
+      "episode": 62,
+      "section": 4,
+      "title": "四、虎力暗放黃犬銜，大聖腔內生新頭"
+    },
+    {
+      "episode": 62,
+      "section": 5,
+      "title": "五、虎力上臺受刀斬，人頭落地血如泉"
+    },
+    {
+      "episode": 62,
+      "section": 6,
+      "title": "六、大聖變犬銜頭走，投入御河無所尋"
+    },
+    {
+      "episode": 62,
+      "section": 7,
+      "title": "七、道士腔子倒塵埃，現出黃毛無頭虎"
+    },
+    {
+      "episode": 63,
+      "section": 1,
+      "title": "一、鹿力不忿比剖腹，利刃劃肚現心肝"
+    },
+    {
+      "episode": 63,
+      "section": 2,
+      "title": "二、大聖揮刀自剖胸，整理臟腑完好全"
+    },
+    {
+      "episode": 63,
+      "section": 3,
+      "title": "三、鹿力剖腹展內臟，大聖變鷹叼心走"
+    },
+    {
+      "episode": 63,
+      "section": 4,
+      "title": "四、鹿力倒地現白鹿，羊力驚恐比油鍋"
+    },
+    {
+      "episode": 63,
+      "section": 5,
+      "title": "五、大聖跳入滾油鍋，洗澡嬉水浮游樂"
+    },
+    {
+      "episode": 63,
+      "section": 6,
+      "title": "六、破除冷龍冰雪計，羊力熟透現羯羊"
+    },
+    {
+      "episode": 63,
+      "section": 7,
+      "title": "七、三妖伏誅朝綱正，車遲國王敬佛僧"
+    },
+    {
+      "episode": 64,
+      "section": 1,
+      "title": "一、八百通天大河橫，濁浪滔天無渡船"
+    },
+    {
+      "episode": 64,
+      "section": 2,
+      "title": "二、夜宿河畔陳家莊，聽得哭聲動悲傷"
+    },
+    {
+      "episode": 64,
+      "section": 3,
+      "title": "三、預備童男與童女，年年進貢保平安"
+    },
+    {
+      "episode": 64,
+      "section": 4,
+      "title": "四、靈感大王施神威，若不供奉降大災"
+    },
+    {
+      "episode": 64,
+      "section": 5,
+      "title": "五、大聖變作陳關保，八戒化作一秤金"
+    },
+    {
+      "episode": 64,
+      "section": 6,
+      "title": "六、端坐靈感大王廟，靜候妖魔享盛宴"
+    },
+    {
+      "episode": 64,
+      "section": 7,
+      "title": "七、陰風慘慘入廟堂，大聖八戒嚴陣待"
+    },
+    {
+      "episode": 65,
+      "section": 1,
+      "title": "一、靈感大王乘雲降，推門欲啖金童身"
+    },
+    {
+      "episode": 65,
+      "section": 2,
+      "title": "二、八戒掄起九齒耙，築碎妖怪護身甲"
+    },
+    {
+      "episode": 65,
+      "section": 3,
+      "title": "三、大聖挺身現威容，金箍棒響打妖王"
+    },
+    {
+      "episode": 65,
+      "section": 4,
+      "title": "四、靈感大王慌逃竄，一頭扎入通天河"
+    },
+    {
+      "episode": 65,
+      "section": 5,
+      "title": "五、河底妖府商對策，鱖魚妹妹獻毒計"
+    },
+    {
+      "episode": 65,
+      "section": 6,
+      "title": "六、呼風喚雨降嚴霜，冰封八百通天河"
+    },
+    {
+      "episode": 65,
+      "section": 7,
+      "title": "七、引誘唐僧踏冰過，開冰落水擒高僧"
+    },
+    {
+      "episode": 66,
+      "section": 1,
+      "title": "一、一夜北風寒徹骨，漫天飛雪凍河川"
+    },
+    {
+      "episode": 66,
+      "section": 2,
+      "title": "二、八百通天凝厚冰，村民競相踩冰行"
+    },
+    {
+      "episode": 66,
+      "section": 3,
+      "title": "三、唐僧救經心切切，執意踏冰渡長河"
+    },
+    {
+      "episode": 66,
+      "section": 4,
+      "title": "四、白馬裹布防滑跌，師徒四人踏冰行"
+    },
+    {
+      "episode": 66,
+      "section": 5,
+      "title": "五、行至河心冰層裂，靈感大王掀波浪"
+    },
+    {
+      "episode": 66,
+      "section": 6,
+      "title": "六、唐僧連人帶馬墜，沉入黑洞入龍宮"
+    },
+    {
+      "episode": 66,
+      "section": 7,
+      "title": "七、石匣冷藏唐三藏，八戒沙僧哭斷腸"
+    },
+    {
+      "episode": 67,
+      "section": 1,
+      "title": "一、八戒沙僧踏水入，直插通天河底門"
+    },
+    {
+      "episode": 67,
+      "section": 2,
+      "title": "二、九瓣赤銅錘舞動，靈感大王破水出"
+    },
+    {
+      "episode": 67,
+      "section": 3,
+      "title": "三、水底大戰三千丈，二僧佯敗引妖出"
+    },
+    {
+      "episode": 67,
+      "section": 4,
+      "title": "四、妖怪躍出通天水，大聖雲頭舉棒迎"
+    },
+    {
+      "episode": 67,
+      "section": 5,
+      "title": "五、金箍棒起風雲變，妖怪縮頸遁水底"
+    },
+    {
+      "episode": 67,
+      "section": 6,
+      "title": "六、泥石封閉水宮門，任憑叫罵不出戰"
+    },
+    {
+      "episode": 67,
+      "section": 7,
+      "title": "七、大聖駕雲赴南海，求請觀音降靈感"
+    },
+    {
+      "episode": 68,
+      "section": 1,
+      "title": "一、紫竹林前候菩薩，未梳雲鬢手編籃"
+    },
+    {
+      "episode": 68,
+      "section": 2,
+      "title": "二、觀音手提紫竹籃，赤腳駕雲降通天"
+    },
+    {
+      "episode": 68,
+      "section": 3,
+      "title": "三、竹籃拋入河心轉，念動真言收孽障"
+    },
+    {
+      "episode": 68,
+      "section": 4,
+      "title": "四、提起竹籃金光燦，籃中活跳金金魚"
+    },
+    {
+      "episode": 68,
+      "section": 5,
+      "title": "五、原是蓮花池養魚，偷聽講經成神通"
+    },
+    {
+      "episode": 68,
+      "section": 6,
+      "title": "六、陳家莊民齊跪拜，手繪魚籃觀音像"
+    },
+    {
+      "episode": 68,
+      "section": 7,
+      "title": "七、通天河底救聖僧，師徒重逢喜淚流"
+    },
+    {
+      "episode": 69,
+      "section": 1,
+      "title": "一、八百巨浪無舟渡，陳家莊送金銀舟"
+    },
+    {
+      "episode": 69,
+      "section": 2,
+      "title": "二、唐僧堅辭不受金，河心浮出白老龜"
+    },
+    {
+      "episode": 69,
+      "section": 3,
+      "title": "三、千年老龜口吐言，自願駝載渡長河"
+    },
+    {
+      "episode": 69,
+      "section": 4,
+      "title": "四、師徒四人登龜背，白馬安然立中央"
+    },
+    {
+      "episode": 69,
+      "section": 5,
+      "title": "五、乘風破浪如履地，一日渡過八百里"
+    },
+    {
+      "episode": 69,
+      "section": 6,
+      "title": "六、老龜託付問佛祖，探問何時脫凡身"
+    },
+    {
+      "episode": 69,
+      "section": 7,
+      "title": "七、唐僧合掌許諾言，師徒登岸別神龜"
+    },
+    {
+      "episode": 70,
+      "section": 1,
+      "title": "一、金兜山前路崎嶇，山高林密妖氣深"
+    },
+    {
+      "episode": 70,
+      "section": 2,
+      "title": "二、大聖騰空去化齋，畫地為圈護師身"
+    },
+    {
+      "episode": 70,
+      "section": 3,
+      "title": "三、唐僧受寒見樓閣，八戒貪暖催進門"
+    },
+    {
+      "episode": 70,
+      "section": 4,
+      "title": "四、樓中空無一人影，床上錦繡納錦衣"
+    },
+    {
+      "episode": 70,
+      "section": 5,
+      "title": "五、八戒偷穿三領衣，捆縛勒骨現妖索"
+    },
+    {
+      "episode": 70,
+      "section": 6,
+      "title": "六、獨角兕大王坐金兜，鋼槍在手鎖聖僧"
+    },
+    {
+      "episode": 70,
+      "section": 7,
+      "title": "七、金箍棒出戰金兜，太上老牛擺白圈"
+    }
+  ]
+}

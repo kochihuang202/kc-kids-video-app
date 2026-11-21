@@ -21,7 +21,8 @@ async page => {
           bounds.right <= document.documentElement.clientWidth + 1;
       }));
     });
-    if (figures.length !== 7 || figures.some(valid => !valid)) {
+    const expected = episode === 54 ? 3 : 7;
+    if (figures.length !== expected || figures.some(valid => !valid)) {
       throw new Error('Section illustration check failed in episode ' + id);
     }
     results.push(id);

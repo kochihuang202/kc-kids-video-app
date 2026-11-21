@@ -33,7 +33,7 @@ class IllustrationTests(unittest.TestCase):
 
     def test_unchanged_episodes_are_preserved(self):
         self.save_manifest()
-        original = (SITE / "episodes" / "003.html").read_text(encoding="utf-8")
+        original = (Path(__file__).with_name("pages") / "003.html").read_text(encoding="utf-8")
         self.assertEqual(apply_section_illustrations(3, original, self.manifest), original)
 
     def test_heading_drift_is_rejected(self):

@@ -4,7 +4,7 @@ $site = 'C:\Users\ji3cp\Documents\xiyouji-reader'
 $engine = 'C:\Users\ji3cp\Documents\FXN-Antigravity'
 $pages = @($First..$Last | ForEach-Object { '{0:000}.html' -f $_ })
 $files = @(Get-ChildItem -LiteralPath (Join-Path $Stage images) -Filter '*.jpg')
-if ($files.Count -ne 7 * $pages.Count) { throw 'Expected seven illustrations per episode' }
+$expectedImages = 0
 $compiler = Join-Path $engine 'compile_all_remaining_episodes.py'
 $compilerText = [IO.File]::ReadAllText($compiler)
 $renderLine = '    full_html = render_unified_page(ep_num, ep_title, heading_ruby, body_inner_html, compiled_glossary)'
@@ -30,11 +30,14 @@ foreach ($page in $pages) {
     $original = [IO.File]::ReadAllText((Join-Path $site "episodes\$page"))
     $updated = [IO.File]::ReadAllText((Join-Path $Stage "episodes\$page"))
     $pattern = '(?s)\n<figure class="story-picture" data-section-illustration="\d+">\n.*?</figure>\n'
-    if ([regex]::Matches($updated, $pattern).Count -ne 7 -or
+    $headings = [regex]::Matches($original, '<h2\b').Count
+    $expectedImages += $headings
+    if ($headings -eq 0 -or [regex]::Matches($updated, $pattern).Count -ne $headings -or
         ($original -cne $updated -and $original -cne [regex]::Replace($updated, $pattern, ''))) {
         throw "Unexpected changes in $page"
     }
 }
+if ($files.Count -ne $expectedImages) { throw 'Expected one illustration per section' }
 foreach ($file in $files) {
     Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $site images)
     Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $PSScriptRoot images)
