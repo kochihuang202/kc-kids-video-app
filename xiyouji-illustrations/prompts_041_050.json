@@ -1,0 +1,358 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "ep01_01_birth.jpg",
+  "style": "16:9 hand-painted Chinese watercolor picture book, paper texture, Wukong with plain narrow golden circlet, no red ribbon. Child-friendly magical action without graphic harm.",
+  "continuity": "變身後只畫該形態。第48集依情節畫真假唐僧，紅孩兒全程著衣。",
+  "scenes": [
+    {
+      "episode": 41,
+      "section": 1,
+      "title": "一、召喚金頭揭諦至，山神合力移三山"
+    },
+    {
+      "episode": 41,
+      "section": 2,
+      "title": "二、大聖脫困探妖蹤，巧遇二妖持寶來"
+    },
+    {
+      "episode": 41,
+      "section": 3,
+      "title": "三、精細鬼對伶俐蟲，紫金葫蘆羊脂玉"
+    },
+    {
+      "episode": 41,
+      "section": 4,
+      "title": "四、大聖變作老神仙，自誇葫蘆能裝天"
+    },
+    {
+      "episode": 41,
+      "section": 5,
+      "title": "五、上天借得日月蔽，黑夜漫天換寶貝"
+    },
+    {
+      "episode": 41,
+      "section": 6,
+      "title": "六、二妖歡喜受矇騙，大聖得寶笑開顏"
+    },
+    {
+      "episode": 41,
+      "section": 7,
+      "title": "七、折返洞前戰銀角，寶貝易主顯神通"
+    },
+    {
+      "episode": 42,
+      "section": 1,
+      "title": "一、二妖回洞訴丟寶，金角驚怒知猴謀"
+    },
+    {
+      "episode": 42,
+      "section": 2,
+      "title": "二、派使去請壓龍母，幌金繩索擒妖猴"
+    },
+    {
+      "episode": 42,
+      "section": 3,
+      "title": "三、大聖半路截巴山，變作小妖赴壓龍"
+    },
+    {
+      "episode": 42,
+      "section": 4,
+      "title": "四、壓龍洞中見老狐，抬起花轎請妖婆"
+    },
+    {
+      "episode": 42,
+      "section": 5,
+      "title": "五、行至半路棒下死，奪下幌金真神索"
+    },
+    {
+      "episode": 42,
+      "section": 6,
+      "title": "六、大聖變作狐老娘，坐入花轎入蓮花"
+    },
+    {
+      "episode": 42,
+      "section": 7,
+      "title": "七、金角銀角叩頭拜，八戒識破尾巴猴"
+    },
+    {
+      "episode": 43,
+      "section": 1,
+      "title": "一、假老娘露真面目，大鬧蓮花殿堂傾"
+    },
+    {
+      "episode": 43,
+      "section": 2,
+      "title": "二、銀角慌取紫金瓶，叫喚大聖應名聲"
+    },
+    {
+      "episode": 43,
+      "section": 3,
+      "title": "三、大聖變名者行孫，應答一聲吸入瓶"
+    },
+    {
+      "episode": 43,
+      "section": 4,
+      "title": "四、化作毫毛避溶汁，巧使金蟬脫殼計"
+    },
+    {
+      "episode": 43,
+      "section": 5,
+      "title": "五、換名行者孫再來，手持真瓶喚銀角"
+    },
+    {
+      "episode": 43,
+      "section": 6,
+      "title": "六、銀角應聲落入瓶，貼上神符化濃水"
+    },
+    {
+      "episode": 43,
+      "section": 7,
+      "title": "七、金角痛哭失兄弟，七星寶劍怒發威"
+    },
+    {
+      "episode": 44,
+      "section": 1,
+      "title": "一、金角大王展神威，芭蕉烈扇起神火"
+    },
+    {
+      "episode": 44,
+      "section": 2,
+      "title": "二、漫天烈火燒山谷，大聖借水難熄火"
+    },
+    {
+      "episode": 44,
+      "section": 3,
+      "title": "三、智偷金角芭蕉扇，倒煽神火燒群妖"
+    },
+    {
+      "episode": 44,
+      "section": 4,
+      "title": "四、金角難敵收玉淨，兩件法寶困妖王"
+    },
+    {
+      "episode": 44,
+      "section": 5,
+      "title": "五、太上老君跨青牛，自天降下討法寶"
+    },
+    {
+      "episode": 44,
+      "section": 6,
+      "title": "六、道童偷下凡間難，金銀童子返天宮"
+    },
+    {
+      "episode": 44,
+      "section": 7,
+      "title": "七、救出師弟與恩師，重整行裝上大道"
+    },
+    {
+      "episode": 45,
+      "section": 1,
+      "title": "一、寶林禪寺借宿宿，方丈傲慢驅貧僧"
+    },
+    {
+      "episode": 45,
+      "section": 2,
+      "title": "二、大聖一棒碎石獅，和尚磕頭迎長老"
+    },
+    {
+      "episode": 45,
+      "section": 3,
+      "title": "三、夜半三更僧房靜，冷風習習吹油燈"
+    },
+    {
+      "episode": 45,
+      "section": 4,
+      "title": "四、水淋淋冤魂現身，自稱烏雞真國王"
+    },
+    {
+      "episode": 45,
+      "section": 5,
+      "title": "五、道人祈雨救全城，井邊推君霸江山"
+    },
+    {
+      "episode": 45,
+      "section": 6,
+      "title": "六、三年深井化冤鬼，夜訪聖僧乞伸冤"
+    },
+    {
+      "episode": 45,
+      "section": 7,
+      "title": "七、留下白玉金圭物，求請神僧救蒼生"
+    },
+    {
+      "episode": 46,
+      "section": 1,
+      "title": "一、晨起長老告徒兒，夜夢冤魂淚漣漣"
+    },
+    {
+      "episode": 46,
+      "section": 2,
+      "title": "二、太子出獵至寺前，大聖變作紅漆盒"
+    },
+    {
+      "episode": 46,
+      "section": 3,
+      "title": "三、小盒立帝貨自跳，逗引太子入禪房"
+    },
+    {
+      "episode": 46,
+      "section": 4,
+      "title": "四、展現白玉金圭信，太子驚疑驗真假"
+    },
+    {
+      "episode": 46,
+      "section": 5,
+      "title": "五、速歸深宮探母后，泣訴三年父王變"
+    },
+    {
+      "episode": 46,
+      "section": 6,
+      "title": "六、母子抱頭痛哭泣，方知假王坐朝綱"
+    },
+    {
+      "episode": 46,
+      "section": 7,
+      "title": "七、夜出宮闈尋神僧，密謀除奸復王位"
+    },
+    {
+      "episode": 47,
+      "section": 1,
+      "title": "一、八戒夜半下琉璃，金井探寶尋金身"
+    },
+    {
+      "episode": 47,
+      "section": 2,
+      "title": "二、井底水晶遇龍王，定顏神珠護君屍"
+    },
+    {
+      "episode": 47,
+      "section": 3,
+      "title": "三、八戒背負屍身回，痛罵行者耍師弟"
+    },
+    {
+      "episode": 47,
+      "section": 4,
+      "title": "四、大聖上天求老君，借得九轉還魂丹"
+    },
+    {
+      "episode": 47,
+      "section": 5,
+      "title": "五、金丹入口吞入喉，烏雞國王起死生"
+    },
+    {
+      "episode": 47,
+      "section": 6,
+      "title": "六、換上道袍入朝廷，金鑾殿上證真偽"
+    },
+    {
+      "episode": 47,
+      "section": 7,
+      "title": "七、真假二王相對峙，滿朝文武辨難清"
+    },
+    {
+      "episode": 48,
+      "section": 1,
+      "title": "一、妖道現形遁半空，大聖金箍棒緊隨"
+    },
+    {
+      "episode": 48,
+      "section": 2,
+      "title": "二、妖魔見勢難抵擋，搖身變作唐三藏"
+    },
+    {
+      "episode": 48,
+      "section": 3,
+      "title": "三、兩個唐僧同面貌，八戒沙僧辨不清"
+    },
+    {
+      "episode": 48,
+      "section": 4,
+      "title": "四、大聖命師念金箍，真師合掌念真言"
+    },
+    {
+      "episode": 48,
+      "section": 5,
+      "title": "五、假僧頭痛滾於地，現出原形欲逃遁"
+    },
+    {
+      "episode": 48,
+      "section": 6,
+      "title": "六、文殊菩薩按雲頭，照出青毛寶獅獸"
+    },
+    {
+      "episode": 48,
+      "section": 7,
+      "title": "七、因果循環懲王罪，國王復位謝神僧"
+    },
+    {
+      "episode": 49,
+      "section": 1,
+      "title": "一、六月炎天路途遙，枯松澗邊見紅雲"
+    },
+    {
+      "episode": 49,
+      "section": 2,
+      "title": "二、一朵紅雲隨風飄，大聖警惕知有妖"
+    },
+    {
+      "episode": 49,
+      "section": 3,
+      "title": "三、古樹上縛紅肚兜，光身孩兒哭啼啼"
+    },
+    {
+      "episode": 49,
+      "section": 4,
+      "title": "四、自稱強盜破家殺，求求師父解繩索"
+    },
+    {
+      "episode": 49,
+      "section": 5,
+      "title": "五、唐僧慈悲動憐憫，命猴負載小頑童"
+    },
+    {
+      "episode": 49,
+      "section": 6,
+      "title": "六、大聖知妖欲砸石，小妖施展壓身法"
+    },
+    {
+      "episode": 49,
+      "section": 7,
+      "title": "七、紅孩兒刮起狂風，掠走唐僧入火雲"
+    },
+    {
+      "episode": 50,
+      "section": 1,
+      "title": "一、大聖喚來土地神，盤問火雲洞妖蹤"
+    },
+    {
+      "episode": 50,
+      "section": 2,
+      "title": "二、原是牛魔王之子，號稱火雲聖嬰王"
+    },
+    {
+      "episode": 50,
+      "section": 3,
+      "title": "三、大聖歡喜親戚遇，登門認親索唐僧"
+    },
+    {
+      "episode": 50,
+      "section": 4,
+      "title": "四、火雲洞外報姓名，紅孩兒不認叔父"
+    },
+    {
+      "episode": 50,
+      "section": 5,
+      "title": "五、火尖神槍戰金箍，二妖大戰幾十合"
+    },
+    {
+      "episode": 50,
+      "section": 6,
+      "title": "六、孩兒捶鼻口吐火，三昧真火衝天起"
+    },
+    {
+      "episode": 50,
+      "section": 7,
+      "title": "七、大聖難抵濃煙熏，敗退落入枯松澗"
+    }
+  ]
+}
