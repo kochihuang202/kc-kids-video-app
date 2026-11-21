@@ -44,6 +44,9 @@ new_definitions = {
 }
 for word, meaning in new_definitions.items():
     glossary.setdefault(word, {"title_ruby": ruby(word), "meaning_ruby": ruby(meaning)})
+for entry in glossary.values():
+    if not entry.get("meaning_ruby") and entry.get("meaning"):
+        entry["meaning_ruby"] = ruby(entry["meaning"])
 
 figures = re.findall(r'<figure class="story-picture".*?</figure>', page, re.S)
 paragraphs = [(m[1], plain_text(m[2])) for m in re.finditer(r'<p class="(source-block[^"]*)">(.*?)</p>', page, re.S)]
