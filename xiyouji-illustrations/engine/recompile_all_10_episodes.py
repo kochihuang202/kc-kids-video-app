@@ -13,6 +13,7 @@ sys.path.append(r"c:\Users\ji3cp\Documents\FXN-Antigravity")
 import taiwan_zhuyin_engine as ze
 from journey_glossary_master import MASTER_GLOSSARY
 from section_illustrations import apply_section_illustrations
+from episode_003_edition import apply_episode_003_edition
 import build_shimajiro_edition as ep1_data
 import build_episode_002 as ep2_data
 from episode_data_003_004 import EPISODE_003, EPISODE_004
@@ -261,7 +262,9 @@ def compile_episode(ep_num, ep_title, paragraphs, raw_glossary, extra_phrases=No
     heading_ruby = ze.ruby_plain_text(heading_raw, phrase_dict)
     
     full_html = render_unified_page(ep_num, ep_title, heading_ruby, body_inner_html, compiled_glossary)
-    full_html = apply_section_illustrations(ep_num, full_html)
+    if ep_num != 3:
+        full_html = apply_section_illustrations(ep_num, full_html)
+    full_html = apply_episode_003_edition(ep_num, full_html)
     dest_path = rf"c:\Users\ji3cp\Documents\xiyouji-reader\episodes\{ep_num:03d}.html"
     with open(dest_path, "w", encoding="utf-8") as f:
         f.write(full_html)
