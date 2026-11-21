@@ -1,12 +1,12 @@
-"""Carry the reviewed episode 003 story and glossary through normal recompiles."""
+"""Carry reviewed story and glossary editions through normal recompiles."""
 from pathlib import Path
 import re
 
 
 def apply_episode_003_edition(episode_number, markup):
-    if episode_number != 3:
+    if episode_number not in {3, 4}:
         return markup
-    edition = Path(__file__).with_name("episode_003_reviewed.html").read_text(encoding="utf-8")
+    edition = Path(__file__).with_name(f"episode_{episode_number:03d}_reviewed.html").read_text(encoding="utf-8")
     for pattern in (
         r"<h2\b.*?(?=<!-- 章節底部翻頁列 -->|<footer\b)",
         r"window\.GLOSSARY_DATA\s*=\s*\{[^\n]*\};",

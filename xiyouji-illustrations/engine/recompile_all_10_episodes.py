@@ -262,7 +262,7 @@ def compile_episode(ep_num, ep_title, paragraphs, raw_glossary, extra_phrases=No
     heading_ruby = ze.ruby_plain_text(heading_raw, phrase_dict)
     
     full_html = render_unified_page(ep_num, ep_title, heading_ruby, body_inner_html, compiled_glossary)
-    if ep_num != 3:
+    if ep_num not in {3, 4}:
         full_html = apply_section_illustrations(ep_num, full_html)
     full_html = apply_episode_003_edition(ep_num, full_html)
     dest_path = rf"c:\Users\ji3cp\Documents\xiyouji-reader\episodes\{ep_num:03d}.html"
