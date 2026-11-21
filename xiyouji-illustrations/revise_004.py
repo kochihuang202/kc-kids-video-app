@@ -33,8 +33,29 @@ for word, sounds in {
 }.items():
     overrides[word] = list(zip(word, sounds.split(), strict=True))
 
+YI_SECOND = set("句個樣變共套座樂下陣看瞪萬定")
+YI_FOURTH = set("身隻戳根群笑抬聲擱天黑白聽推枚直本驚轉筆扔通")
+RUBY_TOKEN = re.compile(r"<ruby\b[^>]*><rb>([^<]+)</rb>.*?</ruby>", re.S)
+
+
+def pronounce_yi(markup):
+    tokens = list(RUBY_TOKEN.finditer(markup))
+    edits = []
+    for current, following in zip(tokens, tokens[1:]):
+        if current[1] != "一" or re.sub(r"<[^>]+>", "", markup[current.end():following.start()]).strip():
+            continue
+        next_char = following[1]
+        tone = "ˊ" if next_char in YI_SECOND else "ˋ" if next_char in YI_FOURTH else ""
+        if not tone:
+            continue
+        edits.append((current.start(), current.end(), ze.ruby_phrase_html([("一", "ㄧ" + tone)])))
+    for start, end, replacement in reversed(edits):
+        markup = markup[:start] + replacement + markup[end:]
+    return markup
+
+
 def ruby(text):
-    return ze.ruby_plain_text(text, overrides)
+    return pronounce_yi(ze.ruby_plain_text(text, overrides))
 
 definitions = """
 披掛盔甲|打仗時穿戴的衣服、帽子和護具。
@@ -167,7 +188,7 @@ def question(number):
         return ""
     title, prompt, answer = questions[number]
     def with_cards(text):
-        return ze.ruby_content(text, overrides, list(glossary))
+        return pronounce_yi(ze.ruby_content(text, overrides, list(glossary)))
     return (f'<div class="interaction-card"><div class="interaction-card-header"><div class="interaction-card-title">💡 {with_cards(title)}</div></div>'
             f'<div class="interaction-prompt">{with_cards(prompt)}</div><div class="interaction-discovery">⭐ {with_cards(answer)}</div></div>')
 
@@ -182,7 +203,8 @@ for cls, text in paragraphs:
         text = "悟空把小針藏進耳朵，是故事裡的法術。把東西塞進耳朵或鼻子可能會受傷。"
     for old, new in edits.items():
         text = text.replace(old, new)
-    blocks.append(f'<p class="{cls}">{ze.ruby_content(text, overrides, list(glossary))}</p>')
+    annotated = pronounce_yi(ze.ruby_content(text, overrides, list(glossary)))
+    blocks.append(f'<p class="{cls}">{annotated}</p>')
 assert section == 7
 start = page.index("<h2")
 end = page.index("<!-- 章節底部翻頁列 -->", start)
