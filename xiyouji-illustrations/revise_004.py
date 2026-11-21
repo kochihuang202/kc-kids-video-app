@@ -30,6 +30,8 @@ for word, sounds in {
     "禺狨": "ㄩˊ ㄖㄨㄥˊ",
     "將那": "ㄐㄧㄤ ㄋㄚˋ",
     "定海神珍鐵": "ㄉㄧㄥˋ ㄏㄞˇ ㄕㄣˊ ㄓㄣ ㄊㄧㄝˇ",
+    "酒意": "ㄐㄧㄡˇ ㄧˋ",
+    "勾你": "ㄍㄡ ㄋㄧˇ",
 }.items():
     overrides[word] = list(zip(word, sounds.split(), strict=True))
 
@@ -152,6 +154,30 @@ definitions = """
 治罪|認定一個人做錯事後，按照規矩處罰他。
 報仇雪恨|想讓傷害過自己的人也受處罰，好消掉心裡的怨氣。
 安生日子|平平安安、少有麻煩的生活。
+酒意|喝酒後頭有點昏、想睡或不太清楚的感覺。
+巍峨百尺|形容城門又高又大。「尺」是古人量長短的單位。這裡是說城門高得要仰起頭看。
+勾你|鬼差說的「勾你」，是要把你的魂帶去地府。
+踏|用腳踩在東西上。
+圍過來|從四周走近，把人或東西圈在中間。
+微微|只有一點點。微微一笑，就是輕輕笑了一下。
+痛快|心裡很開心、很舒服。這裡說妖王們在一起玩得很開心。
+一套|把有圈的東西從上面放下去，圈住人或物。
+腳下|這裡指城門樓的最下面，也就是城門前。
+到這兒|到這裡來。
+嘿嘿一樂|嘿嘿地笑了一下。
+哪聽|這裡的意思是根本不肯聽。
+騰|形容一下子起來。這裡說悟空突然火冒三丈。
+晃了晃|拿在手裡輕輕搖幾下。
+見門砸門|每看到一道門，就把那道門打壞。
+哪敢|因為害怕或尊敬，所以不敢做。
+多了去了|表示多得很，數也數不完。
+抹沒了|用墨把原來的字塗掉，讓字看不見。
+緊接著|前一件事一做完，就立刻做下一件事。
+一通亂打|一下子到處揮打，沒有照著一定順序。
+給告了|到能作主的人面前，說出對方做了什麼事。
+臣|古時在君王手下做事的人，對君王說話時也用它稱自己。
+妖猴|被當成妖怪的猴子。這裡是龍王對悟空的叫法。
+過不上|沒辦法過得了這樣的生活。
 """
 for line in definitions.strip().splitlines():
     word, meaning = line.split("|", 1)
@@ -175,6 +201,8 @@ edits = {
     "搶走了如意金箍棒，又搶走了一身的披掛盔甲，順手啊，又把水晶宮給強拆了": "帶走了如意金箍棒和一身盔甲，還打斷了水晶宮的大柱子",
     "定海神針鐵": "定海神珍鐵",
     "這回不是金箍棒長了": "這回不是金箍棒變長了",
+    "迷迷糊糊中，孫悟空就覺得": "孫悟空還帶著幾分酒意。迷迷糊糊中，他覺得",
+    "他憑什麼勾我的魂啊": "他憑什麼把我的魂帶走啊",
     "這森羅寶殿是哪兒啊？這就是閻王爺的辦公室啊！": "森羅寶殿，就是閻王爺在地府辦事的大殿。",
     "全給勾劃了一遍": "全都用筆劃掉了",
 }
@@ -197,10 +225,11 @@ blocks = []
 section = 0
 for cls, text in paragraphs:
     if section < len(starts) and text.startswith(starts[section][1]):
-        blocks.extend((question(section), f'<h2 class="section-heading">{ruby(starts[section][0])}</h2>', figures[section]))
+        heading = pronounce_yi(ze.ruby_content(starts[section][0], overrides, list(glossary)))
+        blocks.extend((question(section), f'<h2 class="section-heading">{heading}</h2>', figures[section]))
         section += 1
     if text.startswith("不過，寶貝，我在這兒必須提醒你"):
-        text = "悟空把小針藏進耳朵，是故事裡的法術。把東西塞進耳朵或鼻子可能會受傷。"
+        text = "悟空把小針藏進耳朵，是故事裡的法術。我們的耳朵有細小的構造，把東西塞進耳朵或鼻子可能會受傷。"
     for old, new in edits.items():
         text = text.replace(old, new)
     annotated = pronounce_yi(ze.ruby_content(text, overrides, list(glossary)))
@@ -210,6 +239,14 @@ start = page.index("<h2")
 end = page.index("<!-- 章節底部翻頁列 -->", start)
 result = page[:start] + "\n".join(blocks) + "\n" + page[end:]
 linked = set(re.findall(r'data-word="([^"]+)"', result))
+original_links = set(re.findall(r'data-word="([^"]+)"', page)) & original.keys()
+missing_original_links = sorted((original_links | {"巍峨", "百尺"}) - linked)
+if missing_original_links:
+    links = "　".join(ze.ruby_content(word, overrides, [word]) for word in missing_original_links)
+    extra = f'<p class="source-block" id="extra-glossary">{ruby("本集補充詞語")}　{links}</p>\n'
+    result = result.replace("<!-- 章節底部翻頁列 -->", extra + "<!-- 章節底部翻頁列 -->", 1)
+    linked = set(re.findall(r'data-word="([^"]+)"', result))
+assert original_links <= linked
 added = sorted(linked & (glossary.keys() - original.keys()))
 glossary = {key: value for key, value in glossary.items() if key in original or key in linked}
 assert all(all(glossary[key][field] == value for field, value in entry.items()) for key, entry in original.items())
