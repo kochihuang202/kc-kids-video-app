@@ -1,6 +1,10 @@
-param([Parameter(Mandatory)][string]$Stage, [int]$First = 3, [int]$Last = 10)
+param(
+    [Parameter(Mandatory)][string]$Stage,
+    [int]$First = 3,
+    [int]$Last = 10,
+    [string]$Site = 'C:\Users\ji3cp\Documents\xiyouji-reader'
+)
 $ErrorActionPreference = 'Stop'
-$site = 'C:\Users\ji3cp\Documents\xiyouji-reader'
 $engine = 'C:\Users\ji3cp\Documents\FXN-Antigravity'
 $pages = @($First..$Last | ForEach-Object { '{0:000}.html' -f $_ })
 $files = @(Get-ChildItem -LiteralPath (Join-Path $Stage images) -Filter '*.jpg')
