@@ -48,16 +48,19 @@ if(fs.existsSync(extraFile))for(const [id,entry]of Object.entries(JSON.parse(fs.
 }
 // Latest diary/todo parents are a separately reviewed overlay. Never replace the
 // shared React/editor/runtime graph merely because a newer artifact is present.
-const diaryReceipt=path.join(root,'diary-todo-source/receipt.json');
+for(const overlayFolder of ['diary-todo-source','tag-source']){
+const diaryReceipt=path.join(root,overlayFolder,'receipt.json');
 if(fs.existsSync(diaryReceipt)){
   const receipt=JSON.parse(fs.readFileSync(diaryReceipt,'utf8'));
   if(receipt.version!=='1.1.70'||receipt.artifactSha256!=='55f2510a542593342409e591b3d0040b51702f64306fb629d9820c37fe474f4b')throw Error('Unreviewed diary/todo source identity');
   for(const [id,entry]of Object.entries(receipt.modules)){
     if(!/^\d+$/.test(id)||entry.filename!==`module-${id}.cjs`||!Array.isArray(entry.requires)||entry.requires.some(value=>!/^\d+$/.test(value)))throw Error('Invalid diary/todo overlay');
-    const relative=`diary-todo-source/${entry.filename}`,source=fs.readFileSync(path.join(root,relative),'utf8'),ast=ts.createSourceFile(relative,source,99,true),factory=ast.statements[0]?.expression?.right;
+    const relative=`${overlayFolder}/${entry.filename}`,source=fs.readFileSync(path.join(root,relative),'utf8'),ast=ts.createSourceFile(relative,source,99,true),factory=ast.statements[0]?.expression?.right;
     if(ast.parseDiagnostics.length||!factory||!ts.isFunctionExpression(factory))throw Error('Invalid diary/todo factory '+id);
     modules.set(id,{id,file:entry.member,start:factory.getStart(ast),end:factory.end,sha256:entry.factorySha256,bytes:Buffer.byteLength(source),requires:entry.requires,factory:factory.getText(ast),editableSourceOverride:relative,preparedSha256:entry.formattedSha256});
+    if(entry.chunkIds?.length)chunks.push({file:entry.member,chunkIds:entry.chunkIds,bootstrapWithheld:true});
   }
+}
 }
 const runtimeFile=files.find(file=>path.basename(file).startsWith('webpack-'));if(!runtimeFile)throw Error('No original webpack runtime');
 const runtime=fs.readFileSync(runtimeFile,'utf8'),match=/([\w$]+)\.m=([\w$]+),/.exec(runtime);if(!match)throw Error('Runtime exposure anchor not found');

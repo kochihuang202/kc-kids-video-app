@@ -2,9 +2,11 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),ts=require('typescript'),asar=require('@electron/asar');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const artifactSha256='55f2510a542593342409e591b3d0040b51702f64306fb629d9820c37fe474f4b';
-const root=path.resolve(__dirname,'../../private-original-editor'),out=path.join(root,'diary-todo-source');
-const seeds=['23997','55411','37055','72930','42142'];
-function prepareDiaryTodos(archive){
+const root=path.resolve(__dirname,'../../private-original-editor');
+const defaultSeeds=['23997','55411','37055','72930','42142'];
+function prepareDiaryTodos(archive,{folder='diary-todo-source',seeds=defaultSeeds}={}){
+ if(!['diary-todo-source','tag-source'].includes(folder))throw Error('Unreviewed source folder');
+ const out=path.join(root,folder);
  if(hash(fs.readFileSync(archive))!==artifactSha256)throw Error('Diary/todo artifact identity differs; inspect the new version before preparing');
  const read=name=>asar.extractFile(archive,name.split('/').join(path.sep));
  if(JSON.parse(read('package.json')).version!=='1.1.70')throw Error('Expected FlexNote 1.1.70');
@@ -23,8 +25,9 @@ function prepareDiaryTodos(archive){
   // Preparation is idempotent and never silently discards a reviewed private integration patch.
   if(fs.existsSync(target)&&hash(fs.readFileSync(target))!==hash(formatted)&&previous?.modules[id]?.formattedSha256!==hash(formatted))throw Error('Unrecognized modified diary/todo factory '+id);
   if(!fs.existsSync(target))fs.writeFileSync(target,formatted);
-  records[id]={filename,member,sourceSha256:hash(source),factorySha256:hash(raw),formattedSha256:hash(formatted),requires:[...deps]};
-  for(const next of deps)if(!baseline[next]&&!records[next])queue.push(next);
+  const chunkIds=[];function chunks(node){if(ts.isCallExpression(node)&&node.expression.getText(ast).includes('webpackChunk_N_E')&&node.arguments[0]&&ts.isArrayLiteralExpression(node.arguments[0])&&node.pos<=factory.pos&&node.end>=factory.end){const ids=node.arguments[0].elements[0];if(ts.isArrayLiteralExpression(ids))for(const value of ids.elements)if(ts.isNumericLiteral(value))chunkIds.push(Number(value.text));}ts.forEachChild(node,chunks);}chunks(ast);
+  records[id]={filename,member,sourceSha256:hash(source),factorySha256:hash(raw),formattedSha256:hash(formatted),requires:[...deps],chunkIds};
+  for(const next of deps)if((!baseline[next]||baseline[next].editableSource?.startsWith(folder+'/'))&&!records[next])queue.push(next);
  }
  const receipt={version:'1.1.70',artifactSha256,seeds,modules:records,execution:'inert syntax only; original bootstrap withheld',dependencyPolicy:'Selected complete parent factories plus dependencies absent from the existing private registry. Shared dependencies require explicit compatibility review before replacement.'};
  fs.writeFileSync(path.join(out,'receipt.json'),JSON.stringify(receipt,null,2));return {out,modules:Object.keys(records),sourceFiles:parsed.size};

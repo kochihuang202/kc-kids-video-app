@@ -3,7 +3,7 @@
 import {documentIdentity} from './note-version.mjs';
 // A MediaCard instance may hold an image or a (path-linked) video content row.
 const kindMatches=(type,kind)=>({NoteCard:['text'],DailyNote:['text'],PDFCard:['pdf'],MediaCard:['image','video'],image:['image'],video:['video'],WebsiteCard:['html']}[type]||[]).includes(kind);
-export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene }) {
+export function createOriginalNoteWriter({ navigate, coordinator, load, contents, instances, putContent, acceptContentDocument, replaceContentDocument, catalogOperation, store, toNode, getBoardId, getLiveDocument, hydrateScene,tagDefaults }) {
     // The original 31167 video flow sends addMediaCardInstance before addMediaCard. An
     // instance row cannot precede its content, so hold it until that card arrives.
     const pendingMediaInstances = new Map();
@@ -92,9 +92,18 @@ export function createOriginalNoteWriter({ navigate, coordinator, load, contents
             const note = payload.noteCard || payload;
             if (contents.has(note.id))
                 throw Error('卡片ID已存在');
+            const tagSeed=[],graph=await load(),defaults=tagDefaults?.(graph);
+            const tagId=payload.tagId||defaults?.tagList.find(tag=>tag.createdBy==='system'&&tag.name==='NoteCard')?.id;
+            if(tagId){if(!graph.tags?.some(tag=>tag.id===tagId)){
+                if(!defaults?.tagList.some(tag=>tag.id===tagId))throw Error('標籤不存在');
+                for(const tag of defaults.tagList)if(!graph.tags?.some(row=>row.id===tag.id)){const {cards,...data}=tag;tagSeed.push(catalogOperation('tag',data));}
+                for(const group of defaults.tagGroups)if(!graph.tagGroups?.some(row=>row.id===group.id))tagSeed.push(catalogOperation('tag-group',group));
+            }}
             const document = typeof note.content === 'string' ? JSON.parse(note.content) : note.content;
             putContent({ id: note.id, title: note.title, document, kind: 'text', tone: 'sage' });
+            for(const operation of tagSeed)coordinator.stage(operation);
             coordinator.stage(catalogOperation('card', { id: note.id, createdTime: note.createdTime, lastEditedTime: note.lastEditedTime, isTrashed: false, propertiesConfig: note.propertiesConfig || [] }));
+            if(tagId)coordinator.stage(catalogOperation('card-tag',{id:`${note.id}:${tagId}`,cardId:note.id,cardType:'NoteCard',tagId,blockId:'',createdBy:note.createdBy||'inkbridge-local',createdTime:note.createdTime||new Date().toISOString()}));
             await coordinator.flush();
             return { success: true };
         }

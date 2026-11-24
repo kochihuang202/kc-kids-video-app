@@ -1,6 +1,14 @@
 const test = require('node:test'), assert = require('node:assert/strict'), crypto = require('node:crypto'), fs = require('node:fs/promises'), os = require('node:os'), path = require('node:path');
 const { mergeStates, writeState, readState, stateDigest, assertSafeState } = require('../src/main/workspace-merge.cjs');
 const { WorkspaceDatabase } = require('../src/main/database.cjs');
+
+test('tag and collection deletion versus peer edits cannot leave dangling metadata',()=>{
+ const b=base();Object.assign(b.tables.meta,{'tag:tag-a':{id:'tag-a',name:'A',subTagIds:[]},'tag:tag-b':{id:'tag-b',name:'B',subTagIds:[]},'tag-group:group':{id:'group',name:'Group',tags:['tag-a','tag-b']}});
+ const l=structuredClone(b),r=structuredClone(b);delete l.tables.meta['tag:tag-a'];l.tables.meta['tag-group:group'].tags=['tag-b'];r.tables.meta['tag:tag-b'].subTagIds=['tag-a'];
+ const m=mergeStates(b,l,r);assert(m.unresolved.length>0);assertSafeState(m.state);
+ const invalid=structuredClone(b);invalid.tables.meta['collection-view:view']={id:'view',collectionId:'missing'};assert.throws(()=>assertSafeState(invalid),/關聯/);
+ const cyclic=structuredClone(b);cyclic.tables.meta['tag:tag-a'].subTagIds=['tag-b'];cyclic.tables.meta['tag:tag-b'].subTagIds=['tag-a'];assert.throws(()=>assertSafeState(cyclic),/循環/);
+});
 function base() { return { workspaceId: crypto.randomUUID(), revision: 1, tables: { boards: { a: { id: 'a', title: '工作', view_json: { x: 0, y: 0, zoom: 1 } }, b: { id: 'b', title: '生活', view_json: { x: 0, y: 0, zoom: 1 } } }, contents: { one: { id: 'one', title: '報告', text: { body: '原文', document: null }, kind: 'text', tone: 'sage', revision: 1 }, two: { id: 'two', title: '家裡', text: { body: '另一張', document: null }, kind: 'text', tone: 'sage', revision: 1 } }, instances: { i: { id: 'i', content_id: 'one', board_id: 'a', x: 1, y: 2, width: 300, height: 200, z: 0 }, j: { id: 'j', content_id: 'two', board_id: 'b', x: 1, y: 2, width: 300, height: 200, z: 0 } }, meta: { 'card:one': { id: 'one', lastEditedTime: '2026-11-01T00:00:00Z' } } } }; }
 test('different boards/cards and separate fields of one card merge symmetrically without conflicts', () => {
     const b = base(), l = structuredClone(b), r = structuredClone(b);

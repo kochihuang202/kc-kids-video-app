@@ -108,6 +108,17 @@ function refs(table, id, row) {
         add('contents', row.cardId);
         meta('tag', row.tagId);
     }
+    const ids=value=>typeof value==='string'?JSON.parse(value):value||[];
+    if(kind==='tag')for(const child of ids(row.subTagIds))meta('tag',child);
+    if(kind==='tag-group')for(const tag of ids(row.tags))meta('tag',tag);
+    if(kind==='collection'){
+        if(row.queryConfig?.type==='tag')meta('tag',row.queryConfig.id);
+        for(const view of ids(row.viewIds))meta('collection-view',view);
+        meta('collection-view',row.currentViewId);meta('collection-view',row.defaultViewId);
+    }
+    if(kind==='collection-view')meta('collection',row.collectionId);
+    if(kind==='collection-property'){meta('collection',row.collectionId);meta('property',row.propertyId);}
+    if(kind==='object-property')meta('property',row.propertyId);
     // CAS references are independently checked by inspectDatabase before publication.
     return out;
 }
@@ -145,7 +156,7 @@ function preview(value) {
 }
 function textOf(v) { if (!v || typeof v !== 'object')
     return ''; return [typeof v.text === 'string' ? v.text : '', ...Object.values(v).filter(x => x && typeof x === 'object').map(x => Array.isArray(x) ? x.map(textOf).join(' ') : textOf(x))].filter(Boolean).join(' '); }
-const structures = [['whiteboard-instance', ['whiteboardId', 'containerId', 'containerType']], ['section', ['parentId']], ['mindmap-node', ['childNodeIds']], ['todo', ['parentId']], ['connection', ['beginId', 'endId']]];
+const structures = [['tag',['subTagIds']], ['whiteboard-instance', ['whiteboardId', 'containerId', 'containerType']], ['section', ['parentId']], ['mindmap-node', ['childNodeIds']], ['todo', ['parentId']], ['connection', ['beginId', 'endId']]];
 function cycle(state, kind) {
     const links = new Map(), add = (from, to, key) => { if (!links.has(from))
         links.set(from, []); links.get(from).push({ to, key }); };
@@ -156,8 +167,9 @@ function cycle(state, kind) {
             if (row.containerType === 'whiteboard')
                 add(row.containerId, row.whiteboardId, key);
         }
-        else if (kind === 'mindmap-node') {
-            for (const id of row.childNodeIds || [])
+        else if (kind === 'mindmap-node'||kind==='tag') {
+            const children=kind==='tag'?(typeof row.subTagIds==='string'?JSON.parse(row.subTagIds):row.subTagIds):row.childNodeIds;
+            for (const id of children || [])
                 add(row.id, id, key);
         }
         else if (kind === 'connection') {

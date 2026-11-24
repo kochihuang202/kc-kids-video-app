@@ -11,7 +11,8 @@ import {enterWorkspace,installOperationUI} from './operation-ui.mjs';
 import {installSaveIndicator} from './save-indicator.mjs';
 import {createOriginalNoteWriter} from '/inkbridge-core/original-note-writes.mjs';
 import {folderDeletionOperations} from '/inkbridge-core/original-folder-writes.mjs';
-import {createOriginalTags} from '/inkbridge-core/original-tags.mjs';
+import {createOriginalTags,filterTagTree} from '/inkbridge-core/original-tags.mjs';
+import {createOriginalTagCollections} from '/inkbridge-core/original-tag-collections.mjs';
 import {createOriginalBookmarks} from '/inkbridge-core/original-bookmarks.mjs';
 import {createOriginalPdf} from '/inkbridge-core/original-pdf.mjs';
 import {createOriginalVideo} from '/inkbridge-core/original-video.mjs';
@@ -34,6 +35,7 @@ import {mergeContentBlockTranslations} from './content-blocks.mjs';
 import {installWebShare} from './web-share.mjs';
 
 const $=selector=>document.querySelector(selector),r=window.__originalRequire;
+globalThis.__inkbridgeFilterTagTree=filterTagTree;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
 const saveIndicator=installSaveIndicator();
 function report(error){state.errors.push({message:error.message,stack:error.stack});$('#persistence-status').textContent=error.message;$('#persistence-status').classList.add('save-error');}
@@ -217,7 +219,7 @@ async function boot(){
   function registerModalEditor(contentId,editor){if(!contentId||modalEditors.has(editor))return;modalEditors.set(editor,contentId);editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));const read=()=>readLiveEditor(editor,contentId);const offUpdate=editor.registerUpdateListener(({tags})=>{if(tags.has('editor-force-update')){editorSnapshots.set(editor,JSON.stringify(bodyFromEditor(editor).document));return;}queueMicrotask(read);});let offRoot;offRoot=editor.registerRootListener(root=>{if(!root){queueMicrotask(()=>{try{read();}catch(error){report(error);}offUpdate();offRoot?.();modalEditors.delete(editor);});}});}
   function replaceContentDocument(contentId,document){const targets=[...modalEditors].filter(([,id])=>id===contentId).map(([editor])=>editor).concat([...editors].filter(([id])=>instances.get(id)?.contentId===contentId).map(([,editor])=>editor));const parsed=targets.map(editor=>[editor,editor.parseEditorState(document)]);for(const [editor,value]of parsed)editor.setEditorState(value);acceptContentDocument(contentId,document);}
   globalThis.__inkbridgeRegisterSidebarEditor=registerModalEditor;
-  const writeNoteBase=createOriginalNoteWriter({hydrateScene:()=>sections.hydrate(),navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
+  const writeNoteBase=createOriginalNoteWriter({tagDefaults:graph=>tags.project(graph),hydrateScene:()=>sections.hydrate(),navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,acceptContentDocument,replaceContentDocument,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId,getLiveDocument:id=>[...modalEditors].some(([editor,contentId])=>contentId===id&&editor.getRootElement()?.isConnected)?contents.get(id)?.document:null});
   const writeNote=async(method,payload)=>{const result=await writeNoteBase(method,payload);if(method==='registerFiles')for(const file of payload.files)files.set(file.id,file);if(['deleteNoteCardInstance','batchDeleteNoteCardInstances','batchDeleteCardsByType'].includes(method))connections.hydrate(await window.inkbridge.load());return result;};
   globalThis.__inkbridgeResetHeight=async ids=>{
     maxCardHeight=cardMaxHeight((await window.inkbridge.sync({method:'deviceRead'})).editorPreferences?.cardMaxHeight);
@@ -229,6 +231,7 @@ async function boot(){
   };
   window.addEventListener('focus',()=>window.inkbridge.sync({method:'deviceRead'}).then(value=>{maxCardHeight=cardMaxHeight(value.editorPreferences?.cardMaxHeight);}).catch(report));
   const tags=createOriginalTags({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});
+  const tagCollections=createOriginalTagCollections({r,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation,projectTags:graph=>tags.project(graph)});
   const bookmarks=createOriginalBookmarks({r,redux,navigate,coordinator,load:()=>window.inkbridge.load(),catalogOperation});await bookmarks.ready();
   const pdf=createOriginalPdf({navigate,coordinator,load:()=>window.inkbridge.load(),contents,instances,putContent,catalogOperation,store:originalStore,toNode,getBoardId:()=>boardId});
   globalThis.__inkbridgeOnWhiteboard=()=>!state.home;
@@ -263,7 +266,7 @@ async function boot(){
   // Once every mouse button is released while that overlay is open, the pointer
   // interaction is over; clear the flag the original mouse-up path left set.
   window.addEventListener('mouseup',event=>{if(event.buttons!==0)return;setTimeout(()=>{const store=originalStore.getState();if(store.isInteracting&&document.querySelector('[data-video-overlay-content]'))store.setIsInteracting(false);},0);},true);
-  shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,bookmarks,pdf,video,diary,todos,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,showVideo,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
+  shell=connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush:()=>coordinator.flush(),flushAll,registerModalEditor,writeNote,tags,tagCollections,bookmarks,pdf,video,diary,todos,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,showVideo,writeWhiteboard,writeCatalog,getActiveBoardId:()=>boardId,onError:report});
   nested=installNestedWhiteboards({r,graph,store:originalStore,getBoardId:()=>boardId,sections,navigate,coordinator,load:()=>window.inkbridge.load(),shell,rehydrate:()=>mindmaps.hydrate()});
   elements=createOriginalTextElements({r,graph,navigate,coordinator,store:originalStore,sections,getBoardId:()=>boardId});
   installOriginalClipboard({navigate,coordinator,load:()=>window.inkbridge.load(),elements,connections,rehydrate:applySharedGraph});

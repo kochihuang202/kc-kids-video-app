@@ -2,6 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { windowExpectations, assertWindowExpectations, projectWindowOperations, advanceWindowBaseline } from '../src/core/workspace-window-sync.mjs';
 
+test('tag collection property edits retain exact cross-window conflict preconditions',()=>{
+ const graph={boards:[],contents:[],instances:[],properties:[{id:'p',name:'Priority',type:'Text',config:{}}],collectionPropertyRelations:[],objectPropertyRelations:[]};
+ const operations=[{type:'putCatalog',kind:'property',data:{...graph.properties[0],name:'狀態'}},{type:'putCatalog',kind:'object-property',data:{id:'v',propertyId:'p',objectId:'card',value:'高'}}];
+ const expected=windowExpectations(graph,operations),next=projectWindowOperations(graph,operations);
+ assert.equal(next.properties[0].name,'狀態');assert.equal(next.objectPropertyRelations[0].value,'高');assertWindowExpectations(graph,operations,expected);
+ assert.throws(()=>assertWindowExpectations({...graph,properties:[{...graph.properties[0],name:'另一視窗'}]},operations,expected),{code:'WORKSPACE_CONFLICT'});
+});
+
 test('diary and standalone task catalogs retain shared-window conflict preconditions',()=>{
  const graph={boards:[],contents:[],instances:[],quickNotes:[{id:'day',date:'2026-11-17'}],todos:[{id:'task',title:'before',completed:false}]};
  const operations=[{type:'putCatalog',kind:'quick-note',data:{...graph.quickNotes[0],lastEditedTime:'new'}},{type:'putCatalog',kind:'todo',data:{...graph.todos[0],completed:true}}];

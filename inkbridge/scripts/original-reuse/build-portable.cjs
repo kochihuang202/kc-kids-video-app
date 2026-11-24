@@ -7,6 +7,7 @@ async function buildPortable(){
   require('./prepare-sharing.cjs').prepareSharing();
   require('./apply-edit-layout-patches.cjs')({root:path.join(project,'private-original-editor')});
   require('./apply-html-page-patches.cjs')({root:path.join(project,'private-original-editor')});
+  require('./apply-tag-patches.cjs')({root:path.join(project,'private-original-editor')});
   execFileSync(process.execPath,[path.join(__dirname,'collect.cjs')],{cwd:project,windowsHide:true,stdio:'pipe'});
   const commit=execFileSync('git',['rev-parse','--short=12','HEAD'],{cwd:project,encoding:'utf8',windowsHide:true}).trim();
   const version=require('../../package.json').version;

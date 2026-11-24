@@ -1,3 +1,11 @@
+## REG-177 — Complete tag page depends on canonical state, collections and lazy factories
+
+- Port the full 1.1.70 tag parents and collection renderers; sidebar/service existence alone did not establish a usable feature. A missing host ESM route blocked startup, and an unregistered native lazy chunk requested 84840.undefined.js instead of rendering the table. Recover complete selected factories plus their original chunk IDs; repeated preparation retains dependencies from the same overlay.
+- Confirmed UI regressions: matching a grandchild discarded its ancestors, and renaming only updated a local tree while canonical Redux remained stale. Preserve the matching ancestor path without writes; refresh canonical state after update/delete, while leaving native add actions in charge to prevent duplicate tags/groups.
+- Pure reads do not initialize shared revisions. Stable workspace-derived built-in IDs avoid duplicates across windows; legacy missing system collections use original constructors as virtual read defaults, materialized only by a valid edit. New native notes and explicit tag targets save their association in the same transaction. Invalid batches stage nothing.
+- Recursive tag deletion preserves notes/shared properties and removes dependent memberships and collection records. Merge safety now covers tag cycles, groups, collection/view references and property references; real delete/edit conflicts remain reviewable. Shared-window preconditions cover new property metadata.
+- Related Node suite: 50 passed. Added exact SQLite/CAS snapshot transfer assertions for tags/groups/collections/views/properties/values. Real check-tag-page and maintained check-native-tags passed in isolated Electron profiles; the latter now explicitly seeds its sample card. Source ABI: 1085 identified export uses, zero missing; runtime tests cover dynamic exports for the exercised flows. See inkbridge/docs/TAGS_PORT.md.
+
 ## REG-WJ-004 — 新增註解後，原詞卡仍須能點開
 
 - 第 004 集改標題與長詞標註後，原有 15 個點擊入口消失，即使詞庫仍有原文。

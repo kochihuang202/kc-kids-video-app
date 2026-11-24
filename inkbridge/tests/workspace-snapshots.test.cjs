@@ -13,14 +13,17 @@ test('consistent SQLite/CAS restore, no-op, interrupted publication, missing ass
   const options={localDirectory:local,database,getExchange:()=>exchange,resolveAttachment:()=>attachment,fault:stage=>{if(stage===fail)throw Error('injected '+stage);}};
   const snapshots=createWorkspaceSnapshots(options);
   try{
-    await commit('第一版');const request=snapshots.create();assert.equal(snapshots.create(),request);const first=await request;assert.equal(first.created,true);
+    await commit('第一版');
+    const catalogs=[['tag',{id:'work',name:'工作',subTagIds:[]}],['tag-group',{id:'group',name:'標籤分組',tags:['work']}],['card-tag',{id:'card-work',cardId:'card',tagId:'work',cardType:'NoteCard'}],['collection',{id:'collection',queryConfig:{type:'tag',id:'work'},viewIds:['table'],currentViewId:'table'}],['collection-view',{id:'table',collectionId:'collection',type:'table',config:{tableProperties:[]}}],['property',{id:'priority',name:'優先',type:'Text',config:{}}],['collection-property',{id:'column',collectionId:'collection',propertyId:'priority'}],['object-property',{id:'value',objectId:'card',propertyId:'priority',value:'高'}]];
+    revision=(await database.commit({requestId:crypto.randomUUID(),baseRevision:revision,operations:catalogs.map(([kind,data])=>({type:'putCatalog',kind,data}))})).revision;
+    const request=snapshots.create();assert.equal(snapshots.create(),request);const first=await request;assert.equal(first.created,true);
     const state=JSON.parse(await fs.readFile(path.join(local,'Profile/snapshot-state.json'))),workspace=(await database.load()).workspaceId;
     const directory=s=>path.join(exchange,'snapshots',workspace,s.snapshotId);
     const manifest=await snapshots.validate(exchange,directory(first));assert.equal(manifest.assets.length,1);
     assert.equal((await snapshots.create()).created,false);
     // Restore to an isolated working copy through standard SQLite, all rows survive.
     const restored=path.join(root,'restored.sqlite3');await fs.copyFile(path.join(directory(first),'database.sqlite3'),restored);
-    const copy=new WorkspaceDatabase(restored);assert.deepEqual(copy.load(),await database.load());copy.close();
+    const copy=new WorkspaceDatabase(restored);assert.deepEqual(copy.load(),await database.load());assert.equal(copy.load().objectPropertyRelations[0].value,'高');assert.equal(copy.load().tagGroups[0].tags[0],'work');copy.close();
     await commit('第二版');fail='after-database';await assert.rejects(snapshots.create(),/injected/);
     await snapshots.validate(exchange,directory(first));assert.deepEqual(JSON.parse(await fs.readFile(path.join(local,'Profile/snapshot-state.json'))),state);
     fail='';const second=await snapshots.create();assert.equal((await snapshots.validate(exchange,directory(second))).parentSnapshotId,first.snapshotId);
