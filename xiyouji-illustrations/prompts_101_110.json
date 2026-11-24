@@ -1,0 +1,356 @@
+{
+  "tool": "image_gen.imagegen",
+  "style": "16:9 textured Chinese watercolor, warm gold and jade, child-friendly symbolic depictions.",
+  "scenes": [
+    {
+      "episode": 101,
+      "section": 1,
+      "title": "一、娘娘敬上一杯酒，妖王欣喜解寶鈴"
+    },
+    {
+      "episode": 101,
+      "section": 2,
+      "title": "二、大聖隱身屏風後，泥鈴換下紫金珍"
+    },
+    {
+      "episode": 101,
+      "section": 3,
+      "title": "三、真鈴到手猴王笑，縱身跳出獬豸洞"
+    },
+    {
+      "episode": 101,
+      "section": 4,
+      "title": "四、叫罵山門索娘娘，妖王大怒持鈴出"
+    },
+    {
+      "episode": 101,
+      "section": 5,
+      "title": "五、連晃三晃無火發，泥丸碎落現原形"
+    },
+    {
+      "episode": 101,
+      "section": 6,
+      "title": "六、行者反手晃真鈴，漫天烈火燒群魔"
+    },
+    {
+      "episode": 101,
+      "section": 7,
+      "title": "七、濃煙滾滾飛砂漫，賽太歲敗走山崖"
+    },
+    {
+      "episode": 102,
+      "section": 1,
+      "title": "一、大聖舉棒欲除怪，半空祥雲觀音來"
+    },
+    {
+      "episode": 102,
+      "section": 2,
+      "title": "二、原是菩薩金毛犼，偷走紫金下凡塵"
+    },
+    {
+      "episode": 102,
+      "section": 3,
+      "title": "三、菩薩喚回神獸名，金毛俯首戴項圈"
+    },
+    {
+      "episode": 102,
+      "section": 4,
+      "title": "四、迎回娘娘返朱紫，文武百官跪滿街"
+    },
+    {
+      "episode": 102,
+      "section": 5,
+      "title": "五、娘娘身上生硬刺，無人敢近半步身"
+    },
+    {
+      "episode": 102,
+      "section": 6,
+      "title": "六、紫陽真人按下雲，拂袖收回五彩衣"
+    },
+    {
+      "episode": 102,
+      "section": 7,
+      "title": "七、國王夫妻重團聚，師徒四人出城西"
+    },
+    {
+      "episode": 103,
+      "section": 1,
+      "title": "一、三藏自告化齋去，林深處見茅草庵"
+    },
+    {
+      "episode": 103,
+      "section": 2,
+      "title": "二、七位女子繡錦帕，笑語盈盈引客入"
+    },
+    {
+      "episode": 103,
+      "section": 3,
+      "title": "三、端出人肉素麵湯，長老心驚欲脫身"
+    },
+    {
+      "episode": 103,
+      "section": 4,
+      "title": "四、掀開衣袍亮肚臍，千條萬道銀絲噴"
+    },
+    {
+      "episode": 103,
+      "section": 5,
+      "title": "五、雪白蛛絲織成網，倒吊唐僧在房樑"
+    },
+    {
+      "episode": 103,
+      "section": 6,
+      "title": "六、濯垢靈泉熱氣蒸，七女脫衣水中嬉"
+    },
+    {
+      "episode": 103,
+      "section": 7,
+      "title": "七、八戒貪看靈泉水，化作泥鰍鑽水底"
+    },
+    {
+      "episode": 104,
+      "section": 1,
+      "title": "一、大聖變作雙翅鷹，俯衝叼走七彩紗"
+    },
+    {
+      "episode": 104,
+      "section": 2,
+      "title": "二、女妖羞愧躲泉底，八戒揮耙大鬧泉"
+    },
+    {
+      "episode": 104,
+      "section": 3,
+      "title": "三、九齒釘耙攪池水，七妖化風竄草叢"
+    },
+    {
+      "episode": 104,
+      "section": 4,
+      "title": "四、尋至盤絲石洞前，千層蛛網封洞門"
+    },
+    {
+      "episode": 104,
+      "section": 5,
+      "title": "五、行者拔毛變群鳥，啄盡銀絲破妖陣"
+    },
+    {
+      "episode": 104,
+      "section": 6,
+      "title": "六、救下師父解繩索，一把神火焚魔窟"
+    },
+    {
+      "episode": 104,
+      "section": 7,
+      "title": "七、女妖敗走黃花觀，求救師兄百眼魔"
+    },
+    {
+      "episode": 105,
+      "section": 1,
+      "title": "一、黃花觀前道氣清，多目道長迎遠客"
+    },
+    {
+      "episode": 105,
+      "section": 2,
+      "title": "二、七妹哭訴盤絲恨，道兄心懷暗殺機"
+    },
+    {
+      "episode": 105,
+      "section": 3,
+      "title": "三、端出香濃紅棗茶，暗藏鳩毒害聖僧"
+    },
+    {
+      "episode": 105,
+      "section": 4,
+      "title": "四、三藏口吐白沫倒，八戒沙僧四肢軟"
+    },
+    {
+      "episode": 105,
+      "section": 5,
+      "title": "五、大聖踢翻紫砂盞，拔出神棒戰妖道"
+    },
+    {
+      "episode": 105,
+      "section": 6,
+      "title": "六、道士解袍掀兩脅，千隻金眼射光芒"
+    },
+    {
+      "episode": 105,
+      "section": 7,
+      "title": "七、漫天黃光如金網，大聖撞頭痛脫逃"
+    },
+    {
+      "episode": 106,
+      "section": 1,
+      "title": "一、大聖山頭痛欲絕，黎山老母降祥雲"
+    },
+    {
+      "episode": 106,
+      "section": 2,
+      "title": "二、指引紫雲千花洞，唯有毗藍能降魔"
+    },
+    {
+      "episode": 106,
+      "section": 3,
+      "title": "三、行者急馳訪仙洞，菩薩端坐白雲台"
+    },
+    {
+      "episode": 106,
+      "section": 4,
+      "title": "四、三百餘年未出門，感念取經下凡塵"
+    },
+    {
+      "episode": 106,
+      "section": 5,
+      "title": "五、袖中取出一小針，本是昴日眼中煉"
+    },
+    {
+      "episode": 106,
+      "section": 6,
+      "title": "六、神針拋起破金光，百眼魔君化蜈蚣"
+    },
+    {
+      "episode": 106,
+      "section": 7,
+      "title": "七、解毒仙丹救三藏，師徒同心別紫雲"
+    },
+    {
+      "episode": 107,
+      "section": 1,
+      "title": "一、秋風送爽過重山，前路拔起萬仞峰"
+    },
+    {
+      "episode": 107,
+      "section": 2,
+      "title": "二、太白金星化老叟，急搖拐杖示凶兆"
+    },
+    {
+      "episode": 107,
+      "section": 3,
+      "title": "三、八百里嶺妖氣重，四萬八千小妖兵"
+    },
+    {
+      "episode": 107,
+      "section": 4,
+      "title": "四、八戒驚得蹲草叢，大聖仰天哈哈笑"
+    },
+    {
+      "episode": 107,
+      "section": 5,
+      "title": "五、神棒在手何所懼，當年力戰十萬軍"
+    },
+    {
+      "episode": 107,
+      "section": 6,
+      "title": "六、拔下毫毛化小鳥，大聖騰空察妖情"
+    },
+    {
+      "episode": 107,
+      "section": 7,
+      "title": "七、漫山遍野插旗幟，小鑽風巡山敲金鑼"
+    },
+    {
+      "episode": 108,
+      "section": 1,
+      "title": "一、巡山小妖敲銅鑼，大王叫我來巡山"
+    },
+    {
+      "episode": 108,
+      "section": 2,
+      "title": "二、大聖巧變總鑽風，腰牌對暗號無差"
+    },
+    {
+      "episode": 108,
+      "section": 3,
+      "title": "三、三寸之舌編神話，齊天大聖磨長棒"
+    },
+    {
+      "episode": 108,
+      "section": 4,
+      "title": "四、棒子磨成三尺利，專削妖怪腦袋瓜"
+    },
+    {
+      "episode": 108,
+      "section": 5,
+      "title": "五、小妖嚇得面如土，倒豆子般吐真情"
+    },
+    {
+      "episode": 108,
+      "section": 6,
+      "title": "六、青獅白象大鵬鳥，三位魔王神通天"
+    },
+    {
+      "episode": 108,
+      "section": 7,
+      "title": "七、行者大笑入魔窟，群妖恭迎總鑽風"
+    },
+    {
+      "episode": 109,
+      "section": 1,
+      "title": "一、妖洞深處白骨森，三大魔王座上坐"
+    },
+    {
+      "episode": 109,
+      "section": 2,
+      "title": "二、大聖現身指名罵，青獅暴怒亮鋼刀"
+    },
+    {
+      "episode": 109,
+      "section": 3,
+      "title": "三、魔頭大口一張闊，吞下大聖入肚腹"
+    },
+    {
+      "episode": 109,
+      "section": 4,
+      "title": "四、群妖歡呼慶得勝，哪知大聖肚中樂"
+    },
+    {
+      "episode": 109,
+      "section": 5,
+      "title": "五、三魔大鵬眼光毒，抬出陰陽二氣瓶"
+    },
+    {
+      "episode": 109,
+      "section": 6,
+      "title": "六、三十六人抬寶瓶，大聖裝入烈火烹"
+    },
+    {
+      "episode": 109,
+      "section": 7,
+      "title": "七、救命毫毛鑽透底，化作清風溜出瓶"
+    },
+    {
+      "episode": 110,
+      "section": 1,
+      "title": "一、溜出寶瓶立峰頂，大聖大笑叫山門"
+    },
+    {
+      "episode": 110,
+      "section": 2,
+      "title": "二、老魔驚駭再度吞，行者重回獅肚腸"
+    },
+    {
+      "episode": 110,
+      "section": 3,
+      "title": "三、肚中翻滾打鞦韆，拿條絲繩拴心肝"
+    },
+    {
+      "episode": 110,
+      "section": 4,
+      "title": "四、拉一拉來跳一跳，疼得青獅滾地嗷"
+    },
+    {
+      "episode": 110,
+      "section": 5,
+      "title": "五、二魔三魔心膽寒，跪倒在地討告饒"
+    },
+    {
+      "episode": 110,
+      "section": 6,
+      "title": "六、扎造金頂大彩轎，送唐長老過高山"
+    },
+    {
+      "episode": 110,
+      "section": 7,
+      "title": "七、師徒安坐行林間，暗藏殺機獅駝城"
+    }
+  ]
+}
