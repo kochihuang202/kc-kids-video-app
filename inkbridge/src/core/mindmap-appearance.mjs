@@ -1,12 +1,11 @@
 export const MAP_STYLES=['xmind','branch','boxed','plain'];
 // XMind "Rainbow-#000229-MULTI_LINE_COLORS", read from the user's own .xmind theme (2026-11-13):
-// central #000229 rounded rect, main topics filled with the multi-line colours in order,
-// subtopics a light tint of their branch colour; curves from the centre, rounded elbows below.
+// InkBridge fills all topics on a branch with the same colour.
+// Curves leave the centre, with rounded elbows below.
 export const XMIND_ROOT='#000229';
 export const XMIND_BRANCH_COLORS=['#F9423A','#F6A04D','#F3D321','#00BC7B','#486AFF','#4D49BE'];
 const hex=value=>{const m=/^#?([0-9a-f]{6})$/i.exec(value||'');return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):[0,0,0];};
-export const xmindTint=(color,amount=.8)=>'#'+hex(color).map(c=>Math.round(c+(255-c)*amount).toString(16).padStart(2,'0')).join('');
-// Dark text on light fills (the yellow branch and every tint), light text elsewhere.
+// Dark text on light fills, light text elsewhere.
 export const xmindLightText=color=>{const [r,g,b]=hex(color);return (r*299+g*587+b*114)/1000<170;};
 export const MARKER_COLORS={red:'#ff5054',orange:'#ff9e35',yellow:'#e4bd00',green:'#18bc88',blue:'#4387f5',purple:'#8363d8',gray:'#9b9ba1'};
 export const MARKER_GROUPS={tag:Object.keys(MARKER_COLORS),priority:['1','2','3','4','5','6','7'],task:['0','25','50','75','100'],flag:Object.keys(MARKER_COLORS),star:Object.keys(MARKER_COLORS),symbol:['book','idea','heart','check']};
@@ -34,8 +33,8 @@ export function installMindmapAppearance(r,K,fontMgr){
   if(marker.group==='task'){color('#18bc88',true);canvas.drawCircle(cx,cy,7,paint);const fraction=Number(marker.value)/100;if(fraction>0&&fraction<1){const a=-Math.PI/2+fraction*Math.PI*2,shape=`M8 8L8 1A7 7 0 ${fraction>.5?1:0} 1 ${8+Math.cos(a)*7} ${8+Math.sin(a)*7}Z`;color('#18bc88');canvas.save();canvas.translate(x,y);canvas.drawPath(path(shape),paint);canvas.restore();}if(fraction===1){color('#18bc88');canvas.drawCircle(cx,cy,7,paint);canvas.save();canvas.translate(x,y);canvas.scale(size/24,size/24);color('#fff',true);canvas.drawPath(path(SYMBOL_PATHS.check),paint);canvas.restore();}return;}
   const shape=SYMBOL_PATHS[marker.group==='flag'?'flag':marker.group==='star'?'star':marker.value];if(!shape)return;canvas.save();canvas.translate(x,y);canvas.scale(size/24,size/24);color(marker.group==='symbol'?'#64748b':col,marker.group!=='star'&&marker.value!=='heart');canvas.drawPath(path(shape),paint);canvas.restore();
  }
- function drawXmind(canvas,element,ctx){const data=element.data,root=!!data.isRoot,level=root?0:data.inkbridgeDepth??2,branch=data.inkbridgeBranchColor||XMIND_BRANCH_COLORS[0];
-  const fill=root?(xmindHex(data.color)||XMIND_ROOT):level<=1?branch:xmindTint(branch),layout=this.getLayout(element,ctx),radius=root?10:6;
+ function drawXmind(canvas,element,ctx){const data=element.data,root=!!data.isRoot,branch=data.inkbridgeBranchColor||XMIND_BRANCH_COLORS[0];
+  const fill=root?(xmindHex(data.color)||XMIND_ROOT):branch,layout=this.getLayout(element,ctx),radius=root?10:6;
   canvas.save();canvas.translate(element.x,element.y);color(fill);const rect=K.RRectXY(K.LTRBRect(0,0,layout.width,layout.height),radius,radius);canvas.drawRRect(rect,paint);
   canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light'},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
   (data.inkbridgeMarkers||[]).forEach((m,index)=>marker(canvas,m,element.x+layout.padding+index*22,element.y+(layout.height-16)/2));}

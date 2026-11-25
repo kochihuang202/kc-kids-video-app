@@ -4,6 +4,7 @@
 // Synthetic SQLite workspace only.
 const { _electron, expect } = require('@playwright/test'), fs = require('node:fs/promises'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict'), crypto = require('node:crypto');
 const { WorkspaceDatabase } = require('../../src/main/database.cjs');
+const sharp = require('sharp');
 const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'paragraph', version: 1, children: [{ type: 'text', version: 1, text, format: 0, detail: 0, mode: 'normal', style: '' }], direction: null, format: '', indent: 0 }], direction: null, format: '', indent: 0 } });
 (async () => {
   const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-xmind-')), db = new WorkspaceDatabase(path.join(data, 'Workspace/inkbridge.sqlite3'));
@@ -30,7 +31,18 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     assert.deepEqual([look.nodes.a1.branch, look.nodes.a1.depth, look.nodes.a.depth], ['#F9423A', 2, 1]);
     assert.deepEqual(look.edges.find(e => e.to === 'a'), { to: 'a', pathType: 'mindmapCurve', color: '#F9423A', width: 3 });
     assert.deepEqual(look.edges.find(e => e.to === 'a1'), { to: 'a1', pathType: 'smoothStep', color: '#F9423A', width: 2 });
-    await page.screenshot({ path: path.join(data, 'xmind-style.png') });
+    stage = 'same background throughout a branch';
+    const { data: pixels, info } = await sharp(await page.screenshot({ path: path.join(data, 'xmind-style.png'), scale: 'css' })).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    const background = async id => {
+      const { x, y, w } = await pos(id);
+      const offset = (Math.round(y) * info.width + Math.round(x - w / 2 + 4)) * info.channels;
+      return [...pixels.subarray(offset, offset + info.channels)];
+    };
+    const branchBackground = await background('a');
+    assert.deepEqual(branchBackground, [249, 66, 58]);
+    assert.deepEqual(await background('a1'), branchBackground);
+    assert.deepEqual(await background('a2'), branchBackground);
+    assert.notDeepEqual(await background('b'), branchBackground);
     stage = 'no add button';
     await click('a');
     const hit = await page.evaluate(() => { const s = window.__originalRequire(23).gt.getState(), n = s.nodes.find(n => n.id === 'a'), drawer = window.__originalRequire(66597).L.getDrawer('MindmapNode'); const ctx = { CanvasKit: window.__originalRequire(66597).L.CanvasKit, selectedNodeIds: s.selectedNodeIds, hoveredNodeId: 'a', isSelecting: false, getMindmap: id => window.__originalRequire(63268).Z.getState().flow.mindmaps.find(m => m.id === id), view: s.view }; const element = { ...n, x: n.position.x, y: n.position.y }; const results = []; for (let dx = 0; dx <= 80; dx += 4) { const r = drawer.isHit?.(n.position.x + n.width + dx, n.position.y + n.height / 2, element, ctx); if (r && typeof r === 'object' && r.action) results.push(r.action); } return results; });

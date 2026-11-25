@@ -1,3 +1,8 @@
+## REG-179 — Mindmap descendants used a lighter fill than the rest of their branch
+
+- All levels use the resolved branch fill. Explicit sub-branch colours still apply to the selected topic and its descendants.
+- check-mindmap-xmind samples rendered node backgrounds in Electron and checks that sibling branches retain distinct colours.
+
 ## REG-178 — Group refresh hides mind maps and the toolbar cannot delete canvas tables
 
 - Group operations now invoke the current scene hydrator, including mindmap nodes and edges, for creation, move, ungroup and failure recovery. The previous closed-over base hydrator removed those nodes from the live scene.
