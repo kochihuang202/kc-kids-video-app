@@ -1,6 +1,8 @@
 # InkBridge 交接說明
 
-最後更新：2026-11-24（Asia/Taipei）。寫給接手的 AI 或開發者：日常怎麼改、怎麼測、怎麼合併，最近做了什麼，還有哪些事在等使用者決定。
+最後更新：2026-11-25（Asia/Taipei）。寫給接手的 AI 或開發者：日常怎麼改、怎麼測、怎麼合併，最近做了什麼，還有哪些事在等使用者決定。
+
+最新交付 0.9.1（REG-178，程式 commit `b2effbe`，發布序號 33）。群組操作改用完整場景更新，保留心智圖。白板單獨建立的表格可用選取工具列刪除並保存。兩項 Electron 回歸均先重現失敗再通過，另有四項相關 Node 測試、封裝表格刪除重開及隔離 0.9.0 更新重啟通過。OneDrive 完整包為 `InkBridge-release-0.9.1-adf0e52f-4d5f-4104-a0d8-207b79cb4cc3.zip`，0.9.0 增量為 `InkBridge-update-ccfbac8a-7087-4a98-9025-e15464f3a669.zip`。已清除 0.9.0 舊完整包。交付收據為本機 `release/delivery-0.9.1.json`。
 
 最新交付 0.9.0：見 [RELEASE_0_9_0.md](RELEASE_0_9_0.md)、[TAGS_PORT.md](TAGS_PORT.md)、REG-177。完成原版 1.1.70 標籤父頁、分組／子孫／改名／搜尋／集合與 metadata 服務。保留子孫搜尋路徑，更新 canonical Redux 防止舊名覆回，新增仍由原版動作避免重複。補系統 tag/collection/view 的穩定唯讀投影及首次有效寫入，表格初始化 null/default 欄位不產生共享版本；真正修改保存。新 metadata 經跨視窗預條件、合併關聯／循環及快照驗證；刪標籤保留筆記。50 項 Node＋最後集合／筆記6項通過，開發／封裝 check-tag-page、舊 check-native-tags、0.8.1 真更新重開通過；三條直升 Stage、完整 ZIP 3542 檔驗證通過。OneDrive 只留 0.9.0 完整 ZIP，BAT 在 ZIP 內。原生 AG Grid 告警／AI 圖示與其他欄位檢視驗收界線記在 release；未操作另一台實機。來源重建須先 prepare-tags，collect 不可漏掉 overlay 自身缺少依賴與動態 chunk IDs。下列為前版紀錄。
 
