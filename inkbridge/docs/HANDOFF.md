@@ -2,6 +2,8 @@
 
 最後更新：2026-11-25（Asia/Taipei）。寫給接手的 AI 或開發者：日常怎麼改、怎麼測、怎麼合併，最近做了什麼，還有哪些事在等使用者決定。
 
+最新交付 0.9.3（REG-182，程式 commit `67ade06`，發布序號 35）。彩虹心智圖的 @ 白板連結依底色選擇黑白字色，保留同色圖示並加底線。畫布像素、重開、原生編輯器的白板跳轉與 0.9.2 增量升級均已驗證。OneDrive 完整包為 `InkBridge-release-0.9.3-1d6a7daa-3e98-4965-903f-26110fcc3ba7.zip`，0.9.2 增量為 `InkBridge-update-6e37a8f0-8f39-4530-8e5f-48b9482ad39a.zip`。舊的 0.9.2 完整包已清除。本機交付收據為 `release/delivery-0.9.3.json`。
+
 最新交付 0.9.2（REG-179 至 REG-181，程式 commit `2b9222f`，發布序號 34）。心智圖左右主分支共用固定 20 色，子節點及連線沿用分支色，手動改色仍優先。開發與封裝的心智圖測試均通過，隔離的 0.9.1 增量更新測試確認重開與最後一筆中文編輯保存。OneDrive 完整包為 `InkBridge-release-0.9.2-c389c768-6a7b-40d5-9fd8-b96d8f0354f7.zip`，0.9.1 增量為 `InkBridge-update-93ad503e-855c-49cc-950c-db6fceb6b4bf.zip`。已清除舊的 0.9.1 完整包。本機交付收據為 `release/delivery-0.9.2.json`。心智圖中以 @ 插入的白板連結仍需改善文字與底色的對比。
 
 最新交付 0.9.1（REG-178，程式 commit `b2effbe`，發布序號 33）。群組操作改用完整場景更新，保留心智圖。白板單獨建立的表格可用選取工具列刪除並保存。兩項 Electron 回歸均先重現失敗再通過，另有四項相關 Node 測試、封裝表格刪除重開及隔離 0.9.0 更新重啟通過。OneDrive 完整包為 `InkBridge-release-0.9.1-adf0e52f-4d5f-4104-a0d8-207b79cb4cc3.zip`，0.9.0 增量為 `InkBridge-update-ccfbac8a-7087-4a98-9025-e15464f3a669.zip`。已清除 0.9.0 舊完整包。交付收據為本機 `release/delivery-0.9.1.json`。
