@@ -32,15 +32,23 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
   linkedDoc.root.children[0].children = [
     { type: 'mention', version: 1, objectId: linkedBoard, objectType: 'Whiteboard', mentionName: linkedTitle },
   ];
+  const noteIds = ['mention-note-a', 'mention-note-b'];
+  const noteTitles = ['MENTION_TARGET_A', 'MENTION_TARGET_B'];
+  const noteLinkDoc = doc(noteTitles[0]);
+  noteLinkDoc.root.children[0].children = [
+    { type: 'mention', version: 1, objectId: noteIds[0], objectType: 'NoteCard', mentionName: noteTitles[0] },
+  ];
   db.commit({ requestId: crypto.randomUUID(), baseRevision: db.revision(), operations: [
     { type: 'putBoard', data: { id: linkedBoard, title: linkedTitle, view: { x: 0, y: 0, zoom: 1 } } },
     { type: 'putBoard', data: { id: 'board-links', title: 'Mindmap links', view: { x: 0, y: 0, zoom: 1 } } },
+    ...noteIds.map((id, i) => ({ type: 'putContent', data: { id, title: noteTitles[i], body: '', kind: 'text', tone: 'sage', document: doc(noteTitles[i]) } })),
     { type: 'putCatalog', kind: 'mindmap', data: { id: 'links', title: 'Links', layoutMode: 'logic-right' } },
     ...[
-      ['links-root', undefined, ['link-dark', 'link-light'], doc('連結')],
+      ['links-root', undefined, ['link-dark', 'link-light', 'link-input'], doc('連結')],
       ['link-dark', '#274363', ['link-child'], linkedDoc],
-      ['link-child', undefined, [], linkedDoc],
-      ['link-light', '#008A9E', [], linkedDoc],
+      ['link-child', undefined, [], noteLinkDoc],
+      ['link-light', '#008A9E', [], noteLinkDoc],
+      ['link-input', '#008A9E', [], doc('')],
     ].map(([id, color, childNodeIds, content]) => ({
       type: 'putCatalog', kind: 'mindmap-node',
       data: { id, mindMapId: 'links', type: 'Text', isRoot: id === 'links-root', ...(color && { color }), childNodeIds, content },
@@ -91,6 +99,36 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     await page.evaluate(() => window.__inkbridgeIntegrated.controls.fitView({ duration: 0, maxZoom: 1 }));
     await page.mouse.move(0, 0);
   };
+  const checkMentionKeyboard = async () => {
+    await click('link-input');
+    await page.keyboard.press('F2');
+    const editor = page.locator('#board [contenteditable=true]');
+    await expect(editor).toBeVisible();
+    await page.keyboard.insertText('@MENTION_TARGET');
+    const menu = page.getByRole('dialog').last();
+    for (const title of noteTitles) await expect(menu.getByRole('option', { name: title, exact: true })).toBeVisible();
+    const activeTitle = async () => {
+      const preview = await menu.locator('.preview').innerText();
+      return noteTitles.find(title => preview.includes(title));
+    };
+    await expect.poll(activeTitle).toBeDefined();
+    const before = await activeTitle();
+    await page.keyboard.press('ArrowDown');
+    await expect.poll(activeTitle).not.toBe(before);
+    await page.keyboard.press('ArrowUp');
+    await expect.poll(activeTitle).toBe(before);
+    const chosenId = noteIds[noteTitles.indexOf(before)];
+    assert(chosenId);
+    await page.keyboard.press('Enter');
+    await expect(editor.locator('[data-inline-mention-object-id="' + chosenId + '"]')).toBeVisible();
+    await expect(menu).toHaveCount(0);
+    await page.keyboard.press('Enter');
+    await expect.poll(async () => (await state()).editing).toBe(null);
+    await page.evaluate(() => window.__inkbridgeIntegrated.flush());
+    const saved = (await page.evaluate(() => window.inkbridge.load())).mindmapNodes.find(n => n.id === 'link-input');
+    assert(saved.content.root.children[0].children.some(n => n.type === 'mention' && n.objectId === chosenId));
+    return chosenId;
+  };
   const checkLinkPixels = async () => {
     const { data: pixels, info } = await sharp(await page.screenshot({ path: path.join(data, 'mindmap-links.png'), scale: 'css' })).removeAlpha().raw().toBuffer({ resolveWithObject: true });
     const pixel = (x, y) => {
@@ -101,6 +139,7 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
       ['link-dark', [39, 67, 99], 255],
       ['link-child', [39, 67, 99], 255],
       ['link-light', [0, 138, 158], 0],
+      ['link-input', [0, 138, 158], 0],
     ]) {
       const { x, y, w, h } = await pos(id);
       const left = Math.round(x - w / 2);
@@ -126,7 +165,10 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
   };
   try {
     await ready();
-    stage = 'whiteboard mention contrast';
+    stage = 'mention picker Enter';
+    await openLinkBoard();
+    const insertedNote = await checkMentionKeyboard();
+    stage = 'note and whiteboard mention contrast';
     await openLinkBoard();
     await checkLinkPixels();
     await ready();
@@ -237,15 +279,17 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'a').data.inkbridgeBranchColor), '#F9423A');
     assert.deepEqual(errors, []);
     assert.deepEqual(await checkDualColours(), dualColours);
-    stage = 'whiteboard mention after restart';
+    stage = 'mention after restart';
     await openLinkBoard();
     await checkLinkPixels();
+    const restored = (await page.evaluate(() => window.inkbridge.load())).mindmapNodes.find(n => n.id === 'link-input');
+    assert(restored.content.root.children[0].children.some(n => n.type === 'mention' && n.objectId === insertedNote));
     await click('link-dark');
     await page.keyboard.press('F2');
     const mention = page.locator('#board [contenteditable=true] [data-inline-mention-object-id="board-reference"]');
     await mention.click();
     await expect.poll(() => page.evaluate(() => window.__inkbridgeIntegrated.inspect().boardId)).toBe(linkedBoard);
-    console.log(JSON.stringify({ data, rainbowDefault: true, dualSideColours: true, whiteboardMentionContrastAndNavigation: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
+    console.log(JSON.stringify({ data, rainbowDefault: true, dualSideColours: true, mentionContrast: true, keyboardMentionInsert: true, whiteboardMentionNavigation: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
   } catch (error) { console.error({ stage, data }); await page?.screenshot({ path: path.join(data, 'failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
   finally { await app.close(); }
 })();

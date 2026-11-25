@@ -12,7 +12,7 @@ export const XMIND_BRANCH_COLORS = [
 const hex=value=>{const m=/^#?([0-9a-f]{6})$/i.exec(value||'');return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):[0,0,0];};
 // Dark text on light fills, light text elsewhere.
 export const xmindLightText=color=>{const [r,g,b]=hex(color);return (r*299+g*587+b*114)/1000<170;};
-function whiteboardLinkColor(fill) {
+function mentionLinkColor(fill) {
   const [r, g, b] = hex(fill).map(channel => {
     const srgb = channel / 255;
     return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
@@ -21,10 +21,10 @@ function whiteboardLinkColor(fill) {
   return 1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.05 ? '#ffffff' : '#000000';
 }
 
-function styleWhiteboardLinkLines(lines, color) {
+function styleMentionLinkLines(lines, color) {
   return lines.map(line => ({
     ...line,
-    segments: line.segments.map(segment => segment.attributes?.mention?.objectType === 'Whiteboard'
+    segments: line.segments.map(segment => segment.attributes?.mention
       ? { ...segment, attributes: { ...segment.attributes, color, underline: true, inkbridgeLinkUnderline: true } }
       : segment),
   }));
@@ -37,7 +37,7 @@ export function replaceMarker(markers,group,value){const next=(markers||[]).filt
 export const markerInset=data=>(data?.inkbridgeMarkers?.length||0)*22;
 export function nodeStyle(data,map){return data?.inkbridgeNodeStyle||data?.inkbridgeMapStyle||map?.inkbridgeStyle||'xmind';}
 export function installMindmapAppearance(r,K,fontMgr){
- globalThis.__inkbridgeMindmapLinkLines=styleWhiteboardLinkLines;
+ globalThis.__inkbridgeMindmapLinkLines=styleMentionLinkLines;
  const proto=r(53861).b.prototype,native={layout:proto.getLayout,measure:proto.measure,draw:proto.drawDefaultStyle,rich:proto.drawRichText};
  const paints=[],paths=new Map();let font;
  const paint=new K.Paint();paint.setAntiAlias(true);paint.setStrokeWidth(1.5);paints.push(paint);
@@ -59,7 +59,7 @@ export function installMindmapAppearance(r,K,fontMgr){
  function drawXmind(canvas,element,ctx){const data=element.data,root=!!data.isRoot,branch=data.inkbridgeBranchColor||XMIND_BRANCH_COLORS[0];
   const fill=root?(xmindHex(data.color)||XMIND_ROOT):branch,layout=this.getLayout(element,ctx),radius=root?10:6;
   canvas.save();canvas.translate(element.x,element.y);color(fill);const rect=K.RRectXY(K.LTRBRect(0,0,layout.width,layout.height),radius,radius);canvas.drawRRect(rect,paint);
-  canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light',inkbridgeWhiteboardLinkColor:whiteboardLinkColor(fill)},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
+  canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light',inkbridgeMindmapMentionColor:mentionLinkColor(fill)},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
   (data.inkbridgeMarkers||[]).forEach((m,index)=>marker(canvas,m,element.x+layout.padding+index*22,element.y+(layout.height-16)/2));}
  proto.drawDefaultStyle=function(canvas,element,ctx){if(!managed(element.data))return native.draw.call(this,canvas,element,ctx);const style=nodeStyle(element.data,mapOf(element.data,ctx)),root=!!element.data.isRoot;
   if(style==='xmind')return drawXmind.call(this,canvas,element,ctx);

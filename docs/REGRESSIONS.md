@@ -1,3 +1,8 @@
+## REG-183 — Mindmap note mentions have low contrast and the picker loses Enter
+
+- Extend the canvas mention style to note cards and other inline mentions. The mindmap Enter handler defers to the native picker while it is open.
+- check-mindmap-xmind types @, verifies Up/Down select the native preview, inserts the selected note with Enter, and verifies Enter still finishes editing after the picker closes. Screenshot pixels cover both note and board link styling.
+
 ## REG-182 — Whiteboard mentions blend into colourful mindmap topics
 
 - The native canvas renderer uses the contrasting black or white foreground for inline whiteboard mentions, including their existing icons and underlines. The format is applied only to the display layout.

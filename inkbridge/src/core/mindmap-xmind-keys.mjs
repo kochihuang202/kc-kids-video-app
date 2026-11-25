@@ -104,6 +104,7 @@ export function installMindmapXmindKeys({ store, mindmaps, r, pushUndo = () => {
       if (event.key !== 'Enter' || event.shiftKey || !editable(event.target)) return;
       const node = state.nodes.find(row => row.id === editingId);
       if (node?.type !== 'MindmapNode') return;
+      if (document.querySelector('[data-inkbridge-mention-picker-open]')) return;
       event.preventDefault(); event.stopImmediatePropagation();
       send(event.target, 'Escape');
       return;
