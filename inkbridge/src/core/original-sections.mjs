@@ -33,7 +33,7 @@ export function createOriginalSections({graph,navigate,coordinator,instances,sto
             for(const row of changed.values()){coordinator.stage({type:'putInstance',data:row});coordinator.stage(catalogOperation('instance',row.attributes));}
             // Remove deepest children first after reparenting remaining members.
             for(const id of [...removed].sort((a,b)=>depth(sections.get(b))-depth(sections.get(a))))coordinator.stage({type:'deleteCatalog',kind:'section',id});
-            await coordinator.flush();sections.clear();for(const [id,row]of pending)sections.set(id,row);for(const [id,row]of changed)instances.set(id,row);hydrate();return {success:true};
+            await coordinator.flush();sections.clear();for(const [id,row]of pending)sections.set(id,row);for(const [id,row]of changed)instances.set(id,row);api.hydrate();return {success:true};
         }
         const pending=new Map(sections),changedInstances=new Map(),rows=name==='createSection'?payload:name==='updateSection'?[payload]:payload;
         if(!Array.isArray(rows))throw Error('Invalid group update');
@@ -53,8 +53,8 @@ export function createOriginalSections({graph,navigate,coordinator,instances,sto
         for(const row of pending.values())sectionWorldPosition(row.id,pending);
         for(const [id,row]of [...pending].sort((a,b)=>{const height=id=>{let count=0;while(pending.get(id)?.parentId){count++;id=pending.get(id).parentId;}return count;};return height(a[0])-height(b[0]);}))if(JSON.stringify(sections.get(id))!==JSON.stringify(row))coordinator.stage(catalogOperation('section',row));
         for(const next of changedInstances.values()){coordinator.stage({type:'putInstance',data:next});coordinator.stage(catalogOperation('instance',next.attributes));}
-        try{await coordinator.flush();}catch(error){hydrate();throw error;}
-        sections.clear();for(const [id,row]of pending)sections.set(id,row);for(const [id,row]of changedInstances)instances.set(id,row);hydrate();return {success:true};
+        try{await coordinator.flush();}catch(error){api.hydrate();throw error;}
+        sections.clear();for(const [id,row]of pending)sections.set(id,row);for(const [id,row]of changedInstances)instances.set(id,row);api.hydrate();return {success:true};
     });
     const api={sections,has,call,scene,hydrate};return api;
 }

@@ -1,3 +1,9 @@
+## REG-178 — Group refresh hides mind maps and the toolbar cannot delete canvas tables
+
+- Group operations now invoke the current scene hydrator, including mindmap nodes and edges, for creation, move, ungroup and failure recovery. The previous closed-over base hydrator removed those nodes from the live scene.
+- The native selection toolbar passes the canvas instance ID. Route standalone tables and other text elements to the existing text-element deletion service so deletion commits to SQLite.
+- Extended check-native-groups and check-text-shape-tools. Both reproduced the bug before the fix and passed afterward, including drag, toolbar deletion and reopen.
+
 ## REG-177 — Complete tag page depends on canonical state, collections and lazy factories
 
 - Port the full 1.1.70 tag parents and collection renderers; sidebar/service existence alone did not establish a usable feature. A missing host ESM route blocked startup, and an unregistered native lazy chunk requested 84840.undefined.js instead of rendering the table. Recover complete selected factories plus their original chunk IDs; repeated preparation retains dependencies from the same overlay.

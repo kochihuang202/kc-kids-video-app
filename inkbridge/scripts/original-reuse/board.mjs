@@ -442,6 +442,7 @@ async function boot(){
         // Original85886 calls (objectId, instanceId); Canvas callers may pass a node.
         const id=instanceId||(typeof objectOrNode==='string'?objectOrNode:objectOrNode?.id);
         if(mindmaps.nodes.has(id))return (mindmaps.instances.has(id)?mindmaps.call('deleteMindMapInstance',id):mindmaps.deleteNodes([id])).catch(report);
+        if(elements.rows.has(id))return elements.call('batchDeleteTextElements',[id]).catch(report);
         if(!id||!instances.has(id))return;
         return writeNote('deleteNoteCardInstance',id).catch(report);
       },
