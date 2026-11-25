@@ -3,21 +3,12 @@ export const MAP_STYLES=['xmind','branch','boxed','plain'];
 // InkBridge fills all topics on a branch with the same colour.
 // Curves leave the centre, with rounded elbows below.
 export const XMIND_ROOT='#000229';
-export const XMIND_BRANCH_COLORS=['#F9423A','#F6A04D','#F3D321','#00BC7B','#486AFF','#4D49BE'];
-function rainbowColor(index) {
-  const preset = XMIND_BRANCH_COLORS[index];
-  if (preset) return preset;
-
-  // Spread additional branch hues around the wheel without cycling the first six.
-  const hue = (185 + (index - XMIND_BRANCH_COLORS.length) * 137.508) % 360;
-  const lightness = 0.39;
-  const chroma = 0.29;
-  return '#' + [0, 8, 4].map(offset => {
-    const channel = (offset + hue / 30) % 12;
-    const value = lightness - chroma * Math.max(-1, Math.min(channel - 3, 9 - channel, 1));
-    return Math.round(value * 255).toString(16).padStart(2, '0');
-  }).join('');
-}
+export const XMIND_BRANCH_COLORS = [
+  '#F9423A', '#F6A04D', '#F3D321', '#00BC7B', '#486AFF', '#4D49BE',
+  '#008A9E', '#AD276B', '#678318', '#70482E', '#C456A4', '#00547B',
+  '#D46418', '#3B6856', '#8D3DD1', '#963330', '#9B7410', '#546481',
+  '#B8DB64', '#AF9BE0',
+];
 const hex=value=>{const m=/^#?([0-9a-f]{6})$/i.exec(value||'');return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):[0,0,0];};
 // Dark text on light fills, light text elsewhere.
 export const xmindLightText=color=>{const [r,g,b]=hex(color);return (r*299+g*587+b*114)/1000<170;};
@@ -75,7 +66,8 @@ export function installMindmapAppearance(r,K,fontMgr){
     }
     const root = nodes.get(parent);
     const order = root?.data.childNodeIds || root?.data.childrenIds || [];
-    return rainbowColor(Math.max(0, order.indexOf(child)));
+    const index = Math.max(0, order.indexOf(child));
+    return XMIND_BRANCH_COLORS[index % XMIND_BRANCH_COLORS.length];
   };
   // A colour chosen with the original colour menu (node.color) colours that topic and its
   // branch; the nearest chosen colour wins. A colour equal to the parent's was copied by the

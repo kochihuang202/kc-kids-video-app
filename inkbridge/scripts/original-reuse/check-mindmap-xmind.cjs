@@ -10,13 +10,14 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
   const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-xmind-')), db = new WorkspaceDatabase(path.join(data, 'Workspace/inkbridge.sqlite3'));
   const rows = [['root', '出發去動物園', ['a', 'b', 'c']], ['a', '麥當勞', ['a1', 'a2']], ['a1', '薯條', []], ['a2', '可樂', []], ['b', '動物', []], ['c', '要帶的物品', []]];
   db.commit({ requestId: crypto.randomUUID(), baseRevision: 0, operations: [{ type: 'putBoard', data: { id: 'board-main', title: 'XMind', view: { x: 0, y: 0, zoom: 1 } } }, { type: 'putCatalog', kind: 'mindmap', data: { id: 'map', title: 'Root', layoutMode: 'logic-right' } }, ...rows.map(([id, text, childNodeIds]) => ({ type: 'putCatalog', kind: 'mindmap-node', data: { id, mindMapId: 'map', isRoot: id === 'root', type: 'Text', content: doc(text), childNodeIds } })), { type: 'putCatalog', kind: 'mindmap-instance', data: { id: 'root', objectId: 'map', whiteboardId: 'board-main', x: 200, y: 300 } }] });
-  const right = Array.from({ length: 7 }, (_, i) => `right-${i}`);
-  const left = ['left-first', 'left-second'];
+  const right = Array.from({ length: 11 }, (_, i) => `right-${i}`);
+  const left = Array.from({ length: 10 }, (_, i) => `left-${i}`);
+  const branchOrder = [...right.slice(0, 6), ...left, ...right.slice(6)];
   const dualRows = [
-    ['dual-root', 'right', [...right.slice(0, 6), ...left, right[6]]],
+    ['dual-root', 'right', branchOrder],
     ...right.map(id => [id, 'right', []]),
     [left[0], 'left', ['left-child']],
-    [left[1], 'left', []],
+    ...left.slice(1).map(id => [id, 'left', []]),
     ['left-child', 'left', []],
   ];
   db.commit({ requestId: crypto.randomUUID(), baseRevision: db.revision(), operations: [
@@ -27,7 +28,12 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
   ] });
   db.close();
   const env = { ...process.env, INKBRIDGE_ORIGINAL_VIEW: 'board', INKBRIDGE_ORIGINAL_PROBE_DATA: data }; delete env.ELECTRON_RUN_AS_NODE;
-  const launch = () => _electron.launch({ args: [path.join(__dirname, 'host.cjs')], executablePath: require('electron'), env });
+  const candidate = process.env.INKBRIDGE_TEST_BUILD;
+  const launch = () => _electron.launch({
+    args: [candidate ? path.join(candidate, 'app/scripts/original-reuse/host.cjs') : path.join(__dirname, 'host.cjs')],
+    executablePath: candidate ? path.join(candidate, 'runtime/electron.exe') : require('electron'),
+    env,
+  });
   let app = await launch(), page, stage = 'boot'; const errors = [];
   const ready = async () => { page = await app.firstWindow(); page.setDefaultTimeout(10000); page.on('pageerror', e => errors.push(e.message)); await page.waitForFunction(() => window.__inkbridgeIntegrated?.ready); await page.evaluate(() => window.__inkbridgeIntegrated.switchBoard('board-main')); await page.waitForFunction(() => window.__inkbridgeIntegrated.inspect().nodes.some(n => n.id === 'root')); await page.evaluate(() => window.__inkbridgeIntegrated.controls.fitView({ duration: 0, maxZoom: 1 })); await app.evaluate(({ app }) => app.focus({ steal: true })); await page.bringToFront(); };
   const map = async () => (await page.evaluate(() => window.inkbridge.load())).mindmapNodes.filter(n => n.mindMapId === 'map');
@@ -48,8 +54,12 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
         edges: Object.fromEntries(scene.connections.map(edge => [edge.target.nodeId, edge.style.color])),
       };
     });
-    assert(nodes[left[0]].x < nodes['dual-root'].x && nodes[right[0]].x > nodes['dual-root'].x);
-    assert.equal(new Set([...left, ...right].map(id => nodes[id].colour)).size, left.length + right.length);
+    assert(left.every(id => nodes[id].x < nodes['dual-root'].x));
+    assert(right.every(id => nodes[id].x > nodes['dual-root'].x));
+    const colours = branchOrder.map(id => nodes[id].colour);
+    assert.equal(new Set(colours.slice(0, 20)).size, 20);
+    assert.equal(colours[6], '#008A9E');
+    assert.equal(colours[20], colours[0]);
     assert.equal(nodes['left-child'].colour, nodes[left[0]].colour);
     for (const id of [...left, ...right, 'left-child']) assert.equal(edges[id], nodes[id].colour);
     return nodes;

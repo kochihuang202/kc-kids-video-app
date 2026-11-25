@@ -1,3 +1,8 @@
+## REG-181 — Use a fixed 20-colour palette for mindmap main branches
+
+- User requested a fixed shared palette for both sides. Keep the first six colours and add 14 curated colours before cycling. Children and edges inherit their branch colour.
+- check-mindmap-xmind covers 20 different colours, wrap at 21, child and edge inheritance, custom colours and restart.
+
 ## REG-180 — Mindmap main branches on opposite sides repeated the same default colours
 
 - Use the saved main-topic order across both sides. Assign extra hues after the original six instead of repeating the palette.
