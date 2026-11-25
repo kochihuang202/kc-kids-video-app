@@ -23,8 +23,31 @@ const {_electron,expect}=require('@playwright/test'),fs=require('fs/promises'),p
   // Click the native group title, not its children, so mr must expand members.
   let gp=await page.evaluate(id=>{const state=window.__inkbridgeIntegrated.inspect(),node=state.nodes.find(n=>n.id===id),pill=window.__originalRequire(66597).L.getGroupTitlePillBounds(node,state.view.scale),b=document.querySelector('#board').getBoundingClientRect();return {x:b.x+state.view.translateX+(node.position.x+pill.x+pill.width/2)*state.view.scale,y:b.y+state.view.translateY+(node.position.y+pill.y+pill.height/2)*state.view.scale};},group.id);await page.mouse.click(gp.x,gp.y);await page.keyboard.press('Control+c');await expect.poll(()=>page.evaluate(()=>window.__originalRequire(63268).Z.getState().flow.copyNodes.length)).toBe(3);await expect.poll(()=>page.evaluate(()=>window.__originalRequire(63268).Z.getState().flow.internalCopyClipboardText)).toContain('flexnote-canvas-copy:');await page.mouse.move(1100,650);await key('Control+v');await expect.poll(async()=>(await load()).sections.length).toBe(2);graph=await load();const copiedGroup=graph.sections.find(row=>row.id!==group.id);assert.equal(graph.instances.filter(row=>row.attributes.parentId===copiedGroup.id).length,2);assert.equal(new Set((await inspect()).nodes.map(row=>row.id)).size,(await inspect()).nodes.length,'scene must not contain duplicate hydrated nodes');await key('Control+z');assert.equal((await load()).sections.length,1);assert.equal((await load()).instances.filter(row=>row.boardId==='board-main').length,2);
   stage='shape copy and undo';const tool=page.locator('#original-native-tools button').filter({has:page.locator('[data-inkbridge-tool=shape]')});await tool.click();let b=await page.locator('#board').boundingBox();await page.mouse.move(b.x+850,b.y+650);await page.mouse.down();await page.mouse.move(b.x+950,b.y+720,{steps:10});await page.mouse.up();await flush();const shape=(await load()).textElements.find(row=>row.isShape);await expect.poll(async()=>(await inspect()).nodes.some(row=>row.id===shape.id)).toBe(true);await page.waitForFunction(id=>window.__inkbridgeIntegrated.inspect().editingNodeId===id,shape.id);await page.keyboard.press('Escape');await page.locator('#board').focus();await expect.poll(async()=>(await inspect()).selectedNodeIds.includes(shape.id)).toBe(true);await page.keyboard.press('Control+c');await expect.poll(()=>page.evaluate(()=>window.__originalRequire(63268).Z.getState().flow.copyNodes[0]?.id)).toBe(shape.id);await expect.poll(()=>page.evaluate(()=>window.__originalRequire(63268).Z.getState().flow.internalCopyClipboardText)).toContain('flexnote-canvas-copy:');await page.mouse.move(b.x+750,b.y+550);await key('Control+v');assert.equal((await load()).textElements.length,2);await key('Control+z');assert.equal((await load()).textElements.length,1);await key('Control+z');assert.equal((await load()).textElements?.length||0,0);
+  stage='cross-board cut and restore';
+  const beforeCut = await load();
+  const cutCard = beforeCut.instances.find(row => row.id === 'instance-0');
+  await select(cutCard.id);
+  await expect.poll(async () => (await inspect()).selectedNodeIds).toEqual([cutCard.id]);
+  await key('Control+x');
+  assert.deepEqual((await load()).instances.find(row => row.id === cutCard.id), cutCard);
+  await page.evaluate(() => window.__inkbridgeIntegrated.switchBoard('second'));
+  await page.mouse.click(960, 520);
+  await key('Control+v');
+  await expect.poll(async () => (await load()).instances.find(row => row.id === cutCard.id)?.boardId).toBe('second');
+  const moved = await load();
+  assert.equal(moved.instances.length, beforeCut.instances.length);
+  assert.equal(moved.instances.find(row => row.id === cutCard.id).contentId, cutCard.contentId);
+  assert.equal((moved.connections || []).some(row => row.id === 'edge'), false);
+  await key('Control+v');
+  assert.equal((await load()).instances.length, beforeCut.instances.length);
+  await key('Control+z');
+  const restored = await load();
+  assert.deepEqual(restored.instances.find(row => row.id === cutCard.id), cutCard);
+  assert.deepEqual(restored.connections.find(row => row.id === 'edge'), beforeCut.connections.find(row => row.id === 'edge'));
+  await key('Control+y');
+  assert.equal((await load()).instances.find(row => row.id === cutCard.id).boardId, 'second');
   stage='restart';await flush();graph=await load();await page.screenshot({path:path.join(data,'clipboard-history.png')});await app.close();app=await launch();await ready();assert.deepEqual(await load(),graph);assert.deepEqual(await page.evaluate(()=>window.__inkbridgeIntegrated.errors),[]);
-  console.log(JSON.stringify({data,nativeCtrlC:true,pairAndEdgeRemap:true,independentContentCopy:true,pasteUndoRedo:true,moveUndoRedo:true,deleteRestoresEdge:true,groupCopyUndo:true,shapeCopyUndo:true,lexicalClipboardAndHistory:true,boardScope:true,crossBoardPaste:true,restart:true}));
+  console.log(JSON.stringify({data,nativeCtrlC:true,pairAndEdgeRemap:true,independentContentCopy:true,pasteUndoRedo:true,moveUndoRedo:true,deleteRestoresEdge:true,groupCopyUndo:true,shapeCopyUndo:true,lexicalClipboardAndHistory:true,boardScope:true,crossBoardPaste:true,crossBoardCutUndoRedo:true,restart:true}));
  }catch(error){console.error({stage,data});await fs.writeFile(path.join(data,'clip-trace.json'),JSON.stringify(await page?.evaluate(()=>window.__clipTrace).catch(()=>null),null,2)||'null');console.error(await page?.evaluate(()=>({errors:window.__inkbridgeIntegrated?.errors,state:window.__inkbridgeIntegrated?.inspect()})).catch(()=>null));await page?.screenshot({path:path.join(data,'failure.png')}).catch(()=>{});if(savedClipboard)await app.evaluate(async({clipboard,ClipboardItem},saved)=>{if(!saved.length)return clipboard.clear();await clipboard.write(saved.map(item=>new ClipboardItem(Object.fromEntries(item.map(({type,data})=>[type,typeof data==='string'?data:new Blob([new Uint8Array(data)],{type})])))));},savedClipboard).catch(()=>{});savedClipboard=null;await app.evaluate(({app})=>app.exit(1)).catch(()=>{});throw error;
  }finally{if(savedClipboard)await app.evaluate(async({clipboard,ClipboardItem},saved)=>{if(!saved.length)return clipboard.clear();await clipboard.write(saved.map(item=>new ClipboardItem(Object.fromEntries(item.map(({type,data})=>[type,typeof data==='string'?data:new Blob([new Uint8Array(data)],{type})])))));},savedClipboard).catch(()=>{});await app.close().catch(()=>{});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

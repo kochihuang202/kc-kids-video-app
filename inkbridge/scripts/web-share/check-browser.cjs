@@ -5,6 +5,21 @@ const {chromium,expect}=require('@playwright/test'),{exportWebShare}=require('..
  const data=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-web-share-')),project=path.resolve(__dirname,'../..');
  const live=process.env.INKBRIDGE_WEB_URL?new URL(process.env.INKBRIDGE_WEB_URL):null;if(live){live.search='';live.hash='';}
  const graph=live?null:await require('../../tests/helpers/web-share-fixture.cjs')(data);
+ const checkLayoutParity=!live&&!process.env.INKBRIDGE_WEB_PACKAGE;
+ if(checkLayoutParity){
+  graph.sections=[
+   {id:'outer-group',whiteboardId:'root',x:20,y:20,width:590,height:740,name:'Outer'},
+   {id:'inner-group',whiteboardId:'root',x:10,y:10,width:570,height:720,name:'Inner',parentId:'outer-group'},
+  ];
+  const note=graph.instances.find(row=>row.id==='note-instance');
+  Object.assign(note,{x:10,y:20,attributes:{...note.attributes,parentId:'inner-group'}});
+  const {noteDocument}=await import('../../src/core/rich-document.mjs');
+  graph.mindmaps=[{id:'parity-map',layoutMode:'logic-right',inkbridgeStyle:'xmind'}];
+  graph.mindmapInstances=[{id:'map-root',objectId:'parity-map',whiteboardId:'root',x:450,y:800,width:120,height:48}];
+  graph.mindmapNodes=[
+   ['map-root','Main',['map-branch']],['map-branch','Branch',['map-leaf']],['map-leaf','Leaf',[]],
+  ].map(([id,title,childNodeIds])=>({id,mindMapId:'parity-map',isRoot:id==='map-root',type:'Text',childNodeIds,content:noteDocument({title,body:''})}));
+ }
  const result=live?{directory:null}:process.env.INKBRIDGE_WEB_PACKAGE?{directory:process.env.INKBRIDGE_WEB_PACKAGE}:await exportWebShare({graph,rootBoardId:'root',workspaceDirectory:data,projectDirectory:project,outputDirectory:path.join(project,'release/web-shares')});
  const root=result.directory,prefix=live?live.pathname:'/published/demo/',requests=[],errors=[],external=[],failed=[];
  const original=live?await fetch(new URL('share.json',live)).then(r=>r.text()):await fs.readFile(path.join(root,'share.json'),'utf8');
@@ -34,7 +49,14 @@ const {chromium,expect}=require('@playwright/test'),{exportWebShare}=require('..
   return {x:box.x+s.view.translateX+(node.position.x+dx)*s.view.scale,y:box.y+s.view.translateY+(node.position.y+dy)*s.view.scale};
  },{id,dx,dy});await page.mouse.click(point.x,point.y);};
  try{
-  await page.goto(url);await loaded('note-instance');assert.equal((await inspect()).nodes.length,4);
+  await page.goto(url);await loaded('note-instance');assert.equal((await inspect()).nodes.length,checkLayoutParity?9:4);
+  if(checkLayoutParity){
+   stage='group and mindmap layout parity';
+   const scene=await inspect(),byId=new Map(scene.nodes.map(node=>[node.id,node]));
+   assert.deepEqual(byId.get('note-instance').position,{x:40,y:50});
+   for(const id of ['map-branch','map-leaf'])assert.equal(byId.get(id).data.inkbridgeBranchColor,'#F9423A');
+   assert(byId.get('map-branch').position.x-byId.get('map-root').position.x<200,'viewer uses desktop mindmap spacing');
+  }
   stage='zoom and pan';const before=(await inspect()).view.scale;await page.getByRole('button',{name:'zoom-in',exact:true}).click();await expect.poll(async()=>(await inspect()).view.scale).not.toBe(before);
   const view=(await inspect()).view;await page.mouse.move(500,860);await page.mouse.down({button:'right'});await page.mouse.move(550,880,{steps:8});await page.mouse.up({button:'right'});await expect.poll(async()=>(await inspect()).view.translateX).not.toBe(view.translateX);
   stage='native read-only note';await click('note-instance',100,80);await expect(page.getByText('第一頁中文內容',{exact:true})).toBeVisible();

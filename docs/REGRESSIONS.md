@@ -1,3 +1,9 @@
+## REG-184 — Cross-board card cut and shared canvas parity
+
+- Ctrl+X marks selected note placements. Ctrl+V commits the move and affected connections in one transaction and retains the original content IDs. Undo/redo share the destination board history and validate only the moved placements and connections.
+- Keep the exported parent ID for grouped card placement. The readonly reader loads the desktop mindmap appearance rules before initial layout.
+- check-clipboard-history drives actual shortcuts, same ID after board switch, repeated paste, move undo/redo and reopen. check-browser verifies nested group coordinates, branch colors and spacing in the actual share reader. Persistence tests check failed explicit batches are not automatically retried.
+
 ## REG-183 — Mindmap note mentions have low contrast and the picker loses Enter
 
 - Extend the canvas mention style to note cards and other inline mentions. The mindmap Enter handler defers to the native picker while it is open.

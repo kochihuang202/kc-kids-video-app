@@ -30,7 +30,8 @@ import {createOriginalTextElements} from '/inkbridge-core/original-text-elements
 import {installNestedWhiteboards} from '/inkbridge-core/nested-whiteboards.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
 import {captureCanvasHistory,canvasHistoryOperations} from '/inkbridge-core/canvas-history.mjs';
-import {installOriginalClipboard} from '/inkbridge-core/original-clipboard.mjs';
+import {installOriginalClipboard,installCardCut} from '/inkbridge-core/original-clipboard.mjs';
+import {cardMoveOperations} from '/inkbridge-core/card-move.mjs';
 import {mergeContentBlockTranslations} from './content-blocks.mjs';
 import {installWebShare} from './web-share.mjs';
 
@@ -270,6 +271,31 @@ async function boot(){
   nested=installNestedWhiteboards({r,graph,store:originalStore,getBoardId:()=>boardId,sections,navigate,coordinator,load:()=>window.inkbridge.load(),shell,rehydrate:()=>mindmaps.hydrate()});
   elements=createOriginalTextElements({r,graph,navigate,coordinator,store:originalStore,sections,getBoardId:()=>boardId});
   installOriginalClipboard({navigate,coordinator,load:()=>window.inkbridge.load(),elements,connections,rehydrate:applySharedGraph});
+  const refreshHistoryScene=async()=>{
+    applySharedGraph(await window.inkbridge.load(),{preserveHistory:true});
+    r(66963).Ro();engine.clearCache();engine.requestRender(true);
+  };
+  installCardCut({
+    store:originalStore,board:$('#board'),getBoardId:()=>boardId,getWorkspaceId:()=>graph.workspaceId,
+    isBoard:()=>!state.home&&!historyTask&&router.pathname==='/flow',
+    screenToFlow:point=>state.controls.screenToFlowPosition(point),
+    load:()=>window.inkbridge.load(),track:globalThis.__inkbridgeTrackOperation,report,
+    mutate:(prepare,after)=>navigate(async()=>{
+      const wasInert=document.body.inert;document.body.inert=true;
+      try{
+        await coordinator.flush();
+        const command=await prepare();
+        await coordinator.commitBatch(command.operations,command.graph.revision);
+        after(command);
+        await refreshHistoryScene();
+      }finally{document.body.inert=wasInert;}
+    }),
+    onMove:(move,target)=>{
+      const before=originalStore.getState();
+      originalStore.setState({undoStack:[...before.undoStack,{cardMove:move,historyScopeId:target}].slice(-r(66963).QH),redoStack:[]});
+      before.setSelectedNodeIds(new Set(move.ids));
+    },
+  });
   globalThis.__inkbridgeRunHistory=(direction)=>{
     if(historyTask||state.home)return false;
     const store=originalStore.getState();if(!(direction==='undo'?store.canUndo():store.canRedo()))return false;
@@ -278,14 +304,22 @@ async function boot(){
       // Drain actual paste/gesture writes before capturing redo. No idle timer.
       await settleWrites();ReactDOM.flushSync(()=>originalStore.getState().setEditingNode(null));await settleWrites();
       const before=originalStore.getState(),stacks={undoStack:before.undoStack,redoStack:before.redoStack},current=await window.inkbridge.load();let restore;
+      const from=direction==='undo'?'undoStack':'redoStack',to=direction==='undo'?'redoStack':'undoStack',entry=stacks[from].at(-1);
+      if(entry?.cardMove){
+        if(entry.historyScopeId!==boardId)throw Error('白板復原記錄已失效');
+        await coordinator.commitBatch(cardMoveOperations(current,entry.cardMove,direction==='undo'),current.revision);
+        originalStore.setState({[from]:stacks[from].slice(0,-1),[to]:[...stacks[to],entry].slice(-r(66963).QH)});
+        before.setSelectedNodeIds(new Set(direction==='undo'?entry.cardMove.before.instances.filter(row=>row.boardId===boardId).map(row=>row.id):entry.cardMove.ids));
+        await refreshHistoryScene();
+        return;
+      }
       try{
         before[direction](snapshot=>{restore=snapshot;});
         if(!restore?.inkbridgeGraph||restore.historyScopeId!==boardId)throw Error('白板復原記錄已失效');
         const operations=canvasHistoryOperations(restore.inkbridgeGraph,current);
         for(const operation of operations)coordinator.stage(operation);
         await coordinator.flush();
-        applySharedGraph(await window.inkbridge.load(),{preserveHistory:true});
-        r(66963).Ro();engine.clearCache();engine.requestRender(true);
+        await refreshHistoryScene();
       }catch(error){
         // The restoration is one transaction. A rejected COMMIT leaves the old
         // database intact; discard only this attempt and restore its stack.

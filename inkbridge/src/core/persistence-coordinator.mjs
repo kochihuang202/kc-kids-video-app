@@ -19,15 +19,32 @@ export class PersistenceCoordinator {
     const task=this.flushTail.catch(()=>{}).then(()=>this.flushPending());
     this.flushTail=task;return task;
   }
+  // Rejected explicit commands must not enter the autosave retry queue.
+  commitBatch(operations, baseRevision){
+    const task=this.flushTail.catch(()=>{}).then(async()=>{
+      await this.flushPending();
+      if(this.revision!==baseRevision)throw Error('工作區已變更，請重新操作');
+      const request={requestId:crypto.randomUUID(),baseRevision,operations};
+      this.inflight=this.commit(request);this.status();
+      try{return this.accept(await this.inflight,request);}
+      finally{this.inflight=null;this.status();}
+    });
+    this.flushTail=task;
+    return task;
+  }
+  accept(ack,request){
+    if(ack.requestId!==request.requestId||!Number.isSafeInteger(ack.revision)||ack.revision<this.revision)throw Error('Invalid commit acknowledgement');
+    this.revision=ack.revision;this.lastAck=ack;this.error=null;
+    return ack;
+  }
   async flushPending(){
     await this.beforeFlush();
     if(this.inflight)await this.inflight;
     while(this.pending.size){
       const batch=this.pending;this.pending=new Map();const request={requestId:crypto.randomUUID(),baseRevision:this.revision,operations:[...batch.values()]};
       this.inflight=this.commit(request);this.status();
-      try{const ack=await this.inflight;
-        if(ack.requestId!==request.requestId||!Number.isSafeInteger(ack.revision)||ack.revision<this.revision)throw Error('Invalid commit acknowledgement');
-        this.revision=ack.revision;this.lastAck=ack;this.error=null;
+      try{
+        this.accept(await this.inflight,request);
       }catch(error){
         for(const [key,op]of batch)if(!this.pending.has(key))this.pending.set(key,op);
         this.error=error.message;throw error;

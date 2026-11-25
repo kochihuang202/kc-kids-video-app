@@ -53,3 +53,20 @@ test('overlapping flush callers cannot return an old ACK while a newer batch is 
     releaseSecond();assert.equal((await saveA).revision,2);assert.equal((await saveB).revision,2);
   }finally{releaseFirst();releaseSecond();coordinator.dispose();}
 });
+test('a rejected explicit card-move batch stays out of the autosave queue', async () => {
+  const operations = [{type:'putInstance',data:{id:'card',boardId:'target'}}];
+  const calls = [];
+  const coordinator = new PersistenceCoordinator({
+    revision: 4,
+    commit: async request => {
+      calls.push(request);
+      throw Error('Workspace changed before this commit');
+    },
+  });
+  await assert.rejects(coordinator.commitBatch(operations,4),/Workspace changed/);
+  assert.equal(coordinator.revision,4);
+  assert.equal(coordinator.pending.size,0);
+  await coordinator.flush();
+  assert.equal(calls.length,1);
+  assert.deepEqual(calls[0].operations,operations);
+});

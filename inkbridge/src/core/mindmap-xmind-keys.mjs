@@ -129,7 +129,7 @@ export function installMindmapXmindKeys({ store, mindmaps, r, pushUndo = () => {
     const html = event.clipboardData?.getData('text/html') || '', text = event.clipboardData?.getData('text/plain') || '';
     const ours = !!clipboard && html.includes('data-inkbridge-mindmap="' + clipboard.token + '"');
     // Images, files and the original canvas copy (a whole map, cards...) stay with the original paste.
-    if (!ours && (!text.trim() || event.clipboardData?.files?.length || /flexnote-canvas-copy:/.test(text + html))) return;
+    if (!ours && (!text.trim() || event.clipboardData?.files?.length || /flexnote-canvas-copy:|data-inkbridge-card-cut=/.test(text + html))) return;
     event.preventDefault(); event.stopImmediatePropagation();
     paste(topics[0], text, ours).catch(error => console.error(error));
   };

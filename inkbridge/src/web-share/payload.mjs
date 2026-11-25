@@ -5,7 +5,7 @@ export function makePayload(publication,boardId){
  const noteCards=[],mediaCards=[],pdfCards=[],websiteCards=[],websiteInstances=[],noteCardInstances=[],mediaCardInstances=[],pdfCardInstances=[];
  for(const row of g.instances.filter(i=>i.boardId===boardId)){
   const c=contents.get(row.contentId),meta=metadata.get(c.id)||{},item={...meta,id:c.id,title:c.title,content:c.document,propertiesConfig:[],insights:[],isTrashed:false};
-  const instance={...row.attributes,id:row.id,objectId:c.id,whiteboardId:boardId,x:row.x,y:row.y,width:row.width,height:row.height,parentId:row.parentId||'',isAutoHeight:false};
+  const instance={...row.attributes,id:row.id,objectId:c.id,whiteboardId:boardId,x:row.x,y:row.y,width:row.width,height:row.height,parentId:row.parentId??row.attributes?.parentId??'',isAutoHeight:false};
   if(c.kind==='text'){item.type='NoteCard';noteCards.push(item);noteCardInstances.push(instance);}
   else if(c.kind==='image'){item.type='image';mediaCards.push(item);mediaCardInstances.push(instance);}
   else if(c.kind==='pdf'){item.type='PDFCard';pdfCards.push(item);pdfCardInstances.push(instance);}

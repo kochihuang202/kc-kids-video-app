@@ -23,6 +23,7 @@ async function exportWebShare({graph,rootBoardId,selectedBoardIds,workspaceDirec
    for(const file of ['0a3dd850c67b254e.css','inkbridge-content-blocks.css'])await copy(path.join(source,'vendor/app/_next/static/css',file),path.join(stage,'styles',file));
    for(const folder of ['styles','_next/static/css'])for(const file of await fs.readdir(path.join(stage,folder))){const p=path.join(stage,folder,file);let css=await fs.readFile(p,'utf8');const base=folder==='styles'?'../':'../../../';css=css.replaceAll('url(/fonts/','url('+base+'fonts/').replaceAll('url(/_next/','url('+base+'_next/');await fs.writeFile(p,css);}
    for(const file of ['viewer.mjs','payload.mjs','index.html','inkbridge.svg','serve.cjs','Start-Web.bat'])await copy(path.join(projectDirectory,'src/web-share',file),path.join(stage,file));
+   await copy(path.join(projectDirectory,'src/core/mindmap-appearance.mjs'),path.join(stage,'mindmap-appearance.mjs'));
   }
   const attachments=[];await fs.mkdir(path.join(stage,'assets'));
   const htmlPageFiles=[],htmlResources=new Set();for(const record of selected.files.filter(f=>f.type==='htmlbundle')){const m=typeof record.metadata==='string'?JSON.parse(record.metadata):record.metadata;for(const id of m.fileIds||[])htmlResources.add(id);}

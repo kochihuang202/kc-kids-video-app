@@ -1,4 +1,5 @@
 import {makePayload} from './payload.mjs';
+import {installMindmapAppearance} from './mindmap-appearance.mjs';
 const base=new URL('./',import.meta.url),publicationBase=new URL('./',location.href),status=document.querySelector('#status');
 globalThis.__inkbridgeWebBase=base.href;
 const state=window.__inkbridgeWeb={ready:false,errors:[],requests:[],source:'native92570/48626/67259'};
@@ -53,6 +54,7 @@ async function boot(){
  const r=window.__originalRequire;if(!r)throw Error('閱讀器資源未完整下載');r.p=new URL('_next/',base).href;
  r(64744);const React=r(27378),ReactDOM=r(31542),store=r(63268).Z,Provider=r(16125).zt,Theme=r(2726).f,CanvasProvider=r(64744).InkBridgeCanvasHostProvider,Viewer=r(92570).default;
  const kit=r(37757),K=await kit.zj();kit.nY(K);await new Promise((resolve,reject)=>r(65857).fO.init(K,resolve).catch(reject));r(19281).YH.init('inkbridge-web','read-only');
+ installMindmapAppearance(r,K,r(65857).fO.getFontMgr());
  const locale=await fetch(new URL('locale.json',base)).then(r=>r.json());
  window.__NEXT_DATA__={buildId:'LOq0EGi9XWnc3BD21aEGY',page:'/v/flow',query:{shareId:id},props:locale,isFallback:false};
  const router=r(51648).createRouter('/v/flow',{shareId:id},location.pathname+location.search,{initialProps:locale,pageLoader:new(r(43867).default)(window.__NEXT_DATA__.buildId,''),App:r(64744).default,Component:Viewer,wrapApp:c=>c,subscription:()=>{throw Error('此連結不在唯讀分享中');},isFallback:false,locale:'zh-TW',locales:['zh-TW','zh','en'],defaultLocale:'zh-TW',isPreview:false});
