@@ -1,3 +1,8 @@
+## REG-180 — Mindmap main branches on opposite sides repeated the same default colours
+
+- Use the saved main-topic order across both sides. Assign extra hues after the original six instead of repeating the palette.
+- check-mindmap-xmind exercises a dual-side map with nine branches, matching child and edge colours, and stable colours after restart.
+
 ## REG-179 — Mindmap descendants used a lighter fill than the rest of their branch
 
 - All levels use the resolved branch fill. Explicit sub-branch colours still apply to the selected topic and its descendants.

@@ -4,6 +4,20 @@ export const MAP_STYLES=['xmind','branch','boxed','plain'];
 // Curves leave the centre, with rounded elbows below.
 export const XMIND_ROOT='#000229';
 export const XMIND_BRANCH_COLORS=['#F9423A','#F6A04D','#F3D321','#00BC7B','#486AFF','#4D49BE'];
+function rainbowColor(index) {
+  const preset = XMIND_BRANCH_COLORS[index];
+  if (preset) return preset;
+
+  // Spread additional branch hues around the wheel without cycling the first six.
+  const hue = (185 + (index - XMIND_BRANCH_COLORS.length) * 137.508) % 360;
+  const lightness = 0.39;
+  const chroma = 0.29;
+  return '#' + [0, 8, 4].map(offset => {
+    const channel = (offset + hue / 30) % 12;
+    const value = lightness - chroma * Math.max(-1, Math.min(channel - 3, 9 - channel, 1));
+    return Math.round(value * 255).toString(16).padStart(2, '0');
+  }).join('');
+}
 const hex=value=>{const m=/^#?([0-9a-f]{6})$/i.exec(value||'');return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):[0,0,0];};
 // Dark text on light fills, light text elsewhere.
 export const xmindLightText=color=>{const [r,g,b]=hex(color);return (r*299+g*587+b*114)/1000<170;};
@@ -50,8 +64,19 @@ export function installMindmapAppearance(r,K,fontMgr){
   const ctx={CanvasKit:K,fontMgr,view:{scale:1},theme:'light',getMindmap:id=>r(63268).Z.getState().flow.mindmaps.find(map=>map.id===id)};
   const result=kind==='initial'?original(args[0],args[1],row=>r(66597).L.getDrawer('MindmapNode').measure(row,ctx)):original(args[0],args[1],args[2],args[3],row=>r(66597).L.getDrawer('MindmapNode').measure(row,ctx));
   const nodes=new Map(result.nodes.map(n=>[n.id,n])),parentOf=new Map(result.connections.map(edge=>[edge.target.nodeId,edge.source.nodeId]));
-  // Branch colour = the main topic's position under the root, as XMind's multi-line colours.
-  const depthOf=id=>{let depth=0;for(let parent=parentOf.get(id);parent&&depth<64;parent=parentOf.get(parent))depth++;return depth;};const rainbowOf=id=>{let child=id,parent=parentOf.get(id);while(parent&&!nodes.get(parent)?.data?.isRoot){child=parent;parent=parentOf.get(parent);}const root=parent&&nodes.get(parent);if(!root)return XMIND_BRANCH_COLORS[0];const order=(root.data.childNodeIds||root.data.childrenIds||[]);const index=Math.max(0,order.indexOf(child));return XMIND_BRANCH_COLORS[index%XMIND_BRANCH_COLORS.length];};
+  const depthOf=id=>{let depth=0;for(let parent=parentOf.get(id);parent&&depth<64;parent=parentOf.get(parent))depth++;return depth;};
+  // Count main topics across both sides in the root's saved order.
+  const rainbowOf = id => {
+    let child = id;
+    let parent = parentOf.get(child);
+    while (parent && !nodes.get(parent)?.data?.isRoot) {
+      child = parent;
+      parent = parentOf.get(child);
+    }
+    const root = nodes.get(parent);
+    const order = root?.data.childNodeIds || root?.data.childrenIds || [];
+    return rainbowColor(Math.max(0, order.indexOf(child)));
+  };
   // A colour chosen with the original colour menu (node.color) colours that topic and its
   // branch; the nearest chosen colour wins. A colour equal to the parent's was copied by the
   // original on creation, so it is not a choice of its own. Otherwise the rainbow colour.

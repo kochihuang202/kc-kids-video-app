@@ -9,7 +9,23 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
 (async () => {
   const data = await fs.mkdtemp(path.join(os.tmpdir(), 'inkbridge-original-modules-xmind-')), db = new WorkspaceDatabase(path.join(data, 'Workspace/inkbridge.sqlite3'));
   const rows = [['root', '出發去動物園', ['a', 'b', 'c']], ['a', '麥當勞', ['a1', 'a2']], ['a1', '薯條', []], ['a2', '可樂', []], ['b', '動物', []], ['c', '要帶的物品', []]];
-  db.commit({ requestId: crypto.randomUUID(), baseRevision: 0, operations: [{ type: 'putBoard', data: { id: 'board-main', title: 'XMind', view: { x: 0, y: 0, zoom: 1 } } }, { type: 'putCatalog', kind: 'mindmap', data: { id: 'map', title: 'Root', layoutMode: 'logic-right' } }, ...rows.map(([id, text, childNodeIds]) => ({ type: 'putCatalog', kind: 'mindmap-node', data: { id, mindMapId: 'map', isRoot: id === 'root', type: 'Text', content: doc(text), childNodeIds } })), { type: 'putCatalog', kind: 'mindmap-instance', data: { id: 'root', objectId: 'map', whiteboardId: 'board-main', x: 200, y: 300 } }] }); db.close();
+  db.commit({ requestId: crypto.randomUUID(), baseRevision: 0, operations: [{ type: 'putBoard', data: { id: 'board-main', title: 'XMind', view: { x: 0, y: 0, zoom: 1 } } }, { type: 'putCatalog', kind: 'mindmap', data: { id: 'map', title: 'Root', layoutMode: 'logic-right' } }, ...rows.map(([id, text, childNodeIds]) => ({ type: 'putCatalog', kind: 'mindmap-node', data: { id, mindMapId: 'map', isRoot: id === 'root', type: 'Text', content: doc(text), childNodeIds } })), { type: 'putCatalog', kind: 'mindmap-instance', data: { id: 'root', objectId: 'map', whiteboardId: 'board-main', x: 200, y: 300 } }] });
+  const right = Array.from({ length: 7 }, (_, i) => `right-${i}`);
+  const left = ['left-first', 'left-second'];
+  const dualRows = [
+    ['dual-root', 'right', [...right.slice(0, 6), ...left, right[6]]],
+    ...right.map(id => [id, 'right', []]),
+    [left[0], 'left', ['left-child']],
+    [left[1], 'left', []],
+    ['left-child', 'left', []],
+  ];
+  db.commit({ requestId: crypto.randomUUID(), baseRevision: db.revision(), operations: [
+    { type: 'putBoard', data: { id: 'board-dual', title: 'Dual side', view: { x: 0, y: 0, zoom: 1 } } },
+    { type: 'putCatalog', kind: 'mindmap', data: { id: 'dual', title: 'Dual', layoutMode: 'dual-side' } },
+    ...dualRows.map(([id, side, childNodeIds]) => ({ type: 'putCatalog', kind: 'mindmap-node', data: { id, mindMapId: 'dual', isRoot: id === 'dual-root', side, type: 'Text', content: doc(id), childNodeIds } })),
+    { type: 'putCatalog', kind: 'mindmap-instance', data: { id: 'dual-root', objectId: 'dual', whiteboardId: 'board-dual', x: 400, y: 300 } },
+  ] });
+  db.close();
   const env = { ...process.env, INKBRIDGE_ORIGINAL_VIEW: 'board', INKBRIDGE_ORIGINAL_PROBE_DATA: data }; delete env.ELECTRON_RUN_AS_NODE;
   const launch = () => _electron.launch({ args: [path.join(__dirname, 'host.cjs')], executablePath: require('electron'), env });
   let app = await launch(), page, stage = 'boot'; const errors = [];
@@ -22,7 +38,26 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
   const pos = id => page.evaluate(id => { const s = window.__originalRequire(23).gt.getState(), n = s.nodes.find(n => n.id === id), b = document.querySelector('#board').getBoundingClientRect(); return { x: b.x + s.view.translateX + (n.position.x + n.width / 2) * s.view.scale, y: b.y + s.view.translateY + (n.position.y + n.height / 2) * s.view.scale, w: n.width * s.view.scale, h: n.height * s.view.scale }; }, id);
   const click = async id => { const p = await pos(id); await page.mouse.click(p.x, p.y); await expect.poll(async () => (await state()).sel).toEqual([id]); };
   const blank = async () => { await page.keyboard.press('Escape'); await page.mouse.click(1100, 850); await page.waitForFunction(() => !window.__inkbridgeIntegrated.inspect().editingNodeId); };
+  const checkDualColours = async () => {
+    await page.evaluate(() => window.__inkbridgeIntegrated.switchBoard('board-dual'));
+    await page.waitForFunction(() => window.__inkbridgeIntegrated.inspect().nodes.some(n => n.id === 'dual-root'));
+    const { nodes, edges } = await page.evaluate(() => {
+      const scene = window.__originalRequire(23).gt.getState();
+      return {
+        nodes: Object.fromEntries(scene.nodes.map(n => [n.id, { x: n.position.x, colour: n.data.inkbridgeBranchColor }])),
+        edges: Object.fromEntries(scene.connections.map(edge => [edge.target.nodeId, edge.style.color])),
+      };
+    });
+    assert(nodes[left[0]].x < nodes['dual-root'].x && nodes[right[0]].x > nodes['dual-root'].x);
+    assert.equal(new Set([...left, ...right].map(id => nodes[id].colour)).size, left.length + right.length);
+    assert.equal(nodes['left-child'].colour, nodes[left[0]].colour);
+    for (const id of [...left, ...right, 'left-child']) assert.equal(edges[id], nodes[id].colour);
+    return nodes;
+  };
   try {
+    await ready();
+    stage = 'dual side default colours';
+    const dualColours = await checkDualColours();
     await ready();
     stage = 'rainbow style by default';
     const look = await page.evaluate(() => { const s = window.__originalRequire(23).gt.getState(); return { nodes: Object.fromEntries(s.nodes.filter(n => n.type === 'MindmapNode').map(n => [n.id, { style: n.data.inkbridgeMapStyle, branch: n.data.inkbridgeBranchColor, depth: n.data.inkbridgeDepth }])), edges: s.connections.filter(e => String(e.id).startsWith('mindmap-conn-')).map(e => ({ to: e.target.nodeId, pathType: e.pathType, color: e.style.color, width: e.style.strokeWidth })) }; });
@@ -127,7 +162,8 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     assert.equal(await tree(), '出發去動物園/ 麥當勞/  薯條/  可樂/   動物/ 要帶的物品!/  第一行/  第二行');
     assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'a').data.inkbridgeBranchColor), '#F9423A');
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ data, rainbowDefault: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
+    assert.deepEqual(await checkDualColours(), dualColours);
+    console.log(JSON.stringify({ data, rainbowDefault: true, dualSideColours: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
   } catch (error) { console.error({ stage, data }); await page?.screenshot({ path: path.join(data, 'failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
   finally { await app.close(); }
 })();
