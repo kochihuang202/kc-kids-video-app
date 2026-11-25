@@ -104,6 +104,7 @@ if(fs.readFileSync(path.join(root,'source-modules/module-90214.cjs'),'utf8').inc
 patch('90214','let { updateNodeDataById: t = () => { } } = e','let { updateNodeDataById: t = () => { }, inkbridgePageHiddenActions = [] } = e','Accept page-menu capability exclusions at the native parent boundary');
 patch('90214','hideActions: eN, placement: ex, onNewCardCreated: ej','hideActions: [...eN, ...inkbridgePageHiddenActions], placement: ex, onNewCardCreated: ej','Retain complete native blank-canvas menu while excluding unconnected creation actions');
 require('./apply-mindmap-appearance-patches.cjs')({root,changes});
+require('./apply-mindmap-link-patches.cjs')({root,changes});
 require('./apply-mindmap-keyboard-patches.cjs')({root,changes});
 patch('48626','children: (0, i.jsx)(nK, { buttonId: "media", active: eB === v.Sw.image || eB === v.Sw.video || eB === v.Sw.audio })','children: (0, i.jsx)("span", { "data-inkbridge-tool": "media", children: (0, i.jsx)(nK, { buttonId: "media", active: eB === v.Sw.image || eB === v.Sw.video || eB === v.Sw.audio }) })','Identify the native media (image/video/audio) creation button; image and video placement are connected');
 patch('48626','children: (0, i.jsx)(nK, { buttonId: "linkToWhiteboard" })','children: (0, i.jsx)("span", { "data-inkbridge-tool": "whiteboard", children: (0, i.jsx)(nK, { buttonId: "linkToWhiteboard" }) })','Identify native nested-whiteboard placement tool');

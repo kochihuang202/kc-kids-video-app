@@ -12,6 +12,23 @@ export const XMIND_BRANCH_COLORS = [
 const hex=value=>{const m=/^#?([0-9a-f]{6})$/i.exec(value||'');return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):[0,0,0];};
 // Dark text on light fills, light text elsewhere.
 export const xmindLightText=color=>{const [r,g,b]=hex(color);return (r*299+g*587+b*114)/1000<170;};
+function whiteboardLinkColor(fill) {
+  const [r, g, b] = hex(fill).map(channel => {
+    const srgb = channel / 255;
+    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return 1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.05 ? '#ffffff' : '#000000';
+}
+
+function styleWhiteboardLinkLines(lines, color) {
+  return lines.map(line => ({
+    ...line,
+    segments: line.segments.map(segment => segment.attributes?.mention?.objectType === 'Whiteboard'
+      ? { ...segment, attributes: { ...segment.attributes, color, underline: true, inkbridgeLinkUnderline: true } }
+      : segment),
+  }));
+}
 export const MARKER_COLORS={red:'#ff5054',orange:'#ff9e35',yellow:'#e4bd00',green:'#18bc88',blue:'#4387f5',purple:'#8363d8',gray:'#9b9ba1'};
 export const MARKER_GROUPS={tag:Object.keys(MARKER_COLORS),priority:['1','2','3','4','5','6','7'],task:['0','25','50','75','100'],flag:Object.keys(MARKER_COLORS),star:Object.keys(MARKER_COLORS),symbol:['book','idea','heart','check']};
 export const SYMBOL_PATHS={flag:'M5 21V3m0 1c5-4 9 4 15 0v11c-6 4-10-4-15 0',star:'M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',book:'M3 4h7l2 2 2-2h7v15h-7l-2 2-2-2H3zm9 2v15',idea:'M8 17c0-3-3-4-3-8a7 7 0 0 1 14 0c0 4-3 5-3 8zm1 3h6m-5 3h4',heart:'M12 21 3 12C-3 3 7-2 12 5c5-7 15-2 9 7z',check:'M4 12l5 5L21 5'};
@@ -20,6 +37,7 @@ export function replaceMarker(markers,group,value){const next=(markers||[]).filt
 export const markerInset=data=>(data?.inkbridgeMarkers?.length||0)*22;
 export function nodeStyle(data,map){return data?.inkbridgeNodeStyle||data?.inkbridgeMapStyle||map?.inkbridgeStyle||'xmind';}
 export function installMindmapAppearance(r,K,fontMgr){
+ globalThis.__inkbridgeMindmapLinkLines=styleWhiteboardLinkLines;
  const proto=r(53861).b.prototype,native={layout:proto.getLayout,measure:proto.measure,draw:proto.drawDefaultStyle,rich:proto.drawRichText};
  const paints=[],paths=new Map();let font;
  const paint=new K.Paint();paint.setAntiAlias(true);paint.setStrokeWidth(1.5);paints.push(paint);
@@ -41,7 +59,7 @@ export function installMindmapAppearance(r,K,fontMgr){
  function drawXmind(canvas,element,ctx){const data=element.data,root=!!data.isRoot,branch=data.inkbridgeBranchColor||XMIND_BRANCH_COLORS[0];
   const fill=root?(xmindHex(data.color)||XMIND_ROOT):branch,layout=this.getLayout(element,ctx),radius=root?10:6;
   canvas.save();canvas.translate(element.x,element.y);color(fill);const rect=K.RRectXY(K.LTRBRect(0,0,layout.width,layout.height),radius,radius);canvas.drawRRect(rect,paint);
-  canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light'},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
+  canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light',inkbridgeWhiteboardLinkColor:whiteboardLinkColor(fill)},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
   (data.inkbridgeMarkers||[]).forEach((m,index)=>marker(canvas,m,element.x+layout.padding+index*22,element.y+(layout.height-16)/2));}
  proto.drawDefaultStyle=function(canvas,element,ctx){if(!managed(element.data))return native.draw.call(this,canvas,element,ctx);const style=nodeStyle(element.data,mapOf(element.data,ctx)),root=!!element.data.isRoot;
   if(style==='xmind')return drawXmind.call(this,canvas,element,ctx);

@@ -26,6 +26,27 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     ...dualRows.map(([id, side, childNodeIds]) => ({ type: 'putCatalog', kind: 'mindmap-node', data: { id, mindMapId: 'dual', isRoot: id === 'dual-root', side, type: 'Text', content: doc(id), childNodeIds } })),
     { type: 'putCatalog', kind: 'mindmap-instance', data: { id: 'dual-root', objectId: 'dual', whiteboardId: 'board-dual', x: 400, y: 300 } },
   ] });
+  const linkedBoard = 'board-reference';
+  const linkedTitle = 'REFERENCE_BOARD';
+  const linkedDoc = doc(linkedTitle);
+  linkedDoc.root.children[0].children = [
+    { type: 'mention', version: 1, objectId: linkedBoard, objectType: 'Whiteboard', mentionName: linkedTitle },
+  ];
+  db.commit({ requestId: crypto.randomUUID(), baseRevision: db.revision(), operations: [
+    { type: 'putBoard', data: { id: linkedBoard, title: linkedTitle, view: { x: 0, y: 0, zoom: 1 } } },
+    { type: 'putBoard', data: { id: 'board-links', title: 'Mindmap links', view: { x: 0, y: 0, zoom: 1 } } },
+    { type: 'putCatalog', kind: 'mindmap', data: { id: 'links', title: 'Links', layoutMode: 'logic-right' } },
+    ...[
+      ['links-root', undefined, ['link-dark', 'link-light'], doc('連結')],
+      ['link-dark', '#274363', ['link-child'], linkedDoc],
+      ['link-child', undefined, [], linkedDoc],
+      ['link-light', '#008A9E', [], linkedDoc],
+    ].map(([id, color, childNodeIds, content]) => ({
+      type: 'putCatalog', kind: 'mindmap-node',
+      data: { id, mindMapId: 'links', type: 'Text', isRoot: id === 'links-root', ...(color && { color }), childNodeIds, content },
+    })),
+    { type: 'putCatalog', kind: 'mindmap-instance', data: { id: 'links-root', objectId: 'links', whiteboardId: 'board-links', x: 200, y: 300 } },
+  ] });
   db.close();
   const env = { ...process.env, INKBRIDGE_ORIGINAL_VIEW: 'board', INKBRIDGE_ORIGINAL_PROBE_DATA: data }; delete env.ELECTRON_RUN_AS_NODE;
   const candidate = process.env.INKBRIDGE_TEST_BUILD;
@@ -64,7 +85,50 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     for (const id of [...left, ...right, 'left-child']) assert.equal(edges[id], nodes[id].colour);
     return nodes;
   };
+  const openLinkBoard = async () => {
+    await page.evaluate(() => window.__inkbridgeIntegrated.switchBoard('board-links'));
+    await page.waitForFunction(() => window.__inkbridgeIntegrated.inspect().nodes.some(n => n.id === 'links-root'));
+    await page.evaluate(() => window.__inkbridgeIntegrated.controls.fitView({ duration: 0, maxZoom: 1 }));
+    await page.mouse.move(0, 0);
+  };
+  const checkLinkPixels = async () => {
+    const { data: pixels, info } = await sharp(await page.screenshot({ path: path.join(data, 'mindmap-links.png'), scale: 'css' })).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    const pixel = (x, y) => {
+      const offset = (y * info.width + x) * info.channels;
+      return [...pixels.subarray(offset, offset + info.channels)];
+    };
+    for (const [id, fill, foreground] of [
+      ['link-dark', [39, 67, 99], 255],
+      ['link-child', [39, 67, 99], 255],
+      ['link-light', [0, 138, 158], 0],
+    ]) {
+      const { x, y, w, h } = await pos(id);
+      const left = Math.round(x - w / 2);
+      const top = Math.round(y - h / 2);
+      assert.deepEqual(pixel(left + 4, Math.round(y)), fill);
+      const isInk = (x, y) => {
+        const sample = pixel(x, y);
+        const alpha = (sample[1] - fill[1]) / (foreground - fill[1]);
+        return alpha > 0.35 && sample.every((channel, i) => Math.abs(channel - (fill[i] + alpha * (foreground - fill[i]))) < 5);
+      };
+      let longest = 0, iconPixels = 0;
+      for (let row = top + 5; row < top + h - 5; row++) {
+        for (let col = left + 8; col < left + 23; col++) iconPixels += Number(isInk(col, row));
+        let run = 0;
+        for (let col = left + 23; col < left + w - 4; col++) {
+          run = isInk(col, row) ? run + 1 : 0;
+          longest = Math.max(run, longest);
+        }
+      }
+      assert(iconPixels > 8, id + ' has a high-contrast icon');
+      assert(longest > 35, id + ' has a continuous high-contrast underline');
+    }
+  };
   try {
+    await ready();
+    stage = 'whiteboard mention contrast';
+    await openLinkBoard();
+    await checkLinkPixels();
     await ready();
     stage = 'dual side default colours';
     const dualColours = await checkDualColours();
@@ -173,7 +237,15 @@ const doc = text => ({ root: { type: 'root', version: 1, children: [{ type: 'par
     assert.equal(await page.evaluate(() => window.__originalRequire(23).gt.getState().nodes.find(n => n.id === 'a').data.inkbridgeBranchColor), '#F9423A');
     assert.deepEqual(errors, []);
     assert.deepEqual(await checkDualColours(), dualColours);
-    console.log(JSON.stringify({ data, rainbowDefault: true, dualSideColours: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
+    stage = 'whiteboard mention after restart';
+    await openLinkBoard();
+    await checkLinkPixels();
+    await click('link-dark');
+    await page.keyboard.press('F2');
+    const mention = page.locator('#board [contenteditable=true] [data-inline-mention-object-id="board-reference"]');
+    await mention.click();
+    await expect.poll(() => page.evaluate(() => window.__inkbridgeIntegrated.inspect().boardId)).toBe(linkedBoard);
+    console.log(JSON.stringify({ data, rainbowDefault: true, dualSideColours: true, whiteboardMentionContrastAndNavigation: true, noAddButton: true, toolbarOnRightClick: true, branchColour: true, customColourAbove: true, enterSiblingAndEndEdit: true, rootEnterMainTopic: true, f2SpaceEdit: true, dropOnChildSide: true, cutCopyPasteUndo: true, externalTextPaste: true, imagePasteKeepsMap: true, restart: true }));
   } catch (error) { console.error({ stage, data }); await page?.screenshot({ path: path.join(data, 'failure.png') }).catch(() => {}); console.error(error); process.exitCode = 1; }
   finally { await app.close(); }
 })();

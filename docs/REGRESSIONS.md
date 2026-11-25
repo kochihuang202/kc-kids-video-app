@@ -1,3 +1,8 @@
+## REG-182 — Whiteboard mentions blend into colourful mindmap topics
+
+- The native canvas renderer uses the contrasting black or white foreground for inline whiteboard mentions, including their existing icons and underlines. The format is applied only to the display layout.
+- check-mindmap-xmind samples real CanvasKit pixels for dark and teal topics, inherited fills, icons and underlines before and after restart. It also follows the native board link.
+
 ## REG-181 — Use a fixed 20-colour palette for mindmap main branches
 
 - User requested a fixed shared palette for both sides. Keep the first six colours and add 14 curated colours before cycling. Children and edges inherit their branch colour.
