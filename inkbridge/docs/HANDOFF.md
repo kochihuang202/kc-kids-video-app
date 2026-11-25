@@ -2,6 +2,8 @@
 
 最後更新：2026-11-25（Asia/Taipei）。寫給接手的 AI 或開發者：日常怎麼改、怎麼測、怎麼合併，最近做了什麼，還有哪些事在等使用者決定。
 
+最新交付 0.9.4（REG-183，程式 commit `663ba80`，發布序號 36）。彩虹心智圖的筆記卡片與白板 @ 連結都使用高對比字色、圖示和底線。原生 @ 選單在開啟時接收 Enter，關閉後 Enter 完成節點編輯。已實測鍵盤插入、保存重開、畫布像素及 0.9.3 增量升級。OneDrive 完整 ZIP 為 `InkBridge-release-0.9.4-5ee1795e-e5ab-4cfc-b713-b0bbf42547a7.zip`，增量為 `InkBridge-update-dd171eee-d851-4189-b5e1-a181f1805f59.zip`。舊 0.9.3 完整包已清除。本機交付收據為 `release/delivery-0.9.4.json`。
+
 最新交付 0.9.3（REG-182，程式 commit `67ade06`，發布序號 35）。彩虹心智圖的 @ 白板連結依底色選擇黑白字色，保留同色圖示並加底線。畫布像素、重開、原生編輯器的白板跳轉與 0.9.2 增量升級均已驗證。OneDrive 完整包為 `InkBridge-release-0.9.3-1d6a7daa-3e98-4965-903f-26110fcc3ba7.zip`，0.9.2 增量為 `InkBridge-update-6e37a8f0-8f39-4530-8e5f-48b9482ad39a.zip`。舊的 0.9.2 完整包已清除。本機交付收據為 `release/delivery-0.9.3.json`。
 
 最新交付 0.9.2（REG-179 至 REG-181，程式 commit `2b9222f`，發布序號 34）。心智圖左右主分支共用固定 20 色，子節點及連線沿用分支色，手動改色仍優先。開發與封裝的心智圖測試均通過，隔離的 0.9.1 增量更新測試確認重開與最後一筆中文編輯保存。OneDrive 完整包為 `InkBridge-release-0.9.2-c389c768-6a7b-40d5-9fd8-b96d8f0354f7.zip`，0.9.1 增量為 `InkBridge-update-93ad503e-855c-49cc-950c-db6fceb6b4bf.zip`。已清除舊的 0.9.1 完整包。本機交付收據為 `release/delivery-0.9.2.json`。心智圖中以 @ 插入的白板連結仍需改善文字與底色的對比。
