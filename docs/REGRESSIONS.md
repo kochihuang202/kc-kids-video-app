@@ -3,6 +3,7 @@
 - FlexNote 1.1.72 installed package and workspace handlers show a named, ordered list and close/open switching. InkBridge implements the same workflow with a green sidebar picker and its own workspace catalog. The original database remains the default workspace. Other workspaces have separate database, attachment, settings and sync directories. The program updater keeps its application-wide state.
 - Switching waits for all editors, drains writes and closes SQLite before saving the active selection. A failed restart request restores the previous selection and resumes editing. Workspace selection and order are local to this Windows profile.
 - Run `node scripts/original-reuse/check-local-workspaces.cjs` from `inkbridge`. It drives the Electron picker through create, rename, reorder, failure recovery and switching, and verifies that stored notes remain isolated across launches.
+- Run `node scripts/original-reuse/check-workspace-relaunch.cjs <portable-build-directory>` on Windows. The 0.9.6 candidate completed two native relaunches from a single initial launch. The original workspace UUID, original note and last Chinese text entered before switching survived. The new workspace did not expose the note. The separate 0.9.5 → 0.9.6 test applied the signed delta through the actual update button and confirmed healthy restart, preserved settings and the last Chinese edit.
 
 ## REG-185 — Verified delivery must clear superseded program packages and release-test scratch
 

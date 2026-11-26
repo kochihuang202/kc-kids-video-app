@@ -57,9 +57,8 @@ async function main() {
     switches.push(socket);
   }
   async function activate(button) {
-    const disconnected = browser.waitForEvent('disconnected', {timeout: 30000});
     await button.click().catch(error => { if (!/closed/i.test(error.message)) throw error; });
-    await disconnected;
+    await expect.poll(() => browser.isConnected(), {timeout: 30000}).toBe(false);
     await connect(switches.at(-1));
   }
   try {
@@ -70,6 +69,7 @@ async function main() {
     await page.mouse.dblclick(box.x + 250, box.y + 250);
     const editor = page.locator('#board [contenteditable=true]').first();
     await expect(editor).toBeVisible();
+    await page.keyboard.press('End');
     await page.keyboard.insertText('切換前最後一筆中文');
     await page.locator('.workspace-trigger').click();
     await picker().getByRole('button', {name: '新建工作空間'}).click();
@@ -78,13 +78,12 @@ async function main() {
     await expect(page.locator('.workspace-trigger')).toContainText('公司');
     const company = await page.evaluate(() => window.inkbridge.load());
     assert.notEqual(company.workspaceId, originalId);
-    assert(!company.contents.some(row => row.id === 'existing-note' || row.body === '切換前最後一筆中文'));
+    assert(!company.contents.some(row => row.id === 'existing-note' || row.body?.includes('切換前最後一筆中文')));
     await page.locator('.workspace-trigger').click();
     await activate(picker().getByRole('button', {name: '主要工作空間', exact: true}));
     const returned = await page.evaluate(() => window.inkbridge.load());
     assert.equal(returned.workspaceId, originalId);
-    assert.equal(returned.contents.find(row => row.id === 'existing-note')?.body, '原有筆記');
-    assert(returned.contents.some(row => row.body === '切換前最後一筆中文'));
+    assert.equal(returned.contents.find(row => row.id === 'existing-note')?.body, '原有筆記切換前最後一筆中文');
     assert.equal(new Set(switches).size, 3);
     console.log(JSON.stringify({version: build.version, buildId: build.buildId, nativeRelaunches: 2, originalWorkspacePreserved: true, latestChineseEditPreserved: true, isolation: true}));
   } finally {

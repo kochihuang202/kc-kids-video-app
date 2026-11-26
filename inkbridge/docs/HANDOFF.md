@@ -4,7 +4,9 @@
 
 後續程式發布統一使用 scripts/original-reuse/deliver-release.cjs。它會比對可攜版實際升級的驗收收據，驗證完整 ZIP 與實測增量 ZIP 寫入 OneDrive 後才清除舊完整程式包及該次成功測試的暫存。最新與增量基底的本機建置會保留，筆記快照沿用獨立的既有保留規則。
 
-最新交付 0.9.5（REG-184，程式 commit `bb0ecfb`，發布序號 37）。整張筆記卡片的 Ctrl+X/Ctrl+V 以單一交易移動位置，保留原卡片內容與 ID，並支援目標白板的復原和重做。網頁閱讀器保留巢狀群組座標，接回桌面心智圖排版與配色。Cloudflare 正式閱讀器 `inkbridge-reader-0eaa033640f9` 已部署，使用實際線上資源與隔離合成資料驗證。相關 Node、Chrome、可攜 Electron 與 0.9.4 升級測試通過。OneDrive 完整包 `InkBridge-release-0.9.5-27d2e33a-c53f-4a03-8529-cc54def4f0cf.zip` 與增量 `InkBridge-update-dc102dac-9aea-44c4-96e8-9d55fb12b046.zip` 已驗證，舊完整包已清除。收據為 `release/delivery-0.9.5.json`。
+最新交付 0.9.6（REG-186，程式 commit `63ebb1d`，發布序號 38）。工作空間各有獨立資料庫、附件和同步設定。Windows 可攜版從一次啟動完成兩次原生自動重開，切回原工作空間後保留原有筆記及最後輸入的中文。0.9.5 透過程式內的更新按鈕成功套用增量、重新啟動並保留設定及筆記。OneDrive 完整包 `InkBridge-release-0.9.6-aa3279a2-d487-42df-b5fe-c51728a9658a.zip` 和增量 `InkBridge-update-d118189e-450a-43cd-9dc8-642b2d4de327.zip` 已核對雜湊。已清除舊版程式包及本次更新測試暫存。收據為 `release/delivery-0.9.6.json`。
+
+交付 0.9.5（REG-184，程式 commit `bb0ecfb`，發布序號 37）。整張筆記卡片的 Ctrl+X/Ctrl+V 以單一交易移動位置，保留原卡片內容與 ID，並支援目標白板的復原和重做。網頁閱讀器保留巢狀群組座標，接回桌面心智圖排版與配色。Cloudflare 正式閱讀器 `inkbridge-reader-0eaa033640f9` 已部署，使用實際線上資源與隔離合成資料驗證。相關 Node、Chrome、可攜 Electron 與 0.9.4 升級測試通過。OneDrive 完整包 `InkBridge-release-0.9.5-27d2e33a-c53f-4a03-8529-cc54def4f0cf.zip` 與增量 `InkBridge-update-dc102dac-9aea-44c4-96e8-9d55fb12b046.zip` 已驗證，舊完整包已清除。收據為 `release/delivery-0.9.5.json`。
 
 最新交付 0.9.4（REG-183，程式 commit `663ba80`，發布序號 36）。彩虹心智圖的筆記卡片與白板 @ 連結都使用高對比字色、圖示和底線。原生 @ 選單在開啟時接收 Enter，關閉後 Enter 完成節點編輯。已實測鍵盤插入、保存重開、畫布像素及 0.9.3 增量升級。OneDrive 完整 ZIP 為 `InkBridge-release-0.9.4-5ee1795e-e5ab-4cfc-b713-b0bbf42547a7.zip`，增量為 `InkBridge-update-dd171eee-d851-4189-b5e1-a181f1805f59.zip`。舊 0.9.3 完整包已清除。本機交付收據為 `release/delivery-0.9.4.json`。
 
