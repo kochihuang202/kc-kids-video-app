@@ -1,3 +1,8 @@
+## REG-185 — Verified delivery must clear superseded program packages and release-test scratch
+
+- CLI requires the exact portable upgrade receipt and signed full/delta build IDs. Verify both OneDrive copies before cleanup. Keep the current and tested base builds, and remove only recognized older program artifacts and registered successful release-test scratch.
+- Release delivery tests cover missing receipts, wrong delta bases, known superseded artifacts, unknown files, failed tests, note snapshots, and latest local build pointers.
+
 ## REG-184 — Cross-board card cut and shared canvas parity
 
 - Ctrl+X marks selected note placements. Ctrl+V commits the move and affected connections in one transaction and retains the original content IDs. Undo/redo share the destination board history and validate only the moved placements and connections.

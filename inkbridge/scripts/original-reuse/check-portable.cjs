@@ -7,7 +7,11 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   const project=path.resolve(__dirname,'../..'),build=JSON.parse(await fs.readFile(path.join(project,'release/last-portable-build.json')));
   const test=await fs.mkdtemp(path.join(os.tmpdir(),'inkbridge-portable-')),extraction=path.join(test,'解壓 測試');
   let directory=process.env.INKBRIDGE_PORTABLE_TEST_DIRECTORY;
-  if(!directory){execFileSync('powershell.exe',['-NoProfile','-NonInteractive','-Command','Expand-Archive -LiteralPath $env:INKBRIDGE_TEST_ZIP -DestinationPath $env:INKBRIDGE_TEST_OUTPUT'],{env:{...process.env,INKBRIDGE_TEST_ZIP:build.zip,INKBRIDGE_TEST_OUTPUT:extraction},windowsHide:true});directory=path.join(extraction,(await fs.readdir(extraction))[0]);}
+  if(!directory){
+    execFileSync('powershell.exe',['-NoProfile','-NonInteractive','-Command','Expand-Archive -LiteralPath $env:INKBRIDGE_TEST_ZIP -DestinationPath $env:INKBRIDGE_TEST_OUTPUT'],{env:{...process.env,INKBRIDGE_TEST_ZIP:build.zip,INKBRIDGE_TEST_OUTPUT:extraction},windowsHide:true});
+    const entries=await fs.readdir(extraction);
+    directory=entries.includes('portable-build.json')?extraction:path.join(extraction,entries[0]);
+  }
   const manifest=JSON.parse(await fs.readFile(path.join(directory,'portable-build.json')));
   for(const file of manifest.files)assert.equal(await hashFile(path.join(directory,file.path)),file.sha256,file.path);
   const local=path.join(test,'local-appdata');await fs.mkdir(local);
