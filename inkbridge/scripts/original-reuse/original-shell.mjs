@@ -2,6 +2,7 @@ import {searchGraph,searchBlocks} from '/inkbridge-core/original-search.mjs';
 import {createSidebarFooter} from './sidebar-footer.mjs';
 import {createSettingsFrame} from './settings-frame.mjs';
 import {installTooltipTitlebarFix} from './tooltip-titlebar.mjs';
+import {createWorkspaceSwitcher} from './workspace-switcher.mjs';
 // Original components are loaded unchanged from the private factory registry.
 // This module only maps the existing InkBridge database and routing boundary.
 import {cardsByFilters,boardPreviews,noteRecord,attachmentRecord,websiteRecord} from '/inkbridge-core/original-catalog.mjs';
@@ -9,6 +10,7 @@ import {videoRecord,VIDEO_EXTENSIONS} from '/inkbridge-core/original-video.mjs';
 export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,redux,router,flush,flushAll,registerModalEditor,writeNote,tags,tagCollections,bookmarks,pdf,video,diary,todos,connections,drawings,mindmaps,switchBoard,showHome,showNote,showPdf,showVideo,writeWhiteboard,writeCatalog,getActiveBoardId,onError}){
   const SidebarFooter=createSidebarFooter(React,r);
   const SettingsFrame=createSettingsFrame(React,r);
+  const WorkspaceSwitcher=createWorkspaceSwitcher(React);
   function NativeNavigationControls(){
     React.useLayoutEffect(()=>{
       const host=document.querySelector('#original-navigation-controls'),controls=host.firstElementChild,caption=document.createElement('div');
@@ -275,6 +277,7 @@ export function connectOriginalShell({sections,requireOriginal:r,React,ReactDOM,
     React.createElement(r(64744).InkBridgeCardPopover),
     ReactDOM.createPortal(React.createElement(SidebarFooter),document.querySelector('#sidebar-footer-ui')),
     React.createElement(SettingsFrame),
+    document.querySelector('#inkbridge-workspace-switcher') && ReactDOM.createPortal(React.createElement(WorkspaceSwitcher),document.querySelector('#inkbridge-workspace-switcher')),
     ReactDOM.createPortal(React.createElement(NativeLeftSidebar),leftHost),
     ReactDOM.createPortal(React.createElement(NativeRightSidebar),document.querySelector('#original-flow-outline')),
     React.createElement(AddToWhiteboard),

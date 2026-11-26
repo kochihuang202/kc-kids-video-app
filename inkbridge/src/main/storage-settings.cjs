@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {randomUUID} = require('node:crypto');
 
-function createStorageSettings({filename, localDirectory, applicationDirectory}) {
+function createStorageSettings({filename, localDirectory, protectedDirectory = localDirectory, applicationDirectory}) {
   const overlaps = (a, b) => {
     const inside = (x, y) => { const r = path.relative(x, y); return !r || (!r.startsWith('..' + path.sep) && r !== '..' && !path.isAbsolute(r)); };
     return inside(a, b) || inside(b, a);
@@ -17,7 +17,7 @@ function createStorageSettings({filename, localDirectory, applicationDirectory})
     if (typeof directory !== 'string' || !path.isAbsolute(directory)) throw Error('請選擇絕對路徑資料夾');
     const resolved = fs.realpathSync(directory);
     if (!fs.statSync(resolved).isDirectory() || path.parse(resolved).root === resolved) throw Error('請選擇專用的交換資料夾');
-    for (const protectedPath of [localDirectory, applicationDirectory])
+    for (const protectedPath of [protectedDirectory, applicationDirectory])
       if (overlaps(resolved, fs.realpathSync(protectedPath))) throw Error('交換資料夾不可與程式或本機工作資料目錄重疊');
     fs.readdirSync(resolved);
     const probe = path.join(resolved, `.inkbridge-check-${randomUUID()}.tmp`);

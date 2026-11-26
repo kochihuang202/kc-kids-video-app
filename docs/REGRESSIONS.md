@@ -1,3 +1,9 @@
+## REG-186 — Switch local workspaces without mixing notes or discarding drafts
+
+- FlexNote 1.1.72 installed package and workspace handlers show a named, ordered list and close/open switching. InkBridge implements the same workflow with a green sidebar picker and its own workspace catalog. The original database remains the default workspace. Other workspaces have separate database, attachment, settings and sync directories. The program updater keeps its application-wide state.
+- Switching waits for all editors, drains writes and closes SQLite before saving the active selection. A failed restart request restores the previous selection and resumes editing. Workspace selection and order are local to this Windows profile.
+- Run `node scripts/original-reuse/check-local-workspaces.cjs` from `inkbridge`. It drives the Electron picker through create, rename, reorder, failure recovery and switching, and verifies that stored notes remain isolated across launches.
+
 ## REG-185 — Verified delivery must clear superseded program packages and release-test scratch
 
 - CLI requires the exact portable upgrade receipt and signed full/delta build IDs. Verify both OneDrive copies before cleanup. Keep the current and tested base builds, and remove only recognized older program artifacts and registered successful release-test scratch.

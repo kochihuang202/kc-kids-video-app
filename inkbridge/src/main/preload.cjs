@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('inkbridge',{
   operations:()=>invoke('inkbridge:operations'),
   onOperation:callback=>{const listener=(_e,value)=>callback(value);ipcRenderer.on('inkbridge:operation',listener);return ()=>ipcRenderer.removeListener('inkbridge:operation',listener);},
   storageSettings:request=>invoke('inkbridge:storage-settings',request),
+  workspaces:request=>invoke('inkbridge:workspaces',request),
   createSnapshot:()=>invoke('inkbridge:create-snapshot'),
   onSnapshotSaved:callback=>{const listener=(_event,value)=>callback(value);ipcRenderer.on('inkbridge:snapshot-saved',listener);return ()=>ipcRenderer.removeListener('inkbridge:snapshot-saved',listener);},
   onSnapshotError:callback=>{const listener=(_event,value)=>callback(value);ipcRenderer.on('inkbridge:snapshot-error',listener);return ()=>ipcRenderer.removeListener('inkbridge:snapshot-error',listener);},

@@ -9,19 +9,21 @@ const root=path.resolve(__dirname,'../../private-original-editor'),own=__dirname
 const project=path.resolve(__dirname,'../..'),boardMode=process.env.INKBRIDGE_ORIGINAL_VIEW==='board';
 const portable=process.env.INKBRIDGE_PORTABLE==='1';
 const portableData=path.resolve(process.env.LOCALAPPDATA||app.getPath('appData'),'InkBridge');
-const data=portable?portableData:process.env.INKBRIDGE_ORIGINAL_PROBE_DATA||(app.isPackaged?path.join(root,'profiles','desktop'):null);if(!data)throw Error('A dedicated probe profile is required');
-const resolvedData=path.resolve(data),tempRoot=require('node:os').tmpdir();
+const baseData=portable?portableData:process.env.INKBRIDGE_ORIGINAL_PROBE_DATA||(app.isPackaged?path.join(root,'profiles','desktop'):null);if(!baseData)throw Error('A dedicated probe profile is required');
+const resolvedData=path.resolve(baseData),tempRoot=require('node:os').tmpdir();
 // YouTube player page (src/main/youtube.cjs): started before any page is served, so the page
 // security policy can name its exact local origin.
 const youtube=require('../../src/main/youtube.cjs').createYoutube();let youtubeShim='';
 if(!(portable&&resolvedData===portableData)&&!resolvedData.startsWith(path.join(root,'profiles')+path.sep)&&!(path.dirname(resolvedData)===tempRoot&&path.basename(resolvedData).startsWith('inkbridge-original-modules-'))){console.error('Probe profile must be inside its private profiles or a dedicated temp directory');process.exit(1);}
+const workspaces=require('../../src/main/local-workspaces.cjs').createLocalWorkspaces(resolvedData);
+const data=workspaces.directory();
 app.setName('InkBridge Original Module Probe');
 // Baidu NetDisk (src/main/baidu-disk.cjs). Checks may point it at a local fake Baidu, only from a
 // dedicated temp probe profile.
 const baiduTest=path.dirname(resolvedData)===tempRoot&&/^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.INKBRIDGE_BAIDU_TEST_ORIGIN||'')?process.env.INKBRIDGE_BAIDU_TEST_ORIGIN:'';
 // The player gets the stream from this app's own origin (/baidu-media/), see baidu-disk.cjs.
 let baiduDisk=null;
-for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
+for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(key==='userData'?resolvedData:data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
 protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
 const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.pdf':'application/pdf','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
@@ -68,7 +70,7 @@ app.whenReady().then(async()=>{
         html=html.replace(/<aside class="sidebar">[\s\S]*?<\/aside>/,'<aside class="original-sidebar flex min-h-0 shrink-0 flex-col border-r border-default-200 bg-content1 p-2" style="width:280px"><div id="original-board-list" class="min-h-0 flex-1" aria-label="白板清單"></div><small id="board-navigation-status" role="status"></small><button id="open-trash" class="mt-2 rounded-md px-2 py-1 text-left text-xs text-default-600" title="回收站">回收站</button><div id="persistence-status" class="px-2 py-1 text-xs text-default-500">正在載入…</div><b id="sidebar-count" hidden></b><div id="inspector" hidden></div></aside>');
         const brand=html.match(/<div class="brand">[\s\S]*?<\/div>/)?.[0];if(!brand)throw Error('InkBridge brand not found');html=html.replace(brand,'<div id="original-navigation-controls"></div>');
         html=html.replace(/<button id="add-card"[\s\S]*?<\/button>/,'<button id="toggle-outline" aria-label="切換卡片列表" aria-expanded="false" title="卡片列表">☷</button>');
-        html=html.replace('<div id="original-board-list"','<div class="sidebar-brand-row">'+brand+'<button id="add-card" aria-label="新增卡片" title="新增卡片">＋</button><span id="original-new-card-launcher"></span></div><div id="original-sidebar-navigation"></div><div id="original-board-list"');
+        html=html.replace('<div id="original-board-list"','<div class="sidebar-brand-row">'+brand+'<button id="add-card" aria-label="新增卡片" title="新增卡片">＋</button><span id="original-new-card-launcher"></span></div><div id="inkbridge-workspace-switcher"></div><div id="original-sidebar-navigation"></div><div id="original-board-list"');
         const save=html.match(/<button id="save-workspace"[^>]*>[\s\S]*?<\/button>/)?.[0];html=html.replace(save,'');html=html.replace('<div id="persistence-status"',save+'<div id="persistence-status"');
         html=html.replace('<button id="open-trash"','<div class="sidebar-footer"><button id="open-trash"').replace('正在載入…</div><b id="sidebar-count"','正在載入…</div></div><b id="sidebar-count"');
         html=html.replace('<div class="sidebar-footer">','<div class="sidebar-footer"><div id="sidebar-footer-ui"></div>');
@@ -143,7 +145,10 @@ app.whenReady().then(async()=>{
   const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({openLink:links.open,ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load(),assertEpoch:value=>liveSync?.assertEpoch(value),getEpoch:()=>liveSync?.epoch||0});
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   const readable=event=>allowed(event)||!!standalone.child(event);
-  const storageSettings=require('../../src/main/storage-settings.cjs').createStorageSettings({filename:path.join(data,'Profile','storage-settings.json'),localDirectory:data,applicationDirectory:project});
+  const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
+  const settingsFor=directory=>createStorageSettings({filename:path.join(directory,'Profile','storage-settings.json'),localDirectory:directory,protectedDirectory:resolvedData,applicationDirectory:project});
+  const storageSettings=settingsFor(data);
+  fs.mkdirSync(path.join(data,'Profile'),{recursive:true});
   const selectedExchangeDirectories=new Set();
   const snapshots=require('../../src/main/sync-snapshots.cjs').createSyncSnapshots({localDirectory:data,database,getExchange:()=>storageSettings.read().exchangeDirectory,resolveAttachment:attachments.resolvePath});
   ipcMain.handle('inkbridge:editing-state',(event,value)=>{if(!readable(event)||!Number.isSafeInteger(value?.serial)||typeof value.dirty!=='boolean')throw Error('Invalid editing state');const old=editingStates.get(event.sender.id);if(!old||value.serial>=old.serial)editingStates.set(event.sender.id,{...value});saveStateChanged();return {ok:true};});
@@ -170,10 +175,51 @@ app.whenReady().then(async()=>{
   ipcMain.on('inkbridge:epoch',event=>event.returnValue=liveSync.epoch);
   ipcMain.handle('inkbridge:sync',(event,request,epoch)=>{if(!readable(event))throw Error('Unexpected sender');liveSync.assertEpoch(epoch);return liveSync.call(request);});
   ipcMain.handle('inkbridge:operations',event=>{if(!readable(event))throw Error('Unexpected sender');return [...operations.values()];});
-  const updater=require('../../src/main/program-updates.cjs').createProgramUpdates({installRoot:path.dirname(project),localDirectory:data,getExchange:()=>storageSettings.read().exchangeDirectory,portable,notify,queue,
+  const defaultStorageSettings=data===resolvedData?storageSettings:settingsFor(resolvedData);
+  const updater=require('../../src/main/program-updates.cjs').createProgramUpdates({installRoot:path.dirname(project),localDirectory:resolvedData,getExchange:()=>defaultStorageSettings.read().exchangeDirectory||storageSettings.read().exchangeDirectory,portable,notify,queue,
     prepareClose:async()=>{try{if(rendererReady)await standalone.prepareAll();await createSnapshot('before-program-update',true);}catch(error){if(rendererReady)await standalone.resumeAll();throw error;}},
     resume:()=>standalone.resumeAll(),exit:async()=>{closing=true;await database.close();approvedClose=true;standalone.destroyAll();app.exit(0);}});
   ipcMain.handle('inkbridge:program-update',(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return updater.call(request);});
+  ipcMain.handle('inkbridge:workspaces',(event,request,epoch)=>{
+    if(!allowed(event))throw Error('Unexpected sender');
+    if(request?.method==='list')return workspaces.read();
+    return queue.run('local-workspace',async()=>{
+      liveSync.assertEpoch(epoch);
+      if(closing||applyingSettings||!rendererReady||!standalone.allReady())throw Error('編輯視窗仍在載入或保存，請稍後再試');
+      const previous=workspaces.read(),next=workspaces.change(request);
+      if(next.activeId===previous.activeId)return workspaces.save(next);
+      workspaces.directory(next.activeId);
+      closing=true;
+      let closed=false,selected=false;
+      try {
+        await standalone.prepareAll();
+        await writeBarrier.freeze();
+        writeBarrier.assertClean();
+        await createSnapshot('workspace-switch',true);
+        writeBarrier.assertClean();
+        closed=true;
+        await database.close();
+        writeBarrier.assertClean();
+        await workspaces.save(next);
+        selected=true;
+        writeBarrier.assertClean();
+        app.relaunch();
+      } catch(error) {
+        try {
+          if(selected)await workspaces.save(previous);
+        } finally {
+          if(closed)databaseClient=createDatabaseClient({filename});
+          writeBarrier.resume();
+          closing=false;
+          await standalone.resumeAll();
+        }
+        throw error;
+      }
+      approvedClose=true;
+      standalone.destroyAll();
+      app.exit(0);
+    });
+  });
   ipcMain.handle('inkbridge:storage-settings',async(event,request)=>{
     if(!readable(event))throw Error('Unexpected sender');
     const method=request?.method;
