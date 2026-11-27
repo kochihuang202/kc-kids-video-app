@@ -2,6 +2,7 @@
 
 - InkBridge keeps per-launch JSONL under the computer's `Logs/Diagnostics` directory. The log contains process reasons and exit codes, sanitized exception types and stack locations, and heartbeat gaps. It stays outside notes, backups and program packages. A new launch reports an interrupted previous session with its last known contact time. Clean quit and workspace relaunch record a normal end.
 - `node scripts/original-reuse/check-runtime-diagnostics.cjs` opens the settings entry, verifies renderer exception redaction, blocks and releases the real main process, forces a renderer crash and abrupt main exit in a dedicated profile, then checks recovery and clean-exit classification on fresh launches.
+- Pass the portable build directory as the first argument to exercise the packaged Windows executable and confirm the settings action resolves to that profile's `Logs/Diagnostics` folder. The 0.9.8 packaged run passed all checks.
 
 ## REG-187 — Copy image pixels from the canvas and editor without dropping structured Ctrl+C
 

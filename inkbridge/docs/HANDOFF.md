@@ -4,7 +4,9 @@
 
 後續程式發布統一使用 scripts/original-reuse/deliver-release.cjs。它會比對可攜版實際升級的驗收收據，驗證完整 ZIP 與實測增量 ZIP 寫入 OneDrive 後才清除舊完整程式包及該次成功測試的暫存。最新與增量基底的本機建置會保留，筆記快照沿用獨立的既有保留規則。
 
-最新交付 0.9.7（REG-187，程式 commit `8de203c`，發布序號 39）。白板圖片與開啟的卡片內圖片都可按右鍵複製。Windows 原生剪貼簿可讀到原解析度點陣圖。選取卡片按 Ctrl+C 仍可跨白板貼上整張卡片。Windows 0.9.6 → 0.9.7 簽章增量更新已驗證。完整 ZIP `InkBridge-release-0.9.7-1ce557e5-cc24-4bcf-8d46-0bb67308a629.zip`，增量 ZIP `InkBridge-update-adfcfa05-85c0-4ad5-980c-4e1a6b74b6a6.zip`。收據為 `release/delivery-0.9.7.json`。
+最新交付 0.9.8（REG-188，程式 commit `5c5655d`，發布序號 40）。設定的「關於」頁可開啟本機當機與無回應紀錄。Windows 可攜版已驗證主程序卡住與恢復、畫面程序例外與閃退、突然終止後重開、正常關閉及設定入口。已實測從 0.9.7 套用簽章增量並保留筆記與設定。完整 ZIP `InkBridge-release-0.9.8-21261f05-7143-419d-b8de-ed88825c473a.zip`，增量 ZIP `InkBridge-update-322969bf-daae-4c33-9fb0-fc8f9d0fb118.zip`。驗收與交付收據分別位於 `release/runtime-diagnostics-acceptance-0.9.8.json` 和 `release/delivery-0.9.8.json`。
+
+交付 0.9.7（REG-187，程式 commit `8de203c`，發布序號 39）。白板圖片與開啟的卡片內圖片都可按右鍵複製。Windows 原生剪貼簿可讀到原解析度點陣圖。選取卡片按 Ctrl+C 仍可跨白板貼上整張卡片。Windows 0.9.6 → 0.9.7 簽章增量更新已驗證。完整 ZIP `InkBridge-release-0.9.7-1ce557e5-cc24-4bcf-8d46-0bb67308a629.zip`，增量 ZIP `InkBridge-update-adfcfa05-85c0-4ad5-980c-4e1a6b74b6a6.zip`。收據為 `release/delivery-0.9.7.json`。
 
 交付 0.9.6（REG-186，程式 commit `63ebb1d`，發布序號 38）。工作空間各有獨立資料庫、附件和同步設定。Windows 可攜版從一次啟動完成兩次原生自動重開，切回原工作空間後保留原有筆記及最後輸入的中文。0.9.5 透過程式內的更新按鈕成功套用增量、重新啟動並保留設定及筆記。OneDrive 完整包 `InkBridge-release-0.9.6-aa3279a2-d487-42df-b5fe-c51728a9658a.zip` 和增量 `InkBridge-update-d118189e-450a-43cd-9dc8-642b2d4de327.zip` 已核對雜湊。已清除舊版程式包及本次更新測試暫存。收據為 `release/delivery-0.9.6.json`。
 
