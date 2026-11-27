@@ -1,10 +1,12 @@
 # InkBridge 交接說明
 
-最後更新：2026-11-26（Asia/Taipei）。寫給接手的 AI 或開發者：日常怎麼改、怎麼測、怎麼合併，最近做了什麼，還有哪些事在等使用者決定。
+最後更新：2026-11-27（Asia/Taipei）。寫給接手的 AI 或開發者：日常怎麼改、怎麼測、怎麼合併，最近做了什麼，還有哪些事在等使用者決定。
 
 後續程式發布統一使用 scripts/original-reuse/deliver-release.cjs。它會比對可攜版實際升級的驗收收據，驗證完整 ZIP 與實測增量 ZIP 寫入 OneDrive 後才清除舊完整程式包及該次成功測試的暫存。最新與增量基底的本機建置會保留，筆記快照沿用獨立的既有保留規則。
 
-最新交付 0.9.6（REG-186，程式 commit `63ebb1d`，發布序號 38）。工作空間各有獨立資料庫、附件和同步設定。Windows 可攜版從一次啟動完成兩次原生自動重開，切回原工作空間後保留原有筆記及最後輸入的中文。0.9.5 透過程式內的更新按鈕成功套用增量、重新啟動並保留設定及筆記。OneDrive 完整包 `InkBridge-release-0.9.6-aa3279a2-d487-42df-b5fe-c51728a9658a.zip` 和增量 `InkBridge-update-d118189e-450a-43cd-9dc8-642b2d4de327.zip` 已核對雜湊。已清除舊版程式包及本次更新測試暫存。收據為 `release/delivery-0.9.6.json`。
+最新交付 0.9.7（REG-187，程式 commit `8de203c`，發布序號 39）。白板圖片與開啟的卡片內圖片都可按右鍵複製。Windows 原生剪貼簿可讀到原解析度點陣圖。選取卡片按 Ctrl+C 仍可跨白板貼上整張卡片。Windows 0.9.6 → 0.9.7 簽章增量更新已驗證。完整 ZIP `InkBridge-release-0.9.7-1ce557e5-cc24-4bcf-8d46-0bb67308a629.zip`，增量 ZIP `InkBridge-update-adfcfa05-85c0-4ad5-980c-4e1a6b74b6a6.zip`。收據為 `release/delivery-0.9.7.json`。
+
+交付 0.9.6（REG-186，程式 commit `63ebb1d`，發布序號 38）。工作空間各有獨立資料庫、附件和同步設定。Windows 可攜版從一次啟動完成兩次原生自動重開，切回原工作空間後保留原有筆記及最後輸入的中文。0.9.5 透過程式內的更新按鈕成功套用增量、重新啟動並保留設定及筆記。OneDrive 完整包 `InkBridge-release-0.9.6-aa3279a2-d487-42df-b5fe-c51728a9658a.zip` 和增量 `InkBridge-update-d118189e-450a-43cd-9dc8-642b2d4de327.zip` 已核對雜湊。已清除舊版程式包及本次更新測試暫存。收據為 `release/delivery-0.9.6.json`。
 
 交付 0.9.5（REG-184，程式 commit `bb0ecfb`，發布序號 37）。整張筆記卡片的 Ctrl+X/Ctrl+V 以單一交易移動位置，保留原卡片內容與 ID，並支援目標白板的復原和重做。網頁閱讀器保留巢狀群組座標，接回桌面心智圖排版與配色。Cloudflare 正式閱讀器 `inkbridge-reader-0eaa033640f9` 已部署，使用實際線上資源與隔離合成資料驗證。相關 Node、Chrome、可攜 Electron 與 0.9.4 升級測試通過。OneDrive 完整包 `InkBridge-release-0.9.5-27d2e33a-c53f-4a03-8529-cc54def4f0cf.zip` 與增量 `InkBridge-update-dc102dac-9aea-44c4-96e8-9d55fb12b046.zip` 已驗證，舊完整包已清除。收據為 `release/delivery-0.9.5.json`。
 
