@@ -1,3 +1,9 @@
+## REG-189 — A Rainbow mind map must render below 10% and after reopening at that zoom
+
+- The Windows diagnostics captured a `TypeError` through the XMind drawing adapter at about 9.3% zoom. The native rich-text drawer uses a simplified paint below 10%. The custom Rainbow path bypassed the native entry that initializes that paint, so CanvasKit threw while drawing. Restoring the saved camera triggered the same draw on the next launch.
+- Initialize the existing drawer's paints before custom drawing. `check-mindmap-zoom-skeleton.cjs` reproduces the exception before the fix and checks actual rendered pixels after wheel zoom out, wheel zoom back, and reopening at the saved zoom.
+- `check-mindmap-appearance.cjs` passes. The older unit assertion that the global default is `branch` already fails on the baseline, where the default is `xmind`.
+
 ## REG-188 — A crash or unresponsive InkBridge process leaves local diagnostics
 
 - InkBridge keeps per-launch JSONL under the computer's `Logs/Diagnostics` directory. The log contains process reasons and exit codes, sanitized exception types and stack locations, and heartbeat gaps. It stays outside notes, backups and program packages. A new launch reports an interrupted previous session with its last known contact time. Clean quit and workspace relaunch record a normal end.

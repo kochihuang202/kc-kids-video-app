@@ -57,6 +57,8 @@ export function installMindmapAppearance(r,K,fontMgr){
   const shape=SYMBOL_PATHS[marker.group==='flag'?'flag':marker.group==='star'?'star':marker.value];if(!shape)return;canvas.save();canvas.translate(x,y);canvas.scale(size/24,size/24);color(marker.group==='symbol'?'#64748b':col,marker.group!=='star'&&marker.value!=='heart');canvas.drawPath(path(shape),paint);canvas.restore();
  }
  function drawXmind(canvas,element,ctx){const data=element.data,root=!!data.isRoot,branch=data.inkbridgeBranchColor||XMIND_BRANCH_COLORS[0];
+   // The native rich-text drawer switches to skeleton paint below 10% zoom.
+   this.initPaints(K);
   const fill=root?(xmindHex(data.color)||XMIND_ROOT):branch,layout=this.getLayout(element,ctx),radius=root?10:6;
   canvas.save();canvas.translate(element.x,element.y);color(fill);const rect=K.RRectXY(K.LTRBRect(0,0,layout.width,layout.height),radius,radius);canvas.drawRRect(rect,paint);
   canvas.save();canvas.clipRRect(rect,K.ClipOp.Intersect,true);this.drawRichText(canvas,element,{...ctx,theme:xmindLightText(fill)?'dark':'light',inkbridgeMindmapMentionColor:mentionLinkColor(fill)},{padding:layout.padding,textAlign:K.TextAlign.Left,verticalAlign:'middle'});canvas.restore();canvas.restore();
