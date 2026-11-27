@@ -261,6 +261,7 @@ Only important bugs that have occurred in the real app belong here.
 - Correct behavior: A locked adjacent lesson is not offered as the next item and is excluded from the playback queue. Opening a locked URL directly shows a clear locked explanation with navigation away, not a retry loop. Once learning progress makes the sixth lesson selectable, the fifth lesson may offer it normally.
 - Root cause: `WatchPage` and the session playback queue used raw category order without checking each video's server-provided `isSelectable` flag; the generic load-error component also treated an authorization rule as a transient network failure.
 - Regression test: `e2e/regressions/learning-next-track-lock.spec.ts`
+- Related navigation coverage: `e2e/regressions/previous-episode.spec.ts` protects previous/next boundaries in both viewing and listening mode, fresh starts, per-series preferences and narrow-screen controls. Manual previous navigation follows the same `isSelectable` restriction and does not wrap from the first episode.
 
 ## REG-033 — A lesson shown in today's first five is blocked when it also belongs to another category
 

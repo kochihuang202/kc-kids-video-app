@@ -827,6 +827,14 @@ export function WatchPage() {
   const watchContextRef = useRef({ device, accessState });
   watchContextRef.current = { device, accessState };
 
+  const previousTrack = useMemo(() => {
+    if (!video) return null;
+    const currentIndex = categoryVideos.findIndex((item) => item.id === video.id);
+    if (currentIndex <= 0) return null;
+    const candidate = categoryVideos[currentIndex - 1];
+    return candidate.isSelectable === false ? null : candidate;
+  }, [categoryVideos, video]);
+
   const nextTrack = useMemo(() => {
     if (!categoryVideos.length || !video) return null;
     const currentIndex = categoryVideos.findIndex((v) => v.id === video.id);
@@ -2126,6 +2134,22 @@ export function WatchPage() {
             </div>
 
             <div className="playback-buttons" onClick={(e) => e.stopPropagation()}>
+              {previousTrack && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="seek-btn previous-track-btn"
+                  aria-label="上一集"
+                  title={`上一集：${previousTrack.parentLabel}`}
+                  onClick={() => {
+                    diagnosticsRef.current?.event("previous_requested", { state: previousTrack.id }, undefined, currentPosRef.current);
+                    navigate(`/watch/${previousTrack.id}?mode=${playbackMode}&autoplay=1&fresh=1${offlineQuery}`);
+                  }}
+                >
+                  <span>⏮️ 上一集</span>
+                </Button>
+              )}
+
               <Button
                 type="button"
                 variant="secondary"
