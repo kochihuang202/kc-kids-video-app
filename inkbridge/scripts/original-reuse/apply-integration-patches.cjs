@@ -103,6 +103,7 @@ for(const key of ['importXmindShort','importMarkdownShort'])patch('48626','(0, i
 if(fs.readFileSync(path.join(root,'source-modules/module-90214.cjs'),'utf8').includes('...(e.inkbridgePageHiddenActions || [])'))patch('90214','...(e.inkbridgePageHiddenActions || [])','...inkbridgePageHiddenActions','Read host page-menu options outside the native renderMenu local variable');
 patch('90214','let { updateNodeDataById: t = () => { } } = e','let { updateNodeDataById: t = () => { }, inkbridgePageHiddenActions = [] } = e','Accept page-menu capability exclusions at the native parent boundary');
 patch('90214','hideActions: eN, placement: ex, onNewCardCreated: ej','hideActions: [...eN, ...inkbridgePageHiddenActions], placement: ex, onNewCardCreated: ej','Retain complete native blank-canvas menu while excluding unconnected creation actions');
+require('./apply-image-copy-patch.cjs')({root});
 require('./apply-mindmap-appearance-patches.cjs')({root,changes});
 require('./apply-mindmap-link-patches.cjs')({root,changes});
 require('./apply-mindmap-keyboard-patches.cjs')({root,changes});

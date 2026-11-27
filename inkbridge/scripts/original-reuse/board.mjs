@@ -31,6 +31,7 @@ import {installNestedWhiteboards} from '/inkbridge-core/nested-whiteboards.mjs';
 import {installMindmapControls} from './mindmap-controls.mjs';
 import {captureCanvasHistory,canvasHistoryOperations} from '/inkbridge-core/canvas-history.mjs';
 import {installOriginalClipboard,installCardCut} from '/inkbridge-core/original-clipboard.mjs';
+import {installEditorImageMenu} from './editor-image-menu.mjs';
 import {cardMoveOperations} from '/inkbridge-core/card-move.mjs';
 import {mergeContentBlockTranslations} from './content-blocks.mjs';
 import {installWebShare} from './web-share.mjs';
@@ -39,6 +40,7 @@ const $=selector=>document.querySelector(selector),r=window.__originalRequire;
 globalThis.__inkbridgeFilterTagTree=filterTagTree;
 const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],source:'original Canvas10764 + Flow34883 + Editor73866'};
 const saveIndicator=installSaveIndicator();
+installEditorImageMenu();
 function report(error){state.errors.push({message:error.message,stack:error.stack});$('#persistence-status').textContent=error.message;$('#persistence-status').classList.add('save-error');}
 window.addEventListener('error',event=>report(event.error||Error(event.message)));
 window.addEventListener('unhandledrejection',event=>report(event.reason instanceof Error?event.reason:Error(String(event.reason))));

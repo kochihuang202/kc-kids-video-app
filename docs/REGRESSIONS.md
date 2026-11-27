@@ -1,3 +1,8 @@
+## REG-187 — Copy image pixels from the canvas and editor without dropping structured Ctrl+C
+
+- The canvas image menu and local images in an open note expose `複製圖片`. Both use the original-resolution workspace attachment and write a Windows bitmap through the same clipboard IPC. Image-only commands leave the structured card marker out of the clipboard. Ctrl+C on a selected image card retains its HTML marker and accompanying image in one clipboard item.
+- `node scripts/original-reuse/check-real-image-paste.cjs` checks real Windows clipboard format, bitmap size and first pixel, structured canvas re-paste, and right-click copying in the note modal and standalone editor.
+
 ## REG-186 — Switch local workspaces without mixing notes or discarding drafts
 
 - FlexNote 1.1.72 installed package and workspace handlers show a named, ordered list and close/open switching. InkBridge implements the same workflow with a green sidebar picker and its own workspace catalog. The original database remains the default workspace. Other workspaces have separate database, attachment, settings and sync directories. The program updater keeps its application-wide state.

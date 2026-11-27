@@ -6,6 +6,8 @@ import { documentIdentity, standaloneServices } from '/inkbridge-core/note-versi
 import {installOperationUI} from './operation-ui.mjs';
 import {installSaveIndicator} from './save-indicator.mjs';
 import {noteDocument} from '/inkbridge-core/rich-document.mjs';
+import {installEditorImageMenu} from './editor-image-menu.mjs';
+installEditorImageMenu();
 const saveIndicator=installSaveIndicator();
 const r = window.__originalRequire, $ = s => document.querySelector(s);
 const state = window.__inkbridgeStandalone = { ready: false, errors: [], conflict: false };

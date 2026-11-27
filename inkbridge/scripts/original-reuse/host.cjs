@@ -287,7 +287,21 @@ app.whenReady().then(async()=>{
   ipcMain.handle('inkbridge:uploadHtmlPage',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');return htmlPages.prepare(typeof request==='string'?request:request?.filePath);});
   ipcMain.handle('inkbridge:pickVideoFile',async event=>{if(!allowed(event))throw Error('Unexpected sender');const result=await dialog.showOpenDialog(window,{properties:['openFile'],filters:[{name:'Video',extensions:linkedVideoFiles.EXTENSIONS}]});if(result.canceled||!result.filePaths[0])return {canceled:true};return {canceled:false,file:await linkedVideoFiles.inspect(result.filePaths[0])};});
   ipcMain.handle('inkbridge:inspectVideoFile',async(event,source)=>{if(!readable(event))throw Error('Unexpected sender');try{return {exists:true,file:await linkedVideoFiles.inspect(source)};}catch{return {exists:false};}});
-  ipcMain.handle('inkbridge:copyImageToClipboard',async(event,request)=>{if(!readable(event))throw Error('Unexpected sender');const info=attachments.readUrl(String(request?.src||''));const image=nativeImage.createFromBuffer(info.bytes);if(image.isEmpty())throw Error('Image could not be decoded');clipboard.writeImage(image);return {success:true};});
+  ipcMain.handle('inkbridge:copyImageToClipboard',async(event,request)=>{
+    if(!readable(event))throw Error('Unexpected sender');
+    const {bytes,ext}=attachments.readUrl(String(request?.src||''));
+    if(!/^\.(png|jpe?g|bmp|gif|webp)$/.test(ext))throw Error('附件不是圖片');
+    const image=nativeImage.createFromBuffer(bytes);
+    if(image.isEmpty())throw Error('圖片無法解碼');
+    const formats={'image/png':new Blob([image.toPNG()],{type:'image/png'})};
+    if(typeof request.html==='string'&&typeof request.text==='string'){
+      if(request.html.length+request.text.length>8*1024*1024)throw Error('Invalid clipboard payload');
+      formats['text/html']=request.html;
+      formats['text/plain']=request.text;
+    }
+    await clipboard.write([new ClipboardItem(formats)]);
+    return {success:true};
+  });
   ipcMain.handle('inkbridge:inspectFiles',async(event,files)=>{if(!readable(event)||!Array.isArray(files)||files.length>100)throw Error('Invalid file inspection');const results=[];for(const file of files){if(typeof file.path!=='string'||!path.isAbsolute(file.path))throw Error('Invalid selected file');const info=await require('../../src/main/stream-files.cjs').scanFile(file.path,{maxBytes:512*1024*1024});results.push({path:file.path,sha256:info.sha256});}return results;});
   ipcMain.handle('inkbridge:youtubeShimOrigin',async event=>{if(!readable(event))throw Error('Unexpected sender');return youtubeShim||(youtubeShim=await youtube.start());});
   ipcMain.handle('inkbridge:screenshotEmbeddedFrame',async(event,payload)=>{if(!readable(event))throw Error('Unexpected sender');return require('../../src/main/youtube.cjs').screenshotEmbeddedFrame(event.sender,payload);});
