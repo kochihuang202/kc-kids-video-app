@@ -25,6 +25,7 @@ const baiduTest=path.dirname(resolvedData)===tempRoot&&/^http:\/\/127\.0\.0\.1:\
 let baiduDisk=null;
 for(const [key,name]of Object.entries({userData:'Profile',sessionData:'Session',logs:'Logs',crashDumps:'Crashes'})){const target=path.join(key==='userData'?resolvedData:data,name);fs.mkdirSync(target,{recursive:true});app.setPath(key,target);}
 app.setAppUserModelId('org.inkbridge.original-module-preview');const acquired=app.requestSingleInstanceLock();if(!acquired)app.quit();
+const diagnostics=acquired?require('../../src/main/runtime-diagnostics.cjs').installRuntimeDiagnostics({app,powerMonitor,directory:path.join(resolvedData,'Logs','Diagnostics'),version:require('../../package.json').version}):null;
 protocol.registerSchemesAsPrivileged([{scheme:'flexnote',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
 const types={'.js':'text/javascript','.mjs':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.wasm':'application/wasm','.ttf':'font/ttf','.otf':'font/otf','.woff2':'font/woff2','.pdf':'application/pdf','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'};
 let server,window,database,databaseClient,liveSync,rendererReady=false,approvedClose=false,closeRequest=null,closeTimer,closing=false;
@@ -145,6 +146,12 @@ app.whenReady().then(async()=>{
   const standalone=require('../../src/main/standalone-windows.cjs').installStandaloneWindows({openLink:links.open,ipcMain,BrowserWindow,origin,data,preload:path.resolve(own,'../../src/main/preload.cjs'),getMain:()=>window,load:()=>database.load(),assertEpoch:value=>liveSync?.assertEpoch(value),getEpoch:()=>liveSync?.epoch||0});
   const allowed=event=>event.sender===window?.webContents&&event.senderFrame?.url.startsWith(origin+'/');
   const readable=event=>allowed(event)||!!standalone.child(event);
+  const latestRendererError=new WeakMap();
+  ipcMain.on('inkbridge:renderer-error',(event,error)=>{
+    if(!readable(event)||Date.now()-(latestRendererError.get(event.sender)||0)<5000)return;
+    latestRendererError.set(event.sender,Date.now());
+    diagnostics?.capture('renderer-exception',error,{windowId:event.sender.id});
+  });
   const {createStorageSettings}=require('../../src/main/storage-settings.cjs');
   const settingsFor=directory=>createStorageSettings({filename:path.join(directory,'Profile','storage-settings.json'),localDirectory:directory,protectedDirectory:resolvedData,applicationDirectory:project});
   const storageSettings=settingsFor(data);
@@ -224,6 +231,11 @@ app.whenReady().then(async()=>{
     if(!readable(event))throw Error('Unexpected sender');
     const method=request?.method;
     if(method==='read')return storageSettings.read();
+    if(method==='openDiagnostics'){
+      if(!diagnostics?.record)throw Error('無法建立診斷紀錄資料夾');
+      const error=await shell.openPath(diagnostics.directory);if(error)throw Error(error);
+      return {success:true};
+    }
     if(method==='startup')return snapshots.startup();
     if(method==='snapshotStatus')return snapshots.status();
     if(method==='scan')return snapshots.scan({verify:false});
@@ -320,6 +332,7 @@ app.whenReady().then(async()=>{
   window.on('close',event=>{if(approvedClose)return;event.preventDefault();if(closing)return;if(queue.active){queue.settle().then(()=>{if(!window.isDestroyed())window.close();});return;}closing=true;if(!rendererReady){finishClose().catch(error=>{closing=false;dialog.showErrorBox('InkBridge 尚未保存',error.message);});return;}closeRequest=crypto.randomUUID();window.webContents.send('inkbridge:prepare-close',{requestId:closeRequest});closeTimer=setTimeout(()=>{const requestId=closeRequest;closeRequest=null;closing=false;window.webContents.send('inkbridge:close-cancelled',{requestId,message:'保存確認逾時'});dialog.showErrorBox('InkBridge 尚未保存','保存確認逾時；保留工作區。');},10000);});
   globalThis.__inkbridgeOriginalProbe={dataRoot:data,origin,blocked,preload:'existing InkBridge limited preload; no original window.ipc',nodeIntegration:false,originalMainExecuted:false};
   await window.loadURL(origin+'/');
+  diagnostics?.record?.('window-loaded',{});
   const stopSnapshotTimer=require('../../src/main/snapshot-scheduler.cjs').startSnapshotScheduler({ready:()=>rendererReady&&!closing&&!applyingSettings&&!queue.active,save:()=>queue.run('timer-save',()=>createSnapshot('timer')),onError:error=>notify({key:'save',state:'error',title:'自動保存未完成',message:error.message})});
   let blurTimer;app.on('browser-window-blur',()=>{clearTimeout(blurTimer);blurTimer=setTimeout(()=>{if(!BrowserWindow.getFocusedWindow()&&rendererReady&&!closing&&!queue.active)queue.run('background-save',()=>createSnapshot('background')).catch(error=>notify({key:'save',state:'error',title:'背景保存未完成',message:error.message}));},500);});
   window.once('closed',()=>{stopSnapshotTimer();clearTimeout(blurTimer);liveSync.dispose();});

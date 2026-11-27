@@ -29,6 +29,7 @@ export function installStorageSettings() {
     try { await action(); } catch (error) { $('#storage-settings-status').textContent = error.message; }
     finally { busy = false;frame.busy=false;changed(); fieldsButtons().forEach(el => el.disabled = false);const modal=document.querySelector('#storage-settings');if(frame.open&&modal&&!modal.contains(document.activeElement)){const target=previousFocus?.isConnected&&modal.contains(previousFocus)?previousFocus:modal.querySelector('[role=tab][aria-selected=true]');target?.focus({preventScroll:true});}if(autoScanPending){autoScanPending=false;scheduleScan();} }
   };
+  $('#open-runtime-diagnostics').onclick=()=>run(()=>call({method:'openDiagnostics'}));
   $('#publish-this-computer').onclick=()=>run(async()=>{const status=$('#authority-local-status');status.textContent='正在保存並指定這台的完整內容…';try{const result=await publishThisComputer();status.textContent=result.pending?'已保存本機，等待交換資料夾恢復後發布指定版本。':`已指定這台的內容為準 · ${localTime(result.createdAt)}。其他電腦收到後會先備份未同步修改，再自動對齊。`;await scanSnapshots();}catch(error){status.textContent=error.message;throw error;}});
   button.onclick = () => { dialog.showModal(); return run(async () => {
     await cardHeightSettings.read();

@@ -42,8 +42,9 @@ const state=window.__inkbridgeIntegrated={ready:false,errors:[],callbacks:[],sou
 const saveIndicator=installSaveIndicator();
 installEditorImageMenu();
 function report(error){state.errors.push({message:error.message,stack:error.stack});$('#persistence-status').textContent=error.message;$('#persistence-status').classList.add('save-error');}
-window.addEventListener('error',event=>report(event.error||Error(event.message)));
-window.addEventListener('unhandledrejection',event=>report(event.reason instanceof Error?event.reason:Error(String(event.reason))));
+function reportException(error){window.inkbridge?.logRendererError?.({name:error.name,code:error.code,stack:error.stack});report(error);}
+window.addEventListener('error',event=>reportException(event.error||Error(event.message)));
+window.addEventListener('unhandledrejection',event=>reportException(event.reason instanceof Error?event.reason:Error(String(event.reason))));
 
 async function boot(){
   await enterWorkspace();

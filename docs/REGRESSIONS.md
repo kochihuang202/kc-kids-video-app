@@ -1,3 +1,8 @@
+## REG-188 — A crash or unresponsive InkBridge process leaves local diagnostics
+
+- InkBridge keeps per-launch JSONL under the computer's `Logs/Diagnostics` directory. The log contains process reasons and exit codes, sanitized exception types and stack locations, and heartbeat gaps. It stays outside notes, backups and program packages. A new launch reports an interrupted previous session with its last known contact time. Clean quit and workspace relaunch record a normal end.
+- `node scripts/original-reuse/check-runtime-diagnostics.cjs` opens the settings entry, verifies renderer exception redaction, blocks and releases the real main process, forces a renderer crash and abrupt main exit in a dedicated profile, then checks recovery and clean-exit classification on fresh launches.
+
 ## REG-187 — Copy image pixels from the canvas and editor without dropping structured Ctrl+C
 
 - The canvas image menu and local images in an open note expose `複製圖片`. Both use the original-resolution workspace attachment and write a Windows bitmap through the same clipboard IPC. Image-only commands leave the structured card marker out of the clipboard. Ctrl+C on a selected image card retains its HTML marker and accompanying image in one clipboard item.

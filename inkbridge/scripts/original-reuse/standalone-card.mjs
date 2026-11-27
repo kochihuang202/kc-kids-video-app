@@ -14,8 +14,9 @@ const state = window.__inkbridgeStandalone = { ready: false, errors: [], conflic
 const rpc = async (method, payload) => { const response = await window.inkbridge.noteCall({ method, payload }); if (!response.ok)
     throw Object.assign(Error(response.error.message), { code: response.error.code }); return response.result; };
 function report(error) { state.errors.push({ message: error.message, code: error.code }); $('#standalone-status').textContent = error.message; $('#standalone-status').dataset.error = 'true'; }
-window.addEventListener('error', event => report(event.error || Error(event.message)));
-window.addEventListener('unhandledrejection', event => report(event.reason instanceof Error ? event.reason : Error(String(event.reason))));
+function reportException(error) { window.inkbridge?.logRendererError?.({name:error.name,code:error.code,stack:error.stack}); report(error); }
+window.addEventListener('error', event => reportException(event.error || Error(event.message)));
+window.addEventListener('unhandledrejection', event => reportException(event.reason instanceof Error ? event.reason : Error(String(event.reason))));
 async function boot() {
     installOperationUI();
     r.p = '/_next/';
