@@ -5,17 +5,23 @@ const path = require('node:path');
 const {_electron, expect} = require('@playwright/test');
 
 async function main() {
+  const install = process.argv[2] ? await fs.realpath(process.argv[2]) : null;
+  const build = install ? JSON.parse(await fs.readFile(path.join(install, 'portable-build.json'), 'utf8')) : null;
+  const executablePath = install ? path.join(install, 'runtime', 'electron.exe') : require('electron');
+  const entry = install ? path.join(install, 'app', 'scripts', 'original-reuse', 'host.cjs') : path.join(__dirname, 'host.cjs');
   const temp = await fs.realpath(os.tmpdir());
   const root = await fs.mkdtemp(path.join(temp, 'inkbridge-original-modules-diagnostics-'));
-  const logs = path.join(root, 'Logs', 'Diagnostics');
-  const env = {...process.env, INKBRIDGE_ORIGINAL_PROBE_DATA: root, INKBRIDGE_ORIGINAL_VIEW: 'board'};
+  const data = install ? path.join(root, 'InkBridge') : root;
+  const logs = path.join(data, 'Logs', 'Diagnostics');
+  const env = {...process.env, LOCALAPPDATA: root, INKBRIDGE_ORIGINAL_PROBE_DATA: root, INKBRIDGE_ORIGINAL_VIEW: 'board'};
   delete env.INKBRIDGE_PORTABLE;
   delete env.ELECTRON_RUN_AS_NODE;
+  if (install) env.INKBRIDGE_PORTABLE = '1';
   let app, page, pid;
 
   async function launch() {
-    app = await _electron.launch({args: [path.join(__dirname, 'host.cjs')], executablePath: require('electron'), env});
-    pid = await app.evaluate(() => ({pid: process.pid, root: process.env.INKBRIDGE_ORIGINAL_PROBE_DATA})).then(identity => {
+    app = await _electron.launch({args: [entry], executablePath, env});
+    pid = await app.evaluate(() => ({pid: process.pid, root: process.env.LOCALAPPDATA})).then(identity => {
       assert.equal(identity.root, root);
       return identity.pid;
     });
@@ -45,9 +51,13 @@ async function main() {
 
   try {
     await launch();
+    const startup = await waitForEvent('session-start');
+    if (build) assert.equal(startup.version, build.version);
+    await app.evaluate(({shell}) => { shell.openPath = async directory => { globalThis.openedDiagnosticsDirectory = directory; return ''; }; });
     await page.getByRole('button', {name: '設定', exact: true}).click();
     await page.getByRole('tab', {name: '關於'}).click();
-    await expect(page.getByRole('button', {name: '開啟診斷紀錄資料夾'})).toBeVisible();
+    await page.getByRole('button', {name: '開啟診斷紀錄資料夾'}).click();
+    await expect.poll(() => app.evaluate(() => globalThis.openedDiagnosticsDirectory)).toBe(logs);
     await page.keyboard.press('Escape');
     await page.evaluate(() => { setTimeout(() => {
       const error = new TypeError('synthetic private note contents: must not be persisted');
@@ -83,7 +93,7 @@ async function main() {
     const third = (await events())[2];
     assert(!third.some(row => row.event === 'previous-session-interrupted'));
     await exit(true);
-    console.log(JSON.stringify({mainWatchdog:true, rendererException:true, rendererCrash:true, interruptedRestart:true, cleanExit:true, settingsEntry:true}));
+    console.log(JSON.stringify({version:startup.version, ...(build && {buildId:build.buildId}), mainWatchdog:true, rendererException:true, rendererCrash:true, interruptedRestart:true, cleanExit:true, settingsEntry:true}));
   } finally {
     if (pid) {
       const closed = app.waitForEvent('close', {timeout: 5000}).catch(() => {});
